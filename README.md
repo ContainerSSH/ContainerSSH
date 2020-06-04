@@ -1,7 +1,7 @@
-# Direct-to-Docker SSH server
+# An SSH server that launches containers
 
 This is a Proof of Concept SSH server written in Go that sends any shell directly into a Docker container instead
-of launching it on a local machine. It uses a HTTP microservice as an authentication endpoint for SSH connections.
+of launching it on a local machine. It uses an HTTP microservice as an authentication endpoint for SSH connections.
 
 ## Building
 
