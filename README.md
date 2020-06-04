@@ -5,7 +5,7 @@ of launching it on a local machine. It uses an HTTP microservice as an authentic
 
 ## Building
 
-The project can be build using `go build`.
+The project can be build using `make build` or `make build-docker`.
 
 ## Running
 
