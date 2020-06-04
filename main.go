@@ -1,28 +1,27 @@
 package main
 
 import (
-	"bytes"
-	"context"
-	"encoding/base64"
+	"containerssh/auth"
+	"containerssh/backend"
+	"containerssh/backend/dockerrun"
 	"encoding/binary"
-	"encoding/json"
 	"errors"
 	"flag"
 	"fmt"
-	"github.com/docker/docker/api/types"
-	containerType "github.com/docker/docker/api/types/container"
-	"github.com/docker/docker/api/types/network"
-	"github.com/docker/docker/client"
 	"golang.org/x/crypto/ssh"
 	"io"
 	"io/ioutil"
 	"log"
 	"net"
-	"net/http"
 	"strings"
 	"sync"
-	"time"
 )
+
+func InitBackendRegistry() *backend.Registry {
+	registry := backend.NewRegistry()
+	dockerrun.Init(registry)
+	return registry
+}
 
 func addHostKey(hostKeyFile string, config *ssh.ServerConfig) {
 	if hostKeyFile == "" {
@@ -41,49 +40,6 @@ func addHostKey(hostKeyFile string, config *ssh.ServerConfig) {
 	config.AddHostKey(private)
 }
 
-type passwordAuthRequest struct {
-	User          string `json:"user"`
-	RemoteAddress string `json:"remoteAddress"`
-	SessionId     string `json:"sessionIdBase64"`
-	Password      string `json:"passwordBase64"`
-}
-
-type publicKeyAuthRequest struct {
-	User          string `json:"user"`
-	RemoteAddress string `json:"remoteAddress"`
-	SessionId     string `json:"sessionIdBase64"`
-	// serialized key data in SSH wire format
-	PublicKey string `json:"publicKeyBase64"`
-}
-
-type authResponse struct {
-	Success     bool            `json:"success"`
-	Permissions ssh.Permissions `json:"permissions"`
-}
-
-func authServerRequest(authServer string, requestObject interface{}, response interface{}) error {
-	httpClient := http.Client{
-		Timeout: time.Second * 2, // Maximum of 2 secs
-	}
-	buffer := &bytes.Buffer{}
-	json.NewEncoder(buffer).Encode(requestObject)
-	req, err := http.NewRequest(http.MethodGet, authServer, buffer)
-	if err != nil {
-		return err
-	}
-	req.Header.Set("Content-Type", "application/json")
-
-	resp, err := httpClient.Do(req)
-	if err != nil {
-		return err
-	}
-	err = json.NewDecoder(resp.Body).Decode(response)
-	if err != nil {
-		return err
-	}
-	return nil
-}
-
 func main() {
 	var ciphers string
 	var kexAlgos string
@@ -95,11 +51,13 @@ func main() {
 	var authServer string
 	var authPubkey bool
 	var authPassword bool
-	var dockerHost string
+	var selectedBackendKey string
+
+	registry := InitBackendRegistry()
 
 	flag.StringVar(&ciphers, "ciphers", "chacha20-poly1305@openssh.com,aes256-gcm@openssh.com,aes128-gcm@openssh.com,aes256-ctr,aes192-ctr,aes128-ctr", "Supported ciphers")
 	flag.StringVar(&kexAlgos, "kex-algorithms", "curve25519-sha256@libssh.org,ecdh-sha2-nistp521,ecdh-sha2-nistp384,ecdh-sha2-nistp256", "Key exchange algorithms")
-	flag.StringVar(&macs, "macs", "hmac-sha2-512-etm@openssh.com,hmac-sha2-256-etm@openssh.com,umac-128-etm@openssh.com,hmac-sha2-512,hmac-sha2-256,umac-128@openssh.com", "MAC methods")
+	flag.StringVar(&macs, "macs", "hmac-sha2-256-etm@openssh.com,hmac-sha2-256,hmac-sha1,hmac-sha1-96", "MAC methods")
 	flag.StringVar(&hostKeyRSA, "hostkey-rsa", "", "RSA host key file")
 	flag.StringVar(&hostKeyECDSA, "hostkey-ecdsa", "", "ECDSA host key file")
 	flag.StringVar(&hostKeyED25519, "hostkey-ed25519", "", "ED25519 host key file")
@@ -107,10 +65,16 @@ func main() {
 	flag.StringVar(&authServer, "auth-server", "http://localhost:8080", "HTTP server that will answer authentication requests.")
 	flag.BoolVar(&authPubkey, "auth-pubkey", false, "Authenticate using public keys")
 	flag.BoolVar(&authPassword, "auth-password", false, "Authenticate using passwords")
-	flag.StringVar(&dockerHost, "docker-host", "tcp://127.0.0.1:2375", "Docker TCP socket")
+	flag.StringVar(&selectedBackendKey, "backend", registry.GetBackends()[0], fmt.Sprintf("Backend to use (%s)", strings.Join(registry.GetBackends(), ",")))
 
 	flag.Parse()
 
+	selectedBackend, err := registry.GetBackend(selectedBackendKey)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	authClient := auth.NewHttpClient(authServer)
 	config := &ssh.ServerConfig{}
 
 	if !authPassword && !authPubkey {
@@ -119,41 +83,37 @@ func main() {
 
 	if authPassword {
 		config.PasswordCallback = func(conn ssh.ConnMetadata, password []byte) (*ssh.Permissions, error) {
-			authRequest := passwordAuthRequest{
-				User:          conn.User(),
-				RemoteAddress: conn.RemoteAddr().String(),
-				SessionId:     base64.StdEncoding.EncodeToString(conn.SessionID()),
-				Password:      base64.StdEncoding.EncodeToString(password),
-			}
-			authResponse := &authResponse{}
-			err := authServerRequest(authServer+"/password", authRequest, authResponse)
+			authResponse, err := authClient.Password(
+				conn.User(),
+				password,
+				conn.SessionID(),
+				conn.RemoteAddr().String(),
+			)
 			if err != nil {
 				return nil, err
 			}
 			if !authResponse.Success {
 				return nil, errors.New("authentication failed")
 			}
-			return &authResponse.Permissions, nil
+			return &ssh.Permissions{}, nil
 		}
 	}
 
 	if authPubkey {
 		config.PublicKeyCallback = func(conn ssh.ConnMetadata, key ssh.PublicKey) (*ssh.Permissions, error) {
-			authRequest := publicKeyAuthRequest{
-				User:          conn.User(),
-				RemoteAddress: conn.RemoteAddr().String(),
-				SessionId:     base64.StdEncoding.EncodeToString(conn.SessionID()),
-				PublicKey:     base64.StdEncoding.EncodeToString(key.Marshal()),
-			}
-			authResponse := &authResponse{}
-			err := authServerRequest(authServer+"/pubkey", authRequest, authResponse)
+			authResponse, err := authClient.PubKey(
+				conn.User(),
+				key.Marshal(),
+				conn.SessionID(),
+				conn.RemoteAddr().String(),
+			)
 			if err != nil {
 				return nil, err
 			}
 			if !authResponse.Success {
 				return nil, errors.New("authentication failed")
 			}
-			return &authResponse.Permissions, nil
+			return &ssh.Permissions{}, nil
 		}
 	}
 
@@ -201,127 +161,107 @@ func main() {
 
 		log.Printf("New SSH connection from %s (%s)", sshConn.RemoteAddr(), sshConn.ClientVersion())
 		go ssh.DiscardRequests(reqs)
-		go handleChannels(chans, dockerHost)
+		go handleChannels(sshConn, chans, selectedBackend)
 	}
 }
 
-func handleChannels(chans <-chan ssh.NewChannel, dockerHost string) {
+func handleChannels(conn *ssh.ServerConn, chans <-chan ssh.NewChannel, backend *backend.Backend) {
 	for newChannel := range chans {
-		go handleChannel(newChannel, dockerHost)
+		go handleChannel(conn, newChannel, backend)
 	}
 }
 
-func handleChannel(newChannel ssh.NewChannel, dockerHost string) {
+func handleChannel(conn *ssh.ServerConn, newChannel ssh.NewChannel, backend *backend.Backend) {
 	if t := newChannel.ChannelType(); t != "session" {
-		newChannel.Reject(ssh.UnknownChannelType, fmt.Sprintf("unknown channel type: %s", t))
+		_ = newChannel.Reject(ssh.UnknownChannelType, fmt.Sprintf("unknown channel type: %s", t))
+		return
+	}
+
+	backendSession, err := backend.CreateSession(
+		string(conn.SessionID()),
+		conn.User(),
+	)
+	if err != nil {
+		_ = newChannel.Reject(ssh.ConnectionFailed, fmt.Sprintf("internal error while creating backend: %s", err))
 		return
 	}
 
 	connection, requests, err := newChannel.Accept()
 	if err != nil {
 		log.Printf("Could not accept channel (%s)", err)
+		backendSession.Close()
 		return
 	}
 
-	ctx := context.Background()
-	cli, err := client.NewClient(dockerHost, "", nil, make(map[string]string))
-	if err != nil {
-		log.Printf("Could not open connection to Docker server (%s)", err)
-		connection.Close()
-		return
+	closeConnections := func() {
+		backendSession.Close()
+		err := connection.Close()
+		if err != nil {
+			log.Fatal(err)
+		}
 	}
-
-	containerConfig := &containerType.Config{}
-	containerConfig.Image = "busybox"
-	containerConfig.Hostname = "test"
-	containerConfig.Domainname = "example.com"
-	containerConfig.AttachStdin = true
-	containerConfig.AttachStderr = true
-	containerConfig.AttachStdout = true
-	containerConfig.OpenStdin = true
-	containerConfig.StdinOnce = true
-	containerConfig.Tty = true
-	containerConfig.NetworkDisabled = false
-	containerConfig.Cmd = []string{"/bin/sh"}
-	hostConfig := &containerType.HostConfig{}
-	hostConfig.AutoRemove = true
-	networkingConfig := &network.NetworkingConfig{}
-	body, err := cli.ContainerCreate(ctx, containerConfig, hostConfig, networkingConfig, "")
-	if err != nil {
-		log.Printf("Failed to create container (%s)", err)
-		connection.Close()
-		cli.Close()
-		return
-	}
-	containerId := body.ID
-	close := func() {
-		//todo handle errors
-		removeOptions := types.ContainerRemoveOptions{Force: true}
-		cli.ContainerRemove(ctx, containerId, removeOptions)
-		connection.Close()
-		//todo handle errors
-		cli.Close()
-		log.Printf("Session closed")
-	}
-	attachOptions := types.ContainerAttachOptions{
-		Logs:   true,
-		Stdin:  true,
-		Stderr: true,
-		Stdout: true,
-		Stream: true,
-	}
-	attachResult, err := cli.ContainerAttach(ctx, containerId, attachOptions)
-	if err != nil {
-		log.Printf("Failed to attach container (%s)", err)
-		close()
-		return
-	}
-	extendedClose := func() {
-		attachResult.Close()
-		_ = attachResult.CloseWrite()
-		close()
-	}
-
-	startOptions := types.ContainerStartOptions{}
-	err = cli.ContainerStart(ctx, containerId, startOptions)
-	if err != nil {
-		log.Printf("Failed to start container (%s)", err)
-		extendedClose()
-		return
-	}
-
-	var once sync.Once
-	go func() {
-		io.Copy(connection, attachResult.Reader)
-		once.Do(extendedClose)
-	}()
-	go func() {
-		io.Copy(attachResult.Conn, connection)
-		once.Do(extendedClose)
-	}()
 
 	go func() {
 		for req := range requests {
+			//todo properly decode requests into objects
 			switch req.Type {
 			case "shell":
-				if len(req.Payload) == 0 {
-					req.Reply(true, nil)
+				//Shell requests are requests to launch a shell
+				shell, err := backendSession.RequestShell()
+				if err != nil {
+					log.Print(err)
+					err = req.Reply(false, nil)
+					if err != nil {
+						closeConnections()
+						log.Fatal(err)
+					}
+				} else {
+					var once sync.Once
+					go func() {
+						io.Copy(connection, shell.Stdout)
+						once.Do(closeConnections)
+					}()
+					go func() {
+						io.Copy(shell.Stdin, connection)
+						once.Do(closeConnections)
+					}()
+					//todo handle stderr
+					err = req.Reply(true, nil)
+					if err != nil {
+						closeConnections()
+						log.Fatal(err)
+					}
 				}
 			case "pty-req":
+				//PTY requests are requests for a terminal so the session is a TTY session.
 				termLen := req.Payload[3]
 
 				w, h := parseDims(req.Payload[termLen+4:])
-				resizeOptions := types.ResizeOptions{}
-				resizeOptions.Width = uint(w)
-				resizeOptions.Height = uint(h)
-				cli.ContainerResize(ctx, containerId, resizeOptions)
+				err = backendSession.Resize(uint(w), uint(h))
+				if err != nil {
+					closeConnections()
+					log.Fatal(err)
+				}
+				err = backendSession.SetPty()
+				if err != nil {
+					closeConnections()
+					log.Fatal(err)
+				}
 				req.Reply(true, nil)
 			case "window-change":
+				//This is a resize operation for TTY sessions
 				w, h := parseDims(req.Payload)
-				resizeOptions := types.ResizeOptions{}
-				resizeOptions.Width = uint(w)
-				resizeOptions.Height = uint(h)
-				cli.ContainerResize(ctx, containerId, resizeOptions)
+				backendSession.Resize(uint(w), uint(h))
+			case "subsystem":
+				//Subsystem requests are requests to launch a certain program, e.g. SFTP.
+				subsystem := req.Payload
+				if string(subsystem) != "sftp" {
+					req.Reply(false, []byte("Unknown subsystem"))
+				} else {
+					req.Reply(false, []byte("Can't start SFTP subsystem"))
+				}
+			default:
+				log.Printf("Ignoring unknown request type: %s", req.Type)
 			}
 		}
 	}()
