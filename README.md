@@ -31,7 +31,7 @@ The password endpoint will receive a request in this format:
     "user": "username",
     "remoteAddress": "127.0.0.1:1234",
     "sessionIdBase64": "A base64 SSH session ID",
-	"passwordBase64": "Base 64 password"
+    "passwordBase64": "Base 64 password"
 }
 ```
 
@@ -42,7 +42,7 @@ The public key endpoint will receive requests in this format:
     "user": "username",
     "remoteAddress": "127.0.0.1:1234",
     "sessionIdBase64": "A base64 SSH session ID",
-	"publicKeyBase64": "Base 64 public key in SSH wire format"
+    "publicKeyBase64": "Base 64 public key in SSH wire format"
 }
 ```
 

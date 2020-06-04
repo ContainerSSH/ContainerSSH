@@ -201,17 +201,17 @@ func main() {
 
 		log.Printf("New SSH connection from %s (%s)", sshConn.RemoteAddr(), sshConn.ClientVersion())
 		go ssh.DiscardRequests(reqs)
-		go handleChannels(chans)
+		go handleChannels(chans, dockerHost)
 	}
 }
 
-func handleChannels(chans <-chan ssh.NewChannel) {
+func handleChannels(chans <-chan ssh.NewChannel, dockerHost string) {
 	for newChannel := range chans {
-		go handleChannel(newChannel)
+		go handleChannel(newChannel, dockerHost)
 	}
 }
 
-func handleChannel(newChannel ssh.NewChannel) {
+func handleChannel(newChannel ssh.NewChannel, dockerHost string) {
 	if t := newChannel.ChannelType(); t != "session" {
 		newChannel.Reject(ssh.UnknownChannelType, fmt.Sprintf("unknown channel type: %s", t))
 		return
@@ -264,8 +264,8 @@ func handleChannel(newChannel ssh.NewChannel) {
 		log.Printf("Session closed")
 	}
 	attachOptions := types.ContainerAttachOptions{
-		Logs: true,
-		Stdin: true,
+		Logs:   true,
+		Stdin:  true,
 		Stderr: true,
 		Stdout: true,
 		Stream: true,
@@ -282,10 +282,9 @@ func handleChannel(newChannel ssh.NewChannel) {
 		close()
 	}
 
-
 	startOptions := types.ContainerStartOptions{}
 	err = cli.ContainerStart(ctx, containerId, startOptions)
-	if err != nil{
+	if err != nil {
 		log.Printf("Failed to start container (%s)", err)
 		extendedClose()
 		return
