@@ -1,2 +1,5 @@
 hostkey-rsa.pem
 hostkey-rsa.pem.pub
+
+build/
+cover.out
