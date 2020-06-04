@@ -5,7 +5,7 @@ of launching it on a local machine. It uses an HTTP microservice as an authentic
 
 ## Building
 
-The project can be build using `make build` or `make build-docker`.
+The project can be built using `make build` or `make build-docker`.
 
 ## Running
 
@@ -15,7 +15,7 @@ In order to run the application you will need to generate at least one SSH host 
 You can then run the application by specifying either `--auth-password` or `--auth-pubkey`.
 
 ```
-./containerssh --hstkey-rsa ~/.ssh/id_rsa --auth-password
+./containerssh --hostkey-rsa ~/.ssh/id_rsa --auth-password
 ```
 
 For additional configuration options see `-h`.
