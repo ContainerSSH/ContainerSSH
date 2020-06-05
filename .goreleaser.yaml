@@ -1,0 +1,18 @@
+builds:
+  - main: main.go
+    binary: "containerssh"
+    goos:
+      - darwin
+      - linux
+      - windows
+    goarch:
+      - amd64
+    env:
+      - CGO_ENABLED=0
+
+dist: build
+
+release:
+  github:
+    owner: janoszen
+    name: containerssh
