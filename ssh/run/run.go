@@ -1,23 +1,19 @@
-package shell
+package run
 
 import (
 	"containerssh/backend"
-	"containerssh/ssh/request"
 	"golang.org/x/crypto/ssh"
 	"io"
 	"log"
 	"sync"
 )
 
-type requestMsg struct {
-}
-
 type responseMsg struct {
 	exitStatus uint32
 }
 
-func onShellRequest(request *requestMsg, channel ssh.Channel, session backend.Session) error {
-	shell, err := session.RequestShell()
+func run(program string, channel ssh.Channel, session backend.Session) error {
+	shell, err := session.RequestProgram(program)
 	if err != nil {
 		return err
 	}
@@ -47,16 +43,4 @@ func onShellRequest(request *requestMsg, channel ssh.Channel, session backend.Se
 		once.Do(closeSession)
 	}()
 	return nil
-}
-
-var RequestTypeHandler = request.TypeHandler{
-	GetRequestObject: func() interface{} { return &requestMsg{} },
-	HandleRequest: func(request interface{}, reply request.Reply, channel ssh.Channel, session backend.Session) {
-		err := onShellRequest(request.(*requestMsg), channel, session)
-		if err != nil {
-			reply(false, nil)
-		} else {
-			reply(true, nil)
-		}
-	},
 }

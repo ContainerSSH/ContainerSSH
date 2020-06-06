@@ -8,7 +8,7 @@ import (
 	"github.com/docker/docker/api/types/network"
 )
 
-func (session *dockerRunSession) RequestShell() (*backend.ShellOrSubsystem, error) {
+func (session *dockerRunSession) RequestProgram(program string) (*backend.ShellOrSubsystem, error) {
 	if session.containerId != "" {
 		return nil, fmt.Errorf("cannot change request shell after the container has started")
 	}
@@ -25,7 +25,9 @@ func (session *dockerRunSession) RequestShell() (*backend.ShellOrSubsystem, erro
 	containerConfig.StdinOnce = true
 	containerConfig.Tty = session.pty
 	containerConfig.NetworkDisabled = false
-	containerConfig.Cmd = []string{"/bin/sh"}
+	if program != "" {
+		containerConfig.Cmd = []string{"/bin/sh", "-c", program}
+	}
 	hostConfig := &container.HostConfig{}
 	networkingConfig := &network.NetworkingConfig{}
 	body, err := session.client.ContainerCreate(session.ctx, containerConfig, hostConfig, networkingConfig, "")
