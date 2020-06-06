@@ -27,8 +27,12 @@ type Session interface {
 	//construct with stdin, stdout and stderr. It is the callers responsibility to watch for the end of these streams
 	//and call Close afterwards
 	RequestSubsystem(subsystem string) (*ShellOrSubsystem, error)
+	//Request the exit code of the program. Less than zero means that no exit code is available yet.
+	GetExitCode() int32
 	//Clean up the shell
 	Close()
+	//Send a signal to the container
+	SendSignal(signal string) error
 }
 
 type Backend struct {

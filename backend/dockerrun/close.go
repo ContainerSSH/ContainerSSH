@@ -4,6 +4,8 @@ import "github.com/docker/docker/api/types"
 
 func (session *dockerRunSession) removeContainer() error {
 	if session.containerId != "" {
+		//Update the exit code before destroying the container
+		session.GetExitCode()
 		removeOptions := types.ContainerRemoveOptions{Force: true}
 		err := session.client.ContainerRemove(session.ctx, session.containerId, removeOptions)
 		if err != nil {

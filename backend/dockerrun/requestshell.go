@@ -27,7 +27,6 @@ func (session *dockerRunSession) RequestShell() (*backend.ShellOrSubsystem, erro
 	containerConfig.NetworkDisabled = false
 	containerConfig.Cmd = []string{"/bin/sh"}
 	hostConfig := &container.HostConfig{}
-	hostConfig.AutoRemove = true
 	networkingConfig := &network.NetworkingConfig{}
 	body, err := session.client.ContainerCreate(session.ctx, containerConfig, hostConfig, networkingConfig, "")
 	if err != nil {

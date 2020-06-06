@@ -1,4 +1,4 @@
-package env
+package signal
 
 import (
 	"containerssh/backend"
@@ -7,18 +7,18 @@ import (
 )
 
 type requestMsg struct {
-	Name  string
-	Value string
+	signal string
 }
 
-func onSetEnvRequest(request *requestMsg, channel ssh.Channel, session backend.Session) error {
-	return session.SetEnv(request.Name, request.Value)
+func onSignalRequest(request *requestMsg, channel ssh.Channel, session backend.Session) error {
+	//todo should the list of signals allowed be filtered?
+	return session.SendSignal("SIG" + request.signal)
 }
 
 var RequestTypeHandler = request.TypeHandler{
 	GetRequestObject: func() interface{} { return &requestMsg{} },
 	HandleRequest: func(request interface{}, reply request.Reply, channel ssh.Channel, session backend.Session) {
-		err := onSetEnvRequest(request.(*requestMsg), channel, session)
+		err := onSignalRequest(request.(*requestMsg), channel, session)
 		if err != nil {
 			reply(false, nil)
 		} else {

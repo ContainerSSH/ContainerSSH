@@ -17,7 +17,7 @@ func onWindowChange(request *requestMsg, channel ssh.Channel, session backend.Se
 	return session.Resize(uint(request.Columns), uint(request.Rows))
 }
 
-var WindowRequestTypeHandler = request.TypeHandler{
+var RequestTypeHandler = request.TypeHandler{
 	GetRequestObject: func() interface{} { return &requestMsg{} },
 	HandleRequest: func(request interface{}, reply request.Reply, channel ssh.Channel, session backend.Session) {
 		err := onWindowChange(request.(*requestMsg), channel, session)

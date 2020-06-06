@@ -22,6 +22,7 @@ func createSession(sessionId string, username string) (backend.Session, error) {
 	session.containerId = ""
 	session.client = cli
 	session.ctx = context.Background()
+	session.exitCode = -1
 
 	return session, nil
 }
@@ -36,6 +37,7 @@ type dockerRunSession struct {
 	height      uint
 	pty         bool
 	containerId string
+	exitCode    int32
 	ctx         context.Context
 	client      *client.Client
 }
