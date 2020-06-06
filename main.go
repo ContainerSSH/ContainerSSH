@@ -5,7 +5,6 @@ import (
 	"containerssh/backend"
 	"containerssh/backend/dockerrun"
 	containerssh "containerssh/ssh"
-	"encoding/binary"
 	"errors"
 	"flag"
 	"fmt"
@@ -215,10 +214,4 @@ func handleChannel(conn *ssh.ServerConn, newChannel ssh.NewChannel, backend *bac
 			requestHandlers.OnRequest(req.Type, req.Payload, reply, connection, backendSession)
 		}
 	}()
-}
-
-func parseDims(b []byte) (uint32, uint32) {
-	w := binary.BigEndian.Uint32(b)
-	h := binary.BigEndian.Uint32(b[4:])
-	return w, h
 }
