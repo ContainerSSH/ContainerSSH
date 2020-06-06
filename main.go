@@ -4,17 +4,16 @@ import (
 	"containerssh/auth"
 	"containerssh/backend"
 	"containerssh/backend/dockerrun"
+	containerssh "containerssh/ssh"
 	"encoding/binary"
 	"errors"
 	"flag"
 	"fmt"
 	"golang.org/x/crypto/ssh"
-	"io"
 	"io/ioutil"
 	"log"
 	"net"
 	"strings"
-	"sync"
 )
 
 func InitBackendRegistry() *backend.Registry {
@@ -201,68 +200,19 @@ func handleChannel(conn *ssh.ServerConn, newChannel ssh.NewChannel, backend *bac
 		}
 	}
 
+	requestHandlers := containerssh.InitRequestHandlers()
+
 	go func() {
 		for req := range requests {
-			//todo properly decode requests into objects
-			switch req.Type {
-			case "shell":
-				//Shell requests are requests to launch a shell
-				shell, err := backendSession.RequestShell()
-				if err != nil {
-					log.Print(err)
-					err = req.Reply(false, nil)
+			reply := func(success bool, message []byte) {
+				if req.WantReply {
+					err := req.Reply(success, message)
 					if err != nil {
 						closeConnections()
-						log.Fatal(err)
-					}
-				} else {
-					var once sync.Once
-					go func() {
-						io.Copy(connection, shell.Stdout)
-						once.Do(closeConnections)
-					}()
-					go func() {
-						io.Copy(shell.Stdin, connection)
-						once.Do(closeConnections)
-					}()
-					//todo handle stderr
-					err = req.Reply(true, nil)
-					if err != nil {
-						closeConnections()
-						log.Fatal(err)
 					}
 				}
-			case "pty-req":
-				//PTY requests are requests for a terminal so the session is a TTY session.
-				termLen := req.Payload[3]
-
-				w, h := parseDims(req.Payload[termLen+4:])
-				err = backendSession.Resize(uint(w), uint(h))
-				if err != nil {
-					closeConnections()
-					log.Fatal(err)
-				}
-				err = backendSession.SetPty()
-				if err != nil {
-					closeConnections()
-					log.Fatal(err)
-				}
-				req.Reply(true, nil)
-			case "window-change":
-				//This is a resize operation for TTY sessions
-				w, h := parseDims(req.Payload)
-				backendSession.Resize(uint(w), uint(h))
-			case "subsystem":
-				//Subsystem requests are requests to launch a certain program, e.g. SFTP.
-				subsystem := req.Payload
-				if string(subsystem) != "sftp" {
-					req.Reply(false, []byte("Unknown subsystem"))
-				} else {
-					req.Reply(false, []byte("Can't start SFTP subsystem"))
-				}
-			default:
-				log.Printf("Ignoring unknown request type: %s", req.Type)
 			}
+			requestHandlers.OnRequest(req.Type, req.Payload, reply, connection, backendSession)
 		}
 	}()
 }
