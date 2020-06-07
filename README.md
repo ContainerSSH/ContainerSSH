@@ -17,6 +17,29 @@ To run it grab all files from the [example](example/) directory and run `docker-
 `docker-compose up` in that directory. This will run the SSH server on your local machine on port 2222. You can log in
 with any password using the user "foo" to get an Ubuntu image and "busybox" to get a Busybox image. 
 
+## How does it work?
+
+```
++------+        +--------------+   2.   +---------------+
+|      |        |              | -----> |  Auth server  |
+|      |        |              |        +---------------+
+|      |        |              |   
+|      |   1.   |              |   3.   +---------------+
+| User | -----> | containerssh | -----> | Config server |
+|      |        |              |        +---------------+
+|      |        |              |   
+|      |        |              |   4.   +---------------+
+|      |        |              | -----> |    Backend    |
++------+        +--------------+        +---------------+
+```
+
+1. The user opens an SSH connection to containerssh.
+2. Containerssh calls the authentication server with the users username and password/pubkey to check if its valid.
+3. Containerssh calls the config server to obtain backend location and configuration (if configured)
+4. Containerssh calls the backend (currently only Docker is supported) to launch the container with the specified
+   configuration. All input from the user is sent directly to the backend, output from the container is sent to the
+   user.
+
 ## Installing
 
 You can run containerssh directly in containers by using the
