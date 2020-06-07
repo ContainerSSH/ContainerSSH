@@ -1,5 +1,7 @@
 # An SSH server that launches containers
 
+![](https://repository-images.githubusercontent.com/269202949/c1048d80-a635-11ea-9726-00f5d2fca27c)
+
 This is a Proof of Concept SSH server written in Go that sends any shell directly into a Docker container instead
 of launching it on a local machine. It uses an HTTP microservice as an authentication endpoint for SSH connections.
 
