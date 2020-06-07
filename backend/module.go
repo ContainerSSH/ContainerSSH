@@ -1,6 +1,7 @@
 package backend
 
 import (
+	"containerssh/config"
 	"fmt"
 	"io"
 )
@@ -33,7 +34,7 @@ type Session interface {
 
 type Backend struct {
 	Name          string
-	CreateSession func(sessionId string, username string) (Session, error)
+	CreateSession func(sessionId string, username string, appConfig *config.AppConfig) (Session, error)
 }
 
 type Registry struct {

@@ -1,5 +1,7 @@
 package auth
 
+import "containerssh/protocol"
+
 type Client interface {
 	Password(
 		//Username provided
@@ -10,7 +12,7 @@ type Client interface {
 		sessionId []byte,
 		//Remote address in IP:port format
 		remoteAddr string,
-	) (*Response, error)
+	) (*protocol.AuthResponse, error)
 	PubKey(
 		//Username provided
 		username string,
@@ -20,5 +22,5 @@ type Client interface {
 		sessionId []byte,
 		//Remote address in IP:port format
 		remoteAddr string,
-	) (*Response, error)
+	) (*protocol.AuthResponse, error)
 }

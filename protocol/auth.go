@@ -1,20 +1,20 @@
-package auth
+package protocol
 
-type PasswordRequest struct {
+type PasswordAuthRequest struct {
 	User          string `json:"user"`
 	RemoteAddress string `json:"remoteAddress"`
-	SessionId     string `json:"sessionIdBase64"`
+	SessionId     string `json:"sessionId"`
 	Password      string `json:"passwordBase64"`
 }
 
-type PublicKeyRequest struct {
+type PublicKeyAuthRequest struct {
 	User          string `json:"user"`
 	RemoteAddress string `json:"remoteAddress"`
-	SessionId     string `json:"sessionIdBase64"`
+	SessionId     string `json:"sessionId"`
 	// serialized key data in SSH wire format
 	PublicKey string `json:"publicKeyBase64"`
 }
 
-type Response struct {
+type AuthResponse struct {
 	Success bool `json:"success"`
 }

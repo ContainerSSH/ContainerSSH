@@ -2,11 +2,12 @@ package dockerrun
 
 import (
 	"containerssh/backend"
+	"containerssh/config"
 	"context"
 	"github.com/docker/docker/client"
 )
 
-func createSession(sessionId string, username string) (backend.Session, error) {
+func createSession(sessionId string, username string, appConfig *config.AppConfig) (backend.Session, error) {
 	cli, err := client.NewClient("tcp://127.0.0.1:2375", "", nil, make(map[string]string))
 	if err != nil {
 		return nil, err
@@ -23,6 +24,7 @@ func createSession(sessionId string, username string) (backend.Session, error) {
 	session.client = cli
 	session.ctx = context.Background()
 	session.exitCode = -1
+	session.config = &appConfig.DockerRun
 
 	return session, nil
 }
@@ -40,6 +42,7 @@ type dockerRunSession struct {
 	exitCode    int32
 	ctx         context.Context
 	client      *client.Client
+	config      *config.DockerRunConfig
 }
 
 func Init(registry *backend.Registry) {

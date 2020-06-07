@@ -4,7 +4,13 @@ import (
 	"containerssh/auth"
 	"containerssh/backend"
 	"containerssh/backend/dockerrun"
+	"containerssh/config"
+	configurationClient "containerssh/config/client"
+	"containerssh/config/loader"
+	"containerssh/config/util"
+	"containerssh/protocol"
 	containerssh "containerssh/ssh"
+	"encoding/base64"
 	"errors"
 	"flag"
 	"fmt"
@@ -12,7 +18,7 @@ import (
 	"io/ioutil"
 	"log"
 	"net"
-	"strings"
+	"os"
 )
 
 func InitBackendRegistry() *backend.Registry {
@@ -21,66 +27,11 @@ func InitBackendRegistry() *backend.Registry {
 	return registry
 }
 
-func addHostKey(hostKeyFile string, config *ssh.ServerConfig) {
-	if hostKeyFile == "" {
-		return
-	}
-	privateBytes, err := ioutil.ReadFile(hostKeyFile)
-	if err != nil {
-		log.Fatalf("Failed to load private key (%s)", hostKeyFile)
-	}
+func getSshConfig(appConfig *config.AppConfig, authClient auth.Client) (*ssh.ServerConfig, error) {
+	sshConfig := &ssh.ServerConfig{}
 
-	private, err := ssh.ParsePrivateKey(privateBytes)
-	if err != nil {
-		log.Fatal("Failed to parse private key")
-	}
-
-	config.AddHostKey(private)
-}
-
-func main() {
-	var ciphers string
-	var kexAlgos string
-	var macs string
-	var hostKeyRSA string
-	var hostKeyECDSA string
-	var hostKeyED25519 string
-	var listen string
-	var authServer string
-	var authPubkey bool
-	var authPassword bool
-	var selectedBackendKey string
-
-	registry := InitBackendRegistry()
-
-	flag.StringVar(&ciphers, "ciphers", "chacha20-poly1305@openssh.com,aes256-gcm@openssh.com,aes128-gcm@openssh.com,aes256-ctr,aes192-ctr,aes128-ctr", "Supported ciphers")
-	flag.StringVar(&kexAlgos, "kex-algorithms", "curve25519-sha256@libssh.org,ecdh-sha2-nistp521,ecdh-sha2-nistp384,ecdh-sha2-nistp256", "Key exchange algorithms")
-	flag.StringVar(&macs, "macs", "hmac-sha2-256-etm@openssh.com,hmac-sha2-256,hmac-sha1,hmac-sha1-96", "MAC methods")
-	flag.StringVar(&hostKeyRSA, "hostkey-rsa", "", "RSA host key file")
-	flag.StringVar(&hostKeyECDSA, "hostkey-ecdsa", "", "ECDSA host key file")
-	flag.StringVar(&hostKeyED25519, "hostkey-ed25519", "", "ED25519 host key file")
-	flag.StringVar(&listen, "listen", "0.0.0.0:22", "IP and port to listen on")
-	flag.StringVar(&authServer, "auth-server", "http://localhost:8080", "HTTP server that will answer authentication requests.")
-	flag.BoolVar(&authPubkey, "auth-pubkey", false, "Authenticate using public keys")
-	flag.BoolVar(&authPassword, "auth-password", false, "Authenticate using passwords")
-	flag.StringVar(&selectedBackendKey, "backend", registry.GetBackends()[0], fmt.Sprintf("Backend to use (%s)", strings.Join(registry.GetBackends(), ",")))
-
-	flag.Parse()
-
-	selectedBackend, err := registry.GetBackend(selectedBackendKey)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	authClient := auth.NewHttpClient(authServer)
-	config := &ssh.ServerConfig{}
-
-	if !authPassword && !authPubkey {
-		log.Fatal("Neither Password nor SSH key authentication is selected. Cowardly refusing to let everyone in.")
-	}
-
-	if authPassword {
-		config.PasswordCallback = func(conn ssh.ConnMetadata, password []byte) (*ssh.Permissions, error) {
+	if appConfig.Auth.Password {
+		sshConfig.PasswordCallback = func(conn ssh.ConnMetadata, password []byte) (*ssh.Permissions, error) {
 			authResponse, err := authClient.Password(
 				conn.User(),
 				password,
@@ -97,8 +48,8 @@ func main() {
 		}
 	}
 
-	if authPubkey {
-		config.PublicKeyCallback = func(conn ssh.ConnMetadata, key ssh.PublicKey) (*ssh.Permissions, error) {
+	if appConfig.Auth.PubKey {
+		sshConfig.PublicKeyCallback = func(conn ssh.ConnMetadata, key ssh.PublicKey) (*ssh.Permissions, error) {
 			authResponse, err := authClient.PubKey(
 				conn.User(),
 				key.Marshal(),
@@ -115,43 +66,97 @@ func main() {
 		}
 	}
 
-	if hostKeyRSA == "" && hostKeyECDSA == "" && hostKeyED25519 == "" {
-		log.Fatal("No host key supplied. Please supply at least one host key.")
+	if len(appConfig.Ssh.HostKeys) == 0 {
+		return nil, fmt.Errorf("no host keys provided")
 	}
 
-	config.KeyExchanges = strings.Split(kexAlgos, ",")
-	config.MACs = strings.Split(macs, ",")
-	config.Ciphers = strings.Split(ciphers, ",")
-
-	if len(config.KeyExchanges) == 0 {
-		log.Fatal("No key exchanges configured.")
+	for _, hostKeyFile := range appConfig.Ssh.HostKeys {
+		hostKeyData, err := ioutil.ReadFile(hostKeyFile)
+		signer, err := ssh.ParsePrivateKey(hostKeyData)
+		if err != nil {
+			return nil, err
+		}
+		sshConfig.AddHostKey(signer)
 	}
 
-	if len(config.MACs) == 0 {
-		log.Fatal("No key MACs configured.")
+	sshConfig.KeyExchanges = appConfig.Ssh.KexAlgorithms
+	sshConfig.MACs = appConfig.Ssh.Macs
+	sshConfig.Ciphers = appConfig.Ssh.Ciphers
+
+	if sshConfig.PublicKeyCallback == nil && sshConfig.PasswordCallback == nil {
+		return nil, fmt.Errorf("neither public key nor password authentication is configured")
 	}
-
-	if len(config.Ciphers) == 0 {
-		log.Fatal("No key ciphers configured.")
+	if len(sshConfig.KeyExchanges) == 0 {
+		return nil, fmt.Errorf("no key exchanges configured")
 	}
+	if len(sshConfig.MACs) == 0 {
+		return nil, fmt.Errorf("no key MACs configured")
+	}
+	if len(sshConfig.Ciphers) == 0 {
+		return nil, fmt.Errorf("no key ciphers configured")
+	}
+	return sshConfig, nil
+}
 
-	addHostKey(hostKeyRSA, config)
-	addHostKey(hostKeyECDSA, config)
-	addHostKey(hostKeyED25519, config)
+func main() {
 
-	listener, err := net.Listen("tcp", listen)
+	backendRegistry := InitBackendRegistry()
+	appConfig, err := util.GetDefaultConfig()
 	if err != nil {
-		log.Fatalf("Failed to listen on %s (%s)", listen, err)
+		log.Fatal(err)
 	}
 
-	log.Printf("Listening on %s", listen)
+	configFile := ""
+	dumpConfig := false
+	flag.StringVar(&configFile, "config", "", "Configuration file to load (has to end in .yaml, .yml, or .json)")
+	flag.BoolVar(&dumpConfig, "dump-config", false, "Dump configuration and exit")
+	flag.Parse()
+
+	if configFile != "" {
+		fileAppConfig, err := loader.LoadFile(configFile)
+		if err != nil {
+			log.Fatal(err)
+		}
+		appConfig, err = util.Merge(appConfig, fileAppConfig)
+		if err != nil {
+			log.Fatal(err)
+		}
+	}
+
+	if dumpConfig {
+		err := loader.Write(appConfig, os.Stdout)
+		if err != nil {
+			log.Fatal(err)
+		} else {
+			os.Exit(0)
+		}
+	}
+
+	authClient, err := auth.NewHttpAuthClient(appConfig.Auth)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	configClient, err := configurationClient.NewHttpConfigClient(appConfig.ConfigServer)
+
+	sshConfig, err := getSshConfig(appConfig, authClient)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	listener, err := net.Listen("tcp", appConfig.Listen)
+	if err != nil {
+		log.Fatalf("Failed to listen on %s (%s)", appConfig.Listen, err)
+	}
+
+	log.Printf("Listening on %s", appConfig.Listen)
 	for {
 		tcpConn, err := listener.Accept()
 		if err != nil {
 			log.Printf("Failed to accept incoming connection (%s)", err)
 			continue
 		}
-		sshConn, chans, reqs, err := ssh.NewServerConn(tcpConn, config)
+		sshConn, chans, reqs, err := ssh.NewServerConn(tcpConn, sshConfig)
 		if err != nil {
 			log.Printf("Failed to handshake (%s)", err)
 			continue
@@ -159,25 +164,53 @@ func main() {
 
 		log.Printf("New SSH connection from %s (%s)", sshConn.RemoteAddr(), sshConn.ClientVersion())
 		go ssh.DiscardRequests(reqs)
-		go handleChannels(sshConn, chans, selectedBackend)
+		go handleChannels(sshConn, chans, appConfig, backendRegistry, configClient)
 	}
 }
 
-func handleChannels(conn *ssh.ServerConn, chans <-chan ssh.NewChannel, backend *backend.Backend) {
+func handleChannels(conn *ssh.ServerConn, chans <-chan ssh.NewChannel, appConfig *config.AppConfig, backendRegistry *backend.Registry, configClient configurationClient.ConfigClient) {
 	for newChannel := range chans {
-		go handleChannel(conn, newChannel, backend)
+		go handleChannel(conn, newChannel, appConfig, backendRegistry, configClient)
 	}
 }
 
-func handleChannel(conn *ssh.ServerConn, newChannel ssh.NewChannel, backend *backend.Backend) {
+func handleChannel(conn *ssh.ServerConn, newChannel ssh.NewChannel, appConfig *config.AppConfig, backendRegistry *backend.Registry, configClient configurationClient.ConfigClient) {
 	if t := newChannel.ChannelType(); t != "session" {
 		_ = newChannel.Reject(ssh.UnknownChannelType, fmt.Sprintf("unknown channel type: %s", t))
 		return
 	}
 
-	backendSession, err := backend.CreateSession(
+	actualConfig := appConfig
+
+	if configClient != nil {
+		configResponse, err := configClient.GetConfig(protocol.ConfigRequest{
+			Username:  conn.User(),
+			SessionId: base64.StdEncoding.EncodeToString(conn.SessionID()),
+		})
+		if err != nil {
+			log.Print(err)
+			_ = newChannel.Reject(ssh.ResourceShortage, fmt.Sprintf("internal error while calling the config server: %s", err))
+			return
+		}
+		actualConfig, err = util.Merge(appConfig, &configResponse.Config)
+		if err != nil {
+			log.Print(err)
+			_ = newChannel.Reject(ssh.ResourceShortage, fmt.Sprintf("failed to merge config: %s", err))
+			return
+		}
+	}
+
+	containerBackend, err := backendRegistry.GetBackend(actualConfig.Backend)
+	if err != nil {
+		log.Print(err)
+		_ = newChannel.Reject(ssh.ResourceShortage, fmt.Sprintf("no such backend: %s", err))
+		return
+	}
+
+	backendSession, err := containerBackend.CreateSession(
 		string(conn.SessionID()),
 		conn.User(),
+		actualConfig,
 	)
 	if err != nil {
 		_ = newChannel.Reject(ssh.ConnectionFailed, fmt.Sprintf("internal error while creating backend: %s", err))

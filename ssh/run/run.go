@@ -15,6 +15,7 @@ type responseMsg struct {
 func run(program string, channel ssh.Channel, session backend.Session) error {
 	shell, err := session.RequestProgram(program)
 	if err != nil {
+		log.Print(err)
 		return err
 	}
 

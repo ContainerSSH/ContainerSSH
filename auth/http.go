@@ -2,27 +2,42 @@ package auth
 
 import (
 	"bytes"
+	"containerssh/config"
+	containerhttp "containerssh/http"
+	"containerssh/protocol"
 	"encoding/base64"
 	"encoding/json"
+	"fmt"
 	"net/http"
-	"time"
 )
 
-type HttpClient struct {
+type HttpAuthClient struct {
 	httpClient http.Client
 	endpoint   string
 }
 
-func NewHttpClient(endpoint string) *HttpClient {
-	return &HttpClient{
-		httpClient: http.Client{
-			Timeout: time.Second * 2,
-		},
-		endpoint: endpoint,
+func NewHttpAuthClient(config config.AuthConfig) (*HttpAuthClient, error) {
+	if config.Url == "" {
+		return nil, fmt.Errorf("no authentication server URL provided")
 	}
+	realClient, err := containerhttp.NewHttpClient(
+		config.Timeout,
+		config.CaCert,
+		config.ClientCert,
+		config.ClientKey,
+		config.Url,
+	)
+	if err != nil {
+		return nil, err
+	}
+
+	return &HttpAuthClient{
+		httpClient: *realClient,
+		endpoint:   config.Url,
+	}, nil
 }
 
-func (client *HttpClient) Password(
+func (client *HttpAuthClient) Password(
 	//Username provided
 	username string,
 	//Password provided
@@ -31,21 +46,21 @@ func (client *HttpClient) Password(
 	sessionId []byte,
 	//Remote address in IP:port format
 	remoteAddr string,
-) (*Response, error) {
-	authRequest := PasswordRequest{
+) (*protocol.AuthResponse, error) {
+	authRequest := protocol.PasswordAuthRequest{
 		User:          username,
 		RemoteAddress: remoteAddr,
 		SessionId:     base64.StdEncoding.EncodeToString(sessionId),
 		Password:      base64.StdEncoding.EncodeToString(password),
 	}
-	authResponse := &Response{}
+	authResponse := &protocol.AuthResponse{}
 	err := client.authServerRequest(client.endpoint+"/password", authRequest, authResponse)
 	if err != nil {
 		return nil, err
 	}
 	return authResponse, nil
 }
-func (client *HttpClient) PubKey(
+func (client *HttpAuthClient) PubKey(
 	//Username provided
 	username string,
 	//Serialized key data in SSH wire format
@@ -54,14 +69,14 @@ func (client *HttpClient) PubKey(
 	sessionId []byte,
 	//Remote address in IP:port format
 	remoteAddr string,
-) (*Response, error) {
-	authRequest := PublicKeyRequest{
+) (*protocol.AuthResponse, error) {
+	authRequest := protocol.PublicKeyAuthRequest{
 		User:          username,
 		RemoteAddress: remoteAddr,
 		SessionId:     base64.StdEncoding.EncodeToString(sessionId),
 		PublicKey:     base64.StdEncoding.EncodeToString(pubKey),
 	}
-	authResponse := &Response{}
+	authResponse := &protocol.AuthResponse{}
 	err := client.authServerRequest(client.endpoint+"/pubkey", authRequest, authResponse)
 	if err != nil {
 		return nil, err
@@ -69,9 +84,13 @@ func (client *HttpClient) PubKey(
 	return authResponse, nil
 }
 
-func (client *HttpClient) authServerRequest(endpoint string, requestObject interface{}, response interface{}) error {
+func (client *HttpAuthClient) authServerRequest(endpoint string, requestObject interface{}, response interface{}) error {
 	buffer := &bytes.Buffer{}
-	json.NewEncoder(buffer).Encode(requestObject)
+	err := json.NewEncoder(buffer).Encode(requestObject)
+	if err != nil {
+		//This is a bug
+		return err
+	}
 	req, err := http.NewRequest(http.MethodGet, endpoint, buffer)
 	if err != nil {
 		return err
