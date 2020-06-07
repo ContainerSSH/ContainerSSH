@@ -4,11 +4,32 @@ import (
 	"containerssh/backend"
 	"containerssh/config"
 	"context"
+	"crypto/tls"
+	"crypto/x509"
 	"github.com/docker/docker/client"
+	"net/http"
 )
 
 func createSession(sessionId string, username string, appConfig *config.AppConfig) (backend.Session, error) {
-	cli, err := client.NewClient("tcp://127.0.0.1:2375", "", nil, make(map[string]string))
+	var httpClient *http.Client = nil
+	if appConfig.DockerRun.CaCert != "" && appConfig.DockerRun.Key != "" && appConfig.DockerRun.Cert != "" {
+		tlsConfig := &tls.Config{}
+		caCertPool := x509.NewCertPool()
+		caCertPool.AppendCertsFromPEM([]byte(appConfig.DockerRun.CaCert))
+		tlsConfig.RootCAs = caCertPool
+
+		keyPair, err := tls.X509KeyPair([]byte(appConfig.DockerRun.Cert), []byte(appConfig.DockerRun.Key))
+		if err != nil {
+			return nil, err
+		}
+		tlsConfig.Certificates = []tls.Certificate{keyPair}
+		transport := &http.Transport{TLSClientConfig: tlsConfig}
+		httpClient = &http.Client{
+			Transport: transport,
+		}
+	}
+
+	cli, err := client.NewClient(appConfig.DockerRun.Host, "", httpClient, make(map[string]string))
 	if err != nil {
 		return nil, err
 	}

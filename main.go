@@ -117,7 +117,7 @@ func main() {
 		if err != nil {
 			log.Fatal(err)
 		}
-		appConfig, err = util.Merge(appConfig, fileAppConfig)
+		appConfig, err = util.Merge(fileAppConfig, appConfig)
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -192,7 +192,7 @@ func handleChannel(conn *ssh.ServerConn, newChannel ssh.NewChannel, appConfig *c
 			_ = newChannel.Reject(ssh.ResourceShortage, fmt.Sprintf("internal error while calling the config server: %s", err))
 			return
 		}
-		actualConfig, err = util.Merge(appConfig, &configResponse.Config)
+		actualConfig, err = util.Merge(&configResponse.Config, appConfig)
 		if err != nil {
 			log.Print(err)
 			_ = newChannel.Reject(ssh.ResourceShortage, fmt.Sprintf("failed to merge config: %s", err))
