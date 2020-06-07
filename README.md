@@ -3,6 +3,11 @@
 This is a Proof of Concept SSH server written in Go that sends any shell directly into a Docker container instead
 of launching it on a local machine. It uses an HTTP microservice as an authentication endpoint for SSH connections.
 
+## What is this?
+
+This is an **SSH server that launches containers for every incoming connection**. You can run it on the host or in a
+container. It needs two things: an authentication server and access to your container environment (e.g. Docker).
+
 ## Quick start
 
 This is a quick start guide to get a test server up and running in less than 5 minutes with
@@ -12,9 +17,21 @@ To run it grab all files from the [example](example/) directory and run `docker-
 `docker-compose up` in that directory. This will run the SSH server on your local machine on port 2222. You can log in
 with any password using the user "foo" to get an Ubuntu image and "busybox" to get a Busybox image. 
 
+## Installing
+
+You can run containerssh directly in containers by using the
+[janoszen/containerssh](https://hub.docker.com/repository/docker/janoszen/containerssh) image name. Check the
+[docker-compose.yaml example](example/docker-compose.yaml) for details how to set it up.
+
+### Can I install it without containers?
+
+Yes, but for now you will have to build it yourself. Once it hits the first stable release binary releases will be
+provided.
+
 ## Building
 
-The project can be built using `make build` or `make build-docker`.
+The project can be built using `make build` or `make build-docker`. Alternatively, you can make use of the
+[Dockerfile](Dockerfile).
 
 ## Configuring
 
