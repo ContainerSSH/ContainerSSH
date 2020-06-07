@@ -37,7 +37,7 @@ You can run the containerssh server using the following command line:
 
 ## Implementing an authentication server
 
-Containerssh does not know your users and their passwords. Therefore it calls out to a microservice that you have to
+Containerssh does not know your users and their passwords. Therefore, it calls out to a microservice that you have to
 provide so it can verify the users, passwords and SSH keys. You will have to provide the microservice URL in the
 configuration.
 
@@ -157,7 +157,7 @@ dockerrun:
 ### Detailed configuration
 
 The full configuration at the time of writing are as described below. Keep in mind that the configuration structure
-may change over time as it follows the
+may change over time as they follow the
 [Docker API](https://docs.docker.com/engine/api/v1.40/#operation/ContainerCreate).
 
 ```yaml
