@@ -1,4 +1,6 @@
 # An SSH server that launches containers
+[![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2Fjanoszen%2Fcontainerssh.svg?type=shield)](https://app.fossa.com/projects/git%2Bgithub.com%2Fjanoszen%2Fcontainerssh?ref=badge_shield)
+
 
 This is a Proof of Concept SSH server written in Go that sends any shell directly into a Docker container instead
 of launching it on a local machine. It uses an HTTP microservice as an authentication endpoint for SSH connections.
@@ -328,3 +330,7 @@ dockerrun:
             endpointsconfig: {}
         containername: ""
 ```
+
+
+## License
+[![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2Fjanoszen%2Fcontainerssh.svg?type=large)](https://app.fossa.com/projects/git%2Bgithub.com%2Fjanoszen%2Fcontainerssh?ref=badge_large)
