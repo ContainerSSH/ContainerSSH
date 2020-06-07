@@ -3,6 +3,15 @@
 This is a Proof of Concept SSH server written in Go that sends any shell directly into a Docker container instead
 of launching it on a local machine. It uses an HTTP microservice as an authentication endpoint for SSH connections.
 
+## Quick start
+
+This is a quick start guide to get a test server up and running in less than 5 minutes with
+[docker-compose](https://docs.docker.com/compose/).
+
+To run it grab all files from the [example](example/) directory and run `docker-compose build` followed by 
+`docker-compose up` in that directory. This will run the SSH server on your local machine on port 2222. You can log in
+with any password using the user "foo" to get an Ubuntu image and "busybox" to get a Busybox image. 
+
 ## Building
 
 The project can be built using `make build` or `make build-docker`.
@@ -73,6 +82,9 @@ Both endpoints need to respond with the following JSON:
   "success": true
 }
 ```
+
+> **Tip** You can find the source code for a test authentication and configuration server written in Go
+> [in this repository](cmd/testAuthConfigServer/main.go)
 
 ## Backend selection
 

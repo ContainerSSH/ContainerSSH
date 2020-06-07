@@ -16,7 +16,8 @@ test:
 	go test -timeout 30s -covermode=atomic -coverprofile=cover.out ./...
 
 build: fmtcheck vet test
-	go build -o build/containerssh main.go
+	go build -o build/containerssh cmd/containerssh/main.go
+	go build -o build/testAuthConfigServer cmd/testAuthConfigServer/main.go
 
 build-docker:
 	@#USER_NS='-u $(shell id -u $(whoami)):$(shell id -g $(whoami))'

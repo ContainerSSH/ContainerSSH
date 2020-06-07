@@ -1,5 +1,2 @@
-ssh_host_rsa_key
-config.yaml
-
 build/
 cover.out
