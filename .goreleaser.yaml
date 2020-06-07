@@ -1,5 +1,5 @@
 builds:
-  - main: main.go
+  - main: cmd/containerssh/main.go
     binary: "containerssh"
     goos:
       - darwin
