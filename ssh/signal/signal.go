@@ -10,7 +10,7 @@ type requestMsg struct {
 	signal string
 }
 
-func onSignalRequest(request *requestMsg, channel ssh.Channel, session backend.Session) error {
+func onSignalRequest(request *requestMsg, session backend.Session) error {
 	//todo should the list of signals allowed be filtered?
 	return session.SendSignal("SIG" + request.signal)
 }
@@ -18,7 +18,7 @@ func onSignalRequest(request *requestMsg, channel ssh.Channel, session backend.S
 var RequestTypeHandler = request.TypeHandler{
 	GetRequestObject: func() interface{} { return &requestMsg{} },
 	HandleRequest: func(request interface{}, reply request.Reply, channel ssh.Channel, session backend.Session) {
-		err := onSignalRequest(request.(*requestMsg), channel, session)
+		err := onSignalRequest(request.(*requestMsg), session)
 		if err != nil {
 			reply(false, nil)
 		} else {

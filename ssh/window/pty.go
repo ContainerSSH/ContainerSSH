@@ -13,14 +13,14 @@ type requestMsg struct {
 	Height  uint32
 }
 
-func onWindowChange(request *requestMsg, channel ssh.Channel, session backend.Session) error {
+func onWindowChange(request *requestMsg, session backend.Session) error {
 	return session.Resize(uint(request.Columns), uint(request.Rows))
 }
 
 var RequestTypeHandler = request.TypeHandler{
 	GetRequestObject: func() interface{} { return &requestMsg{} },
 	HandleRequest: func(request interface{}, reply request.Reply, channel ssh.Channel, session backend.Session) {
-		err := onWindowChange(request.(*requestMsg), channel, session)
+		err := onWindowChange(request.(*requestMsg), session)
 		if err != nil {
 			reply(false, nil)
 		} else {

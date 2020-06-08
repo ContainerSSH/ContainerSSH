@@ -11,14 +11,14 @@ type requestMsg struct {
 	Value string
 }
 
-func onSetEnvRequest(request *requestMsg, channel ssh.Channel, session backend.Session) error {
+func onSetEnvRequest(request *requestMsg, session backend.Session) error {
 	return session.SetEnv(request.Name, request.Value)
 }
 
 var RequestTypeHandler = request.TypeHandler{
 	GetRequestObject: func() interface{} { return &requestMsg{} },
 	HandleRequest: func(request interface{}, reply request.Reply, channel ssh.Channel, session backend.Session) {
-		err := onSetEnvRequest(request.(*requestMsg), channel, session)
+		err := onSetEnvRequest(request.(*requestMsg), session)
 		if err != nil {
 			reply(false, nil)
 		} else {

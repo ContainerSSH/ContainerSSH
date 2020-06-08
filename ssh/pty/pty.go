@@ -15,7 +15,7 @@ type requestMsg struct {
 	Modelist string
 }
 
-func onPtyRequest(request *requestMsg, channel ssh.Channel, session backend.Session) error {
+func onPtyRequest(request *requestMsg, session backend.Session) error {
 	err := session.SetPty()
 	if err != nil {
 		return err
@@ -26,7 +26,7 @@ func onPtyRequest(request *requestMsg, channel ssh.Channel, session backend.Sess
 var RequestTypeHandler = request.TypeHandler{
 	GetRequestObject: func() interface{} { return &requestMsg{} },
 	HandleRequest: func(request interface{}, reply request.Reply, channel ssh.Channel, session backend.Session) {
-		err := onPtyRequest(request.(*requestMsg), channel, session)
+		err := onPtyRequest(request.(*requestMsg), session)
 		if err != nil {
 			reply(false, nil)
 		} else {
