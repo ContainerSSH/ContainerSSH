@@ -1,12 +1,12 @@
 package dockerrun
 
 import (
-	"containerssh/backend"
-	"containerssh/config"
 	"context"
 	"crypto/tls"
 	"crypto/x509"
 	"github.com/docker/docker/client"
+	"github.com/janoszen/containerssh/backend"
+	"github.com/janoszen/containerssh/config"
 	"net/http"
 )
 

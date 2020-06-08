@@ -1,6 +1,7 @@
 Dockerfile
 ssh_host_rsa_key
 config.yaml
+docker-compose.yaml
 
 build/
 cover.out

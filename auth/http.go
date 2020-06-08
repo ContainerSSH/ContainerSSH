@@ -2,12 +2,12 @@ package auth
 
 import (
 	"bytes"
-	"containerssh/config"
-	containerhttp "containerssh/http"
-	"containerssh/protocol"
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
+	"github.com/janoszen/containerssh/config"
+	containerhttp "github.com/janoszen/containerssh/http"
+	"github.com/janoszen/containerssh/protocol"
 	"net/http"
 )
 

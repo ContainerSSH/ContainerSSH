@@ -1,8 +1,8 @@
 package pty
 
 import (
-	"containerssh/backend"
-	"containerssh/ssh/request"
+	"github.com/janoszen/containerssh/backend"
+	"github.com/janoszen/containerssh/ssh/request"
 	"golang.org/x/crypto/ssh"
 )
 

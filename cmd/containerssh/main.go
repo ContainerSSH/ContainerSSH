@@ -1,19 +1,19 @@
 package main
 
 import (
-	"containerssh/auth"
-	"containerssh/backend"
-	"containerssh/backend/dockerrun"
-	"containerssh/config"
-	configurationClient "containerssh/config/client"
-	"containerssh/config/loader"
-	"containerssh/config/util"
-	"containerssh/protocol"
-	containerssh "containerssh/ssh"
 	"encoding/base64"
 	"errors"
 	"flag"
 	"fmt"
+	"github.com/janoszen/containerssh/auth"
+	"github.com/janoszen/containerssh/backend"
+	"github.com/janoszen/containerssh/backend/dockerrun"
+	"github.com/janoszen/containerssh/config"
+	configurationClient "github.com/janoszen/containerssh/config/client"
+	"github.com/janoszen/containerssh/config/loader"
+	"github.com/janoszen/containerssh/config/util"
+	"github.com/janoszen/containerssh/protocol"
+	containerssh "github.com/janoszen/containerssh/ssh"
 	"golang.org/x/crypto/ssh"
 	"io/ioutil"
 	"log"
@@ -72,6 +72,9 @@ func getSshConfig(appConfig *config.AppConfig, authClient auth.Client) (*ssh.Ser
 
 	for _, hostKeyFile := range appConfig.Ssh.HostKeys {
 		hostKeyData, err := ioutil.ReadFile(hostKeyFile)
+		if err != nil {
+			return nil, err
+		}
 		signer, err := ssh.ParsePrivateKey(hostKeyData)
 		if err != nil {
 			return nil, err
@@ -138,6 +141,9 @@ func main() {
 	}
 
 	configClient, err := configurationClient.NewHttpConfigClient(appConfig.ConfigServer)
+	if err != nil {
+		log.Fatal(err)
+	}
 
 	sshConfig, err := getSshConfig(appConfig, authClient)
 	if err != nil {

@@ -1,6 +1,6 @@
 package auth
 
-import "containerssh/protocol"
+import "github.com/janoszen/containerssh/protocol"
 
 type Client interface {
 	Password(

@@ -1,6 +1,6 @@
 package protocol
 
-import "containerssh/config"
+import "github.com/janoszen/containerssh/config"
 
 type ConfigRequest struct {
 	Username  string `json:"username"`

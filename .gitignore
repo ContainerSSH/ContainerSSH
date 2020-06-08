@@ -1,2 +1,4 @@
 build/
 cover.out
+/config.yaml
+/ssh_host_rsa_key

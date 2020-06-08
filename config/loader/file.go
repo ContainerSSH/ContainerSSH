@@ -1,9 +1,9 @@
 package loader
 
 import (
-	"containerssh/config"
 	"encoding/json"
 	"fmt"
+	"github.com/janoszen/containerssh/config"
 	"gopkg.in/yaml.v3"
 	"io"
 	"io/ioutil"

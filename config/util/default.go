@@ -1,8 +1,8 @@
 package util
 
 import (
-	"containerssh/config"
 	"github.com/creasty/defaults"
+	"github.com/janoszen/containerssh/config"
 )
 
 func GetDefaultConfig() (*config.AppConfig, error) {

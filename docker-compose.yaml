@@ -1,0 +1,23 @@
+---
+version: '3.2'
+services:
+  containerssh:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - 127.0.0.1:2222:2222
+    volumes:
+    - type: bind
+      source: ./example/config.yaml
+      target: /etc/containerssh/config.yaml
+    - type: bind
+      source: ./example/ssh_host_rsa_key
+      target: /var/secrets/ssh_host_rsa_key
+    - type: bind
+      source: /var/run/docker.sock
+      target: /var/run/docker.sock
+  authconfig:
+    build:
+      context: .
+      dockerfile: Dockerfile.testAuthConfig

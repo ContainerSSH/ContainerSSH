@@ -1,8 +1,8 @@
 package request
 
 import (
-	"containerssh/backend"
 	"fmt"
+	"github.com/janoszen/containerssh/backend"
 	"golang.org/x/crypto/ssh"
 	"log"
 )

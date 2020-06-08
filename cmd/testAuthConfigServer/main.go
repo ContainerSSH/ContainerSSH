@@ -1,9 +1,9 @@
 package main
 
 import (
-	"containerssh/config/util"
-	"containerssh/protocol"
 	"encoding/json"
+	"github.com/janoszen/containerssh/config/util"
+	"github.com/janoszen/containerssh/protocol"
 	"log"
 	"net/http"
 )

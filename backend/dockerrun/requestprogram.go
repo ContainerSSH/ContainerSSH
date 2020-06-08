@@ -1,10 +1,10 @@
 package dockerrun
 
 import (
-	"containerssh/backend"
 	"fmt"
 	"github.com/docker/distribution/reference"
 	"github.com/docker/docker/api/types"
+	"github.com/janoszen/containerssh/backend"
 	"github.com/mattn/go-shellwords"
 	"io/ioutil"
 	"strings"

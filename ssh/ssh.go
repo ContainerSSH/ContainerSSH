@@ -1,12 +1,12 @@
 package ssh
 
 import (
-	"containerssh/ssh/env"
-	"containerssh/ssh/pty"
-	"containerssh/ssh/request"
-	"containerssh/ssh/run"
-	"containerssh/ssh/signal"
-	"containerssh/ssh/window"
+	"github.com/janoszen/containerssh/ssh/env"
+	"github.com/janoszen/containerssh/ssh/pty"
+	"github.com/janoszen/containerssh/ssh/request"
+	"github.com/janoszen/containerssh/ssh/run"
+	"github.com/janoszen/containerssh/ssh/signal"
+	"github.com/janoszen/containerssh/ssh/window"
 )
 
 func InitRequestHandlers() request.Handler {

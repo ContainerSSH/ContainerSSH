@@ -1,7 +1,7 @@
 package run
 
 import (
-	"containerssh/backend"
+	"github.com/janoszen/containerssh/backend"
 	"golang.org/x/crypto/ssh"
 	"io"
 	"log"

@@ -1,8 +1,8 @@
 package backend
 
 import (
-	"containerssh/config"
 	"fmt"
+	"github.com/janoszen/containerssh/config"
 	"io"
 )
 

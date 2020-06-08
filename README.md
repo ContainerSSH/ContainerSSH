@@ -1,5 +1,12 @@
 # An SSH server that launches containers
 
+[![GitHub Workflow Status](https://img.shields.io/github/workflow/status/janoszen/containerssh/goreleaser)](https://github.com/janoszen/containerssh/actions)
+[![Docker Cloud Build Status](https://img.shields.io/docker/cloud/build/janoszen/containerssh)](https://hub.docker.com/r/janoszen/containerssh/builds)
+[![Docker Image Size (latest by date)](https://img.shields.io/docker/image-size/janoszen/containerssh)](http://hub.docker.com/r/janoszen/containerssh)
+[![Go Report Card](https://goreportcard.com/badge/github.com/janoszen/containerssh)](https://goreportcard.com/report/github.com/janoszen/containerssh)
+[![LGTM Alerts](https://img.shields.io/lgtm/alerts/github/janoszen/containerssh)](https://lgtm.com/projects/g/janoszen/containerssh/)
+[![GitHub](https://img.shields.io/github/license/janoszen/containerssh)](LICENSE.md)
+
 This is a Proof of Concept SSH server written in Go that sends any shell directly into a Docker container instead
 of launching it on a local machine. It uses an HTTP microservice as an authentication endpoint for SSH connections.
 

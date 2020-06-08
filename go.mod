@@ -1,4 +1,4 @@
-module containerssh
+module github.com/janoszen/containerssh
 
 go 1.14
 

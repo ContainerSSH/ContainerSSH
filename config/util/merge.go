@@ -1,8 +1,8 @@
 package util
 
 import (
-	"containerssh/config"
 	"github.com/imdario/mergo"
+	"github.com/janoszen/containerssh/config"
 	"github.com/jinzhu/copier"
 )
 
