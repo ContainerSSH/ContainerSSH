@@ -8,24 +8,24 @@ assignees: janoszen
 ---
 
 <details>
-<summary>Describe the bug</summary>
+<summary><h2>Describe the bug</h2></summary>
 A clear and concise description of what the bug is.
 </details>
 
 <details>
-<summary>To Reproduce</summary>
+<summary><h2>To Reproduce</h2></summary>
 1. Run containerssh with these parameters
 2. Do something else...
 3. ...
 </details>
 
 <details>
-<summary>Expected behavior</summary>
+<summary><h2>Expected behavior</h2></summary>
 A clear and concise description of what you expected to happen.
 </details>
 
 <details>
-<summary>Version</summary>
+<summary><h2>Version</h2></summary>
 Please insert the output of `go version` here:
 ```
 $ go version
