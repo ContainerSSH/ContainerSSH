@@ -10,4 +10,5 @@ COPY --from=build /go/src/github.com/janoszen/containerssh/build/testAuthConfigS
 CMD ["/testAuthConfigServer"]
 VOLUME /etc/containerssh
 VOLUME /var/secrets
+USER 1080:1080
 EXPOSE 2222
