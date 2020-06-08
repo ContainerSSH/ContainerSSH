@@ -1,4 +1,4 @@
-# An SSH server that launches containers
+# ContainerSSH: An SSH server that launches containers
 
 [![GitHub Workflow Status](https://img.shields.io/github/workflow/status/janoszen/containerssh/goreleaser)](https://github.com/janoszen/containerssh/actions)
 [![Docker Cloud Build Status](https://img.shields.io/docker/cloud/build/janoszen/containerssh)](https://hub.docker.com/r/janoszen/containerssh/builds)
@@ -41,9 +41,9 @@ with any password using the user "foo" to get an Ubuntu image and "busybox" to g
 ```
 
 1. The user opens an SSH connection to containerssh.
-2. Containerssh calls the authentication server with the users username and password/pubkey to check if its valid.
-3. Containerssh calls the config server to obtain backend location and configuration (if configured)
-4. Containerssh calls the container backend (currently only Docker is supported) to launch the container with the
+2. ContainerSSH calls the authentication server with the users username and password/pubkey to check if its valid.
+3. ContainerSSH calls the config server to obtain backend location and configuration (if configured)
+4. ContainerSSH calls the container backend (currently only Docker is supported) to launch the container with the
    specified configuration. All input from the user is sent directly to the backend, output from the container is sent
    to the user.
 
@@ -93,7 +93,7 @@ You can run the containerssh server using the following command line:
 
 ## Implementing an authentication server
 
-Containerssh does not know your users and their passwords. Therefore, it calls out to a microservice that you have to
+ContainerSSH does not know your users and their passwords. Therefore, it calls out to a microservice that you have to
 provide so it can verify the users, passwords and SSH keys. You will have to provide the microservice URL in the
 configuration.
 
@@ -135,7 +135,7 @@ Both endpoints need to respond with the following JSON:
 
 ## Backend selection
 
-Containerssh is built to support multiple backends. At this time only `dockerrun` is implemented, which is described
+ContainerSSH is built to support multiple backends. At this time only `dockerrun` is implemented, which is described
 below. The backend can be changed in the configuration file:
 
 ```yaml
