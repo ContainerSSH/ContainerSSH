@@ -46,8 +46,6 @@ with any password using the user "foo" to get an Ubuntu image and "busybox" to g
 4. ContainerSSH calls the container backend (currently only Docker is supported) to launch the container with the
    specified configuration. All input from the user is sent directly to the backend, output from the container is sent
    to the user.
-   
-![Animation: first an SSH client is started. This launches a container. Then a second SSH is started which launches a second container and so on.](https://pasztor.at/assets/img/ssh-docker-anim.gif)
 
 ## Installing
 
