@@ -7,9 +7,6 @@ import (
 )
 
 type ShellOrSubsystem struct {
-	Stdin  io.Writer
-	Stdout io.Reader
-	Stderr io.Reader
 }
 
 type Session interface {
@@ -18,12 +15,15 @@ type Session interface {
 	SetEnv(name string, value string) error
 	//Resize the application to fit the new window size.
 	Resize(cols uint, rows uint) error
-	//Request that a pseudoterminal be allocated when RequestProgram or RequestSubsystem are called.
+	//Request that a pseudo terminal be allocated when RequestProgram or RequestSubsystem are called.
 	SetPty() error
 	//Request a shell. If a PTY has been requested before this command will start with a PTY. It will return a construct
 	//with stdin, stdout and stderr. It is the callers responsibility to watch for the end of these streams and call
 	//Close afterwards
-	RequestProgram(program string) (*ShellOrSubsystem, error)
+	RequestProgram(program string, stdin io.Reader, stdOut io.Writer, stdErr io.Writer, done func()) error
+	//Request the execution of a subsystem. It works similar to RequestProgram, except that it takes a
+	//subsystem name instead of a program.
+	RequestSubsystem(subsystem string, stdin io.Reader, stdOut io.Writer, stdErr io.Writer, done func()) error
 	//Request the exit code of the program. Less than zero means that no exit code is available yet.
 	GetExitCode() int32
 	//Clean up the shell

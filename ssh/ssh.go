@@ -6,6 +6,7 @@ import (
 	"github.com/janoszen/containerssh/ssh/request"
 	"github.com/janoszen/containerssh/ssh/run"
 	"github.com/janoszen/containerssh/ssh/signal"
+	"github.com/janoszen/containerssh/ssh/subsystem"
 	"github.com/janoszen/containerssh/ssh/window"
 )
 
@@ -15,6 +16,7 @@ func InitRequestHandlers() request.Handler {
 	handler.AddTypeHandler("pty-req", pty.RequestTypeHandler)
 	handler.AddTypeHandler("shell", run.ShellRequestTypeHandler)
 	handler.AddTypeHandler("exec", run.ExecRequestTypeHandler)
+	handler.AddTypeHandler("subsystem", subsystem.RequestTypeHandler)
 	handler.AddTypeHandler("window-change", window.RequestTypeHandler)
 	handler.AddTypeHandler("signal", signal.RequestTypeHandler)
 	return handler

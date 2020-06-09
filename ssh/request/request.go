@@ -50,9 +50,11 @@ func (handler *Handler) dispatchRequest(
 	if err != nil {
 		log.Println(err)
 		reply(false, nil)
+	} else if typeHandler == nil {
+		reply(false, nil)
+	} else {
+		typeHandler.HandleRequest(payload, reply, channel, session)
 	}
-	//noinspection GoNilness
-	typeHandler.HandleRequest(payload, reply, channel, session)
 }
 
 func (handler *Handler) AddTypeHandler(requestType string, typeHandler TypeHandler) {

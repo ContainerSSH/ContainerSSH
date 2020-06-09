@@ -18,4 +18,5 @@ type DockerRunContainerConfig struct {
 	HostConfig      container.HostConfig     `json:"host" yaml:"host" comment:"Host configuration"`
 	NetworkConfig   network.NetworkingConfig `json:"network" yaml:"network" comment:"Network configuration"`
 	ContainerName   string                   `json:"containername" yaml:"containername" comment:"Name for the container to be launched"`
+	Subsystems      map[string]string        `json:"subsystems" yaml:"subsystems" comment:"Subsystem names and binaries map." default:"{\"sftp\":\"/usr/lib/openssh/sftp-server\"}"`
 }

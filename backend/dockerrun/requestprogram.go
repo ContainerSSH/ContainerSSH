@@ -4,15 +4,17 @@ import (
 	"fmt"
 	"github.com/docker/distribution/reference"
 	"github.com/docker/docker/api/types"
-	"github.com/janoszen/containerssh/backend"
+	"github.com/docker/docker/pkg/stdcopy"
 	"github.com/mattn/go-shellwords"
+	"io"
 	"io/ioutil"
 	"strings"
+	"sync"
 )
 
-func (session *dockerRunSession) RequestProgram(program string) (*backend.ShellOrSubsystem, error) {
+func (session *dockerRunSession) RequestProgram(program string, stdIn io.Reader, stdOut io.Writer, stdErr io.Writer, done func()) error {
 	if session.containerId != "" {
-		return nil, fmt.Errorf("cannot change request shell after the container has started")
+		return fmt.Errorf("cannot change request program after the container has started")
 	}
 
 	config := session.config
@@ -27,21 +29,21 @@ func (session *dockerRunSession) RequestProgram(program string) (*backend.ShellO
 				image = "docker.io/" + image
 			}
 		} else {
-			return nil, err
+			return err
 		}
 	}
 
 	pullReader, err := session.client.ImagePull(session.ctx, image, types.ImagePullOptions{})
 	if err != nil {
-		return nil, err
+		return err
 	}
 	_, err = ioutil.ReadAll(pullReader)
 	if err != nil {
-		return nil, err
+		return err
 	}
 	err = pullReader.Close()
 	if err != nil {
-		return nil, err
+		return err
 	}
 
 	config.Config.ContainerConfig.AttachStdin = true
@@ -71,7 +73,7 @@ func (session *dockerRunSession) RequestProgram(program string) (*backend.ShellO
 		config.Config.ContainerName,
 	)
 	if err != nil {
-		return nil, err
+		return err
 	}
 	session.containerId = body.ID
 	attachOptions := types.ContainerAttachOptions{
@@ -83,19 +85,32 @@ func (session *dockerRunSession) RequestProgram(program string) (*backend.ShellO
 	}
 	attachResult, err := session.client.ContainerAttach(session.ctx, session.containerId, attachOptions)
 	if err != nil {
-		return nil, err
+		return err
 	}
 
 	startOptions := types.ContainerStartOptions{}
 	err = session.client.ContainerStart(session.ctx, session.containerId, startOptions)
 	if err != nil {
-		return nil, err
+		return err
 	}
 
-	return &backend.ShellOrSubsystem{
-		Stdin:  attachResult.Conn,
-		Stdout: attachResult.Reader,
-		//todo stderr handling?
-		Stderr: attachResult.Reader,
-	}, nil
+	var once sync.Once
+	if session.pty {
+		go func() {
+			_, _ = io.Copy(stdOut, attachResult.Reader)
+			once.Do(done)
+		}()
+	} else {
+		go func() {
+			//Demultiplex Docker stream
+			_, _ = stdcopy.StdCopy(stdOut, stdErr, attachResult.Reader)
+			once.Do(done)
+		}()
+	}
+	go func() {
+		_, _ = io.Copy(attachResult.Conn, stdIn)
+		once.Do(done)
+	}()
+
+	return nil
 }

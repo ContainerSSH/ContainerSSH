@@ -3,9 +3,7 @@ package run
 import (
 	"github.com/janoszen/containerssh/backend"
 	"golang.org/x/crypto/ssh"
-	"io"
 	"log"
-	"sync"
 )
 
 type responseMsg struct {
@@ -13,13 +11,6 @@ type responseMsg struct {
 }
 
 func run(program string, channel ssh.Channel, session backend.Session) error {
-	shell, err := session.RequestProgram(program)
-	if err != nil {
-		log.Print(err)
-		return err
-	}
-
-	var once sync.Once
 	closeSession := func() {
 		exitCode := session.GetExitCode()
 		session.Close()
@@ -35,13 +26,10 @@ func run(program string, channel ssh.Channel, session backend.Session) error {
 		//Close the channel as described by the RFC
 		_ = channel.Close()
 	}
-	go func() {
-		_, _ = io.Copy(channel, shell.Stdout)
-		once.Do(closeSession)
-	}()
-	go func() {
-		_, _ = io.Copy(shell.Stdin, channel)
-		once.Do(closeSession)
-	}()
+	err := session.RequestProgram(program, channel, channel, channel.Stderr(), closeSession)
+	if err != nil {
+		log.Print(err)
+		return err
+	}
 	return nil
 }
