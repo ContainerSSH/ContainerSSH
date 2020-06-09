@@ -32,7 +32,7 @@ with any password using the user "foo" to get an Ubuntu image and "busybox" to g
 |      |        |              |        +-------------------+
 |      |        |              |   
 |      |   1.   |              |   3.   +-------------------+
-| User | -----> | containerssh | -----> |   Config server   |
+| User | -----> | ContainerSSH | -----> |   Config server   |
 |      |        |              |        +-------------------+
 |      |        |              |   
 |      |        |              |   4.   +-------------------+
@@ -40,7 +40,7 @@ with any password using the user "foo" to get an Ubuntu image and "busybox" to g
 +------+        +--------------+        +-------------------+
 ```
 
-1. The user opens an SSH connection to containerssh.
+1. The user opens an SSH connection to ContainerSSH.
 2. ContainerSSH calls the authentication server with the users username and password/pubkey to check if its valid.
 3. ContainerSSH calls the config server to obtain backend location and configuration (if configured)
 4. ContainerSSH calls the container backend (currently only Docker is supported) to launch the container with the
@@ -49,7 +49,7 @@ with any password using the user "foo" to get an Ubuntu image and "busybox" to g
 
 ## Installing
 
-You can run containerssh directly in containers by using the
+You can run ContainerSSH directly in containers by using the
 [janoszen/containerssh](https://hub.docker.com/repository/docker/janoszen/containerssh) image name. Check the
 [docker-compose.yaml example](example/docker-compose.yaml) for details how to set it up.
 
@@ -65,7 +65,7 @@ The project can be built using `make build` or `make build-docker`. Alternativel
 
 ## Configuring
 
-Before you can run containerssh you will need to create a configuration file. The minimal configuration file looks like
+Before you can run ContainerSSH you will need to create a configuration file. The minimal configuration file looks like
 this:
 
 ```yaml
@@ -85,7 +85,7 @@ Note that the config file must end in `.yml`, `.yaml`, or `.json`. You can dump 
 
 ## Running
 
-You can run the containerssh server using the following command line:
+You can run the ContainerSSH server using the following command line:
 
 ```
 ./containerssh --config your/config-file.yaml
@@ -97,7 +97,7 @@ ContainerSSH does not know your users and their passwords. Therefore, it calls o
 provide so it can verify the users, passwords and SSH keys. You will have to provide the microservice URL in the
 configuration.
 
-For password authentication containerssh will call out to `http://your-auth-server/password` with the following request
+For password authentication ContainerSSH will call out to `http://your-auth-server/password` with the following request
 body. The password is base64 encoded to transfer special characters properly.
 
 ```json
@@ -109,7 +109,7 @@ body. The password is base64 encoded to transfer special characters properly.
 }
 ```
 
-The public key auth containerssh will call out to `http://your-auth-server/pubkey` in the following format.
+The public key auth ContainerSSH will call out to `http://your-auth-server/pubkey` in the following format.
 
 ```json
 {
