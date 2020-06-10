@@ -15,6 +15,8 @@ of launching it on a local machine. It uses an HTTP microservice as an authentic
 This is an **SSH server that launches containers for every incoming connection**. You can run it on the host or in a
 container. It needs two things: an authentication server and access to your container environment (e.g. Docker).
 
+![Animation: SSH-ing into this SSH server lands you in a container where you can't access the network and you can't see any processes.](https://pasztor.at/assets/img/ssh-in-action.gif)
+
 ## Quick start
 
 This is a quick start guide to get a test server up and running in less than 5 minutes with
