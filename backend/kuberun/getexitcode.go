@@ -13,7 +13,7 @@ func (session *kubeRunSession) GetExitCode() int32 {
 			Pods(session.pod.Namespace).
 			Get(session.ctx, session.pod.Name, v1.GetOptions{})
 		if err != nil {
-			log.Info("Error while fetching exit code (%s)", err)
+			log.Infof("Error while fetching exit code (%s)", err)
 			return session.exitCode
 		}
 		containerStatuses := pod.Status.ContainerStatuses
