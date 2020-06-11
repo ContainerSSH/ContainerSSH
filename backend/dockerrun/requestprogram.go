@@ -52,6 +52,11 @@ func (session *dockerRunSession) RequestProgram(program string, stdIn io.Reader,
 	config.Config.ContainerConfig.OpenStdin = true
 	config.Config.ContainerConfig.StdinOnce = true
 	config.Config.ContainerConfig.Tty = session.pty
+
+	for key, value := range session.env {
+		config.Config.ContainerConfig.Env = append(config.Config.ContainerConfig.Env, fmt.Sprintf("%s=%s", key, value))
+	}
+
 	if program != "" {
 		programParts, err := shellwords.Parse(program)
 		if err != nil {

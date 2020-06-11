@@ -6,6 +6,7 @@ import (
 	"github.com/janoszen/containerssh/config"
 	containerhttp "github.com/janoszen/containerssh/http"
 	"github.com/janoszen/containerssh/protocol"
+	"github.com/sirupsen/logrus"
 	"net/http"
 )
 
@@ -36,6 +37,7 @@ func NewHttpConfigClient(config config.ConfigServerConfig) (ConfigClient, error)
 }
 
 func (client *HttpConfigClient) GetConfig(request protocol.ConfigRequest) (*protocol.ConfigResponse, error) {
+	logrus.Tracef("Fetching configuration for connection for user %s", request.Username)
 	response := protocol.ConfigResponse{}
 	err := client.configServerRequest(request, &response)
 	if err != nil {

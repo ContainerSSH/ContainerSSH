@@ -6,7 +6,7 @@ import (
 )
 
 type DockerRunConfig struct {
-	Host   string                   `json:"host" yaml:"host" comment:"Docker connect URL" default:"tcp://127.0.0.1:2375"`
+	Host   string                   `json:"host" yaml:"host" comment:"Docker connect URL" default:"unix:///var/run/docker.sock"`
 	CaCert string                   `json:"cacert" yaml:"cacert" comment:"CA certificate for Docker connection embedded in the configuration in PEM format."`
 	Cert   string                   `json:"cert" yaml:"cert" comment:"Client certificate in PEM format embedded in the configuration."`
 	Key    string                   `json:"key" yaml:"key" comment:"Client key in PEM format embedded in the configuration."`

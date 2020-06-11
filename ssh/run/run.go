@@ -2,8 +2,9 @@ package run
 
 import (
 	"github.com/janoszen/containerssh/backend"
+	log "github.com/sirupsen/logrus"
 	"golang.org/x/crypto/ssh"
-	"log"
+	"sync"
 )
 
 type responseMsg struct {
@@ -11,9 +12,12 @@ type responseMsg struct {
 }
 
 func run(program string, channel ssh.Channel, session backend.Session) error {
+	var mutex = &sync.Mutex{}
 	closeSession := func() {
-		exitCode := session.GetExitCode()
+		mutex.Lock()
 		session.Close()
+		exitCode := session.GetExitCode()
+		mutex.Unlock()
 
 		if exitCode < 0 {
 			log.Printf("invalid exit code (%d)", exitCode)
@@ -28,7 +32,6 @@ func run(program string, channel ssh.Channel, session backend.Session) error {
 	}
 	err := session.RequestProgram(program, channel, channel, channel.Stderr(), closeSession)
 	if err != nil {
-		log.Print(err)
 		return err
 	}
 	return nil

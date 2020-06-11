@@ -3,8 +3,8 @@ package request
 import (
 	"fmt"
 	"github.com/janoszen/containerssh/backend"
+	log "github.com/sirupsen/logrus"
 	"golang.org/x/crypto/ssh"
-	"log"
 )
 
 type Reply func(success bool, message interface{})

@@ -15,7 +15,7 @@ vet:
 test:
 	go test -timeout 30s -covermode=atomic -coverprofile=cover.out ./...
 
-build: fmtcheck vet test
+build: fmtcheck vet test.go
 	go build -o build/containerssh cmd/containerssh/main.go
 	go build -o build/testAuthConfigServer cmd/testAuthConfigServer/main.go
 

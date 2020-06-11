@@ -1,10 +1,13 @@
 package subsystem
 
 import (
+	"fmt"
 	"github.com/janoszen/containerssh/backend"
 	"github.com/janoszen/containerssh/ssh/request"
+	"github.com/sirupsen/logrus"
+	log "github.com/sirupsen/logrus"
 	"golang.org/x/crypto/ssh"
-	"log"
+	"sync"
 )
 
 type requestMsg struct {
@@ -16,12 +19,16 @@ type responseMsg struct {
 }
 
 func onSubsystemRequest(request *requestMsg, channel ssh.Channel, session backend.Session) error {
+	logrus.Trace(fmt.Sprintf("Subsystem request: %s", request.Subsystem))
+	var mutex = &sync.Mutex{}
 	closeSession := func() {
-		exitCode := session.GetExitCode()
+		mutex.Lock()
 		session.Close()
+		exitCode := session.GetExitCode()
+		mutex.Unlock()
 
 		if exitCode < 0 {
-			log.Printf("invalid exit code (%d)", exitCode)
+			log.Warnf("invalid exit code (%d)", exitCode)
 		}
 
 		//Send the exit status before closing the session. No reply is sent.
@@ -33,7 +40,6 @@ func onSubsystemRequest(request *requestMsg, channel ssh.Channel, session backen
 	}
 	err := session.RequestSubsystem(request.Subsystem, channel, channel, channel.Stderr(), closeSession)
 	if err != nil {
-		log.Print(err)
 		return err
 	}
 	return nil
@@ -44,6 +50,7 @@ var RequestTypeHandler = request.TypeHandler{
 	HandleRequest: func(request interface{}, reply request.Reply, channel ssh.Channel, session backend.Session) {
 		err := onSubsystemRequest(request.(*requestMsg), channel, session)
 		if err != nil {
+			log.Tracef("Failed subsystem request (%s)", err)
 			reply(false, nil)
 		} else {
 			reply(true, nil)

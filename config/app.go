@@ -7,4 +7,5 @@ type AppConfig struct {
 	Auth         AuthConfig         `json:"auth" yaml:"auth" comment:"Authentication server configuration"`
 	Backend      string             `json:"backend" yaml:"backend" default:"dockerrun" comment:"Backend module to use"`
 	DockerRun    DockerRunConfig    `json:"dockerrun" yaml:"dockerrun" comment:"Docker configuration to use when the Docker run backend is used."`
+	KubeRun      KubeRunConfig      `json:"kuberun" yaml:"kuberun" comment:"Kubernetes configuration to use when the Kubernetes run backend is used."`
 }

@@ -8,6 +8,7 @@ import (
 	"github.com/janoszen/containerssh/config"
 	containerhttp "github.com/janoszen/containerssh/http"
 	"github.com/janoszen/containerssh/protocol"
+	"github.com/sirupsen/logrus"
 	"net/http"
 )
 
@@ -47,6 +48,7 @@ func (client *HttpAuthClient) Password(
 	//Remote address in IP:port format
 	remoteAddr string,
 ) (*protocol.AuthResponse, error) {
+	logrus.Tracef("Authentication user %s with password for connection from %s", username, remoteAddr)
 	authRequest := protocol.PasswordAuthRequest{
 		User:          username,
 		RemoteAddress: remoteAddr,
@@ -56,8 +58,10 @@ func (client *HttpAuthClient) Password(
 	authResponse := &protocol.AuthResponse{}
 	err := client.authServerRequest(client.endpoint+"/password", authRequest, authResponse)
 	if err != nil {
+		logrus.Tracef("Authentication failed (%s)", err)
 		return nil, err
 	}
+	logrus.Tracef("Authentication successful")
 	return authResponse, nil
 }
 func (client *HttpAuthClient) PubKey(
@@ -70,6 +74,7 @@ func (client *HttpAuthClient) PubKey(
 	//Remote address in IP:port format
 	remoteAddr string,
 ) (*protocol.AuthResponse, error) {
+	logrus.Tracef("Authentication user %s with public key for connection from %s", username, remoteAddr)
 	authRequest := protocol.PublicKeyAuthRequest{
 		User:          username,
 		RemoteAddress: remoteAddr,
@@ -79,8 +84,10 @@ func (client *HttpAuthClient) PubKey(
 	authResponse := &protocol.AuthResponse{}
 	err := client.authServerRequest(client.endpoint+"/pubkey", authRequest, authResponse)
 	if err != nil {
+		logrus.Tracef("Authentication failed (%s)", err)
 		return nil, err
 	}
+	logrus.Tracef("Authentication successful")
 	return authResponse, nil
 }
 

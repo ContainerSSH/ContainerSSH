@@ -1,8 +1,10 @@
 package pty
 
 import (
+	"fmt"
 	"github.com/janoszen/containerssh/backend"
 	"github.com/janoszen/containerssh/ssh/request"
+	"github.com/sirupsen/logrus"
 	"golang.org/x/crypto/ssh"
 )
 
@@ -16,6 +18,7 @@ type requestMsg struct {
 }
 
 func onPtyRequest(request *requestMsg, session backend.Session) error {
+	logrus.Trace(fmt.Sprintf("PTY request"))
 	err := session.SetPty()
 	if err != nil {
 		return err
@@ -28,6 +31,7 @@ var RequestTypeHandler = request.TypeHandler{
 	HandleRequest: func(request interface{}, reply request.Reply, channel ssh.Channel, session backend.Session) {
 		err := onPtyRequest(request.(*requestMsg), session)
 		if err != nil {
+			logrus.Tracef("Failed pty request (%s)", err)
 			reply(false, nil)
 		} else {
 			reply(true, nil)

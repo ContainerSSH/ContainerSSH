@@ -4,13 +4,16 @@ import (
 	"context"
 	"crypto/tls"
 	"crypto/x509"
+	"fmt"
 	"github.com/docker/docker/client"
 	"github.com/janoszen/containerssh/backend"
 	"github.com/janoszen/containerssh/config"
+	"github.com/sirupsen/logrus"
 	"net/http"
 )
 
 func createSession(sessionId string, username string, appConfig *config.AppConfig) (backend.Session, error) {
+	logrus.Trace(fmt.Sprintf("Initializing Docker backend"))
 	var httpClient *http.Client = nil
 	if appConfig.DockerRun.CaCert != "" && appConfig.DockerRun.Key != "" && appConfig.DockerRun.Cert != "" {
 		tlsConfig := &tls.Config{}
