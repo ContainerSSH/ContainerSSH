@@ -7,13 +7,14 @@
 [![LGTM Alerts](https://img.shields.io/lgtm/alerts/github/janoszen/containerssh)](https://lgtm.com/projects/g/janoszen/containerssh/)
 [![GitHub](https://img.shields.io/github/license/janoszen/containerssh)](LICENSE.md)
 
-This is a Proof of Concept SSH server written in Go that sends any shell directly into a Docker container instead
-of launching it on a local machine. It uses an HTTP microservice as an authentication endpoint for SSH connections.
+This is a Proof of Concept SSH server written in Go that sends any shell directly into a Docker container or Kubernetes
+pod instead of launching it on a local machine. It uses an HTTP microservice as an authentication endpoint for SSH
+connections.
 
 ## What is this?
 
 This is an **SSH server that launches containers for every incoming connection**. You can run it on the host or in a
-container. It needs two things: an authentication server and access to your container environment (e.g. Docker).
+container. It needs two things: an authentication server and access to your container environment.
 
 ![Animation: SSH-ing into this SSH server lands you in a container where you can't access the network and you can't see any processes.](https://pasztor.at/assets/img/ssh-in-action.gif)
 
@@ -45,7 +46,7 @@ with any password using the user "foo" to get an Ubuntu image and "busybox" to g
 1. The user opens an SSH connection to ContainerSSH.
 2. ContainerSSH calls the authentication server with the users username and password/pubkey to check if its valid.
 3. ContainerSSH calls the config server to obtain backend location and configuration (if configured)
-4. ContainerSSH calls the container backend (currently only Docker is supported) to launch the container with the
+4. ContainerSSH calls the container backend to launch the container with the
    specified configuration. All input from the user is sent directly to the backend, output from the container is sent
    to the user.
    
@@ -178,7 +179,7 @@ You can view the full configuration structure in YAML format by running `./conta
 config server must respond in JSON format.
 
 Some configuration values cannot be overridden from the config server. These are the ones that get used before the
-connection is established, but the Docker provider also overrides a few, such as `attachstdio`.
+connection is established, but the backends also override a few, such as `attachstdio`.
 
 ## The `dockerrun` backend
 
@@ -499,3 +500,56 @@ kuberun:
             sftp: /usr/lib/openssh/sftp-server
     timeout: 1m0s
 ```
+
+## FAQ
+
+### Is ContainerSSH secure?
+
+ContainerSSH depends on a number of libraries to achieve what it does. A security hole in any of the critical ones
+could mean a compromise of your container environment, especially if you are using the `dockerrun` backend. (Docker
+has no access control so a compromise means your whole host is compromised.)
+
+### Is ContainerSSH production-ready?
+
+No. ContainerSSH is very early in its development and has not undergone extensive testing yet. You should be careful
+before deploying it into production.
+
+### Does ContainerSSH delete containers after it is done?
+
+ContainerSSH does its best to delete containers it creates. However, at this time there is no cleanup mechanism in case
+it crashes.
+
+### Do I need to run ContainerSSH as root?
+
+No! In fact, you shouldn't! ContainerSSH is perfectly fine running as non-root as long as it has access to Kubernetes
+or Docker. (Granted, access to the Docker socket means it could easily launch a root process on the host.)
+
+### Can ContainerSSH run exec into existing containers?
+
+Not at this time. The architecture needs to solidify before such a feature is implemented.
+
+### Can ContainerSSH deploy additional services, such as sidecar containers, etc?
+
+ContainerSSH supports the entire Kubernetes pod specification so you can launch as many containers as you want in a
+single pod. The Docker backend, however, does not support sidecar containers.
+
+### Can I add metadata to my pods with the `kuberun` backend?
+
+Not at this time. You may want to open up a feature request and detail your use case.
+
+### Why is the `kuberun` backend so slow?
+
+Kubernetes is built for scale. That means there are some tradeoffs in terms of responsiveness. This is not something
+ContainerSSH can do anything about, it just takes a bit to launch a pod. You may want to fine-tune your Kubernetes 
+cluster for responsiveness.
+
+### Why is there no initial prompt with the `kuberun` backend?
+
+This is a [known bug](https://github.com/janoszen/containerssh/issues/12). Unfortunately the `kuberun` backend was 
+built by reverse engineering kubectl as there is no documentation whatsoever on how the attach functionality works on
+pods. If you are good with Go you might want to help out here.
+
+### Can I use my normal kubeconfig files?
+
+Unfortunately, no. Kubeconfig files are parsed by kubectl and the code is quite elaborate. At this time I don't think
+adding it to ContainerSSH is wise.
