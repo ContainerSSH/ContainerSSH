@@ -27,6 +27,13 @@ To run it grab all files from the [example](example/) directory and run `docker-
 `docker-compose up` in that directory. This will run the SSH server on your local machine on port 2222. You can log in
 with any password using the user "foo" to get an Ubuntu image and "busybox" to get a Busybox image. 
 
+## Use cases
+
+- **Web hosting:** Imagine user A has access to site X and Y, user B has access to site Y and Z. You can use
+  ContainerSSH to mount the appropriate sites for the SSH session.
+- **Practicing environments:** Launch dummy containers for practice environment.
+- **Honeypot:** Let attackers into an enclosed environment and observe them.
+
 ## How does it work?
 
 ```
@@ -436,18 +443,22 @@ kuberun:
         timeout: 0s
     pod:
         namespace: default
+        # If you have multiple containers which container should the SSH session attach to?
         consoleContainerNumber: 0
         podSpec:
             volumes: []
             initcontainers: []
             containers:
+              # The name doesn't matter
               - name: shell
                 image: janoszen/containerssh-image
+                # This may be overridden by the SSH client
                 command: []
                 args: []
                 workingdir: ""
                 ports: []
                 envfrom: []
+                # These will be populated from the SSH session but you can provide additional ones.
                 env: []
                 resources:
                     limits: {}
@@ -462,9 +473,10 @@ kuberun:
                 terminationmessagepolicy: ""
                 imagepullpolicy: ""
                 securitycontext: null
-                stdin: false
-                stdinonce: false
-                tty: false
+                # These 3 will be overridden based on the SSH session
+                #stdin: false
+                #stdinonce: false
+                #tty: false
             ephemeralcontainers: []
             restartpolicy: ""
             terminationgraceperiodseconds: null
@@ -497,6 +509,7 @@ kuberun:
             overhead: {}
             topologyspreadconstraints: []
         subsystems:
+            # This will be used as `command` when the client asks for the SFTP subsystem.
             sftp: /usr/lib/openssh/sftp-server
     timeout: 1m0s
 ```
