@@ -18,9 +18,8 @@ require (
 	github.com/mitchellh/golicense v0.2.0 // indirect
 	github.com/niemeyer/pretty v0.0.0-20200227124842-a10e7caefd8e // indirect
 	github.com/opencontainers/go-digest v1.0.0 // indirect
-	github.com/pkg/errors v0.9.1 // indirect
 	github.com/qdm12/reprint v0.0.0-20200326205758-722754a53494
-	github.com/sirupsen/logrus v1.4.2
+	github.com/sirupsen/logrus v1.6.0
 	github.com/stretchr/testify v1.6.0 // indirect
 	golang.org/x/crypto v0.0.0-20200602180216-279210d13fed
 	golang.org/x/sys v0.0.0-20200602225109-6fdc65e7d980 // indirect
