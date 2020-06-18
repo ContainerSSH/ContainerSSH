@@ -9,9 +9,13 @@ require (
 	github.com/docker/docker v1.13.1
 	github.com/docker/go-connections v0.4.0 // indirect
 	github.com/docker/go-units v0.4.0 // indirect
+	github.com/gobuffalo/envy v1.9.0 // indirect
+	github.com/gohugoio/hugo v0.72.0 // indirect
+	github.com/google/wire v0.4.0 // indirect
 	github.com/imdario/mergo v0.3.9
 	github.com/jinzhu/copier v0.0.0-20190924061706-b57f9002281a
 	github.com/mattn/go-shellwords v1.0.10
+	github.com/mitchellh/golicense v0.2.0 // indirect
 	github.com/niemeyer/pretty v0.0.0-20200227124842-a10e7caefd8e // indirect
 	github.com/opencontainers/go-digest v1.0.0 // indirect
 	github.com/pkg/errors v0.9.1 // indirect

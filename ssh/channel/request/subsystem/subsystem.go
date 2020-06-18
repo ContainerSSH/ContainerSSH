@@ -3,7 +3,7 @@ package subsystem
 import (
 	"fmt"
 	"github.com/janoszen/containerssh/backend"
-	"github.com/janoszen/containerssh/ssh/request"
+	request2 "github.com/janoszen/containerssh/ssh/channel/request"
 	"github.com/sirupsen/logrus"
 	log "github.com/sirupsen/logrus"
 	"golang.org/x/crypto/ssh"
@@ -45,9 +45,9 @@ func onSubsystemRequest(request *requestMsg, channel ssh.Channel, session backen
 	return nil
 }
 
-var RequestTypeHandler = request.TypeHandler{
+var RequestTypeHandler = request2.TypeHandler{
 	GetRequestObject: func() interface{} { return &requestMsg{} },
-	HandleRequest: func(request interface{}, reply request.Reply, channel ssh.Channel, session backend.Session) {
+	HandleRequest: func(request interface{}, reply request2.Reply, channel ssh.Channel, session backend.Session) {
 		err := onSubsystemRequest(request.(*requestMsg), channel, session)
 		if err != nil {
 			log.Tracef("Failed subsystem request (%s)", err)

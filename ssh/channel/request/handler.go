@@ -15,17 +15,17 @@ type TypeHandler struct {
 }
 
 type Handler struct {
-	typeHandlers map[string]TypeHandler
+	ChannelHandlers map[string]TypeHandler
 }
 
 func NewHandler() Handler {
 	return Handler{
-		typeHandlers: map[string]TypeHandler{},
+		ChannelHandlers: map[string]TypeHandler{},
 	}
 }
 
 func (handler *Handler) getTypeHandler(requestType string) (*TypeHandler, error) {
-	if typeHandler, ok := handler.typeHandlers[requestType]; ok {
+	if typeHandler, ok := handler.ChannelHandlers[requestType]; ok {
 		return &typeHandler, nil
 	}
 	return nil, fmt.Errorf("unsupported request type: %s", requestType)
@@ -58,10 +58,10 @@ func (handler *Handler) dispatchRequest(
 }
 
 func (handler *Handler) AddTypeHandler(requestType string, typeHandler TypeHandler) {
-	handler.typeHandlers[requestType] = typeHandler
+	handler.ChannelHandlers[requestType] = typeHandler
 }
 
-func (handler *Handler) OnRequest(
+func (handler *Handler) OnChannelRequest(
 	requestType string,
 	payload []byte,
 	reply func(success bool, message []byte),

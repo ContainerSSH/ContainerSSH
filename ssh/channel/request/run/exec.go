@@ -3,7 +3,7 @@ package run
 import (
 	"fmt"
 	"github.com/janoszen/containerssh/backend"
-	"github.com/janoszen/containerssh/ssh/request"
+	request2 "github.com/janoszen/containerssh/ssh/channel/request"
 	"github.com/sirupsen/logrus"
 	"golang.org/x/crypto/ssh"
 )
@@ -17,9 +17,9 @@ func onExecRequest(request *execRequestMsg, channel ssh.Channel, session backend
 	return run(request.Exec, channel, session)
 }
 
-var ExecRequestTypeHandler = request.TypeHandler{
+var ExecRequestTypeHandler = request2.TypeHandler{
 	GetRequestObject: func() interface{} { return &execRequestMsg{} },
-	HandleRequest: func(request interface{}, reply request.Reply, channel ssh.Channel, session backend.Session) {
+	HandleRequest: func(request interface{}, reply request2.Reply, channel ssh.Channel, session backend.Session) {
 		err := onExecRequest(request.(*execRequestMsg), channel, session)
 		if err != nil {
 			logrus.Tracef("Failed exec request (%s)", err)

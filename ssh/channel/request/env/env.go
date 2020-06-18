@@ -3,7 +3,7 @@ package env
 import (
 	"fmt"
 	"github.com/janoszen/containerssh/backend"
-	"github.com/janoszen/containerssh/ssh/request"
+	channelRequest "github.com/janoszen/containerssh/ssh/channel/request"
 	"github.com/sirupsen/logrus"
 	"golang.org/x/crypto/ssh"
 )
@@ -18,9 +18,9 @@ func onSetEnvRequest(request *requestMsg, session backend.Session) error {
 	return session.SetEnv(request.Name, request.Value)
 }
 
-var RequestTypeHandler = request.TypeHandler{
+var RequestTypeHandler = channelRequest.TypeHandler{
 	GetRequestObject: func() interface{} { return &requestMsg{} },
-	HandleRequest: func(request interface{}, reply request.Reply, channel ssh.Channel, session backend.Session) {
+	HandleRequest: func(request interface{}, reply channelRequest.Reply, channel ssh.Channel, session backend.Session) {
 		err := onSetEnvRequest(request.(*requestMsg), session)
 		if err != nil {
 			logrus.Tracef("Failed env request (%s)", err)

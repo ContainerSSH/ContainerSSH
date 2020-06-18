@@ -1,17 +1,106 @@
 builds:
-  - main: cmd/containerssh/main.go
+  - id: containerssh-linux
+    main: cmd/containerssh/main.go
     binary: "containerssh"
     goos:
-      - darwin
       - linux
+    goarch:
+      - amd64
+    env:
+      - CGO_ENABLED=0
+    hooks:
+      post:
+        - cmd: go run cmd/license-report/main.go golicense.json build/containerssh-linux_linux_amd64/containerssh NOTICE.md
+          dir: "{{ dir .Path }}/../../"
+  - id: containerssh-windows
+    main: cmd/containerssh/main.go
+    binary: "containerssh"
+    goos:
       - windows
     goarch:
       - amd64
     env:
       - CGO_ENABLED=0
-
+  - id: containerssh-darwin
+    main: cmd/containerssh/main.go
+    binary: "containerssh"
+    goos:
+      - darwin
+    goarch:
+      - amd64
+    env:
+      - CGO_ENABLED=0
+  - id: containerssh-testauthconfigserver
+    main: cmd/containerssh-testauthconfigserver/main.go
+    binary: "containerssh-testauthconfigserver"
+    goos:
+      - linux
+      - darwin
+      - windows
+    goarch:
+      - amd64
+    env:
+      - CGO_ENABLED=0
+archives:
+  - builds:
+      - containerssh-linux
+      - containerssh-windows
+      - containerssh-darwin
+    format_overrides:
+      - goos: windows
+        format: zip
+    files:
+      - LICENSE.md
+      - NOTICE.md
+      - config.example.yaml
+dockers:
+  - goos: linux
+    goarch: amd64
+    binaries:
+      - containerssh
+      - containerssh-testauthconfigserver
+    image_templates:
+      - "janoszen/{{.ProjectName}}:latest"
+      - "janoszen/{{.ProjectName}}:{{ .Major }}.{{ .Minor }}"
+      - "janoszen/{{.ProjectName}}:{{ .Tag }}"
+    dockerfile: Dockerfile.goreleaser
+    builds:
+      - containerssh-linux
+      - containerssh-testauthconfigserver
+    extra_files:
+      - LICENSE.md
+      - NOTICE.md
+    build_flag_templates:
+      - "--label=org.opencontainers.image.created={{.Date}}"
+      - "--label=org.opencontainers.image.name={{.ProjectName}}"
+      - "--label=org.opencontainers.image.revision={{.FullCommit}}"
+      - "--label=org.opencontainers.image.version={{.Version}}"
+    skip_push: auto
+nfpms:
+  - vendor: Janos Pasztor
+    homepage: https://pasztor.at
+    maintainer: Janos Pasztor <janos@pasztor.at>
+    description: An SSH server that launches Docker containers and Kubernetes pods
+    license: MIT
+    builds:
+      - containerssh-linux
+      - containerssh-testauthconfigserver
+    formats:
+      - deb
+      - rpm
+    empty_folders:
+      - /etc/containerssh
+    bindir: /usr/sbin
+    suggests:
+      - docker
+    files:
+      LICENSE.md: /usr/share/doc/containerssh/LICENSE.md
+    config_files:
+      config.example.yaml: /etc/containerssh/config.yaml
+source:
+  enabled: true
+  name_template: '{{ .ProjectName }}-{{ .Version }}-source'
 dist: build
-
 release:
   github:
     owner: janoszen

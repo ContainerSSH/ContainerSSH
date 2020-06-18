@@ -3,7 +3,7 @@ package window
 import (
 	"fmt"
 	"github.com/janoszen/containerssh/backend"
-	"github.com/janoszen/containerssh/ssh/request"
+	request2 "github.com/janoszen/containerssh/ssh/channel/request"
 	log "github.com/sirupsen/logrus"
 	"golang.org/x/crypto/ssh"
 )
@@ -20,9 +20,9 @@ func onWindowChange(request *requestMsg, session backend.Session) error {
 	return session.Resize(uint(request.Columns), uint(request.Rows))
 }
 
-var RequestTypeHandler = request.TypeHandler{
+var RequestTypeHandler = request2.TypeHandler{
 	GetRequestObject: func() interface{} { return &requestMsg{} },
-	HandleRequest: func(request interface{}, reply request.Reply, channel ssh.Channel, session backend.Session) {
+	HandleRequest: func(request interface{}, reply request2.Reply, channel ssh.Channel, session backend.Session) {
 		err := onWindowChange(request.(*requestMsg), session)
 		if err != nil {
 			log.Tracef("Failed window change request (%s)", err)
