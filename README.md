@@ -71,8 +71,8 @@ provided.
 
 ## Building
 
-The project can be built using `make build` or `make build-docker`. Alternatively, you can make use of the
-[Dockerfile](Dockerfile).
+The project can be built by running `go build cmd/containerssh/main.go` or using [goreleaser](https://goreleaser.com/)
+by running `goreleaser build --snapshot --rm-dist`.
 
 ## Configuring
 
