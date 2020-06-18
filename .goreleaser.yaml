@@ -1,3 +1,6 @@
+before:
+  hooks:
+    - go install github.com/mitchellh/golicense
 builds:
   - id: containerssh-linux
     main: cmd/containerssh/main.go
