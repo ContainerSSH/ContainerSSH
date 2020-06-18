@@ -1,7 +1,6 @@
 # ContainerSSH: An SSH server that launches containers
 
 [![GitHub Workflow Status](https://img.shields.io/github/workflow/status/janoszen/containerssh/goreleaser)](https://github.com/janoszen/containerssh/actions)
-[![Docker Cloud Build Status](https://img.shields.io/docker/cloud/build/janoszen/containerssh)](https://hub.docker.com/r/janoszen/containerssh/builds)
 [![Docker Image Size (latest by date)](https://img.shields.io/docker/image-size/janoszen/containerssh)](http://hub.docker.com/r/janoszen/containerssh)
 [![Go Report Card](https://goreportcard.com/badge/github.com/janoszen/containerssh)](https://goreportcard.com/report/github.com/janoszen/containerssh)
 [![LGTM Alerts](https://img.shields.io/lgtm/alerts/github/janoszen/containerssh)](https://lgtm.com/projects/g/janoszen/containerssh/)
