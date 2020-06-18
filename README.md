@@ -1,10 +1,11 @@
 # ContainerSSH: An SSH server that launches containers
 
-[![GitHub Workflow Status](https://img.shields.io/github/workflow/status/janoszen/containerssh/goreleaser)](https://github.com/janoszen/containerssh/actions)
-[![Docker Image Size (latest by date)](https://img.shields.io/docker/image-size/janoszen/containerssh)](http://hub.docker.com/r/janoszen/containerssh)
-[![Go Report Card](https://goreportcard.com/badge/github.com/janoszen/containerssh)](https://goreportcard.com/report/github.com/janoszen/containerssh)
-[![LGTM Alerts](https://img.shields.io/lgtm/alerts/github/janoszen/containerssh)](https://lgtm.com/projects/g/janoszen/containerssh/)
-[![GitHub](https://img.shields.io/github/license/janoszen/containerssh)](LICENSE.md)
+[![GitHub Workflow Status](https://img.shields.io/github/workflow/status/janoszen/containerssh/goreleaser?style=for-the-badge)](https://github.com/janoszen/containerssh/actions)
+[![GitHub release (latest SemVer)](https://img.shields.io/github/v/release/janoszen/containerssh?style=for-the-badge)](https://github.com/janoszen/containerssh/releases)
+[![Docker Image Size (latest by date)](https://img.shields.io/docker/image-size/janoszen/containerssh?style=for-the-badge)](http://hub.docker.com/r/janoszen/containerssh)
+[![Go Report Card](https://goreportcard.com/badge/github.com/janoszen/containerssh?style=for-the-badge)](https://goreportcard.com/report/github.com/janoszen/containerssh)
+[![LGTM Alerts](https://img.shields.io/lgtm/alerts/github/janoszen/containerssh?style=for-the-badge)](https://lgtm.com/projects/g/janoszen/containerssh/)
+[![GitHub](https://img.shields.io/github/license/janoszen/containerssh?style=for-the-badge)](LICENSE.md)
 
 This is a Proof of Concept SSH server written in Go that sends any shell directly into a Docker container or Kubernetes
 pod instead of launching it on a local machine. It uses an HTTP microservice as an authentication endpoint for SSH
