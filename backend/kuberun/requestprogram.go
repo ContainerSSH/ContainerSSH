@@ -122,7 +122,7 @@ func (session *kubeRunSession) RequestProgram(program string, stdIn io.Reader, s
 	session.pod = pod
 	container := pod.Spec.Containers[session.config.Pod.ConsoleContainerNumber]
 
-	go session.handlePodConnection(err, pod, container, stdIn, stdOut, stdErr, done)()
+	go session.handlePodConnection(err, pod, container, stdIn, stdOut, stdErr, done)
 	return nil
 }
 
@@ -162,61 +162,59 @@ func (session *kubeRunSession) createPodSpec(program string, config config.KubeR
 	return spec
 }
 
-func (session *kubeRunSession) handlePodConnection(err error, pod *v1.Pod, container v1.Container, stdIn io.Reader, stdOut io.Writer, stdErr io.Writer, done func()) func() {
-	return func() {
-		// This function is running async so that the SSH client can receive an acknowledgement of the requested
-		// shell/exec/subsystem before sending output, otherwise the output will be ignored.
-		// Todo possible race condition? Unlikely as the pod takes time to come up
+func (session *kubeRunSession) handlePodConnection(err error, pod *v1.Pod, container v1.Container, stdIn io.Reader, stdOut io.Writer, stdErr io.Writer, done func()) {
+	// This function is running async so that the SSH client can receive an acknowledgement of the requested
+	// shell/exec/subsystem before sending output, otherwise the output will be ignored.
+	// Todo possible race condition? Unlikely as the pod takes time to come up
 
-		//Wait for pod do come up
-		session.pod, err = session.waitForPodAvailable()
-		if err != nil {
-			logrus.Tracef("Pod failed to come up (%s)", err)
-			session.Close()
-			_ = session.removePod()
-			//todo send error to client
-		}
-
-		req := session.restClient.Post().
-			Namespace(pod.Namespace).
-			Resource("pods").
-			Name(pod.Name).
-			SubResource("attach")
-		req.VersionedParams(&v1.PodAttachOptions{
-			Container: container.Name,
-			Stdin:     true,
-			Stdout:    true,
-			Stderr:    !session.pty,
-			TTY:       session.pty,
-		}, scheme.ParameterCodec)
-
-		logrus.Tracef("POST %s", req.URL())
-		exec, err := remotecommand.NewSPDYExecutor(&session.connectionConfig, "POST", req.URL())
-		if err != nil {
-			logrus.Warnf("Failed to attach to container (%s)", err)
-			session.Close()
-			_ = session.removePod()
-			return
-		}
-
-		logrus.Tracef("Streaming input/output")
-		err = exec.Stream(remotecommand.StreamOptions{
-			Stdin:             stdIn,
-			Stdout:            stdOut,
-			Stderr:            stdErr,
-			Tty:               session.pty,
-			TerminalSizeQueue: &session.terminalSizeQueue,
-		})
-
-		if err != nil {
-			session.handleFinishedPod(pod, container, stdOut)
-		}
+	//Wait for pod do come up
+	session.pod, err = session.waitForPodAvailable()
+	if err != nil {
+		logrus.Tracef("Pod failed to come up (%s)", err)
 		session.Close()
-		done()
+		_ = session.removePod()
+		//todo send error to client
 	}
+
+	req := session.restClient.Post().
+		Namespace(pod.Namespace).
+		Resource("pods").
+		Name(pod.Name).
+		SubResource("attach")
+	req.VersionedParams(&v1.PodAttachOptions{
+		Container: container.Name,
+		Stdin:     true,
+		Stdout:    true,
+		Stderr:    !session.pty,
+		TTY:       session.pty,
+	}, scheme.ParameterCodec)
+
+	logrus.Tracef("POST %s", req.URL())
+	exec, err := remotecommand.NewSPDYExecutor(&session.connectionConfig, "POST", req.URL())
+	if err != nil {
+		logrus.Warnf("Failed to attach to container (%s)", err)
+		session.Close()
+		_ = session.removePod()
+		return
+	}
+
+	logrus.Tracef("Streaming input/output")
+	err = exec.Stream(remotecommand.StreamOptions{
+		Stdin:             stdIn,
+		Stdout:            stdOut,
+		Stderr:            stdErr,
+		Tty:               session.pty,
+		TerminalSizeQueue: &session.terminalSizeQueue,
+	})
+	if err != nil {
+		session.handleFinishedPod(pod, container, stdOut)
+	}
+	session.Close()
+	done()
 }
 
 func (session *kubeRunSession) handleFinishedPod(pod *v1.Pod, container v1.Container, stdOut io.Writer) {
+	logrus.Tracef("Pod already finished, streaming logs")
 	//Try fetching logs in case the container already exited.
 	//Do not move this above the "attach" method otherwise there will be a race condition.
 	request := session.client.CoreV1().Pods(pod.Namespace).GetLogs(pod.Name, &v1.PodLogOptions{
