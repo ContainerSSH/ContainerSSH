@@ -51,6 +51,7 @@ func (client *HttpAuthClient) Password(
 	logrus.Tracef("Authentication user %s with password for connection from %s", username, remoteAddr)
 	authRequest := protocol.PasswordAuthRequest{
 		User:          username,
+		Username:      username,
 		RemoteAddress: remoteAddr,
 		SessionId:     base64.StdEncoding.EncodeToString(sessionId),
 		Password:      base64.StdEncoding.EncodeToString(password),
@@ -77,6 +78,7 @@ func (client *HttpAuthClient) PubKey(
 	logrus.Tracef("Authentication user %s with public key for connection from %s", username, remoteAddr)
 	authRequest := protocol.PublicKeyAuthRequest{
 		User:          username,
+		Username:      username,
 		RemoteAddress: remoteAddr,
 		SessionId:     base64.StdEncoding.EncodeToString(sessionId),
 		PublicKey:     base64.StdEncoding.EncodeToString(pubKey),

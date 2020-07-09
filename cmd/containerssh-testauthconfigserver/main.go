@@ -36,12 +36,12 @@ func authPublicKey(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	log.Tracef("Public key authentication request for user %s", authRequest.User)
+	log.Tracef("Public key authentication request for user %s", authRequest.Username)
 
 	authResponse := protocol.AuthResponse{
 		Success: false,
 	}
-	if authRequest.User == "foo" || authRequest.User == "busybox" {
+	if authRequest.Username == "foo" || authRequest.Username == "busybox" {
 		authResponse.Success = true
 	}
 

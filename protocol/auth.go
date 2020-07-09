@@ -2,6 +2,7 @@ package protocol
 
 type PasswordAuthRequest struct {
 	User          string `json:"user"`
+	Username      string `json:"username"`
 	RemoteAddress string `json:"remoteAddress"`
 	SessionId     string `json:"sessionId"`
 	Password      string `json:"passwordBase64"`
@@ -9,6 +10,7 @@ type PasswordAuthRequest struct {
 
 type PublicKeyAuthRequest struct {
 	User          string `json:"user"`
+	Username      string `json:"username"`
 	RemoteAddress string `json:"remoteAddress"`
 	SessionId     string `json:"sessionId"`
 	// serialized key data in SSH wire format

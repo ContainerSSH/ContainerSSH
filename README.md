@@ -114,23 +114,29 @@ body. The password is base64 encoded to transfer special characters properly.
 
 ```json
 {
-    "user": "username",
+    "username": "username",
     "remoteAddress": "127.0.0.1:1234",
     "sessionId": "A base64 SSH session ID",
     "passwordBase64": "Base 64 password"
 }
 ```
 
+> **Note:** Earlier versions of ContainerSSH used the `user` field instead of `username`. While the `user` field still
+> exists it is considered deprecated and will be removed in a future version.
+
 The public key auth ContainerSSH will call out to `http://your-auth-server/pubkey` in the following format.
 
 ```json
 {
-    "user": "username",
+    "username": "username",
     "remoteAddress": "127.0.0.1:1234",
     "sessionId": "A base64 SSH session ID",
     "publicKeyBase64": "Base 64 public key in SSH wire format"
 }
 ```
+
+> **Note:** Earlier versions of ContainerSSH used the `user` field instead of `username`. While the `user` field still
+> exists it is considered deprecated and will be removed in a future version.
 
 The public key is provided in the SSH wire format in base64 encoding.
 
