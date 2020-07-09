@@ -346,21 +346,19 @@ func (server *Server) handleChannel(ctx context.Context, channelHandler ChannelH
 			server.replyRequest(channelRequest, false, []byte(fmt.Sprintf("unknown request type (%s)", req.Type)))
 			continue
 		}
-		go func() {
-			response := channelRequestHandler.OnChannelRequest(
-				ctx,
-				sshConn,
-				channel,
-				channelRequest.Type,
-				channelRequest.Payload,
-			)
-			if response.Success {
-				server.replyRequest(channelRequest, true, response.Payload)
-			} else {
-				log.Tracef("channel request channelRequestHandler failed (%v)", response.Payload)
-				server.replyRequest(channelRequest, false, response.Payload)
-			}
-		}()
+		response := channelRequestHandler.OnChannelRequest(
+			ctx,
+			sshConn,
+			channel,
+			channelRequest.Type,
+			channelRequest.Payload,
+		)
+		if response.Success {
+			server.replyRequest(channelRequest, true, response.Payload)
+		} else {
+			log.Tracef("channel request channelRequestHandler failed (%v)", response.Payload)
+			server.replyRequest(channelRequest, false, response.Payload)
+		}
 	}
 }
 
