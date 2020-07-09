@@ -1,6 +1,7 @@
 package loader
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
 	"github.com/janoszen/containerssh/config"
@@ -13,12 +14,16 @@ import (
 func parseConfig(filename string, data []byte, config *config.AppConfig) error {
 	var err error
 	if strings.HasSuffix(filename, ".yaml") || strings.HasSuffix(filename, ".yml") {
-		err = yaml.Unmarshal(data, config)
+		decoder := yaml.NewDecoder(bytes.NewReader(data))
+		decoder.KnownFields(true)
+		err = decoder.Decode(config)
 		if err != nil {
 			return err
 		}
 	} else if strings.HasSuffix(filename, ".json") {
-		err = json.Unmarshal(data, config)
+		decoder := json.NewDecoder(bytes.NewReader(data))
+		decoder.DisallowUnknownFields()
+		err = decoder.Decode(config)
 		if err != nil {
 			return err
 		}

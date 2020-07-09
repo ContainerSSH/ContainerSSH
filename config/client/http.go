@@ -63,7 +63,9 @@ func (client *HttpConfigClient) configServerRequest(requestObject interface{}, r
 	if err != nil {
 		return err
 	}
-	err = json.NewDecoder(resp.Body).Decode(response)
+	decoder := json.NewDecoder(resp.Body)
+	decoder.DisallowUnknownFields()
+	err = decoder.Decode(response)
 	if err != nil {
 		return err
 	}
