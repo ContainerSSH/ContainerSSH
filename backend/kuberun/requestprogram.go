@@ -224,12 +224,14 @@ func (session *kubeRunSession) handleFinishedPod(pod *v1.Pod, container v1.Conta
 	logStream, err := request.Stream(session.ctx)
 	if err != nil {
 		logrus.Tracef("Failed to attach or stream logs (%s)", err)
+		return
 	}
 	//TODO stderr stream? Does Kubernetes even support that with logs?
 	//     https://github.com/kubernetes/kubernetes/issues/28167
 	_, err = io.Copy(stdOut, logStream)
 	if err != nil {
 		logrus.Tracef("Failed to attach or stream logs (%s)", err)
+		return
 	}
 	//todo inform client of the error.
 }
