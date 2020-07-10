@@ -11,8 +11,6 @@ theme:
   name: readthedocs
   custom_dir: ./.docs-theme/
   include_sidebar: false
-  static_templates:
-    - .circleci/config.yml
   font: false
 
   include_search_page: true
@@ -37,6 +35,7 @@ nav:
   - 'Configuration': 'configuration.md'
   - 'Authentication Server': 'authserver.md'
   - 'Configuration Server': 'configserver.md'
+  - 'Selecting a Backend': 'backends.md'
   - 'The dockerrun Backend': 'dockerrun.md'
   - 'The kuberun Backend': 'kuberun.md'
   - 'Creating an Image': 'image.md'
