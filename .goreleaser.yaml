@@ -14,7 +14,7 @@ builds:
     hooks:
       pre:
         - cmd: go run cmd/swagger/main.go containerssh-authconfig-openapi.json docs/api/authconfig/containerssh-authconfig.json
-          dir: "{{ dir .Path }}/../../"
+          dir: "{{ dir .Path }}/../../../"
       post:
         - cmd: go run cmd/license-report/main.go golicense.json build/containerssh-linux_linux_amd64/containerssh NOTICE.md
           dir: "{{ dir .Path }}/../../"
