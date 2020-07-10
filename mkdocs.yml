@@ -37,12 +37,13 @@ nav:
   - 'Configuration': 'configuration.md'
   - 'Authentication Server': 'authserver.md'
   - 'Configuration Server': 'configserver.md'
-  - The dockerrun Backend: 'dockerrun.md'
-  - The kuberun Backend: 'kuberun.md'
-  - Creating an Image: 'image.md'
-  - FAQ: faq.md
-  - API reference:
-      - The AuthConfig Server ⭧: './api/authconfig/'
+  - 'The dockerrun Backend': 'dockerrun.md'
+  - 'The kuberun Backend': 'kuberun.md'
+  - 'Creating an Image': 'image.md'
+  - 'Hardening': 'hardening.md'
+  - 'FAQ': 'faq.md'
+  - 'API reference':
+      - 'The AuthConfig Server ⭧': './api/authconfig/'
 site_favicon: img/favicon.png
 extra_css:
   - css/custom.css

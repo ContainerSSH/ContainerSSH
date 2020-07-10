@@ -1,12 +1,12 @@
 <h1>Implementing an authentication server</h1>
 
-!!! note
-    We have an [OpenAPI document](/api/authconfig) available for the authentication and configuration server. You can
-    check the exact values available there, or use the OpenAPI document to generate parts of your server code.
-
 ContainerSSH does not know your users and their passwords. Therefore, it calls out to a microservice that you have to
 provide so it can verify the users, passwords and SSH keys. You will have to provide the microservice URL in the
 configuration.
+
+!!! note
+    We have an [OpenAPI document](../api/authconfig) available for the authentication and configuration server. You can
+    check the exact values available there, or use the OpenAPI document to generate parts of your server code.
 
 For password authentication ContainerSSH will call out to `http://your-auth-server/password` with the following request
 body. The password is base64 encoded to transfer special characters properly.
