@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+
+{% block extrahead %}
+<meta property="og:type" content="website" />
+<meta property="og:locale" content="en_US" />
+<meta property="og:site_name" content="ContainerSSH: An SSH Server that Launches Containers" />
+<meta property="og:title" content="{{ page.title }}"/>
+<meta property="og:image" content="{{ config.site_url }}img/opengraph.png" />
+<meta property="og:url" content="{{ page.canonical_url | url }}" />
+<meta property="og:description" content="ContainerSSH is an SSH server that launches containers in Docker and Kubernetes." />
+
+<link rel="apple-touch-icon-precomposed" href="{{ config.site_url }}img/tileicon.png" />
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:description" content="ContainerSSH is an SSH server that launches containers in Docker and Kubernetes." />
+<meta name="twitter:site" content="@janoszen" />
+<meta name="twitter:title" content="ContainerSSH" />
+<meta name="twitter:image" content="{{ config.site_url }}img/opengraph.png" />
+<meta name="theme-color" content="#da291c" />
+<meta name="msapplication-navbutton-color" content="#da291c" />
+<meta name="application-name" content="ContainerSSH" />
+<meta name="msapplication-starturl" content="/" />
+<meta name="HandheldFriendly" content="true" />
+<meta name="msapplication-TileImage" content="{{ config.site_url }}img/tileicon.png' | url }}" />
+{% endblock %}
+

@@ -1,0 +1,51 @@
+site_name: "ContainerSSH: An SSH Server That Launches Containers"
+site_url: "https://projects.pasztor.at/containerssh/"
+repo_url: "https://github.com/janoszen/containerssh/"
+edit_uri: "edit/stable/docs/"
+markdown_extensions:
+  - admonition
+  - toc:
+      permalink: True
+      separator: "-"
+theme:
+  name: readthedocs
+  custom_dir: ./.docs-theme/
+  include_sidebar: false
+  static_templates:
+    - .circleci/config.yml
+  font: false
+
+  include_search_page: true
+  search_index_only: false
+
+  highlightjs: true
+  hljs_languages: []
+
+  include_homepage_in_sidebar: true
+  prev_next_buttons_location: bottom
+  navigation_depth: 4
+  titles_only: false
+  sticky_navigation: true
+  collapse_navigation: true
+plugins:
+  - search
+  - macros
+nav:
+  - 'Home': 'index.md'
+  - 'Quick Start': 'quickstart.md'
+  - 'Installation': 'installation.md'
+  - 'Configuration': 'configuration.md'
+  - 'Authentication Server': 'authserver.md'
+  - 'Configuration Server': 'configserver.md'
+  - The dockerrun Backend: 'dockerrun.md'
+  - The kuberun Backend: 'kuberun.md'
+  - Creating an Image: 'image.md'
+  - FAQ: faq.md
+  - API reference:
+      - The AuthConfig Server ⭧: './api/authconfig/'
+site_favicon: img/favicon.png
+extra_css:
+  - css/custom.css
+copyright: >
+  Copyright &copy; Janos Pasztor and Contributors
+  | <a href="https://projects.pasztor.at/containerssh/privacy/">Privacy Policy</a>

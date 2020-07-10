@@ -1,11 +1,26 @@
 package config
 
+// swagger:enum
+type BackendName string
+
+const (
+	BACKEND_NAME_DOCKERRUN = "dockerrun"
+	BACKEND_NAME_KUBERUN   = "kuberun"
+)
+
 type AppConfig struct {
-	Listen       string             `json:"listen" yaml:"listen" default:"0.0.0.0:2222" comment:"IP address and port to listen on"`
-	Ssh          SshConfig          `json:"ssh" yaml:"ssh" comment:"SSH configuration"`
+	// swagger:ignore
+	Listen string `json:"listen" yaml:"listen" default:"0.0.0.0:2222" comment:"IP address and port to listen on"`
+	// swagger:ignore
+	Ssh SshConfig `json:"ssh" yaml:"ssh" comment:"SSH configuration"`
+	// swagger:ignore
 	ConfigServer ConfigServerConfig `json:"configserver" yaml:"configserver" comment:"Configuration server settings"`
-	Auth         AuthConfig         `json:"auth" yaml:"auth" comment:"Authentication server configuration"`
-	Backend      string             `json:"backend" yaml:"backend" default:"dockerrun" comment:"Backend module to use"`
-	DockerRun    DockerRunConfig    `json:"dockerrun" yaml:"dockerrun" comment:"Docker configuration to use when the Docker run backend is used."`
-	KubeRun      KubeRunConfig      `json:"kuberun" yaml:"kuberun" comment:"Kubernetes configuration to use when the Kubernetes run backend is used."`
+	// swagger:ignore
+	Auth AuthConfig `json:"auth" yaml:"auth" comment:"Authentication server configuration"`
+	// Backend to use.
+	Backend BackendName `json:"backend" yaml:"backend" default:"dockerrun" comment:"Backend module to use"`
+	// Configuration for the dockerrun backend
+	DockerRun DockerRunConfig `json:"dockerrun" yaml:"dockerrun" comment:"Docker configuration to use when the Docker run backend is used."`
+	// Configuration for the kuberun backend
+	KubeRun KubeRunConfig `json:"kuberun" yaml:"kuberun" comment:"Kubernetes configuration to use when the Kubernetes run backend is used."`
 }

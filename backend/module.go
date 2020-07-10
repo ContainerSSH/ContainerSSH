@@ -33,19 +33,19 @@ type Session interface {
 }
 
 type Backend struct {
-	Name          string
+	Name          config.BackendName
 	CreateSession func(sessionId string, username string, appConfig *config.AppConfig) (Session, error)
 }
 
 type Registry struct {
-	backends    map[string]Backend
-	backendKeys []string
+	backends    map[config.BackendName]Backend
+	backendKeys []config.BackendName
 }
 
 func NewRegistry() *Registry {
 	return &Registry{
-		backends:    make(map[string]Backend),
-		backendKeys: []string{},
+		backends:    make(map[config.BackendName]Backend),
+		backendKeys: []config.BackendName{},
 	}
 }
 
@@ -54,11 +54,11 @@ func (registry *Registry) Register(backend Backend) {
 	registry.backendKeys = append(registry.backendKeys, backend.Name)
 }
 
-func (registry *Registry) GetBackends() []string {
+func (registry *Registry) GetBackends() []config.BackendName {
 	return registry.backendKeys
 }
 
-func (registry *Registry) GetBackend(key string) (*Backend, error) {
+func (registry *Registry) GetBackend(key config.BackendName) (*Backend, error) {
 	if backend, ok := registry.backends[key]; ok {
 		return &backend, nil
 	}

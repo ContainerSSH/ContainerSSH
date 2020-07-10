@@ -1,3 +1,20 @@
+// ContainerSSH Authentication and Configuration Server
+//
+// This OpenAPI document describes the API endpoints that are required for implementing an authentication
+// and configuration server for ContainerSSH. (See https://github.com/janoszen/containerssh for details.)
+//
+//     Schemes: http, https
+//     Host: localhost
+//     BasePath: /
+//     Version: 0.2.0
+//
+//     Consumes:
+//     - application/json
+//
+//     Produces:
+//     - application/json
+//
+// swagger:meta
 package main
 
 import (
@@ -9,6 +26,22 @@ import (
 )
 
 func authPassword(w http.ResponseWriter, req *http.Request) {
+	// swagger:operation POST /password Authentication authPassword
+	//
+	// Password authentication
+	//
+	// ---
+	// parameters:
+	// - name: request
+	//   in: body
+	//   description: The authentication request
+	//   required: true
+	//   schema:
+	//     "$ref": "#/definitions/PasswordAuthRequest"
+	// responses:
+	//   "200":
+	//     "$ref": "#/responses/AuthResponse"
+
 	var authRequest protocol.PasswordAuthRequest
 	err := json.NewDecoder(req.Body).Decode(&authRequest)
 	if err != nil {
@@ -29,6 +62,22 @@ func authPassword(w http.ResponseWriter, req *http.Request) {
 }
 
 func authPublicKey(w http.ResponseWriter, req *http.Request) {
+	// swagger:operation POST /pubkey Authentication authPubKey
+	//
+	// Public key authentication
+	//
+	// ---
+	// parameters:
+	// - name: request
+	//   in: body
+	//   description: The authentication request
+	//   required: true
+	//   schema:
+	//     "$ref": "#/definitions/PublicKeyAuthRequest"
+	// responses:
+	//   "200":
+	//     "$ref": "#/responses/AuthResponse"
+
 	var authRequest protocol.PublicKeyAuthRequest
 	err := json.NewDecoder(req.Body).Decode(&authRequest)
 	if err != nil {
@@ -49,6 +98,21 @@ func authPublicKey(w http.ResponseWriter, req *http.Request) {
 }
 
 func configHandler(w http.ResponseWriter, req *http.Request) {
+	// swagger:operation POST /config Configuration getUserConfiguration
+	//
+	// Fetches the configuration for a user/session
+	//
+	// ---
+	// parameters:
+	// - name: request
+	//   in: body
+	//   description: The configuration request
+	//   schema:
+	//     "$ref": "#/definitions/ConfigRequest"
+	// responses:
+	//   "200":
+	//     "$ref": "#/responses/ConfigResponse"
+
 	var configRequest protocol.ConfigRequest
 	err := json.NewDecoder(req.Body).Decode(&configRequest)
 	if err != nil {

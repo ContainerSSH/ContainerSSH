@@ -1,0 +1,82 @@
+html .wy-side-nav-search {
+    background-color:#407dc0ff;
+}
+
+html .rst-content .admonition-title,
+html .rst-content .note .admonition-title {
+    background-color:#407dc0ff;
+}
+
+html .rst-content .note {
+    background-color: #d2e0f0ff;
+}
+
+@media screen and (max-width: 768px) {
+    html img {
+        width: auto
+    }
+}
+
+.wy-side-nav-search>a.logo {
+    display:block;
+}
+.wy-side-nav-search>a.logo img {
+    width:100%;
+    height:auto;
+    border-radius: 0;
+    margin:0;
+    background:transparent;
+}
+
+.since {
+    display:inline-block;
+    font-weight: normal;
+    border-radius:3px;
+    font-family:sans-serif;
+    height:16px;
+    line-height:16px;
+    font-size: 0;
+    position:relative;
+    top:-2px;
+}
+
+h1 .since {
+    height:21px;
+    top:-5px;
+}
+
+.since__text {
+    background-color:#555;
+    color: #fff;
+    display: inline-block;
+    height:16px;
+    font-size:12px;
+    border-top-left-radius: 2px;
+    border-bottom-left-radius: 2px;
+    padding: 0 5px;
+}
+
+h1 .since__text {
+    height:21px;
+    padding:3px 5px;
+}
+
+.side__hide {
+    display:none;
+}
+
+.since__value {
+    background-color:#4c1;
+    color:#fff;
+    display: inline-block;
+    height:16px;
+    padding: 0 5px;
+    font-size:12px;
+    border-top-right-radius: 2px;
+    border-bottom-right-radius: 2px;
+}
+
+h1 .since__value {
+    height:21px;
+    padding: 3px 5px;
+}
