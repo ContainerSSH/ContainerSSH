@@ -19,4 +19,5 @@ type DockerRunContainerConfig struct {
 	NetworkConfig   network.NetworkingConfig `json:"network" yaml:"network" comment:"Network configuration"`
 	ContainerName   string                   `json:"containername" yaml:"containername" comment:"Name for the container to be launched"`
 	Subsystems      map[string]string        `json:"subsystems" yaml:"subsystems" comment:"Subsystem names and binaries map." default:"{\"sftp\":\"/usr/lib/openssh/sftp-server\"}"`
+	DisableCommand  bool                     `json:"disableCommand" yaml:"disableCommand" comment:"Disable command execution passed from SSH"`
 }

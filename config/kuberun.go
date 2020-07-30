@@ -42,4 +42,5 @@ type KubeRunPodConfig struct {
 	ConsoleContainerNumber int               `json:"consoleContainerNumber" yaml:"consoleContainerNumber" comment:"Which container to attach the SSH connection to" default:"0"`
 	Spec                   v1.PodSpec        `json:"podSpec" yaml:"podSpec" comment:"Pod specification to launch" default:"{\"containers\":[{\"name\":\"shell\",\"image\":\"janoszen/containerssh-image\"}]}"`
 	Subsystems             map[string]string `json:"subsystems" yaml:"subsystems" comment:"Subsystem names and binaries map." default:"{\"sftp\":\"/usr/lib/openssh/sftp-server\"}"`
+	DisableCommand         bool              `json:"disableCommand" yaml:"disableCommand" comment:"Disable command execution passed from SSH"`
 }
