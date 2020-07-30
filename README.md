@@ -17,7 +17,7 @@ connections.
 This is an **SSH server that launches containers for every incoming connection**. You can run it on the host or in a
 container. It needs two things: an authentication server and access to your container environment.
 
-![Animation: SSH-ing into this SSH server lands you in a container where you can't access the network and you can't see any processes.](https://pasztor.at/assets/img/ssh-in-action.gif)
+![Animation: SSH-ing into this SSH server lands you in a container where you can't access the network and you can't see any processes.](https://projects.pasztor.at/containerssh/images/ssh-in-action.gif)
 
 ## Quick start
 
