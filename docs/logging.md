@@ -6,7 +6,7 @@ The configuration can be done from the config file:
 
 ```
 log:
- level: "warning"
+  level: "warning"
 ```
 
 !!! tip
