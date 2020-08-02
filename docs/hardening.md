@@ -49,7 +49,7 @@ configserver:
     key: "insert your client key in PEM format here"
 ```
 
-## Disabling command execution {{ since "0.2.1" }}
+## Disabling command execution {{ since("0.2.1") }}
 
 You can disable the execution of custom SSH commands through the configuration:
 
