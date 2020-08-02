@@ -3,10 +3,12 @@ package ssh
 import (
 	"context"
 	"github.com/janoszen/containerssh/backend"
+	"github.com/janoszen/containerssh/log"
 	channelRequest "github.com/janoszen/containerssh/ssh/channel/request"
 	"github.com/janoszen/containerssh/ssh/channel/request/env"
+	"github.com/janoszen/containerssh/ssh/channel/request/exec"
 	"github.com/janoszen/containerssh/ssh/channel/request/pty"
-	"github.com/janoszen/containerssh/ssh/channel/request/run"
+	"github.com/janoszen/containerssh/ssh/channel/request/shell"
 	"github.com/janoszen/containerssh/ssh/channel/request/signal"
 	"github.com/janoszen/containerssh/ssh/channel/request/subsystem"
 	"github.com/janoszen/containerssh/ssh/channel/request/window"
@@ -49,21 +51,27 @@ type ChannelRequestHandlerFactory interface {
 	Make(session backend.Session) *channelRequestHandler
 }
 
-type defaultChannelRequestHandlerFactory struct{}
+type defaultChannelRequestHandlerFactory struct{
+	logger log.Logger
+}
 
-func NewDefaultChannelRequestHandlerFactory() ChannelRequestHandlerFactory {
-	return &defaultChannelRequestHandlerFactory{}
+func NewDefaultChannelRequestHandlerFactory(
+	logger log.Logger,
+) ChannelRequestHandlerFactory {
+	return &defaultChannelRequestHandlerFactory{
+		logger: logger,
+	}
 }
 
 func (factory *defaultChannelRequestHandlerFactory) Make(session backend.Session) *channelRequestHandler {
-	handler := channelRequest.NewHandler()
-	handler.AddTypeHandler("env", env.RequestTypeHandler)
-	handler.AddTypeHandler("pty-req", pty.RequestTypeHandler)
-	handler.AddTypeHandler("shell", run.ShellRequestTypeHandler)
-	handler.AddTypeHandler("exec", run.ExecRequestTypeHandler)
-	handler.AddTypeHandler("subsystem", subsystem.RequestTypeHandler)
-	handler.AddTypeHandler("window-change", window.RequestTypeHandler)
-	handler.AddTypeHandler("signal", signal.RequestTypeHandler)
+	handler := channelRequest.NewHandler(factory.logger)
+	handler.AddTypeHandler("env", env.New(factory.logger))
+	handler.AddTypeHandler("pty-req", pty.New(factory.logger))
+	handler.AddTypeHandler("shell", shell.New(factory.logger))
+	handler.AddTypeHandler("exec", exec.New(factory.logger))
+	handler.AddTypeHandler("subsystem", subsystem.New(factory.logger))
+	handler.AddTypeHandler("window-change", window.New(factory.logger))
+	handler.AddTypeHandler("signal", signal.New(factory.logger))
 	return &channelRequestHandler{
 		typeHandler: &handler,
 		session:     session,

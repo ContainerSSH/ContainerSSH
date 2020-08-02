@@ -11,8 +11,9 @@ import (
 	configurationClient "github.com/janoszen/containerssh/config/client"
 	"github.com/janoszen/containerssh/config/loader"
 	"github.com/janoszen/containerssh/config/util"
+	"github.com/janoszen/containerssh/log"
+	"github.com/janoszen/containerssh/log/writer"
 	"github.com/janoszen/containerssh/ssh"
-	log "github.com/sirupsen/logrus"
 	"io/ioutil"
 	"os"
 	"os/signal"
@@ -27,13 +28,19 @@ func InitBackendRegistry() *backend.Registry {
 }
 
 func main() {
-	log.SetLevel(log.TraceLevel)
+	logConfig, err := log.NewConfig(log.LevelInfoString)
+	if err != nil {
+		panic(err)
+	}
+	logWriter := writer.NewJsonLogWriter()
+	var logger log.Logger
+	logger = log.NewLoggerPipeline(logConfig, logWriter)
 
 	backendRegistry := InitBackendRegistry()
 	appConfig, err := util.GetDefaultConfig()
 	if err != nil {
-		log.Fatalf("Error getting default config (%s)", err)
-		return
+		logger.CriticalF("Error getting default config (%s)", err)
+		os.Exit(1)
 	}
 
 	configFile := ""
@@ -69,18 +76,21 @@ func main() {
 	if configFile != "" {
 		fileAppConfig, err := loader.LoadFile(configFile)
 		if err != nil {
-			log.Fatal(fmt.Sprintf("Error loading config file (%s)", err))
+			logger.EmergencyF("Error loading config file (%v)", err)
+			os.Exit(1)
 		}
 		appConfig, err = util.Merge(fileAppConfig, appConfig)
 		if err != nil {
-			log.Fatal(fmt.Sprintf("Error merging config (%s)", err))
+			logger.EmergencyF("Error merging config (%v)", err)
+			os.Exit(1)
 		}
 	}
 
 	if dumpConfig {
 		err := loader.Write(appConfig, os.Stdout)
 		if err != nil {
-			log.Fatal(fmt.Sprintf("Error dumping config (%s)", err))
+			logger.EmergencyF("error dumping config (%v)", err)
+			os.Exit(1)
 		}
 	}
 
@@ -89,13 +99,15 @@ func main() {
 		fmt.Println("")
 		data, err := ioutil.ReadFile("LICENSE.md")
 		if err != nil {
-			log.Fatalf("Missing LICENSE.md, cannot print license information")
+			logger.EmergencyF("Missing LICENSE.md, cannot print license information")
+			os.Exit(1)
 		}
 		fmt.Println(string(data))
 		fmt.Println("")
 		data, err = ioutil.ReadFile("NOTICE.md")
 		if err != nil {
-			log.Fatalf("Missing NOTICE.md, cannot print third party license information")
+			logger.EmergencyF("Missing NOTICE.md, cannot print third party license information")
+			os.Exit(1)
 		}
 		fmt.Println(string(data))
 		fmt.Println("")
@@ -105,16 +117,16 @@ func main() {
 		return
 	}
 
-	authClient, err := auth.NewHttpAuthClient(appConfig.Auth)
+	authClient, err := auth.NewHttpAuthClient(appConfig.Auth, logger)
 	if err != nil {
-		log.Fatal(fmt.Sprintf("Error creating auth HTTP client (%s)", err))
-		return
+		logger.CriticalF("error creating auth HTTP client (%v)", err)
+		os.Exit(1)
 	}
 
-	configClient, err := configurationClient.NewHttpConfigClient(appConfig.ConfigServer)
+	configClient, err := configurationClient.NewHttpConfigClient(appConfig.ConfigServer, logger)
 	if err != nil {
-		log.Fatal(fmt.Sprintf("Error creating config HTTP client (%s)", err))
-		return
+		logger.EmergencyF(fmt.Sprintf("Error creating config HTTP client (%s)", err))
+		os.Exit(1)
 	}
 
 	sshServer, err := ssh.NewServer(
@@ -122,10 +134,12 @@ func main() {
 		authClient,
 		backendRegistry,
 		configClient,
+		logger,
+		logWriter,
 	)
 	if err != nil {
-		log.Fatalf("failed to create SSH server (%v)", err)
-		return
+		logger.EmergencyF("failed to create SSH server (%v)", err)
+		os.Exit(1)
 	}
 
 	ctx, cancel := context.WithCancel(context.Background())
@@ -145,11 +159,11 @@ func main() {
 
 	select {
 	case <-sigs:
-		log.Infof("received exit signal, stopping SSH server")
+		logger.InfoF("received exit signal, stopping SSH server")
 		cancel()
 	case <-ctx.Done():
 	case err = <-errChannel:
 		cancel()
-		log.Fatalf("failed to run SSH server (%v)", err)
+		logger.EmergencyF("failed to run SSH server (%v)", err)
 	}
 }

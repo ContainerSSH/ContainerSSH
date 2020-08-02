@@ -3,7 +3,7 @@ package server
 import (
 	"context"
 	"fmt"
-	log "github.com/sirupsen/logrus"
+	"github.com/janoszen/containerssh/log"
 	"golang.org/x/crypto/ssh"
 	"net"
 )
@@ -81,6 +81,7 @@ type Server struct {
 	serverConfig      *Config
 	readyHandler      ReadyHandler
 	connectionHandler ConnectionHandler
+	logger            log.Logger
 }
 
 func New(
@@ -88,12 +89,14 @@ func New(
 	serverConfig *Config,
 	readyHandler ReadyHandler,
 	connectionHandler ConnectionHandler,
+	logger log.Logger,
 ) (*Server, error) {
 	server := &Server{
 		listen:            listen,
 		serverConfig:      serverConfig,
 		readyHandler:      readyHandler,
 		connectionHandler: connectionHandler,
+		logger:            logger,
 	}
 
 	err := server.validateConfig()
@@ -225,7 +228,7 @@ func (server *Server) Run(ctx context.Context) error {
 		config.AddHostKey(hostKey)
 	}
 
-	log.Tracef("starting listen socket on %s", server.listen)
+	server.logger.InfoF("starting listen socket on %s", server.listen)
 	netListener, err := net.Listen("tcp", server.listen)
 	if err != nil {
 		return err
@@ -240,29 +243,29 @@ func (server *Server) Run(ctx context.Context) error {
 				// Assume listen socket closed
 				break
 			}
-			log.Tracef("connection from: %s", tcpConn.RemoteAddr().String())
+			server.logger.DebugF("connection from: %s", tcpConn.RemoteAddr().String())
 			sshConn, chans, reqs, err := ssh.NewServerConn(tcpConn, config)
 			if err != nil {
-				log.Infof("failed to handshake (%v)", err)
+				server.logger.DebugF("failed to handshake (%v)", err)
 				continue
 			}
-			log.Tracef("new SSH connection from %s for user %s (%s)", sshConn.RemoteAddr(), sshConn.User(), sshConn.ClientVersion())
+			server.logger.DebugF("new SSH connection from %s for user %s (%s)", sshConn.RemoteAddr(), sshConn.User(), sshConn.ClientVersion())
 
 			if server.connectionHandler == nil {
-				log.Tracef("no connection handler defined, closing connection")
+				server.logger.DebugF("no connection handler defined, closing connection")
 				err = sshConn.Close()
 				if err != nil {
-					log.Tracef("failed to close newly opened connection (%v)", err)
+					server.logger.DebugF("failed to close newly opened connection (%v)", err)
 				}
 				continue
 			}
 
 			globalRequestHandler, channelHandler, err := server.connectionHandler.OnConnection(sshConn)
 			if err != nil {
-				log.Tracef("error from connection handler (%v)", err)
+				server.logger.DebugF("error from connection handler (%v)", err)
 				err = sshConn.Close()
 				if err != nil {
-					log.Tracef("failed to close newly opened connection (%v)", err)
+					server.logger.DebugF("failed to close newly opened connection (%v)", err)
 				}
 				continue
 			}
@@ -275,7 +278,7 @@ func (server *Server) Run(ctx context.Context) error {
 	<-ctx.Done()
 	err = netListener.Close()
 	if err != nil {
-		log.Warnf("failed to close listen socket (%v)", err)
+		server.logger.WarningF("failed to close listen socket (%v)", err)
 		return err
 	}
 
@@ -294,7 +297,7 @@ func (server Server) handleGlobalRequests(ctx context.Context, globalRequestHand
 			if response.Success {
 				server.replyRequest(globalRequest, true, response.Payload)
 			} else {
-				log.Tracef("global request globalRequestHandler failed (%v)", response.Payload)
+				server.logger.DebugF("global request globalRequestHandler failed (%v)", response.Payload)
 				server.replyRequest(globalRequest, false, response.Payload)
 			}
 		}()
@@ -311,7 +314,7 @@ func (server *Server) handleChannel(ctx context.Context, channelHandler ChannelH
 	if channelHandler == nil {
 		err := newChannel.Reject(ssh.UnknownChannelType, "no channel channelRequestHandler")
 		if err != nil {
-			log.Infof("unable to send channel rejection (%v)", err)
+			server.logger.DebugF("unable to send channel rejection (%v)", err)
 		}
 		return
 	}
@@ -324,19 +327,19 @@ func (server *Server) handleChannel(ctx context.Context, channelHandler ChannelH
 	if rejection != nil {
 		err := newChannel.Reject(rejection.RejectionReason, rejection.RejectionMessage)
 		if err != nil {
-			log.Infof("unable to send channel rejection (%v)", err)
+			server.logger.DebugF("unable to send channel rejection (%v)", err)
 		}
 		return
 	}
 	channel, requests, err := newChannel.Accept()
 	if err != nil {
-		log.Infof("unable to accept channel (%v)", err)
+		server.logger.DebugF("unable to accept channel (%v)", err)
 		return
 	}
 	defer func() {
 		err := channel.Close()
 		if err != nil {
-			log.Infof("failed to close channel (%v)", err)
+			server.logger.DebugF("failed to close channel (%v)", err)
 		}
 	}()
 
@@ -356,7 +359,7 @@ func (server *Server) handleChannel(ctx context.Context, channelHandler ChannelH
 		if response.Success {
 			server.replyRequest(channelRequest, true, response.Payload)
 		} else {
-			log.Tracef("channel request channelRequestHandler failed (%v)", response.Payload)
+			server.logger.DebugF("channel request channelRequestHandler failed (%v)", response.Payload)
 			server.replyRequest(channelRequest, false, response.Payload)
 		}
 	}
@@ -366,7 +369,7 @@ func (server *Server) replyRequest(channelRequest *ssh.Request, success bool, me
 	if channelRequest.WantReply {
 		err := channelRequest.Reply(success, message)
 		if err != nil {
-			log.Infof("failed to send reply (%v)", err)
+			server.logger.DebugF("failed to send reply (%v)", err)
 		}
 	}
 }

@@ -6,6 +6,7 @@ import (
 	"github.com/janoszen/containerssh/backend"
 	"github.com/janoszen/containerssh/config"
 	configurationClient "github.com/janoszen/containerssh/config/client"
+	"github.com/janoszen/containerssh/log"
 	"github.com/janoszen/containerssh/ssh/server"
 	"golang.org/x/crypto/ssh"
 	"io/ioutil"
@@ -17,6 +18,8 @@ func NewServer(
 	authClient auth.Client,
 	registry *backend.Registry,
 	client configurationClient.ConfigClient,
+	logger log.Logger,
+	logWriter log.Writer,
 ) (*server.Server, error) {
 	serverConfig := &server.Config{
 		Config:       ssh.Config{},
@@ -88,8 +91,11 @@ func NewServer(
 			NewDefaultChannelHandlerFactory(
 				registry,
 				client,
-				NewDefaultChannelRequestHandlerFactory(),
+				NewDefaultChannelRequestHandlerFactory(logger),
+				logger,
+				log.NewLoggerPipelineFactory(logWriter),
 			),
 		),
+		logger,
 	)
 }

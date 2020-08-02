@@ -1,13 +1,13 @@
 package subsystem
 
 import (
-	"fmt"
-	"github.com/janoszen/containerssh/backend"
-	request2 "github.com/janoszen/containerssh/ssh/channel/request"
-	"github.com/sirupsen/logrus"
-	log "github.com/sirupsen/logrus"
-	"golang.org/x/crypto/ssh"
 	"sync"
+
+	"github.com/janoszen/containerssh/backend"
+	"github.com/janoszen/containerssh/log"
+	channelRequest "github.com/janoszen/containerssh/ssh/channel/request"
+
+	"golang.org/x/crypto/ssh"
 )
 
 type requestMsg struct {
@@ -18,8 +18,22 @@ type responseMsg struct {
 	exitStatus uint32
 }
 
-func onSubsystemRequest(request *requestMsg, channel ssh.Channel, session backend.Session) error {
-	logrus.Trace(fmt.Sprintf("Subsystem request: %s", request.Subsystem))
+type ChannelRequestHandler struct {
+	logger log.Logger
+}
+
+func New(logger log.Logger) channelRequest.TypeHandler {
+	return &ChannelRequestHandler{
+		logger: logger,
+	}
+}
+
+func (c ChannelRequestHandler) GetRequestObject() interface{} {
+	return &requestMsg{}
+}
+
+func (c ChannelRequestHandler) HandleRequest(request interface{}, reply channelRequest.Reply, channel ssh.Channel, session backend.Session) {
+	c.logger.DebugF("subsystem request: %s", request.(*requestMsg).Subsystem)
 	var mutex = &sync.Mutex{}
 	closeSession := func() {
 		mutex.Lock()
@@ -28,7 +42,7 @@ func onSubsystemRequest(request *requestMsg, channel ssh.Channel, session backen
 		mutex.Unlock()
 
 		if exitCode < 0 {
-			log.Warnf("invalid exit code (%d)", exitCode)
+			c.logger.DebugF("invalid exit code (%d)", exitCode)
 		}
 
 		//Send the exit status before closing the session. No reply is sent.
@@ -38,22 +52,11 @@ func onSubsystemRequest(request *requestMsg, channel ssh.Channel, session backen
 		//Close the channel as described by the RFC
 		_ = channel.Close()
 	}
-	err := session.RequestSubsystem(request.Subsystem, channel, channel, channel.Stderr(), closeSession)
+	err := session.RequestSubsystem(request.(*requestMsg).Subsystem, channel, channel, channel.Stderr(), closeSession)
 	if err != nil {
-		return err
+		c.logger.DebugF("failed subsystem request (%v)", err)
+		reply(false, nil)
+	} else {
+		reply(true, nil)
 	}
-	return nil
-}
-
-var RequestTypeHandler = request2.TypeHandler{
-	GetRequestObject: func() interface{} { return &requestMsg{} },
-	HandleRequest: func(request interface{}, reply request2.Reply, channel ssh.Channel, session backend.Session) {
-		err := onSubsystemRequest(request.(*requestMsg), channel, session)
-		if err != nil {
-			log.Tracef("Failed subsystem request (%s)", err)
-			reply(false, nil)
-		} else {
-			reply(true, nil)
-		}
-	},
 }

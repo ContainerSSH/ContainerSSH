@@ -1,15 +1,16 @@
 package http
 
 import (
-	"crypto/tls"
-	"crypto/x509"
 	"fmt"
-	log "github.com/sirupsen/logrus"
-	"io/ioutil"
-	"net/http"
+	"github.com/janoszen/containerssh/log"
 	"runtime"
 	"strings"
 	"time"
+
+	"crypto/tls"
+	"crypto/x509"
+	"io/ioutil"
+	"net/http"
 )
 
 func NewHttpClient(
@@ -18,6 +19,7 @@ func NewHttpClient(
 	ClientCert string,
 	ClientKey string,
 	Url string,
+	logger log.Logger,
 ) (*http.Client, error) {
 	tlsConfig := &tls.Config{}
 	if CaCert != "" {
@@ -36,7 +38,7 @@ func NewHttpClient(
 	if ClientCert != "" && ClientKey != "" {
 		cert, err := tls.LoadX509KeyPair(ClientCert, ClientKey)
 		if err != nil {
-			log.Fatal(err)
+			logger.CriticalE(err)
 		}
 		tlsConfig.Certificates = []tls.Certificate{cert}
 	}

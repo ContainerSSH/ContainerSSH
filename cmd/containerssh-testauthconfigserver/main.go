@@ -19,13 +19,22 @@ package main
 
 import (
 	"encoding/json"
-	"github.com/janoszen/containerssh/config"
-	"github.com/janoszen/containerssh/protocol"
-	log "github.com/sirupsen/logrus"
+	"os"
+
 	"net/http"
+
+	"github.com/janoszen/containerssh/config"
+	"github.com/janoszen/containerssh/log"
+	"github.com/janoszen/containerssh/log/writer"
+	"github.com/janoszen/containerssh/protocol"
+
 )
 
-func authPassword(w http.ResponseWriter, req *http.Request) {
+type authConfigServer struct {
+	logger log.Logger
+}
+
+func (s * authConfigServer) authPassword(w http.ResponseWriter, req *http.Request) {
 	// swagger:operation POST /password Authentication authPassword
 	//
 	// Password authentication
@@ -49,7 +58,7 @@ func authPassword(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	log.Tracef("Password authentication request for user %s", authRequest.User)
+	s.logger.DebugF("password authentication request for user %s", authRequest.User)
 
 	authResponse := protocol.AuthResponse{
 		Success: false,
@@ -61,7 +70,7 @@ func authPassword(w http.ResponseWriter, req *http.Request) {
 	_ = json.NewEncoder(w).Encode(authResponse)
 }
 
-func authPublicKey(w http.ResponseWriter, req *http.Request) {
+func (s * authConfigServer) authPublicKey(w http.ResponseWriter, req *http.Request) {
 	// swagger:operation POST /pubkey Authentication authPubKey
 	//
 	// Public key authentication
@@ -85,7 +94,7 @@ func authPublicKey(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	log.Tracef("Public key authentication request for user %s", authRequest.Username)
+	s.logger.DebugF("public key authentication request for user %s", authRequest.Username)
 
 	authResponse := protocol.AuthResponse{
 		Success: false,
@@ -97,7 +106,7 @@ func authPublicKey(w http.ResponseWriter, req *http.Request) {
 	_ = json.NewEncoder(w).Encode(authResponse)
 }
 
-func configHandler(w http.ResponseWriter, req *http.Request) {
+func (s * authConfigServer) configHandler(w http.ResponseWriter, req *http.Request) {
 	// swagger:operation POST /config Configuration getUserConfiguration
 	//
 	// Fetches the configuration for a user/session
@@ -126,7 +135,7 @@ func configHandler(w http.ResponseWriter, req *http.Request) {
 		Config: *defaultConfig,
 	}
 
-	log.Tracef("Config request for user %s", configRequest.Username)
+	s.logger.DebugF("config request for user %s", configRequest.Username)
 
 	if configRequest.Username == "busybox" {
 		response.Config.DockerRun.Config.ContainerConfig.Image = "busybox"
@@ -134,17 +143,28 @@ func configHandler(w http.ResponseWriter, req *http.Request) {
 
 	err = json.NewEncoder(w).Encode(response)
 	if err != nil {
-		log.Println(err)
+		s.logger.ErrorE(err)
 	}
 }
 
 func main() {
-	log.SetLevel(log.TraceLevel)
-	http.HandleFunc("/pubkey", authPublicKey)
-	http.HandleFunc("/password", authPassword)
-	http.HandleFunc("/config", configHandler)
-	err := http.ListenAndServe(":8080", nil)
+	logConfig, err := log.NewConfig(log.StoredConfig{
+		Level: "debug",
+	})
 	if err != nil {
-		log.Fatal(err)
+		panic(err)
+	}
+	logWriter := writer.NewJsonLogWriter()
+	logger := log.NewLoggerPipeline(logConfig, logWriter)
+	s := &authConfigServer{
+		logger: logger,
+	}
+	http.HandleFunc("/pubkey", s.authPublicKey)
+	http.HandleFunc("/password", s.authPassword)
+	http.HandleFunc("/config", s.configHandler)
+	err = http.ListenAndServe(":8080", nil)
+	if err != nil {
+		logger.CriticalE(err)
+		os.Exit(1)
 	}
 }

@@ -1,8 +1,7 @@
 package kuberun
 
 import (
-	"github.com/sirupsen/logrus"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 func (session *kubeRunSession) removePod() error {
@@ -15,11 +14,11 @@ func (session *kubeRunSession) removePod() error {
 			Namespace(session.pod.Namespace).
 			Resource("pods").
 			Name(session.pod.Name).
-			Body(&metav1.DeleteOptions{})
-		logrus.Tracef("Deleting %s", request.URL())
+			Body(&meta.DeleteOptions{})
+		session.logger.DebugF("deleting %s", request.URL())
 		result := request.Do(session.ctx)
 		if result.Error() != nil {
-			logrus.Tracef("Failed to remove pod (%s)", result.Error())
+			session.logger.DebugF("failed to remove pod (%v)", result.Error())
 			return result.Error()
 		}
 		session.pod = nil

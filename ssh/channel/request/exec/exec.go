@@ -1,17 +1,17 @@
-package signal
+package exec
 
 import (
 	"github.com/janoszen/containerssh/backend"
 	"github.com/janoszen/containerssh/log"
 	channelRequest "github.com/janoszen/containerssh/ssh/channel/request"
+	"github.com/janoszen/containerssh/ssh/channel/request/util"
 
 	"golang.org/x/crypto/ssh"
 )
 
 type requestMsg struct {
-	signal string
+	Exec string
 }
-
 
 type ChannelRequestHandler struct {
 	logger log.Logger
@@ -23,17 +23,15 @@ func New(logger log.Logger) channelRequest.TypeHandler {
 	}
 }
 
-
-func (e ChannelRequestHandler) GetRequestObject() interface{} {
+func (c ChannelRequestHandler) GetRequestObject() interface{} {
 	return &requestMsg{}
 }
 
-func (e ChannelRequestHandler) HandleRequest(request interface{}, reply channelRequest.Reply, channel ssh.Channel, session backend.Session) {
-	e.logger.DebugF("Signal request: %s", request.(*requestMsg).signal)
-	//todo should the list of signals allowed be filtered?
-	err := session.SendSignal("SIG" + request.(*requestMsg).signal)
+func (c ChannelRequestHandler) HandleRequest(request interface{}, reply channelRequest.Reply, channel ssh.Channel, session backend.Session) {
+	c.logger.DebugF("Exec request: %s", request.(*requestMsg).Exec)
+	err := util.Run(request.(*requestMsg).Exec, channel, session, c.logger)
 	if err != nil {
-		e.logger.DebugF("Failed signal request (%s)", err)
+		c.logger.DebugF("failed exec request (%s)", err)
 		reply(false, nil)
 	} else {
 		reply(true, nil)

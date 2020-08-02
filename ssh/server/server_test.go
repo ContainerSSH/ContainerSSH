@@ -4,6 +4,8 @@ import (
 	"context"
 	"crypto/rand"
 	"crypto/rsa"
+	"github.com/janoszen/containerssh/log"
+	"github.com/janoszen/containerssh/log/writer"
 	"golang.org/x/crypto/ssh"
 	"net"
 	"testing"
@@ -25,6 +27,18 @@ func createHostKey() (ssh.Signer, error) {
 	return private, nil
 }
 
+func createTestLogger(
+) log.Logger {
+	logConfig, err := log.NewConfig(log.StoredConfig{
+		Level: "debug",
+	})
+	if err != nil {
+		panic(err)
+	}
+	logWriter := writer.NewJsonLogWriter()
+	return log.NewLoggerPipeline(logConfig, logWriter)
+}
+
 func createTestServer(
 	readyHandler ReadyHandler,
 ) (*Server, error) {
@@ -44,6 +58,7 @@ func createTestServer(
 		serverConfig,
 		readyHandler,
 		nil,
+		createTestLogger(),
 	)
 }
 

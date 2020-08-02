@@ -3,13 +3,15 @@ package kuberun
 import (
 	"context"
 	"fmt"
-	"github.com/janoszen/containerssh/config"
-	"github.com/mattn/go-shellwords"
-	"github.com/sirupsen/logrus"
 	"io"
-	v1 "k8s.io/api/core/v1"
+	"strings"
+
+	"github.com/janoszen/containerssh/config"
+
+	"github.com/mattn/go-shellwords"
+	core "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/fields"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/schema"
@@ -17,9 +19,8 @@ import (
 	"k8s.io/client-go/kubernetes/scheme"
 	"k8s.io/client-go/tools/cache"
 	"k8s.io/client-go/tools/remotecommand"
-	watchtools "k8s.io/client-go/tools/watch"
+	watchTools "k8s.io/client-go/tools/watch"
 	"k8s.io/kubectl/pkg/util/interrupt"
-	"strings"
 )
 
 //This function returns true if the pod is either running or already has finished running (in which case logs are
@@ -30,16 +31,16 @@ func (session *kubeRunSession) isPodAvailableEvent(event watch.Event) (bool, err
 	}
 
 	switch eventObject := event.Object.(type) {
-	case *v1.Pod:
+	case *core.Pod:
 		switch eventObject.Status.Phase {
-		case v1.PodFailed, v1.PodSucceeded:
+		case core.PodFailed, core.PodSucceeded:
 			return true, nil
-		case v1.PodRunning:
+		case core.PodRunning:
 			conditions := eventObject.Status.Conditions
 			if conditions != nil {
 				for _, condition := range conditions {
-					if condition.Type == v1.PodReady &&
-						condition.Status == v1.ConditionTrue {
+					if condition.Type == core.PodReady &&
+						condition.Status == core.ConditionTrue {
 						return true, nil
 					}
 				}
@@ -50,8 +51,8 @@ func (session *kubeRunSession) isPodAvailableEvent(event watch.Event) (bool, err
 }
 
 //This function waits for a pod to be either running or already complete.
-func (session *kubeRunSession) waitForPodAvailable() (result *v1.Pod, err error) {
-	timeoutContext, cancelTimeoutContext := watchtools.ContextWithOptionalTimeout(session.ctx, session.config.Timeout)
+func (session *kubeRunSession) waitForPodAvailable() (result *core.Pod, err error) {
+	timeoutContext, cancelTimeoutContext := watchTools.ContextWithOptionalTimeout(session.ctx, session.config.Timeout)
 	defer cancelTimeoutContext()
 
 	//TODO if metadata is made customizable this must be adjusted to match
@@ -59,14 +60,14 @@ func (session *kubeRunSession) waitForPodAvailable() (result *v1.Pod, err error)
 		OneTermEqualSelector("metadata.name", session.pod.Name).
 		String()
 	listWatch := &cache.ListWatch{
-		ListFunc: func(options metav1.ListOptions) (runtime.Object, error) {
+		ListFunc: func(options meta.ListOptions) (runtime.Object, error) {
 			options.FieldSelector = fieldSelector
 			return session.client.
 				CoreV1().
 				Pods(session.pod.Namespace).
 				List(context.TODO(), options)
 		},
-		WatchFunc: func(options metav1.ListOptions) (watch.Interface, error) {
+		WatchFunc: func(options meta.ListOptions) (watch.Interface, error) {
 			options.FieldSelector = fieldSelector
 			return session.client.
 				CoreV1().
@@ -79,15 +80,15 @@ func (session *kubeRunSession) waitForPodAvailable() (result *v1.Pod, err error)
 		New(nil, cancelTimeoutContext).
 		Run(
 			func() error {
-				event, err := watchtools.UntilWithSync(
+				event, err := watchTools.UntilWithSync(
 					timeoutContext,
 					listWatch,
-					&v1.Pod{},
+					&core.Pod{},
 					nil,
 					session.isPodAvailableEvent,
 				)
 				if event != nil {
-					result = event.Object.(*v1.Pod)
+					result = event.Object.(*core.Pod)
 				}
 				return err
 			},
@@ -107,17 +108,17 @@ func (session *kubeRunSession) RequestProgram(program string, stdIn io.Reader, s
 
 	spec := session.createPodSpec(program, session.config)
 
-	logrus.Tracef("Creating pod")
+	session.logger.DebugF("Creating pod")
 	pod, err := session.client.CoreV1().Pods(session.config.Pod.Namespace).Create(
 		session.ctx,
-		&v1.Pod{
-			ObjectMeta: metav1.ObjectMeta{
+		&core.Pod{
+			ObjectMeta: meta.ObjectMeta{
 				GenerateName: "containerssh-",
 				Namespace:    session.config.Pod.Namespace,
 			},
 			Spec: spec,
 		},
-		metav1.CreateOptions{},
+		meta.CreateOptions{},
 	)
 	if err != nil {
 		return err
@@ -130,14 +131,14 @@ func (session *kubeRunSession) RequestProgram(program string, stdIn io.Reader, s
 	return nil
 }
 
-func (session *kubeRunSession) createPodSpec(program string, config config.KubeRunConfig) v1.PodSpec {
+func (session *kubeRunSession) createPodSpec(program string, config config.KubeRunConfig) core.PodSpec {
 	spec := config.Pod.Spec
 
 	consoleContainerNumber := config.Pod.ConsoleContainerNumber
 	for key, value := range session.env {
 		spec.Containers[consoleContainerNumber].Env = append(
 			spec.Containers[consoleContainerNumber].Env,
-			v1.EnvVar{
+			core.EnvVar{
 				Name:  key,
 				Value: value,
 			},
@@ -147,7 +148,7 @@ func (session *kubeRunSession) createPodSpec(program string, config config.KubeR
 	spec.Containers[consoleContainerNumber].TTY = session.pty
 	spec.Containers[consoleContainerNumber].StdinOnce = true
 	spec.Containers[consoleContainerNumber].Stdin = true
-	spec.RestartPolicy = v1.RestartPolicyNever
+	spec.RestartPolicy = core.RestartPolicyNever
 
 	if !config.Pod.DisableCommand && program != "" {
 		programParts, err := shellwords.Parse(program)
@@ -166,7 +167,7 @@ func (session *kubeRunSession) createPodSpec(program string, config config.KubeR
 	return spec
 }
 
-func (session *kubeRunSession) handlePodConnection(err error, pod *v1.Pod, container v1.Container, stdIn io.Reader, stdOut io.Writer, stdErr io.Writer, done func()) {
+func (session *kubeRunSession) handlePodConnection(err error, pod *core.Pod, container core.Container, stdIn io.Reader, stdOut io.Writer, stdErr io.Writer, done func()) {
 	// This function is running async so that the SSH client can receive an acknowledgement of the requested
 	// shell/exec/subsystem before sending output, otherwise the output will be ignored.
 	// Todo possible race condition? Unlikely as the pod takes time to come up
@@ -174,7 +175,7 @@ func (session *kubeRunSession) handlePodConnection(err error, pod *v1.Pod, conta
 	//Wait for pod do come up
 	session.pod, err = session.waitForPodAvailable()
 	if err != nil {
-		logrus.Tracef("Pod failed to come up (%s)", err)
+		session.logger.WarningF("pod failed to come up (%v)", err)
 		session.Close()
 		_ = session.removePod()
 		//todo send error to client
@@ -185,7 +186,7 @@ func (session *kubeRunSession) handlePodConnection(err error, pod *v1.Pod, conta
 		Resource("pods").
 		Name(pod.Name).
 		SubResource("attach")
-	req.VersionedParams(&v1.PodAttachOptions{
+	req.VersionedParams(&core.PodAttachOptions{
 		Container: container.Name,
 		Stdin:     true,
 		Stdout:    true,
@@ -193,16 +194,16 @@ func (session *kubeRunSession) handlePodConnection(err error, pod *v1.Pod, conta
 		TTY:       session.pty,
 	}, scheme.ParameterCodec)
 
-	logrus.Tracef("POST %s", req.URL())
+	session.logger.DebugF("POST %s", req.URL())
 	exec, err := remotecommand.NewSPDYExecutor(&session.connectionConfig, "POST", req.URL())
 	if err != nil {
-		logrus.Warnf("Failed to attach to container (%s)", err)
+		session.logger.WarningF("failed to attach to container (%s)", err)
 		session.Close()
 		_ = session.removePod()
 		return
 	}
 
-	logrus.Tracef("Streaming input/output")
+	session.logger.DebugF("Streaming input/output")
 	err = exec.Stream(remotecommand.StreamOptions{
 		Stdin:             stdIn,
 		Stdout:            stdOut,
@@ -217,24 +218,24 @@ func (session *kubeRunSession) handlePodConnection(err error, pod *v1.Pod, conta
 	done()
 }
 
-func (session *kubeRunSession) handleFinishedPod(pod *v1.Pod, container v1.Container, stdOut io.Writer) {
-	logrus.Tracef("Pod already finished, streaming logs")
+func (session *kubeRunSession) handleFinishedPod(pod *core.Pod, container core.Container, stdOut io.Writer) {
+	session.logger.DebugF("Pod already finished, streaming logs")
 	//Try fetching logs in case the container already exited.
 	//Do not move this above the "attach" method otherwise there will be a race condition.
-	request := session.client.CoreV1().Pods(pod.Namespace).GetLogs(pod.Name, &v1.PodLogOptions{
+	request := session.client.CoreV1().Pods(pod.Namespace).GetLogs(pod.Name, &core.PodLogOptions{
 		Container: container.Name,
 	})
 
 	logStream, err := request.Stream(session.ctx)
 	if err != nil {
-		logrus.Tracef("Failed to attach or stream logs (%s)", err)
+		session.logger.DebugF("Failed to attach or stream logs (%s)", err)
 		return
 	}
 	//TODO stderr stream? Does Kubernetes even support that with logs?
 	//     https://github.com/kubernetes/kubernetes/issues/28167
 	_, err = io.Copy(stdOut, logStream)
 	if err != nil {
-		logrus.Tracef("Failed to attach or stream logs (%s)", err)
+		session.logger.DebugF("Failed to attach or stream logs (%s)", err)
 		return
 	}
 	//todo inform client of the error.

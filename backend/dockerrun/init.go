@@ -4,16 +4,15 @@ import (
 	"context"
 	"crypto/tls"
 	"crypto/x509"
-	"fmt"
 	"github.com/docker/docker/client"
 	"github.com/janoszen/containerssh/backend"
 	"github.com/janoszen/containerssh/config"
-	"github.com/sirupsen/logrus"
+	"github.com/janoszen/containerssh/log"
 	"net/http"
 )
 
-func createSession(sessionId string, username string, appConfig *config.AppConfig) (backend.Session, error) {
-	logrus.Trace(fmt.Sprintf("Initializing Docker backend"))
+func createSession(sessionId string, username string, appConfig *config.AppConfig, logger log.Logger) (backend.Session, error) {
+	logger.DebugF("initializing Docker backend")
 	var httpClient *http.Client = nil
 	if appConfig.DockerRun.CaCert != "" && appConfig.DockerRun.Key != "" && appConfig.DockerRun.Cert != "" {
 		tlsConfig := &tls.Config{}
@@ -49,6 +48,7 @@ func createSession(sessionId string, username string, appConfig *config.AppConfi
 	session.ctx = context.Background()
 	session.exitCode = -1
 	session.config = &appConfig.DockerRun
+	session.logger = logger
 
 	return session, nil
 }
@@ -67,6 +67,7 @@ type dockerRunSession struct {
 	ctx         context.Context
 	client      *client.Client
 	config      *config.DockerRunConfig
+	logger      log.Logger
 }
 
 func Init(registry *backend.Registry) {

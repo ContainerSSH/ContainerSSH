@@ -3,30 +3,32 @@ package request
 import (
 	"fmt"
 	"github.com/janoszen/containerssh/backend"
-	log "github.com/sirupsen/logrus"
+	"github.com/janoszen/containerssh/log"
 	"golang.org/x/crypto/ssh"
 )
 
 type Reply func(success bool, message interface{})
 
-type TypeHandler struct {
-	GetRequestObject func() interface{}
-	HandleRequest    func(request interface{}, reply Reply, channel ssh.Channel, session backend.Session)
+type TypeHandler interface {
+	GetRequestObject() interface{}
+	HandleRequest(request interface{}, reply Reply, channel ssh.Channel, session backend.Session)
 }
 
 type Handler struct {
-	ChannelHandlers map[string]TypeHandler
+	channelHandlers map[string]TypeHandler
+	logger log.Logger
 }
 
-func NewHandler() Handler {
+func NewHandler(logger log.Logger) Handler {
 	return Handler{
-		ChannelHandlers: map[string]TypeHandler{},
+		channelHandlers: map[string]TypeHandler{},
+		logger: logger,
 	}
 }
 
-func (handler *Handler) getTypeHandler(requestType string) (*TypeHandler, error) {
-	if typeHandler, ok := handler.ChannelHandlers[requestType]; ok {
-		return &typeHandler, nil
+func (handler *Handler) getTypeHandler(requestType string) (TypeHandler, error) {
+	if typeHandler, ok := handler.channelHandlers[requestType]; ok {
+		return typeHandler, nil
 	}
 	return nil, fmt.Errorf("unsupported request type: %s", requestType)
 }
@@ -48,7 +50,7 @@ func (handler *Handler) dispatchRequest(
 ) {
 	typeHandler, err := handler.getTypeHandler(requestType)
 	if err != nil {
-		log.Println(err)
+		handler.logger.InfoE(err)
 		reply(false, nil)
 	} else if typeHandler == nil {
 		reply(false, nil)
@@ -58,7 +60,7 @@ func (handler *Handler) dispatchRequest(
 }
 
 func (handler *Handler) AddTypeHandler(requestType string, typeHandler TypeHandler) {
-	handler.ChannelHandlers[requestType] = typeHandler
+	handler.channelHandlers[requestType] = typeHandler
 }
 
 func (handler *Handler) OnChannelRequest(
@@ -70,14 +72,14 @@ func (handler *Handler) OnChannelRequest(
 ) {
 	unmarshalledPayload, err := handler.getPayloadObjectForRequestType(requestType)
 	if err != nil {
-		log.Println(err)
+		handler.logger.InfoE(err)
 		reply(false, nil)
 	}
 
 	if payload != nil && len(payload) > 0 {
 		err = ssh.Unmarshal(payload, unmarshalledPayload)
 		if err != nil {
-			log.Println(err)
+			handler.logger.InfoE(err)
 			reply(false, nil)
 		}
 	}

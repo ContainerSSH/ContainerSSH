@@ -2,7 +2,9 @@ package request
 
 import (
 	"fmt"
-	log "github.com/sirupsen/logrus"
+
+	"github.com/janoszen/containerssh/log"
+
 	"golang.org/x/crypto/ssh"
 )
 
@@ -14,17 +16,18 @@ type TypeHandler struct {
 }
 
 type Handler struct {
-	GlobalHandlers map[string]TypeHandler
+	globalHandlers map[string]TypeHandler
+	logger log.Logger
 }
 
 func NewHandler() *Handler {
 	return &Handler{
-		GlobalHandlers: map[string]TypeHandler{},
+		globalHandlers: map[string]TypeHandler{},
 	}
 }
 
 func (handler *Handler) getTypeHandler(requestType string) (*TypeHandler, error) {
-	if typeHandler, ok := handler.GlobalHandlers[requestType]; ok {
+	if typeHandler, ok := handler.globalHandlers[requestType]; ok {
 		return &typeHandler, nil
 	}
 	return nil, fmt.Errorf("unsupported request type: %s", requestType)
@@ -45,7 +48,7 @@ func (handler *Handler) dispatchRequest(
 ) {
 	typeHandler, err := handler.getTypeHandler(requestType)
 	if err != nil {
-		log.Println(err)
+		handler.logger.DebugE(err)
 		reply(false, nil)
 	} else if typeHandler == nil {
 		reply(false, nil)
@@ -55,7 +58,7 @@ func (handler *Handler) dispatchRequest(
 }
 
 func (handler *Handler) AddTypeHandler(requestType string, typeHandler TypeHandler) {
-	handler.GlobalHandlers[requestType] = typeHandler
+	handler.globalHandlers[requestType] = typeHandler
 }
 
 func (handler *Handler) OnGlobalRequest(
@@ -65,14 +68,14 @@ func (handler *Handler) OnGlobalRequest(
 ) {
 	unmarshalledPayload, err := handler.getPayloadObjectForRequestType(requestType)
 	if err != nil {
-		log.Println(err)
+		handler.logger.DebugE(err)
 		reply(false, nil)
 	}
 
 	if payload != nil && len(payload) > 0 {
 		err = ssh.Unmarshal(payload, unmarshalledPayload)
 		if err != nil {
-			log.Println(err)
+			handler.logger.DebugE(err)
 			reply(false, nil)
 		}
 	}

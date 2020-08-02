@@ -5,17 +5,21 @@ import (
 	"encoding/json"
 	"github.com/janoszen/containerssh/config"
 	containerhttp "github.com/janoszen/containerssh/http"
+	"github.com/janoszen/containerssh/log"
 	"github.com/janoszen/containerssh/protocol"
-	"github.com/sirupsen/logrus"
 	"net/http"
 )
 
 type HttpConfigClient struct {
 	httpClient http.Client
 	endpoint   string
+	logger     log.Logger
 }
 
-func NewHttpConfigClient(config config.ConfigServerConfig) (ConfigClient, error) {
+func NewHttpConfigClient(
+	config config.ConfigServerConfig,
+	logger log.Logger,
+) (ConfigClient, error) {
 	if config.Url == "" {
 		return nil, nil
 	}
@@ -25,6 +29,7 @@ func NewHttpConfigClient(config config.ConfigServerConfig) (ConfigClient, error)
 		config.ClientCert,
 		config.ClientKey,
 		config.Url,
+		logger,
 	)
 	if err != nil {
 		return nil, err
@@ -33,11 +38,12 @@ func NewHttpConfigClient(config config.ConfigServerConfig) (ConfigClient, error)
 	return &HttpConfigClient{
 		httpClient: *realClient,
 		endpoint:   config.Url,
+		logger: logger,
 	}, nil
 }
 
 func (client *HttpConfigClient) GetConfig(request protocol.ConfigRequest) (*protocol.ConfigResponse, error) {
-	logrus.Tracef("Fetching configuration for connection for user %s", request.Username)
+	client.logger.DebugF("Fetching configuration for connection for user %s", request.Username)
 	response := protocol.ConfigResponse{}
 	err := client.configServerRequest(request, &response)
 	if err != nil {

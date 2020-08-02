@@ -1,10 +1,10 @@
 package pty
 
 import (
-	"fmt"
 	"github.com/janoszen/containerssh/backend"
-	request2 "github.com/janoszen/containerssh/ssh/channel/request"
-	"github.com/sirupsen/logrus"
+	"github.com/janoszen/containerssh/log"
+	channelRequest "github.com/janoszen/containerssh/ssh/channel/request"
+
 	"golang.org/x/crypto/ssh"
 )
 
@@ -17,24 +17,34 @@ type requestMsg struct {
 	Modelist string
 }
 
-func onPtyRequest(request *requestMsg, session backend.Session) error {
-	logrus.Trace(fmt.Sprintf("PTY request"))
-	err := session.SetPty()
-	if err != nil {
-		return err
-	}
-	return session.Resize(uint(request.Columns), uint(request.Rows))
+type ChannelRequestHandler struct {
+	logger log.Logger
 }
 
-var RequestTypeHandler = request2.TypeHandler{
-	GetRequestObject: func() interface{} { return &requestMsg{} },
-	HandleRequest: func(request interface{}, reply request2.Reply, channel ssh.Channel, session backend.Session) {
-		err := onPtyRequest(request.(*requestMsg), session)
-		if err != nil {
-			logrus.Tracef("Failed pty request (%s)", err)
-			reply(false, nil)
-		} else {
-			reply(true, nil)
-		}
-	},
+func New(logger log.Logger) channelRequest.TypeHandler {
+	return &ChannelRequestHandler{
+		logger: logger,
+	}
+}
+
+func (c ChannelRequestHandler) GetRequestObject() interface{} {
+	return &requestMsg{}
+}
+
+func (c ChannelRequestHandler) HandleRequest(request interface{}, reply channelRequest.Reply, channel ssh.Channel, session backend.Session) {
+	c.logger.DebugF("PTY request")
+	err := session.SetPty()
+	if err != nil {
+		c.logger.DebugF("failed PTY request (%v)", err)
+		reply(false, nil)
+		return
+	}
+	err = session.Resize(uint(request.(*requestMsg).Columns), uint(request.(*requestMsg).Rows))
+	if err != nil {
+		c.logger.DebugF("failed PTY request (%v)", err)
+		reply(false, nil)
+		return
+	}
+
+	reply(true, nil)
 }

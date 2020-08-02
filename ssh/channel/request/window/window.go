@@ -1,10 +1,10 @@
 package window
 
 import (
-	"fmt"
 	"github.com/janoszen/containerssh/backend"
-	request2 "github.com/janoszen/containerssh/ssh/channel/request"
-	log "github.com/sirupsen/logrus"
+	"github.com/janoszen/containerssh/log"
+	channelRequest "github.com/janoszen/containerssh/ssh/channel/request"
+
 	"golang.org/x/crypto/ssh"
 )
 
@@ -15,20 +15,27 @@ type requestMsg struct {
 	Height  uint32
 }
 
-func onWindowChange(request *requestMsg, session backend.Session) error {
-	log.Trace(fmt.Sprintf("Window change request: %dx%d", request.Rows, request.Columns))
-	return session.Resize(uint(request.Columns), uint(request.Rows))
+type ChannelRequestHandler struct {
+	logger log.Logger
 }
 
-var RequestTypeHandler = request2.TypeHandler{
-	GetRequestObject: func() interface{} { return &requestMsg{} },
-	HandleRequest: func(request interface{}, reply request2.Reply, channel ssh.Channel, session backend.Session) {
-		err := onWindowChange(request.(*requestMsg), session)
-		if err != nil {
-			log.Tracef("Failed window change request (%s)", err)
-			reply(false, nil)
-		} else {
-			reply(true, nil)
-		}
-	},
+func New(logger log.Logger) channelRequest.TypeHandler {
+	return &ChannelRequestHandler{
+		logger: logger,
+	}
+}
+
+func (e ChannelRequestHandler) GetRequestObject() interface{} {
+	return &requestMsg{}
+}
+
+func (e ChannelRequestHandler) HandleRequest(request interface{}, reply channelRequest.Reply, channel ssh.Channel, session backend.Session) {
+	e.logger.DebugF("window change request: %dx%d", request.(*requestMsg).Rows, request.(*requestMsg).Columns)
+	err := session.Resize(uint(request.(*requestMsg).Columns), uint(request.(*requestMsg).Rows))
+	if err != nil {
+		e.logger.DebugF("failed window change request (%v)", err)
+		reply(false, nil)
+	} else {
+		reply(true, nil)
+	}
 }

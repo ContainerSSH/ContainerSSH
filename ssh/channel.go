@@ -2,16 +2,19 @@ package ssh
 
 import (
 	"context"
-	"encoding/base64"
 	"fmt"
+
+	"encoding/base64"
+
 	"github.com/janoszen/containerssh/backend"
 	"github.com/janoszen/containerssh/config"
 	configurationClient "github.com/janoszen/containerssh/config/client"
 	"github.com/janoszen/containerssh/config/util"
+	"github.com/janoszen/containerssh/log"
 	"github.com/janoszen/containerssh/protocol"
 	"github.com/janoszen/containerssh/ssh/server"
+
 	"github.com/qdm12/reprint"
-	log "github.com/sirupsen/logrus"
 	"golang.org/x/crypto/ssh"
 )
 
@@ -24,6 +27,7 @@ type ChannelHandler struct {
 	backendRegistry              *backend.Registry
 	configClient                 configurationClient.ConfigClient
 	channelRequestHandlerFactory ChannelRequestHandlerFactory
+	logger 						 log.Logger
 }
 
 func NewChannelHandler(
@@ -31,12 +35,14 @@ func NewChannelHandler(
 	backendRegistry *backend.Registry,
 	configClient configurationClient.ConfigClient,
 	channelRequestHandlerFactory ChannelRequestHandlerFactory,
+	logger 						 log.Logger,
 ) *ChannelHandler {
 	return &ChannelHandler{
 		appConfig:                    appConfig,
 		backendRegistry:              backendRegistry,
 		configClient:                 configClient,
 		channelRequestHandlerFactory: channelRequestHandlerFactory,
+		logger:                       logger,
 	}
 }
 
@@ -56,7 +62,7 @@ func (handler *ChannelHandler) OnChannel(
 	actualConfig := config.AppConfig{}
 	err := reprint.FromTo(handler.appConfig, &actualConfig)
 	if err != nil {
-		log.Warnf("Failed to copy application config (%s)", err)
+		handler.logger.WarningF("failed to copy application config (%v)", err)
 		return nil, &server.ChannelRejection{
 			RejectionReason:  ssh.ResourceShortage,
 			RejectionMessage: "failed to create config",
@@ -69,7 +75,7 @@ func (handler *ChannelHandler) OnChannel(
 			SessionId: base64.StdEncoding.EncodeToString(connection.SessionID()),
 		})
 		if err != nil {
-			log.Tracef("%v", err)
+			handler.logger.DebugE(err)
 			return nil, &server.ChannelRejection{
 				RejectionReason:  ssh.ResourceShortage,
 				RejectionMessage: fmt.Sprintf("internal error while calling the config server: %s", err),
@@ -77,7 +83,7 @@ func (handler *ChannelHandler) OnChannel(
 		}
 		newConfig, err := util.Merge(&configResponse.Config, &actualConfig)
 		if err != nil {
-			log.Tracef("%v", err)
+			handler.logger.DebugE(err)
 			return nil, &server.ChannelRejection{
 				RejectionReason:  ssh.ResourceShortage,
 				RejectionMessage: fmt.Sprintf("failed to merge config"),
@@ -88,7 +94,7 @@ func (handler *ChannelHandler) OnChannel(
 
 	containerBackend, err := handler.backendRegistry.GetBackend(actualConfig.Backend)
 	if err != nil {
-		log.Tracef("%v", err)
+		handler.logger.DebugE(err)
 		return nil, &server.ChannelRejection{
 			RejectionReason:  ssh.ResourceShortage,
 			RejectionMessage: fmt.Sprintf("no such backend"),
@@ -99,9 +105,10 @@ func (handler *ChannelHandler) OnChannel(
 		string(connection.SessionID()),
 		connection.User(),
 		&actualConfig,
+		handler.logger,
 	)
 	if err != nil {
-		log.Tracef("%v", err)
+		handler.logger.DebugE(err)
 		return nil, &server.ChannelRejection{
 			RejectionReason:  ssh.ResourceShortage,
 			RejectionMessage: fmt.Sprintf("internal error while creating backend"),
@@ -115,14 +122,25 @@ type channelHandlerFactory struct {
 	backendRegistry              *backend.Registry
 	configClient                 configurationClient.ConfigClient
 	channelRequestHandlerFactory ChannelRequestHandlerFactory
+	logger                       log.Logger
+	loggerFactory                log.LoggerFactory
 }
 
 func (factory *channelHandlerFactory) Make(appConfig *config.AppConfig) *ChannelHandler {
+	logConfig, err := log.NewConfig(appConfig.Log.Level)
+	logger := factory.logger
+	if err != nil {
+		factory.logger.WarningF("invalid log level (%s) using default logger", appConfig.Log.Level)
+	} else {
+		logger = factory.loggerFactory.Make(logConfig)
+	}
+
 	return NewChannelHandler(
 		appConfig,
 		factory.backendRegistry,
 		factory.configClient,
 		factory.channelRequestHandlerFactory,
+		logger,
 	)
 }
 
@@ -130,10 +148,14 @@ func NewDefaultChannelHandlerFactory(
 	backendRegistry *backend.Registry,
 	configClient configurationClient.ConfigClient,
 	channelRequestHandlerFactory ChannelRequestHandlerFactory,
+	logger                       log.Logger,
+	loggerFactory                log.LoggerFactory,
 ) ChannelHandlerFactory {
 	return &channelHandlerFactory{
 		backendRegistry:              backendRegistry,
 		configClient:                 configClient,
 		channelRequestHandlerFactory: channelRequestHandlerFactory,
+		logger: logger,
+		loggerFactory: loggerFactory,
 	}
 }

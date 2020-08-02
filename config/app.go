@@ -4,8 +4,8 @@ package config
 type BackendName string
 
 const (
-	BACKEND_NAME_DOCKERRUN = "dockerrun"
-	BACKEND_NAME_KUBERUN   = "kuberun"
+	BackendDockerRun BackendName = "dockerrun"
+	BackendKubeRun   BackendName = "kuberun"
 )
 
 type AppConfig struct {
@@ -23,4 +23,6 @@ type AppConfig struct {
 	DockerRun DockerRunConfig `json:"dockerrun" yaml:"dockerrun" comment:"Docker configuration to use when the Docker run backend is used."`
 	// Configuration for the kuberun backend
 	KubeRun KubeRunConfig `json:"kuberun" yaml:"kuberun" comment:"Kubernetes configuration to use when the Kubernetes run backend is used."`
+	// Logging configuration
+	Log LogConfig `json:"log" yaml:"log" comment:"Log configuration"`
 }

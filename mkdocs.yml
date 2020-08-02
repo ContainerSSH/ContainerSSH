@@ -39,6 +39,7 @@ nav:
   - 'The dockerrun Backend': 'dockerrun.md'
   - 'The kuberun Backend': 'kuberun.md'
   - 'Creating an Image': 'image.md'
+  - 'Logging': 'logging.md'
   - 'Hardening': 'hardening.md'
   - 'FAQ': 'faq.md'
   - 'API reference':

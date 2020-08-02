@@ -7,17 +7,21 @@ import (
 	"fmt"
 	"github.com/janoszen/containerssh/config"
 	containerhttp "github.com/janoszen/containerssh/http"
+	"github.com/janoszen/containerssh/log"
 	"github.com/janoszen/containerssh/protocol"
-	"github.com/sirupsen/logrus"
 	"net/http"
 )
 
 type HttpAuthClient struct {
 	httpClient http.Client
 	endpoint   string
+	logger     log.Logger
 }
 
-func NewHttpAuthClient(config config.AuthConfig) (*HttpAuthClient, error) {
+func NewHttpAuthClient(
+	config config.AuthConfig,
+	logger log.Logger,
+) (*HttpAuthClient, error) {
 	if config.Url == "" {
 		return nil, fmt.Errorf("no authentication server URL provided")
 	}
@@ -27,6 +31,7 @@ func NewHttpAuthClient(config config.AuthConfig) (*HttpAuthClient, error) {
 		config.ClientCert,
 		config.ClientKey,
 		config.Url,
+		logger,
 	)
 	if err != nil {
 		return nil, err
@@ -35,6 +40,7 @@ func NewHttpAuthClient(config config.AuthConfig) (*HttpAuthClient, error) {
 	return &HttpAuthClient{
 		httpClient: *realClient,
 		endpoint:   config.Url,
+		logger:     logger,
 	}, nil
 }
 
@@ -48,7 +54,7 @@ func (client *HttpAuthClient) Password(
 	//Remote address in IP:port format
 	remoteAddr string,
 ) (*protocol.AuthResponse, error) {
-	logrus.Tracef("Authentication user %s with password for connection from %s", username, remoteAddr)
+	client.logger.DebugF("Password authentication attempt user %s with public key for connection from %s", username, remoteAddr)
 	authRequest := protocol.PasswordAuthRequest{
 		User:          username,
 		Username:      username,
@@ -59,10 +65,10 @@ func (client *HttpAuthClient) Password(
 	authResponse := &protocol.AuthResponse{}
 	err := client.authServerRequest(client.endpoint+"/password", authRequest, authResponse)
 	if err != nil {
-		logrus.Tracef("Authentication failed (%s)", err)
+		client.logger.DebugF("Failed password authentication for user %s with public key for connection from %s", username, remoteAddr)
 		return nil, err
 	}
-	logrus.Tracef("Authentication successful")
+	client.logger.DebugF("Successful password authentication for user %s with public key for connection from %s", username, remoteAddr)
 	return authResponse, nil
 }
 func (client *HttpAuthClient) PubKey(
@@ -75,7 +81,7 @@ func (client *HttpAuthClient) PubKey(
 	//Remote address in IP:port format
 	remoteAddr string,
 ) (*protocol.AuthResponse, error) {
-	logrus.Tracef("Authentication user %s with public key for connection from %s", username, remoteAddr)
+	client.logger.DebugF("Public key authentication attempt user %s with public key for connection from %s", username, remoteAddr)
 	authRequest := protocol.PublicKeyAuthRequest{
 		User:          username,
 		Username:      username,
@@ -86,10 +92,10 @@ func (client *HttpAuthClient) PubKey(
 	authResponse := &protocol.AuthResponse{}
 	err := client.authServerRequest(client.endpoint+"/pubkey", authRequest, authResponse)
 	if err != nil {
-		logrus.Tracef("Authentication failed (%s)", err)
+		client.logger.DebugF("Failed public key authentication for user %s with public key for connection from %s", username, remoteAddr)
 		return nil, err
 	}
-	logrus.Tracef("Authentication successful")
+	client.logger.DebugF("Successful public key authentication for user %s with public key for connection from %s", username, remoteAddr)
 	return authResponse, nil
 }
 

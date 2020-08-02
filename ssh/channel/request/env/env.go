@@ -1,10 +1,10 @@
 package env
 
 import (
-	"fmt"
 	"github.com/janoszen/containerssh/backend"
+	"github.com/janoszen/containerssh/log"
 	channelRequest "github.com/janoszen/containerssh/ssh/channel/request"
-	"github.com/sirupsen/logrus"
+
 	"golang.org/x/crypto/ssh"
 )
 
@@ -13,20 +13,28 @@ type requestMsg struct {
 	Value string
 }
 
-func onSetEnvRequest(request *requestMsg, session backend.Session) error {
-	logrus.Trace(fmt.Sprintf("Set env request: %s=%s", request.Name, request.Value))
-	return session.SetEnv(request.Name, request.Value)
+type ChannelRequestHandler struct {
+	logger log.Logger
 }
 
-var RequestTypeHandler = channelRequest.TypeHandler{
-	GetRequestObject: func() interface{} { return &requestMsg{} },
-	HandleRequest: func(request interface{}, reply channelRequest.Reply, channel ssh.Channel, session backend.Session) {
-		err := onSetEnvRequest(request.(*requestMsg), session)
-		if err != nil {
-			logrus.Tracef("Failed env request (%s)", err)
-			reply(false, nil)
-		} else {
-			reply(true, nil)
-		}
-	},
+func New(logger log.Logger) channelRequest.TypeHandler {
+	return &ChannelRequestHandler{
+		logger: logger,
+	}
+}
+
+
+func (e ChannelRequestHandler) GetRequestObject() interface{} {
+	return &requestMsg{}
+}
+
+func (e ChannelRequestHandler) HandleRequest(request interface{}, reply channelRequest.Reply, channel ssh.Channel, session backend.Session) {
+	e.logger.DebugF("Set env request: %s=%s", request.(*requestMsg).Name, request.(*requestMsg).Value)
+	err := session.SetEnv(request.(*requestMsg).Name, request.(*requestMsg).Value)
+	if err != nil {
+		e.logger.DebugF("Failed env request (%s)", err)
+		reply(false, nil)
+	} else {
+		reply(true, nil)
+	}
 }

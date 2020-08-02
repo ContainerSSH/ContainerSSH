@@ -2,10 +2,9 @@ package kuberun
 
 import (
 	"context"
-	"fmt"
 	"github.com/janoszen/containerssh/backend"
 	"github.com/janoszen/containerssh/config"
-	"github.com/sirupsen/logrus"
+	"github.com/janoszen/containerssh/log"
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/client-go/kubernetes"
 	restclient "k8s.io/client-go/rest"
@@ -13,8 +12,8 @@ import (
 	"k8s.io/kubectl/pkg/scheme"
 )
 
-func createSession(sessionId string, username string, appConfig *config.AppConfig) (backend.Session, error) {
-	logrus.Trace(fmt.Sprintf("Initializing Kubernetes backend"))
+func createSession(sessionId string, username string, appConfig *config.AppConfig, logger log.Logger) (backend.Session, error) {
+	logger.DebugF("Initializing Kubernetes backend")
 	connectionConfig := restclient.Config{
 		Host:    appConfig.KubeRun.Connection.Host,
 		APIPath: appConfig.KubeRun.Connection.APIPath,
@@ -65,6 +64,7 @@ func createSession(sessionId string, username string, appConfig *config.AppConfi
 	session.config = appConfig.KubeRun
 	session.restClient = restClient
 	session.connectionConfig = connectionConfig
+	session.logger = logger
 
 	return session, nil
 }
@@ -94,6 +94,7 @@ type kubeRunSession struct {
 	terminalSizeQueue sizeQueue
 	restClient        *restclient.RESTClient
 	connectionConfig  restclient.Config
+	logger            log.Logger
 }
 
 func Init(registry *backend.Registry) {

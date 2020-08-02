@@ -3,6 +3,7 @@ package backend
 import (
 	"fmt"
 	"github.com/janoszen/containerssh/config"
+	"github.com/janoszen/containerssh/log"
 	"io"
 )
 
@@ -34,7 +35,7 @@ type Session interface {
 
 type Backend struct {
 	Name          config.BackendName
-	CreateSession func(sessionId string, username string, appConfig *config.AppConfig) (Session, error)
+	CreateSession func(sessionId string, username string, appConfig *config.AppConfig, logger log.Logger) (Session, error)
 }
 
 type Registry struct {

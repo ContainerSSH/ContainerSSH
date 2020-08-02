@@ -1,19 +1,18 @@
 package kuberun
 
 import (
-	log "github.com/sirupsen/logrus"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 func (session *kubeRunSession) GetExitCode() int32 {
 	if session.exitCode < 0 && session.pod != nil {
-		log.Tracef("Fetching exit code...")
+		session.logger.Debug("Fetching exit code...")
 		pod, err := session.client.
 			CoreV1().
 			Pods(session.pod.Namespace).
 			Get(session.ctx, session.pod.Name, v1.GetOptions{})
 		if err != nil {
-			log.Infof("Error while fetching exit code (%s)", err)
+			session.logger.DebugF("Error while fetching exit code (%v)", err)
 			return session.exitCode
 		}
 		containerStatuses := pod.Status.ContainerStatuses
