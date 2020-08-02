@@ -1,6 +1,5 @@
 before:
   hooks:
-    - go install github.com/mitchellh/golicense
     - go run cmd/swagger/main.go containerssh-authconfig-openapi.json docs/api/authconfig/containerssh-authconfig.json
 builds:
   - id: containerssh-linux
