@@ -48,3 +48,23 @@ configserver:
     cert: "insert your client certificate in PEM format here"
     key: "insert your client key in PEM format here"
 ```
+
+## Disabling command execution {{ since "0.2.1" }}
+
+You can disable the execution of custom SSH commands through the configuration:
+
+
+```yaml
+dockerrun:
+    config:
+        disableCommand: true
+```
+
+```yaml
+kuberun:
+    pod:
+        disableCommand: true
+```
+
+!!! note
+    Enabling command execution also disables SFTP integration.
