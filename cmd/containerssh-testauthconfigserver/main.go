@@ -6,7 +6,7 @@
 //     Schemes: http, https
 //     Host: localhost
 //     BasePath: /
-//     Version: 0.2.1
+//     Version: 0.2.2
 //
 //     Consumes:
 //     - application/json
@@ -148,9 +148,7 @@ func (s * authConfigServer) configHandler(w http.ResponseWriter, req *http.Reque
 }
 
 func main() {
-	logConfig, err := log.NewConfig(log.StoredConfig{
-		Level: "debug",
-	})
+	logConfig, err := log.NewConfig(log.LevelDebugString)
 	if err != nil {
 		panic(err)
 	}
