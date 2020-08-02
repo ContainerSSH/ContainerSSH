@@ -101,6 +101,10 @@ func (session *kubeRunSession) RequestProgram(program string, stdIn io.Reader, s
 		return fmt.Errorf("cannot change request program after the pod has started")
 	}
 
+	if session.config.Pod.DisableCommand && program != "" {
+		return fmt.Errorf("command execution disabled, cannot run program: %s", program)
+	}
+
 	spec := session.createPodSpec(program, session.config)
 
 	logrus.Tracef("Creating pod")
@@ -145,7 +149,7 @@ func (session *kubeRunSession) createPodSpec(program string, config config.KubeR
 	spec.Containers[consoleContainerNumber].Stdin = true
 	spec.RestartPolicy = v1.RestartPolicyNever
 
-	if program != "" {
+	if !config.Pod.DisableCommand && program != "" {
 		programParts, err := shellwords.Parse(program)
 		if err != nil {
 			spec.Containers[consoleContainerNumber].Command = []string{"/bin/sh", "-c", program}

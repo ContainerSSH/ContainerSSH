@@ -160,5 +160,7 @@ kuberun:
         subsystems:
             # This will be used as `command` when the client asks for the SFTP subsystem.
             sftp: /usr/lib/openssh/sftp-server
+        # Disable command execution via SSH. Also disables subsystem requests.
+        disableCommand: false
     timeout: 1m0s
 ```

@@ -19,6 +19,11 @@ func (session *dockerRunSession) RequestProgram(program string, stdIn io.Reader,
 
 	config := session.config
 
+	if config.Config.DisableCommand && program != "" {
+		return fmt.Errorf("command execution disabled, cannot run program: %s", program)
+	}
+
+
 	image := config.Config.ContainerConfig.Image
 	_, err := reference.ParseNamed(config.Config.ContainerConfig.Image)
 	if err != nil {
@@ -57,7 +62,7 @@ func (session *dockerRunSession) RequestProgram(program string, stdIn io.Reader,
 		config.Config.ContainerConfig.Env = append(config.Config.ContainerConfig.Env, fmt.Sprintf("%s=%s", key, value))
 	}
 
-	if program != "" {
+	if !config.Config.DisableCommand && program != "" {
 		programParts, err := shellwords.Parse(program)
 		if err != nil {
 			config.Config.ContainerConfig.Cmd = []string{"/bin/sh", "-c", program}
