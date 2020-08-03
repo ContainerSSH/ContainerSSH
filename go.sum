@@ -48,6 +48,8 @@ github.com/cpuguy83/go-md2man v1.0.10/go.mod h1:SmD6nW6nTyfqj6ABTjUi3V3JVMnlJmwc
 github.com/creack/pty v1.1.9/go.mod h1:oKZEueFk5CKHvIhNR5MUki03XCEU+Q6VDXinZuGJ33E=
 github.com/creasty/defaults v1.4.0 h1:Pz90duUjIzkmCznPtRSpamL+ET00QOxyA+kIgpRDp/E=
 github.com/creasty/defaults v1.4.0/go.mod h1:9UWnPlI41ASz+YJswP5aK5S79d6QH60/Ioz52OXV9X8=
+github.com/creasty/defaults v1.5.0 h1:DW6NAGGaKuNSKkntc8BCBrR2KOUAcXVnfcwu/LmJhaQ=
+github.com/creasty/defaults v1.5.0/go.mod h1:FPZ+Y0WNrbqOVw+c6av63eyHUAl6pMHZwqLPvXUZGfY=
 github.com/cucumber/gherkin-go/v11 v11.0.0 h1:cwVwN1Qn2VRSfHZNLEh5x00tPBmZcjATBWDpxsR5Xug=
 github.com/cucumber/gherkin-go/v11 v11.0.0/go.mod h1:CX33k2XU2qog4e+TFjOValoq6mIUq0DmVccZs238R9w=
 github.com/cucumber/godog v0.10.0 h1:W01u1+o8bRpgqJRLrclN3iAanU1jAao+TwOMoSV9g1Y=
