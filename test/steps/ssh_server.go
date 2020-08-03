@@ -26,7 +26,7 @@ func (scenario *Scenario) StartSshServer() error {
 
 	configClientInstance, err := configClient.NewHttpConfigClient(
 		config.ConfigServerConfig{
-			Url: "http://127.0.0.1:8081",
+			Url: "http://127.0.0.1:8081/config",
 		},
 		scenario.Logger,
 	)

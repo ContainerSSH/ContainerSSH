@@ -2,7 +2,8 @@ name: Build and Deploy branch or tag
 on:
   push:
 jobs:
-  goreleaser:
+  release:
+    name: Release
     runs-on: ubuntu-latest
     steps:
       -
@@ -26,6 +27,9 @@ jobs:
           login-server: docker.pkg.github.com
           username: ${{ secrets.GH_USERNAME }}
           password: ${{ secrets.GITHUB_TOKEN }}
+      -
+        name: Set up Kubernetes
+        uses: engineerd/setup-kind@v0.4.0
       -
         name: Run GoReleaser
         uses: goreleaser/goreleaser-action@v2

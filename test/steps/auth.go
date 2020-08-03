@@ -18,7 +18,7 @@ func (scenario *Scenario) StartAuthServer() error {
 		return fmt.Errorf("auth server is already running")
 	}
 	scenario.AuthServer = auth.NewMemoryAuthServer()
-	return nil
+	return scenario.AuthServer.Start()
 }
 
 func (scenario *Scenario) StopAuthServer() error {

@@ -10,7 +10,7 @@ func (scenario *Scenario) StartConfigServer() error {
 		return fmt.Errorf("config server is already running")
 	}
 	scenario.ConfigServer = config.NewMemoryConfigServer()
-	return scenario.AuthServer.Start()
+	return scenario.ConfigServer.Start()
 }
 
 func (scenario *Scenario) StopConfigServer() error {

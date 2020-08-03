@@ -4,7 +4,8 @@ on:
     branches:
       - stable
 jobs:
-  goreleaser:
+  docs:
+    name: Documentation
     runs-on: ubuntu-latest
     steps:
       -
@@ -15,6 +16,9 @@ jobs:
         uses: actions/setup-go@v2
         with:
           go-version: 1.14
+      -
+        name: Set up Kubernetes
+        uses: engineerd/setup-kind@v0.4.0
       -
         name: Run GoReleaser
         uses: goreleaser/goreleaser-action@v2

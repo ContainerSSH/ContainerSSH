@@ -2,12 +2,12 @@ package main
 
 import (
 	"flag"
-	"github.com/janoszen/containerssh/test/steps"
 	"os"
 	"testing"
 
 	"github.com/janoszen/containerssh/log"
 	"github.com/janoszen/containerssh/log/writer"
+	"github.com/janoszen/containerssh/test/steps"
 
 	"github.com/cucumber/godog"
 	"github.com/cucumber/godog/colors"
@@ -67,8 +67,18 @@ func InitializeScenario(ctx *godog.ScenarioContext) {
 	ctx.Step(`^I start(?:|ed) the configuration server$`, scenario.StartConfigServer)
 	ctx.Step(`^I stop(?:|ed) the configuration server$`, scenario.StopConfigServer)
 
-	ctx.Step(`^authentication with user "(.*)" and password "(.*)" (?:should fail|should have failed)$`, scenario.AuthenticationShouldFail)
-	ctx.Step(`^authentication with user "(.*)" and password "(.*)" (?:should succeed|should have succeeded)$`, scenario.AuthenticationShouldSucceed)
+	ctx.Step(
+		`^authentication with user "(.*)" and password "(.*)" (?:should fail|should have failed)$`,
+		scenario.AuthenticationShouldFail,
+	)
+	ctx.Step(
+		`^authentication with user "(.*)" and password "(.*)" (?:should succeed|should have succeeded)$`,
+		scenario.AuthenticationShouldSucceed,
+	)
+
+	ctx.Step(`^I should (?:be able to|should have been able to) execute a command with user "(.*)" and password "(.*)"$`, scenario.RunCommand)
+
+	ctx.Step(`^I configure the user "(.*)" to use Kubernetes`, scenario.ConfigureKubernetes)
 }
 
 // endregion

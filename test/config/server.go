@@ -11,9 +11,9 @@ import (
 
 type MemoryConfigServer struct {
 	defaultConfig config.AppConfig
-	userConfig map[string]config.AppConfig
-	server    *testHttp.Server
-	mutex     *sync.Mutex
+	userConfig    map[string]config.AppConfig
+	server        *testHttp.Server
+	mutex         *sync.Mutex
 }
 
 func NewMemoryConfigServer() *MemoryConfigServer {
@@ -21,9 +21,9 @@ func NewMemoryConfigServer() *MemoryConfigServer {
 
 	server := &MemoryConfigServer{
 		defaultConfig: config.AppConfig{},
-		userConfig: make(map[string]config.AppConfig),
-		server:    httpServer,
-		mutex:     &sync.Mutex{},
+		userConfig:    make(map[string]config.AppConfig),
+		server:        httpServer,
+		mutex:         &sync.Mutex{},
 	}
 
 	httpServer.GetMux().HandleFunc("/config", server.config)
@@ -31,7 +31,7 @@ func NewMemoryConfigServer() *MemoryConfigServer {
 	return server
 }
 
-func (server * MemoryConfigServer) config(w http.ResponseWriter, req *http.Request) {
+func (server *MemoryConfigServer) config(w http.ResponseWriter, req *http.Request) {
 	var configRequest protocol.ConfigRequest
 	err := json.NewDecoder(req.Body).Decode(&configRequest)
 	if err != nil {
@@ -50,10 +50,17 @@ func (server * MemoryConfigServer) config(w http.ResponseWriter, req *http.Reque
 	_ = json.NewEncoder(w).Encode(response)
 }
 
-func (server * MemoryConfigServer) Start() error {
+func (server *MemoryConfigServer) Start() error {
 	return server.server.Start()
 }
 
-func (server * MemoryConfigServer) Stop() error {
+func (server *MemoryConfigServer) Stop() error {
 	return server.server.Stop()
+}
+
+func (server *MemoryConfigServer) SetUserConfig(
+	username string,
+	configuration *config.AppConfig,
+) {
+	server.userConfig[username] = *configuration
 }
