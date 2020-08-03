@@ -27,6 +27,9 @@ func main() {
 	client := &http.Client{}
 
 	jsonRequest, err := http.NewRequest("GET", url, nil)
+	if err != nil {
+		log.Fatalf("%v", err)
+	}
 	if os.Getenv("GITHUB_TOKEN") != "" {
 		jsonRequest.Header.Add("authorization", "bearer "+os.Getenv("GITHUB_TOKEN"))
 	}
@@ -68,6 +71,9 @@ func main() {
 	fullPath := path.Join(tempDir, file)
 
 	binaryRequest, err := http.NewRequest("GET", url, nil)
+	if err != nil {
+		log.Fatalf("%v", err)
+	}
 	if os.Getenv("GITHUB_TOKEN") != "" {
 		jsonRequest.Header.Add("authorization", "bearer "+os.Getenv("GITHUB_TOKEN"))
 	}
