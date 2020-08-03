@@ -3,9 +3,11 @@ package http
 import (
 	"context"
 	"fmt"
+	"net"
 	"net/http"
 	"strconv"
 	"sync"
+	"time"
 )
 
 type Server struct {
@@ -19,13 +21,13 @@ type Server struct {
 
 func New(port int) *Server {
 	return &Server{
-		port: port,
+		port:  port,
 		mutex: &sync.Mutex{},
 		mux:   http.NewServeMux(),
 	}
 }
 
-func (server *Server) GetMux() * http.ServeMux {
+func (server *Server) GetMux() *http.ServeMux {
 	return server.mux
 }
 
@@ -55,7 +57,7 @@ func (server *Server) run() {
 	server.srv = srv
 	server.mutex.Unlock()
 	err := srv.ListenAndServe()
-	if err != nil {
+	if err != nil && err != http.ErrServerClosed {
 		server.mutex.Lock()
 		server.cancel()
 		server.ctx = nil
@@ -76,6 +78,22 @@ func (server *Server) Start() error {
 		server.ctx, server.cancel = context.WithCancel(context.Background())
 		server.mutex.Unlock()
 		go server.monitorAndRun()
+
+		tries := 0
+		for {
+			tcp, err := net.Dial("tcp", "127.0.0.1:"+strconv.Itoa(server.port))
+			if err == nil {
+				_ = tcp.Close()
+				break
+			}
+			tries = tries + 1
+			if tries > 100 {
+				server.cancel()
+				return fmt.Errorf("failed to start HTTP server")
+			}
+			time.Sleep(time.Millisecond * 100)
+		}
+
 		return nil
 	} else {
 		server.mutex.Unlock()

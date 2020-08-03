@@ -1,6 +1,7 @@
 package auth
 
 import (
+	"encoding/base64"
 	"encoding/json"
 	"fmt"
 	"github.com/janoszen/containerssh/protocol"
@@ -32,11 +33,11 @@ func NewMemoryAuthServer() *MemoryAuthServer {
 	return server
 }
 
-func (server * MemoryAuthServer) SetPassword(username string, password string) {
+func (server *MemoryAuthServer) SetPassword(username string, password string) {
 	server.passwords[username] = password
 }
 
-func (server * MemoryAuthServer) AddPublicKey(username string, publicKeyBase64 string) {
+func (server *MemoryAuthServer) AddPublicKey(username string, publicKeyBase64 string) {
 	server.mutex.Lock()
 	if _, ok := server.keys[username]; !ok {
 		server.keys[username] = []string{}
@@ -45,11 +46,11 @@ func (server * MemoryAuthServer) AddPublicKey(username string, publicKeyBase64 s
 	server.mutex.Unlock()
 }
 
-func (server * MemoryAuthServer) Start() error {
+func (server *MemoryAuthServer) Start() error {
 	return server.http.Start()
 }
 
-func (server * MemoryAuthServer) Stop() error {
+func (server *MemoryAuthServer) Stop() error {
 	if server.http != nil {
 		return server.http.Stop()
 	} else {
@@ -57,7 +58,7 @@ func (server * MemoryAuthServer) Stop() error {
 	}
 }
 
-func (server * MemoryAuthServer) authPassword(w http.ResponseWriter, req *http.Request) {
+func (server *MemoryAuthServer) authPassword(w http.ResponseWriter, req *http.Request) {
 	var authRequest protocol.PasswordAuthRequest
 	err := json.NewDecoder(req.Body).Decode(&authRequest)
 	if err != nil {
@@ -69,14 +70,14 @@ func (server * MemoryAuthServer) authPassword(w http.ResponseWriter, req *http.R
 		Success: false,
 	}
 
-	if server.passwords[authRequest.Username] == authRequest.Password {
+	if base64.StdEncoding.EncodeToString([]byte(server.passwords[authRequest.Username])) == authRequest.Password {
 		authResponse.Success = true
 	}
 
 	_ = json.NewEncoder(w).Encode(authResponse)
 }
 
-func (server * MemoryAuthServer) authPublicKey(w http.ResponseWriter, req *http.Request) {
+func (server *MemoryAuthServer) authPublicKey(w http.ResponseWriter, req *http.Request) {
 	var authRequest protocol.PublicKeyAuthRequest
 	err := json.NewDecoder(req.Body).Decode(&authRequest)
 	if err != nil {

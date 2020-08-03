@@ -40,7 +40,7 @@ func TestMain(m *testing.M) {
 }
 
 func InitializeTestSuite(ctx *godog.TestSuiteContext) {
-	ctx.BeforeSuite(func() {  })
+	ctx.BeforeSuite(func() {})
 }
 
 func InitializeScenario(ctx *godog.ScenarioContext) {
@@ -48,7 +48,7 @@ func InitializeScenario(ctx *godog.ScenarioContext) {
 	logger := log.NewLoggerPipeline(log.Config{}, w)
 	scenario := &steps.Scenario{
 		LogWriter: w,
-		Logger: logger,
+		Logger:    logger,
 	}
 
 	ctx.AfterScenario(func(*godog.Scenario, error) {
@@ -62,15 +62,13 @@ func InitializeScenario(ctx *godog.ScenarioContext) {
 
 	ctx.Step(`^I start(?:|ed) the authentication server$`, scenario.StartAuthServer)
 	ctx.Step(`^I stop(?:|ed) the authentication server$`, scenario.StopAuthServer)
-	ctx.Step(`^I create(?:|d) the user "(.*)" with password "(.*)"$`, scenario.CreateUser)
+	ctx.Step(`^I create(?:|d) the user "(.*)" with the password "(.*)"$`, scenario.CreateUser)
 
-	ctx.Step(`^I start(?:|ed) the config server$`, scenario.StartConfigServer)
-	ctx.Step(`^I stop(?:|ed) the config server$`, scenario.StopConfigServer)
+	ctx.Step(`^I start(?:|ed) the configuration server$`, scenario.StartConfigServer)
+	ctx.Step(`^I stop(?:|ed) the configuration server$`, scenario.StopConfigServer)
 
-	ctx.Step(`^Authentication with user "(.*)" and password "(.*)" (?:should fail|should have failed)$`, scenario.AuthenticationShouldFail)
+	ctx.Step(`^authentication with user "(.*)" and password "(.*)" (?:should fail|should have failed)$`, scenario.AuthenticationShouldFail)
+	ctx.Step(`^authentication with user "(.*)" and password "(.*)" (?:should succeed|should have succeeded)$`, scenario.AuthenticationShouldSucceed)
 }
 
-func TestGodog(t *testing.T) {
-
-}
 // endregion

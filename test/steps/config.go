@@ -2,25 +2,25 @@ package steps
 
 import (
 	"fmt"
-	"github.com/janoszen/containerssh/test/auth"
+	"github.com/janoszen/containerssh/test/config"
 )
 
 func (scenario *Scenario) StartConfigServer() error {
-	if scenario.AuthServer != nil {
-		return fmt.Errorf("auth server is already running")
+	if scenario.ConfigServer != nil {
+		return fmt.Errorf("config server is already running")
 	}
-	scenario.AuthServer = auth.NewMemoryAuthServer()
+	scenario.ConfigServer = config.NewMemoryConfigServer()
 	return scenario.AuthServer.Start()
 }
 
 func (scenario *Scenario) StopConfigServer() error {
-	if scenario.AuthServer == nil {
-		return fmt.Errorf("auth server is not running")
+	if scenario.ConfigServer == nil {
+		return fmt.Errorf("config server is not running")
 	}
-	err := scenario.AuthServer.Stop()
+	err := scenario.ConfigServer.Stop()
 	if err != nil {
 		return err
 	}
-	scenario.AuthServer = nil
+	scenario.ConfigServer = nil
 	return nil
 }

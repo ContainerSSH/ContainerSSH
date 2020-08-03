@@ -18,11 +18,11 @@ import (
 )
 
 type Server struct {
-	ctx context.Context
-	cancel context.CancelFunc
-	logger log.Logger
-	logWriter log.Writer
-	authClient auth.Client
+	ctx          context.Context
+	cancel       context.CancelFunc
+	logger       log.Logger
+	logWriter    log.Writer
+	authClient   auth.Client
 	configClient configurationClient.ConfigClient
 }
 
@@ -32,10 +32,10 @@ func NewServer(
 	authClient auth.Client,
 	configClient configurationClient.ConfigClient,
 ) *Server {
-	return &Server {
-		logWriter: logWriter,
-		logger: logger,
-		authClient: authClient,
+	return &Server{
+		logWriter:    logWriter,
+		logger:       logger,
+		authClient:   authClient,
 		configClient: configClient,
 	}
 }
@@ -49,6 +49,11 @@ func (server *Server) Start() error {
 		kuberun.Init(backendRegistry)
 
 		appConfig, err := util.GetDefaultConfig()
+		if err != nil {
+			return err
+		}
+		appConfig.Auth.Password = true
+		appConfig.Auth.PubKey = true
 
 		privateKey, err := rsa.GenerateKey(rand.Reader, 2014)
 		if err != nil {
