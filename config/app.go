@@ -1,6 +1,6 @@
 package config
 
-// swagger:enum
+// swagger:enum BackendName
 type BackendName string
 
 const (
