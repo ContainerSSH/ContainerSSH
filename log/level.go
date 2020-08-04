@@ -15,7 +15,7 @@ const (
 
 type Level int
 
-// swagger:enum
+// swagger:enum LevelString
 type LevelString string
 
 const (

@@ -24,5 +24,5 @@ type AppConfig struct {
 	// Configuration for the kuberun backend
 	KubeRun KubeRunConfig `json:"kuberun" yaml:"kuberun" comment:"Kubernetes configuration to use when the Kubernetes run backend is used."`
 	// Logging configuration
-	Log LogConfig `json:"log" yaml:"log" comment:"Log configuration"`
+	Log AppLogConfig `json:"log" yaml:"log" comment:"Log configuration"`
 }
