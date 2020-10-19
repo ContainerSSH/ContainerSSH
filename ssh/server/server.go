@@ -12,6 +12,7 @@ import (
 var MetricNameConnections = "ssh_connections"
 var MetricNameSuccessfulHandshake = "ssh_handshake_successful"
 var MetricNameFailedHandshake = "ssh_handshake_failed"
+var MetricNameCurrentConnections = "ssh_current_connections"
 var MetricConnections = metrics.Metric{
 	Name:   MetricNameConnections,
 	Labels: map[string]string{},
@@ -22,6 +23,10 @@ var MetricSuccessfulHandshake = metrics.Metric{
 }
 var MetricFailedHandshake = metrics.Metric{
 	Name:   MetricNameFailedHandshake,
+	Labels: map[string]string{},
+}
+var MetricCurrentConnections = metrics.Metric{
+	Name:   MetricNameCurrentConnections,
 	Labels: map[string]string{},
 }
 
@@ -130,6 +135,8 @@ func New(
 	metric.Set(MetricSuccessfulHandshake, 0)
 	metric.SetMetricMeta(MetricNameFailedHandshake, "Failed SSH handshakes since start", metrics.MetricTypeCounter)
 	metric.Set(MetricFailedHandshake, 0)
+	metric.SetMetricMeta(MetricNameCurrentConnections, "Current open SSH connections", metrics.MetricTypeGauge)
+	metric.Set(MetricCurrentConnections, 0)
 	return server, err
 }
 
@@ -280,6 +287,12 @@ func (server *Server) Run(ctx context.Context) error {
 			}
 			server.logger.DebugF("new SSH connection from %s for user %s (%s)", sshConn.RemoteAddr(), sshConn.User(), sshConn.ClientVersion())
 			server.metric.Increment(MetricSuccessfulHandshake)
+			server.metric.Increment(MetricCurrentConnections)
+
+			go func() {
+				_ = sshConn.Wait()
+				server.metric.Decrement(MetricCurrentConnections)
+			}()
 
 			if server.connectionHandler == nil {
 				server.logger.DebugF("no connection handler defined, closing connection")
