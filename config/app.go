@@ -1,8 +1,11 @@
 package config
 
+import metricsServer "github.com/janoszen/containerssh/metrics/server"
+
 // swagger:enum BackendName
 type BackendName string
 
+//goland:noinspection GoUnusedConst
 const (
 	BackendDockerRun BackendName = "dockerrun"
 	BackendKubeRun   BackendName = "kuberun"
@@ -25,4 +28,6 @@ type AppConfig struct {
 	KubeRun KubeRunConfig `json:"kuberun" yaml:"kuberun" comment:"Kubernetes configuration to use when the Kubernetes run backend is used."`
 	// Logging configuration
 	Log AppLogConfig `json:"log" yaml:"log" comment:"Log configuration"`
+	// Metrics configuration
+	Metrics metricsServer.Config `json:"metrics" yaml:"metrics" comment:"Metrics configuration."`
 }

@@ -40,6 +40,7 @@ nav:
   - 'The kuberun Backend': 'kuberun.md'
   - 'Creating an Image': 'image.md'
   - 'Logging': 'logging.md'
+  - 'Metrics': 'metrics.md'
   - 'Hardening': 'hardening.md'
   - 'FAQ': 'faq.md'
   - 'API reference':

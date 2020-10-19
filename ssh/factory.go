@@ -7,6 +7,7 @@ import (
 	"github.com/janoszen/containerssh/config"
 	configurationClient "github.com/janoszen/containerssh/config/client"
 	"github.com/janoszen/containerssh/log"
+	"github.com/janoszen/containerssh/metrics"
 	"github.com/janoszen/containerssh/ssh/server"
 	"golang.org/x/crypto/ssh"
 	"io/ioutil"
@@ -20,6 +21,7 @@ func NewServer(
 	client configurationClient.ConfigClient,
 	logger log.Logger,
 	logWriter log.Writer,
+	metricCollector *metrics.MetricCollector,
 ) (*server.Server, error) {
 	serverConfig := &server.Config{
 		Config:       ssh.Config{},
@@ -97,5 +99,6 @@ func NewServer(
 			),
 		),
 		logger,
+		metricCollector,
 	)
 }

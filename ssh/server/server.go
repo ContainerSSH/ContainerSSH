@@ -4,9 +4,26 @@ import (
 	"context"
 	"fmt"
 	"github.com/janoszen/containerssh/log"
+	"github.com/janoszen/containerssh/metrics"
 	"golang.org/x/crypto/ssh"
 	"net"
 )
+
+var MetricNameConnections = "ssh_connections"
+var MetricNameSuccessfulHandshake = "ssh_handshake_successful"
+var MetricNameFailedHandshake = "ssh_handshake_failed"
+var MetricConnections = metrics.Metric{
+	Name:   MetricNameConnections,
+	Labels: map[string]string{},
+}
+var MetricSuccessfulHandshake = metrics.Metric{
+	Name:   MetricNameSuccessfulHandshake,
+	Labels: map[string]string{},
+}
+var MetricFailedHandshake = metrics.Metric{
+	Name:   MetricNameFailedHandshake,
+	Labels: map[string]string{},
+}
 
 type RequestResponse struct {
 	Success bool
@@ -82,6 +99,7 @@ type Server struct {
 	readyHandler      ReadyHandler
 	connectionHandler ConnectionHandler
 	logger            log.Logger
+	metric            *metrics.MetricCollector
 }
 
 func New(
@@ -90,6 +108,7 @@ func New(
 	readyHandler ReadyHandler,
 	connectionHandler ConnectionHandler,
 	logger log.Logger,
+	metric *metrics.MetricCollector,
 ) (*Server, error) {
 	server := &Server{
 		listen:            listen,
@@ -97,12 +116,20 @@ func New(
 		readyHandler:      readyHandler,
 		connectionHandler: connectionHandler,
 		logger:            logger,
+		metric:            metric,
 	}
 
 	err := server.validateConfig()
 	if err != nil {
 		return nil, err
 	}
+
+	metric.SetMetricMeta(MetricNameConnections, "Number of connections since start", metrics.MetricTypeCounter)
+	metric.Set(MetricConnections, 0)
+	metric.SetMetricMeta(MetricNameSuccessfulHandshake, "Successful SSH handshakes since start", metrics.MetricTypeCounter)
+	metric.Set(MetricSuccessfulHandshake, 0)
+	metric.SetMetricMeta(MetricNameFailedHandshake, "Failed SSH handshakes since start", metrics.MetricTypeCounter)
+	metric.Set(MetricFailedHandshake, 0)
 	return server, err
 }
 
@@ -228,7 +255,7 @@ func (server *Server) Run(ctx context.Context) error {
 		config.AddHostKey(hostKey)
 	}
 
-	server.logger.InfoF("starting listen socket on %s", server.listen)
+	server.logger.InfoF("starting SSH server on %s", server.listen)
 	netListener, err := net.Listen("tcp", server.listen)
 	if err != nil {
 		return err
@@ -243,13 +270,16 @@ func (server *Server) Run(ctx context.Context) error {
 				// Assume listen socket closed
 				break
 			}
+			server.metric.Increment(MetricConnections)
 			server.logger.DebugF("connection from: %s", tcpConn.RemoteAddr().String())
 			sshConn, chans, reqs, err := ssh.NewServerConn(tcpConn, config)
 			if err != nil {
+				server.metric.Increment(MetricFailedHandshake)
 				server.logger.DebugF("failed to handshake (%v)", err)
 				continue
 			}
 			server.logger.DebugF("new SSH connection from %s for user %s (%s)", sshConn.RemoteAddr(), sshConn.User(), sshConn.ClientVersion())
+			server.metric.Increment(MetricSuccessfulHandshake)
 
 			if server.connectionHandler == nil {
 				server.logger.DebugF("no connection handler defined, closing connection")

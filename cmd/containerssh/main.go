@@ -13,6 +13,8 @@ import (
 	"github.com/janoszen/containerssh/config/util"
 	"github.com/janoszen/containerssh/log"
 	"github.com/janoszen/containerssh/log/writer"
+	"github.com/janoszen/containerssh/metrics"
+	metricsServer "github.com/janoszen/containerssh/metrics/server"
 	"github.com/janoszen/containerssh/ssh"
 	"io/ioutil"
 	"os"
@@ -129,6 +131,8 @@ func main() {
 		os.Exit(1)
 	}
 
+	metricCollector := metrics.New()
+
 	sshServer, err := ssh.NewServer(
 		appConfig,
 		authClient,
@@ -136,6 +140,7 @@ func main() {
 		configClient,
 		logger,
 		logWriter,
+		metricCollector,
 	)
 	if err != nil {
 		logger.EmergencyF("failed to create SSH server (%v)", err)
@@ -147,23 +152,49 @@ func main() {
 	sigs := make(chan os.Signal, 1)
 	signal.Notify(sigs, syscall.SIGINT, syscall.SIGTERM)
 
-	errChannel := make(chan error)
+	sshErrChannel := make(chan error)
 	go func() {
 		err = sshServer.Run(ctx)
 		if err != nil {
-			errChannel <- err
+			sshErrChannel <- err
 		} else {
-			errChannel <- nil
+			sshErrChannel <- nil
 		}
 	}()
+
+	metricsErrChannel := make(chan error)
+	if appConfig.Metrics.Enable {
+		go func() {
+			metricsSrv := metricsServer.New(
+				appConfig.Metrics,
+				metricCollector,
+				logger,
+			)
+			err := metricsSrv.Run(ctx)
+			if err != nil {
+				metricsErrChannel <- err
+			} else {
+				metricsErrChannel <- nil
+			}
+		}()
+	} else {
+		metricsErrChannel <- nil
+	}
 
 	select {
 	case <-sigs:
 		logger.InfoF("received exit signal, stopping SSH server")
 		cancel()
 	case <-ctx.Done():
-	case err = <-errChannel:
+	case err = <-metricsErrChannel:
 		cancel()
-		logger.EmergencyF("failed to run SSH server (%v)", err)
+		if err != nil {
+			logger.EmergencyF("failed to run HTTP server (%v)", err)
+		}
+	case err = <-sshErrChannel:
+		cancel()
+		if err != nil {
+			logger.EmergencyF("failed to run SSH server (%v)", err)
+		}
 	}
 }

@@ -8,3 +8,4 @@ VOLUME /etc/containerssh
 VOLUME /var/secrets
 USER 1022:1022
 EXPOSE 2222
+EXPOSE 9100
