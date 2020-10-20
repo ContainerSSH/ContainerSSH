@@ -119,19 +119,19 @@ func main() {
 		return
 	}
 
-	authClient, err := auth.NewHttpAuthClient(appConfig.Auth, logger)
+	metricCollector := metrics.New()
+
+	authClient, err := auth.NewHttpAuthClient(appConfig.Auth, logger, metricCollector)
 	if err != nil {
 		logger.CriticalF("error creating auth HTTP client (%v)", err)
 		os.Exit(1)
 	}
 
-	configClient, err := configurationClient.NewHttpConfigClient(appConfig.ConfigServer, logger)
+	configClient, err := configurationClient.NewHttpConfigClient(appConfig.ConfigServer, logger, metricCollector)
 	if err != nil {
 		logger.EmergencyF(fmt.Sprintf("Error creating config HTTP client (%s)", err))
 		os.Exit(1)
 	}
-
-	metricCollector := metrics.New()
 
 	sshServer, err := ssh.NewServer(
 		appConfig,

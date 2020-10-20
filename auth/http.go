@@ -8,19 +8,28 @@ import (
 	"github.com/janoszen/containerssh/config"
 	containerhttp "github.com/janoszen/containerssh/http"
 	"github.com/janoszen/containerssh/log"
+	"github.com/janoszen/containerssh/metrics"
 	"github.com/janoszen/containerssh/protocol"
 	"net/http"
 )
+
+var MetricNameAuthBackendFailure = "auth_backend_failure"
+var MetricAuthBackendFailure = metrics.Metric{
+	Name:   MetricNameAuthBackendFailure,
+	Labels: map[string]string{},
+}
 
 type HttpAuthClient struct {
 	httpClient http.Client
 	endpoint   string
 	logger     log.Logger
+	metric     *metrics.MetricCollector
 }
 
 func NewHttpAuthClient(
 	config config.AuthConfig,
 	logger log.Logger,
+	metric *metrics.MetricCollector,
 ) (*HttpAuthClient, error) {
 	if config.Url == "" {
 		return nil, fmt.Errorf("no authentication server URL provided")
@@ -37,10 +46,14 @@ func NewHttpAuthClient(
 		return nil, err
 	}
 
+	metric.SetMetricMeta(MetricNameAuthBackendFailure, "Number of request failures to the authentication backend", metrics.MetricTypeCounter)
+	metric.Set(MetricAuthBackendFailure, 0)
+
 	return &HttpAuthClient{
 		httpClient: *realClient,
 		endpoint:   config.Url,
 		logger:     logger,
+		metric:     metric,
 	}, nil
 }
 
@@ -108,12 +121,14 @@ func (client *HttpAuthClient) authServerRequest(endpoint string, requestObject i
 	}
 	req, err := http.NewRequest(http.MethodGet, endpoint, buffer)
 	if err != nil {
+		client.metric.Increment(MetricAuthBackendFailure)
 		return err
 	}
 	req.Header.Set("Content-Type", "application/json")
 
 	resp, err := client.httpClient.Do(req)
 	if err != nil {
+		client.metric.Increment(MetricAuthBackendFailure)
 		return err
 	}
 
@@ -121,6 +136,7 @@ func (client *HttpAuthClient) authServerRequest(endpoint string, requestObject i
 	decoder.DisallowUnknownFields()
 	err = decoder.Decode(response)
 	if err != nil {
+		client.metric.Increment(MetricAuthBackendFailure)
 		return err
 	}
 	return nil
