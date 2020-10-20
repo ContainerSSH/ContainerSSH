@@ -8,6 +8,7 @@ import (
 	"github.com/janoszen/containerssh/backend"
 	"github.com/janoszen/containerssh/backend/dockerrun"
 	"github.com/janoszen/containerssh/backend/kuberun"
+	backendMetrics "github.com/janoszen/containerssh/backend/metrics"
 	configurationClient "github.com/janoszen/containerssh/config/client"
 	"github.com/janoszen/containerssh/config/loader"
 	"github.com/janoszen/containerssh/config/util"
@@ -23,6 +24,7 @@ import (
 )
 
 func InitBackendRegistry(metric *metrics.MetricCollector) *backend.Registry {
+	backendMetrics.Init(metric)
 	registry := backend.NewRegistry()
 	dockerrun.Init(registry, metric)
 	kuberun.Init(registry, metric)

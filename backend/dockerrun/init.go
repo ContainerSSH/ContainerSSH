@@ -74,7 +74,6 @@ type dockerRunSession struct {
 }
 
 func Init(registry *backend.Registry, metric *metrics.MetricCollector) {
-	metric.SetMetricMeta(MetricNameBackendError, "Number of errors in the dockerrun backend", metrics.MetricTypeCounter)
 	metric.Set(MetricBackendError, 0)
 
 	dockerRunBackend := backend.Backend{}

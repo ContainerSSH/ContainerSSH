@@ -13,9 +13,19 @@ import (
 	"net/http"
 )
 
-var MetricNameAuthBackendFailure = "auth_backend_failure"
+var MetricNameAuthBackendFailure = "auth_backend_failures"
 var MetricAuthBackendFailure = metrics.Metric{
 	Name:   MetricNameAuthBackendFailure,
+	Labels: map[string]string{},
+}
+var MetricNameAuthFailure = "auth_failures"
+var MetricAuthFailure = metrics.Metric{
+	Name:   MetricNameAuthFailure,
+	Labels: map[string]string{},
+}
+var MetricNameAuthSuccess = "auth_successes"
+var MetricAuthSuccess = metrics.Metric{
+	Name:   MetricNameAuthFailure,
 	Labels: map[string]string{},
 }
 
@@ -48,6 +58,10 @@ func NewHttpAuthClient(
 
 	metric.SetMetricMeta(MetricNameAuthBackendFailure, "Number of request failures to the authentication backend", metrics.MetricTypeCounter)
 	metric.Set(MetricAuthBackendFailure, 0)
+	metric.SetMetricMeta(MetricNameAuthFailure, "Number of failed authentications", metrics.MetricTypeCounter)
+	metric.Set(MetricAuthFailure, 0)
+	metric.SetMetricMeta(MetricNameAuthSuccess, "Number of successful authentications", metrics.MetricTypeCounter)
+	metric.Set(MetricAuthSuccess, 0)
 
 	return &HttpAuthClient{
 		httpClient: *realClient,
@@ -78,10 +92,17 @@ func (client *HttpAuthClient) Password(
 	authResponse := &protocol.AuthResponse{}
 	err := client.authServerRequest(client.endpoint+"/password", authRequest, authResponse)
 	if err != nil {
-		client.logger.DebugF("Failed password authentication for user %s with public key for connection from %s", username, remoteAddr)
+		client.logger.DebugF("Failed password authentication for user %s with password for connection from %s", username, remoteAddr)
 		return nil, err
 	}
-	client.logger.DebugF("Successful password authentication for user %s with public key for connection from %s", username, remoteAddr)
+	client.logger.DebugF("Completed password authentication for user %s with password for connection from %s", username, remoteAddr)
+	if authResponse.Success {
+		client.logger.DebugF("Authentication successful %s with password for connection from %s", username, remoteAddr)
+		client.metric.Increment(MetricAuthSuccess)
+	} else {
+		client.logger.DebugF("Authentication failed %s with password for connection from %s", username, remoteAddr)
+		client.metric.Increment(MetricAuthFailure)
+	}
 	return authResponse, nil
 }
 func (client *HttpAuthClient) PubKey(
@@ -108,7 +129,14 @@ func (client *HttpAuthClient) PubKey(
 		client.logger.DebugF("Failed public key authentication for user %s with public key for connection from %s", username, remoteAddr)
 		return nil, err
 	}
-	client.logger.DebugF("Successful public key authentication for user %s with public key for connection from %s", username, remoteAddr)
+	client.logger.DebugF("Completed password authentication for user %s with public key for connection from %s", username, remoteAddr)
+	if authResponse.Success {
+		client.logger.DebugF("Authentication successful %s with public key for connection from %s", username, remoteAddr)
+		client.metric.Increment(MetricAuthSuccess)
+	} else {
+		client.logger.DebugF("Authentication failed %s with public key for connection from %s", username, remoteAddr)
+		client.metric.Increment(MetricAuthFailure)
+	}
 	return authResponse, nil
 }
 

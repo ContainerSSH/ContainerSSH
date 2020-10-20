@@ -1,9 +1,11 @@
 package dockerrun
 
-import "github.com/janoszen/containerssh/metrics"
+import (
+	backendMetrics "github.com/janoszen/containerssh/backend/metrics"
+	"github.com/janoszen/containerssh/metrics"
+)
 
-var MetricNameBackendError = "dockerrun_error"
 var MetricBackendError = metrics.Metric{
-	Name:   MetricNameBackendError,
-	Labels: map[string]string{},
+	Name:   backendMetrics.MetricNameBackendError,
+	Labels: map[string]string{backendMetrics.MetricLabelBackend: "dockerrun"},
 }

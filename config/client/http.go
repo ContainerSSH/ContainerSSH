@@ -11,7 +11,7 @@ import (
 	"net/http"
 )
 
-var MetricNameConfigBackendFailure = "config_backend_failure"
+var MetricNameConfigBackendFailure = "config_backend_failures"
 var MetricConfigBackendFailure = metrics.Metric{
 	Name:   MetricNameConfigBackendFailure,
 	Labels: map[string]string{},

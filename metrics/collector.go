@@ -81,6 +81,9 @@ func (collector *MetricCollector) GetMetricNames() []string {
 		names[i] = k
 		i = i + 1
 	}
+	sort.Slice(names, func(i, j int) bool {
+		return names[i] < names[j]
+	})
 	return names
 }
 

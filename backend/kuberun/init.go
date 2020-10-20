@@ -101,7 +101,6 @@ type kubeRunSession struct {
 }
 
 func Init(registry *backend.Registry, metric *metrics.MetricCollector) {
-	metric.SetMetricMeta(MetricNameBackendError, "Number of errors in the kuberun backend", metrics.MetricTypeCounter)
 	metric.Set(MetricBackendError, 0)
 
 	kubeRunBackend := backend.Backend{}
