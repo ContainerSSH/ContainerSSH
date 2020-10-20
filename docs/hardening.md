@@ -67,4 +67,4 @@ kuberun:
 ```
 
 !!! note
-    Enabling command execution also disables SFTP integration.
+    Disabling command execution also disables SFTP integration.
