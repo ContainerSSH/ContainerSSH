@@ -96,6 +96,7 @@ func NewServer(
 				NewDefaultChannelRequestHandlerFactory(logger),
 				logger,
 				log.NewLoggerPipelineFactory(logWriter),
+				metricCollector,
 			),
 		),
 		logger,

@@ -11,6 +11,7 @@ func (session *dockerRunSession) Resize(cols uint, rows uint) error {
 		resizeOptions.Height = session.rows
 		err := session.client.ContainerResize(session.ctx, session.containerId, resizeOptions)
 		if err != nil {
+			session.metric.Increment(MetricBackendError)
 			return err
 		}
 	}

@@ -9,6 +9,7 @@ func (session *dockerRunSession) removeContainer() error {
 		removeOptions := types.ContainerRemoveOptions{Force: true}
 		err := session.client.ContainerRemove(session.ctx, session.containerId, removeOptions)
 		if err != nil {
+			session.metric.Increment(MetricBackendError)
 			return err
 		}
 	}

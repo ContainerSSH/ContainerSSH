@@ -14,6 +14,7 @@ import (
 	configurationClient "github.com/janoszen/containerssh/config/client"
 	"github.com/janoszen/containerssh/config/util"
 	"github.com/janoszen/containerssh/log"
+	"github.com/janoszen/containerssh/metrics"
 	"github.com/janoszen/containerssh/ssh"
 )
 
@@ -44,9 +45,11 @@ func (server *Server) Start() error {
 	if server.ctx == nil {
 		server.ctx, server.cancel = context.WithCancel(context.Background())
 
+		metricCollector := metrics.New()
+
 		backendRegistry := backend.NewRegistry()
-		dockerrun.Init(backendRegistry)
-		kuberun.Init(backendRegistry)
+		dockerrun.Init(backendRegistry, metricCollector)
+		kuberun.Init(backendRegistry, metricCollector)
 
 		appConfig, err := util.GetDefaultConfig()
 		if err != nil {
@@ -75,6 +78,7 @@ func (server *Server) Start() error {
 			server.configClient,
 			server.logger,
 			server.logWriter,
+			metricCollector,
 		)
 		if err != nil {
 			server.logger.EmergencyF("failed to create SSH server (%v)", err)

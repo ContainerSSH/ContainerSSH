@@ -8,10 +8,11 @@ import (
 	"github.com/janoszen/containerssh/backend"
 	"github.com/janoszen/containerssh/config"
 	"github.com/janoszen/containerssh/log"
+	"github.com/janoszen/containerssh/metrics"
 	"net/http"
 )
 
-func createSession(sessionId string, username string, appConfig *config.AppConfig, logger log.Logger) (backend.Session, error) {
+func createSession(sessionId string, username string, appConfig *config.AppConfig, logger log.Logger, metric *metrics.MetricCollector) (backend.Session, error) {
 	logger.DebugF("initializing Docker backend")
 	var httpClient *http.Client = nil
 	if appConfig.DockerRun.CaCert != "" && appConfig.DockerRun.Key != "" && appConfig.DockerRun.Cert != "" {
@@ -49,6 +50,7 @@ func createSession(sessionId string, username string, appConfig *config.AppConfi
 	session.exitCode = -1
 	session.config = &appConfig.DockerRun
 	session.logger = logger
+	session.metric = metric
 
 	return session, nil
 }
@@ -68,9 +70,13 @@ type dockerRunSession struct {
 	client      *client.Client
 	config      *config.DockerRunConfig
 	logger      log.Logger
+	metric      *metrics.MetricCollector
 }
 
-func Init(registry *backend.Registry) {
+func Init(registry *backend.Registry, metric *metrics.MetricCollector) {
+	metric.SetMetricMeta(MetricNameBackendError, "Number of errors in the dockerrun backend", metrics.MetricTypeCounter)
+	metric.Set(MetricBackendError, 0)
+
 	dockerRunBackend := backend.Backend{}
 	dockerRunBackend.Name = "dockerrun"
 	dockerRunBackend.CreateSession = createSession

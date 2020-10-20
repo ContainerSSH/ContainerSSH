@@ -5,6 +5,7 @@ import (
 	"github.com/janoszen/containerssh/backend"
 	"github.com/janoszen/containerssh/config"
 	"github.com/janoszen/containerssh/log"
+	"github.com/janoszen/containerssh/metrics"
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/client-go/kubernetes"
 	restclient "k8s.io/client-go/rest"
@@ -12,7 +13,7 @@ import (
 	"k8s.io/kubectl/pkg/scheme"
 )
 
-func createSession(sessionId string, username string, appConfig *config.AppConfig, logger log.Logger) (backend.Session, error) {
+func createSession(sessionId string, username string, appConfig *config.AppConfig, logger log.Logger, metric *metrics.MetricCollector) (backend.Session, error) {
 	logger.DebugF("Initializing Kubernetes backend")
 	connectionConfig := restclient.Config{
 		Host:    appConfig.KubeRun.Connection.Host,
@@ -65,6 +66,7 @@ func createSession(sessionId string, username string, appConfig *config.AppConfi
 	session.restClient = restClient
 	session.connectionConfig = connectionConfig
 	session.logger = logger
+	session.metric = metric
 
 	return session, nil
 }
@@ -95,9 +97,13 @@ type kubeRunSession struct {
 	restClient        *restclient.RESTClient
 	connectionConfig  restclient.Config
 	logger            log.Logger
+	metric            *metrics.MetricCollector
 }
 
-func Init(registry *backend.Registry) {
+func Init(registry *backend.Registry, metric *metrics.MetricCollector) {
+	metric.SetMetricMeta(MetricNameBackendError, "Number of errors in the kuberun backend", metrics.MetricTypeCounter)
+	metric.Set(MetricBackendError, 0)
+
 	kubeRunBackend := backend.Backend{}
 	kubeRunBackend.Name = "kuberun"
 	kubeRunBackend.CreateSession = createSession

@@ -5,6 +5,7 @@ import (
 	authClient "github.com/janoszen/containerssh/auth"
 	"github.com/janoszen/containerssh/config"
 	configClient "github.com/janoszen/containerssh/config/client"
+	"github.com/janoszen/containerssh/metrics"
 	"github.com/janoszen/containerssh/test/ssh"
 	"net"
 	"time"
@@ -14,11 +15,13 @@ func (scenario *Scenario) StartSshServer() error {
 	if scenario.SshServer != nil {
 		return fmt.Errorf("SSH server is already running")
 	}
+	metric := metrics.New()
 	ac, err := authClient.NewHttpAuthClient(
 		config.AuthConfig{
 			Url: "http://127.0.0.1:8080",
 		},
 		scenario.Logger,
+		metric,
 	)
 	if err != nil {
 		return err
@@ -29,6 +32,7 @@ func (scenario *Scenario) StartSshServer() error {
 			Url: "http://127.0.0.1:8081/config",
 		},
 		scenario.Logger,
+		metric,
 	)
 	if err != nil {
 		return err

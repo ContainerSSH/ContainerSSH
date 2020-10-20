@@ -121,6 +121,7 @@ func (session *kubeRunSession) RequestProgram(program string, stdIn io.Reader, s
 		meta.CreateOptions{},
 	)
 	if err != nil {
+		session.metric.Increment(MetricBackendError)
 		return err
 	}
 
@@ -175,6 +176,7 @@ func (session *kubeRunSession) handlePodConnection(err error, pod *core.Pod, con
 	//Wait for pod do come up
 	session.pod, err = session.waitForPodAvailable()
 	if err != nil {
+		session.metric.Increment(MetricBackendError)
 		session.logger.WarningF("pod failed to come up (%v)", err)
 		session.Close()
 		_ = session.removePod()
@@ -197,6 +199,7 @@ func (session *kubeRunSession) handlePodConnection(err error, pod *core.Pod, con
 	session.logger.DebugF("POST %s", req.URL())
 	exec, err := remotecommand.NewSPDYExecutor(&session.connectionConfig, "POST", req.URL())
 	if err != nil {
+		session.metric.Increment(MetricBackendError)
 		session.logger.WarningF("failed to attach to container (%s)", err)
 		session.Close()
 		_ = session.removePod()
@@ -228,6 +231,7 @@ func (session *kubeRunSession) handleFinishedPod(pod *core.Pod, container core.C
 
 	logStream, err := request.Stream(session.ctx)
 	if err != nil {
+		session.metric.Increment(MetricBackendError)
 		session.logger.DebugF("Failed to attach or stream logs (%s)", err)
 		return
 	}
@@ -235,6 +239,7 @@ func (session *kubeRunSession) handleFinishedPod(pod *core.Pod, container core.C
 	//     https://github.com/kubernetes/kubernetes/issues/28167
 	_, err = io.Copy(stdOut, logStream)
 	if err != nil {
+		session.metric.Increment(MetricBackendError)
 		session.logger.DebugF("Failed to attach or stream logs (%s)", err)
 		return
 	}

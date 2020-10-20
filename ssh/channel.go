@@ -3,6 +3,7 @@ package ssh
 import (
 	"context"
 	"fmt"
+	"github.com/janoszen/containerssh/metrics"
 
 	"encoding/base64"
 
@@ -27,7 +28,8 @@ type ChannelHandler struct {
 	backendRegistry              *backend.Registry
 	configClient                 configurationClient.ConfigClient
 	channelRequestHandlerFactory ChannelRequestHandlerFactory
-	logger 						 log.Logger
+	logger                       log.Logger
+	metric                       *metrics.MetricCollector
 }
 
 func NewChannelHandler(
@@ -35,7 +37,8 @@ func NewChannelHandler(
 	backendRegistry *backend.Registry,
 	configClient configurationClient.ConfigClient,
 	channelRequestHandlerFactory ChannelRequestHandlerFactory,
-	logger 						 log.Logger,
+	logger log.Logger,
+	metric *metrics.MetricCollector,
 ) *ChannelHandler {
 	return &ChannelHandler{
 		appConfig:                    appConfig,
@@ -43,14 +46,15 @@ func NewChannelHandler(
 		configClient:                 configClient,
 		channelRequestHandlerFactory: channelRequestHandlerFactory,
 		logger:                       logger,
+		metric:                       metric,
 	}
 }
 
 func (handler *ChannelHandler) OnChannel(
-	ctx context.Context,
+	_ context.Context,
 	connection ssh.ConnMetadata,
 	channelType string,
-	extraData []byte,
+	_ []byte,
 ) (server.ChannelRequestHandler, *server.ChannelRejection) {
 	if channelType != "session" {
 		return nil, &server.ChannelRejection{
@@ -106,6 +110,7 @@ func (handler *ChannelHandler) OnChannel(
 		connection.User(),
 		&actualConfig,
 		handler.logger,
+		handler.metric,
 	)
 	if err != nil {
 		handler.logger.DebugE(err)
@@ -124,6 +129,7 @@ type channelHandlerFactory struct {
 	channelRequestHandlerFactory ChannelRequestHandlerFactory
 	logger                       log.Logger
 	loggerFactory                log.LoggerFactory
+	metric                       *metrics.MetricCollector
 }
 
 func (factory *channelHandlerFactory) Make(appConfig *config.AppConfig) *ChannelHandler {
@@ -141,6 +147,7 @@ func (factory *channelHandlerFactory) Make(appConfig *config.AppConfig) *Channel
 		factory.configClient,
 		factory.channelRequestHandlerFactory,
 		logger,
+		factory.metric,
 	)
 }
 
@@ -148,14 +155,16 @@ func NewDefaultChannelHandlerFactory(
 	backendRegistry *backend.Registry,
 	configClient configurationClient.ConfigClient,
 	channelRequestHandlerFactory ChannelRequestHandlerFactory,
-	logger                       log.Logger,
-	loggerFactory                log.LoggerFactory,
+	logger log.Logger,
+	loggerFactory log.LoggerFactory,
+	metric *metrics.MetricCollector,
 ) ChannelHandlerFactory {
 	return &channelHandlerFactory{
 		backendRegistry:              backendRegistry,
 		configClient:                 configClient,
 		channelRequestHandlerFactory: channelRequestHandlerFactory,
-		logger: logger,
-		loggerFactory: loggerFactory,
+		logger:                       logger,
+		loggerFactory:                loggerFactory,
+		metric:                       metric,
 	}
 }

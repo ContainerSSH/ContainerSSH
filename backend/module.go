@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/janoszen/containerssh/config"
 	"github.com/janoszen/containerssh/log"
+	"github.com/janoszen/containerssh/metrics"
 	"io"
 )
 
@@ -35,7 +36,7 @@ type Session interface {
 
 type Backend struct {
 	Name          config.BackendName
-	CreateSession func(sessionId string, username string, appConfig *config.AppConfig, logger log.Logger) (Session, error)
+	CreateSession func(sessionId string, username string, appConfig *config.AppConfig, logger log.Logger, metric *metrics.MetricCollector) (Session, error)
 }
 
 type Registry struct {

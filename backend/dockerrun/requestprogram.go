@@ -23,7 +23,6 @@ func (session *dockerRunSession) RequestProgram(program string, stdIn io.Reader,
 		return fmt.Errorf("command execution disabled, cannot run program: %s", program)
 	}
 
-
 	image := config.Config.ContainerConfig.Image
 	_, err := reference.ParseNamed(config.Config.ContainerConfig.Image)
 	if err != nil {
@@ -40,14 +39,17 @@ func (session *dockerRunSession) RequestProgram(program string, stdIn io.Reader,
 
 	pullReader, err := session.client.ImagePull(session.ctx, image, types.ImagePullOptions{})
 	if err != nil {
+		session.metric.Increment(MetricBackendError)
 		return err
 	}
 	_, err = ioutil.ReadAll(pullReader)
 	if err != nil {
+		session.metric.Increment(MetricBackendError)
 		return err
 	}
 	err = pullReader.Close()
 	if err != nil {
+		session.metric.Increment(MetricBackendError)
 		return err
 	}
 
@@ -83,6 +85,7 @@ func (session *dockerRunSession) RequestProgram(program string, stdIn io.Reader,
 		config.Config.ContainerName,
 	)
 	if err != nil {
+		session.metric.Increment(MetricBackendError)
 		return err
 	}
 	session.containerId = body.ID
@@ -95,30 +98,41 @@ func (session *dockerRunSession) RequestProgram(program string, stdIn io.Reader,
 	}
 	attachResult, err := session.client.ContainerAttach(session.ctx, session.containerId, attachOptions)
 	if err != nil {
+		session.metric.Increment(MetricBackendError)
 		return err
 	}
 
 	startOptions := types.ContainerStartOptions{}
 	err = session.client.ContainerStart(session.ctx, session.containerId, startOptions)
 	if err != nil {
+		session.metric.Increment(MetricBackendError)
 		return err
 	}
 
 	var once sync.Once
 	if session.pty {
 		go func() {
-			_, _ = io.Copy(stdOut, attachResult.Reader)
+			_, err = io.Copy(stdOut, attachResult.Reader)
+			if err != nil {
+				session.metric.Increment(MetricBackendError)
+			}
 			once.Do(done)
 		}()
 	} else {
 		go func() {
 			//Demultiplex Docker stream
-			_, _ = stdcopy.StdCopy(stdOut, stdErr, attachResult.Reader)
+			_, err = stdcopy.StdCopy(stdOut, stdErr, attachResult.Reader)
+			if err != nil {
+				session.metric.Increment(MetricBackendError)
+			}
 			once.Do(done)
 		}()
 	}
 	go func() {
-		_, _ = io.Copy(attachResult.Conn, stdIn)
+		_, err = io.Copy(attachResult.Conn, stdIn)
+		if err != nil {
+			session.metric.Increment(MetricBackendError)
+		}
 		once.Do(done)
 	}()
 

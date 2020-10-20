@@ -22,10 +22,10 @@ import (
 	"syscall"
 )
 
-func InitBackendRegistry() *backend.Registry {
+func InitBackendRegistry(metric *metrics.MetricCollector) *backend.Registry {
 	registry := backend.NewRegistry()
-	dockerrun.Init(registry)
-	kuberun.Init(registry)
+	dockerrun.Init(registry, metric)
+	kuberun.Init(registry, metric)
 	return registry
 }
 
@@ -37,8 +37,9 @@ func main() {
 	logWriter := writer.NewJsonLogWriter()
 	var logger log.Logger
 	logger = log.NewLoggerPipeline(logConfig, logWriter)
+	metricCollector := metrics.New()
 
-	backendRegistry := InitBackendRegistry()
+	backendRegistry := InitBackendRegistry(metricCollector)
 	appConfig, err := util.GetDefaultConfig()
 	if err != nil {
 		logger.CriticalF("Error getting default config (%s)", err)
@@ -118,8 +119,6 @@ func main() {
 	if dumpConfig || licenses {
 		return
 	}
-
-	metricCollector := metrics.New()
 
 	authClient, err := auth.NewHttpAuthClient(appConfig.Auth, logger, metricCollector)
 	if err != nil {
