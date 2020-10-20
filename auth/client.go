@@ -1,6 +1,9 @@
 package auth
 
-import "github.com/janoszen/containerssh/protocol"
+import (
+	"github.com/janoszen/containerssh/protocol"
+	"net"
+)
 
 type Client interface {
 	Password(
@@ -11,7 +14,7 @@ type Client interface {
 		//Opaque session ID to identify the login attempt
 		sessionId []byte,
 		//Remote address in IP:port format
-		remoteAddr string,
+		remoteAddr net.IP,
 	) (*protocol.AuthResponse, error)
 	PubKey(
 		//Username provided
@@ -21,6 +24,6 @@ type Client interface {
 		//Opaque session ID to identify the login attempt
 		sessionId []byte,
 		//Remote address in IP:port format
-		remoteAddr string,
+		remoteAddr net.IP,
 	) (*protocol.AuthResponse, error)
 }

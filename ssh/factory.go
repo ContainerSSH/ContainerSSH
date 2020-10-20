@@ -11,6 +11,7 @@ import (
 	"github.com/janoszen/containerssh/ssh/server"
 	"golang.org/x/crypto/ssh"
 	"io/ioutil"
+	"net"
 	"strings"
 )
 
@@ -35,7 +36,7 @@ func NewServer(
 				conn.User(),
 				password,
 				conn.SessionID(),
-				conn.RemoteAddr().String(),
+				net.ParseIP(conn.RemoteAddr().String()),
 			)
 			if err != nil {
 				return nil, err
@@ -53,7 +54,7 @@ func NewServer(
 				conn.User(),
 				key.Marshal(),
 				conn.SessionID(),
-				conn.RemoteAddr().String(),
+				net.ParseIP(conn.RemoteAddr().String()),
 			)
 			if err != nil {
 				return nil, err

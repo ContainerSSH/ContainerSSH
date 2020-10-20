@@ -30,4 +30,6 @@ type AppConfig struct {
 	Log AppLogConfig `json:"log" yaml:"log" comment:"Log configuration"`
 	// Metrics configuration
 	Metrics metricsServer.Config `json:"metrics" yaml:"metrics" comment:"Metrics configuration."`
+	// GeoIP configuration
+	GeoIP GeoIPConfig `json:"geoip" yaml:"geoip" comment:"GeoIP database"`
 }

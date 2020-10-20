@@ -1,62 +1,29 @@
 package metrics
 
 import (
+	"github.com/janoszen/containerssh/geoip"
+	"net"
 	"sort"
-	"strings"
 	"sync"
 )
 
-type MetricType string
-
-//goland:noinspection GoUnusedConst
-const (
-	MetricTypeCounter MetricType = "counter"
-	MetricTypeGauge   MetricType = "gauge"
-)
-
-type Metric struct {
-	Name   string
-	Labels map[string]string
-}
-
-func (metric *Metric) ToString() string {
-	var labelList []string
-
-	keys := make([]string, 0, len(metric.Labels))
-	for k := range metric.Labels {
-		keys = append(keys, k)
-	}
-	sort.Strings(keys)
-
-	for _, k := range keys {
-		labelList = append(labelList, k+"=\""+metric.Labels[k]+"\"")
-	}
-
-	var labels string
-	if len(labelList) > 0 {
-		labels = "{" + strings.Join(labelList, ",") + "}"
-	} else {
-		labels = ""
-	}
-
-	return metric.Name + labels
-}
-
 type MetricCollector struct {
-	mutex      *sync.Mutex
-	metricKeys map[string]*Metric
-	metrics    map[string]map[*Metric]float64
-	help       map[string]string
-	types      map[string]MetricType
+	mutex               *sync.Mutex
+	metricKeys          map[string]*Metric
+	metrics             map[string]map[*Metric]float64
+	help                map[string]string
+	types               map[string]MetricType
+	geoIpLookupProvider geoip.LookupProvider
 }
 
-func New() *MetricCollector {
+func New(geoIpLookupProvider geoip.LookupProvider) *MetricCollector {
 	return &MetricCollector{
 		&sync.Mutex{},
 		make(map[string]*Metric, 0),
 		make(map[string]map[*Metric]float64, 0),
 		make(map[string]string, 0),
 		make(map[string]MetricType, 0),
+		geoIpLookupProvider,
 	}
 }
 
@@ -121,6 +88,11 @@ func (collector *MetricCollector) Increment(metric Metric) float64 {
 	return value
 }
 
+func (collector *MetricCollector) IncrementGeo(metric Metric, remoteAddr net.IP) float64 {
+	metric.Labels["country"] = collector.geoIpLookupProvider.Lookup(remoteAddr)
+	return collector.Increment(metric)
+}
+
 func (collector *MetricCollector) Decrement(metric Metric) float64 {
 	collector.mutex.Lock()
 	defer collector.mutex.Unlock()
@@ -128,6 +100,11 @@ func (collector *MetricCollector) Decrement(metric Metric) float64 {
 	value = value - 1
 	collector.set(metric, value)
 	return value
+}
+
+func (collector *MetricCollector) DecrementGeo(metric Metric, remoteAddr net.IP) float64 {
+	metric.Labels["country"] = collector.geoIpLookupProvider.Lookup(remoteAddr)
+	return collector.Decrement(metric)
 }
 
 func (collector *MetricCollector) get(metric Metric) float64 {

@@ -4,6 +4,7 @@ go 1.14
 
 require (
 	github.com/Microsoft/go-winio v0.4.14 // indirect
+	github.com/alecthomas/gobundle v0.0.0-20151026125332-e2f55dbde06a // indirect
 	github.com/creasty/defaults v1.5.0
 	github.com/cucumber/godog v0.10.0
 	github.com/docker/distribution v2.7.1+incompatible
@@ -17,6 +18,7 @@ require (
 	github.com/jinzhu/copier v0.0.0-20190924061706-b57f9002281a
 	github.com/mattn/go-shellwords v1.0.10
 	github.com/opencontainers/go-digest v1.0.0 // indirect
+	github.com/oschwald/geoip2-golang v1.4.0
 	github.com/pkg/errors v0.9.1 // indirect
 	github.com/qdm12/reprint v0.0.0-20200326205758-722754a53494
 	golang.org/x/crypto v0.0.0-20200604202706-70a84ac30bf9

@@ -12,6 +12,8 @@ import (
 	configurationClient "github.com/janoszen/containerssh/config/client"
 	"github.com/janoszen/containerssh/config/loader"
 	"github.com/janoszen/containerssh/config/util"
+	"github.com/janoszen/containerssh/geoip/dummy"
+	"github.com/janoszen/containerssh/geoip/oschwald"
 	"github.com/janoszen/containerssh/log"
 	"github.com/janoszen/containerssh/log/writer"
 	"github.com/janoszen/containerssh/metrics"
@@ -39,12 +41,10 @@ func main() {
 	logWriter := writer.NewJsonLogWriter()
 	var logger log.Logger
 	logger = log.NewLoggerPipeline(logConfig, logWriter)
-	metricCollector := metrics.New()
 
-	backendRegistry := InitBackendRegistry(metricCollector)
 	appConfig, err := util.GetDefaultConfig()
 	if err != nil {
-		logger.CriticalF("Error getting default config (%s)", err)
+		logger.CriticalF("error getting default config (%v)", err)
 		os.Exit(1)
 	}
 
@@ -81,12 +81,12 @@ func main() {
 	if configFile != "" {
 		fileAppConfig, err := loader.LoadFile(configFile)
 		if err != nil {
-			logger.EmergencyF("Error loading config file (%v)", err)
+			logger.EmergencyF("error loading config file (%v)", err)
 			os.Exit(1)
 		}
 		appConfig, err = util.Merge(fileAppConfig, appConfig)
 		if err != nil {
-			logger.EmergencyF("Error merging config (%v)", err)
+			logger.EmergencyF("error merging config (%v)", err)
 			os.Exit(1)
 		}
 	}
@@ -121,6 +121,15 @@ func main() {
 	if dumpConfig || licenses {
 		return
 	}
+
+	geoIpLookupProvider, err := oschwald.New(appConfig.GeoIP.GeoIP2File)
+	if err != nil {
+		logger.WarningF("failed to load GeoIP2 database, falling back to dummy provider (%v)", err)
+		geoIpLookupProvider = dummy.New()
+	}
+	metricCollector := metrics.New(geoIpLookupProvider)
+
+	backendRegistry := InitBackendRegistry(metricCollector)
 
 	authClient, err := auth.NewHttpAuthClient(appConfig.Auth, logger, metricCollector)
 	if err != nil {

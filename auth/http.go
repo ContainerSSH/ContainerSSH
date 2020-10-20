@@ -10,6 +10,7 @@ import (
 	"github.com/janoszen/containerssh/log"
 	"github.com/janoszen/containerssh/metrics"
 	"github.com/janoszen/containerssh/protocol"
+	"net"
 	"net/http"
 )
 
@@ -23,9 +24,9 @@ var MetricAuthFailure = metrics.Metric{
 	Name:   MetricNameAuthFailure,
 	Labels: map[string]string{},
 }
-var MetricNameAuthSuccess = "auth_successes"
+var MetricNameAuthSuccess = "auth_success"
 var MetricAuthSuccess = metrics.Metric{
-	Name:   MetricNameAuthFailure,
+	Name:   MetricNameAuthSuccess,
 	Labels: map[string]string{},
 }
 
@@ -59,9 +60,7 @@ func NewHttpAuthClient(
 	metric.SetMetricMeta(MetricNameAuthBackendFailure, "Number of request failures to the authentication backend", metrics.MetricTypeCounter)
 	metric.Set(MetricAuthBackendFailure, 0)
 	metric.SetMetricMeta(MetricNameAuthFailure, "Number of failed authentications", metrics.MetricTypeCounter)
-	metric.Set(MetricAuthFailure, 0)
 	metric.SetMetricMeta(MetricNameAuthSuccess, "Number of successful authentications", metrics.MetricTypeCounter)
-	metric.Set(MetricAuthSuccess, 0)
 
 	return &HttpAuthClient{
 		httpClient: *realClient,
@@ -79,13 +78,13 @@ func (client *HttpAuthClient) Password(
 	//Opaque session ID to identify the login attempt
 	sessionId []byte,
 	//Remote address in IP:port format
-	remoteAddr string,
+	remoteAddr net.IP,
 ) (*protocol.AuthResponse, error) {
 	client.logger.DebugF("Password authentication attempt user %s with public key for connection from %s", username, remoteAddr)
 	authRequest := protocol.PasswordAuthRequest{
 		User:          username,
 		Username:      username,
-		RemoteAddress: remoteAddr,
+		RemoteAddress: remoteAddr.String(),
 		SessionId:     base64.StdEncoding.EncodeToString(sessionId),
 		Password:      base64.StdEncoding.EncodeToString(password),
 	}
@@ -98,10 +97,10 @@ func (client *HttpAuthClient) Password(
 	client.logger.DebugF("Completed password authentication for user %s with password for connection from %s", username, remoteAddr)
 	if authResponse.Success {
 		client.logger.DebugF("Authentication successful %s with password for connection from %s", username, remoteAddr)
-		client.metric.Increment(MetricAuthSuccess)
+		client.metric.IncrementGeo(MetricAuthSuccess, remoteAddr)
 	} else {
 		client.logger.DebugF("Authentication failed %s with password for connection from %s", username, remoteAddr)
-		client.metric.Increment(MetricAuthFailure)
+		client.metric.IncrementGeo(MetricAuthFailure, remoteAddr)
 	}
 	return authResponse, nil
 }
@@ -113,13 +112,13 @@ func (client *HttpAuthClient) PubKey(
 	//Opaque session ID to identify the login attempt
 	sessionId []byte,
 	//Remote address in IP:port format
-	remoteAddr string,
+	remoteAddr net.IP,
 ) (*protocol.AuthResponse, error) {
 	client.logger.DebugF("Public key authentication attempt user %s with public key for connection from %s", username, remoteAddr)
 	authRequest := protocol.PublicKeyAuthRequest{
 		User:          username,
 		Username:      username,
-		RemoteAddress: remoteAddr,
+		RemoteAddress: remoteAddr.String(),
 		SessionId:     base64.StdEncoding.EncodeToString(sessionId),
 		PublicKey:     base64.StdEncoding.EncodeToString(pubKey),
 	}
@@ -132,10 +131,10 @@ func (client *HttpAuthClient) PubKey(
 	client.logger.DebugF("Completed password authentication for user %s with public key for connection from %s", username, remoteAddr)
 	if authResponse.Success {
 		client.logger.DebugF("Authentication successful %s with public key for connection from %s", username, remoteAddr)
-		client.metric.Increment(MetricAuthSuccess)
+		client.metric.IncrementGeo(MetricAuthSuccess, remoteAddr)
 	} else {
 		client.logger.DebugF("Authentication failed %s with public key for connection from %s", username, remoteAddr)
-		client.metric.Increment(MetricAuthFailure)
+		client.metric.IncrementGeo(MetricAuthFailure, remoteAddr)
 	}
 	return authResponse, nil
 }
