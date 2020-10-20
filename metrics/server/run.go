@@ -13,11 +13,11 @@ func (s *MetricsServer) Handle(writer http.ResponseWriter, _ *http.Request) {
 	for _, metricName := range s.collector.GetMetricNames() {
 		help := s.collector.GetHelp(metricName)
 		if help != "" {
-			buffer.Write([]byte(fmt.Sprintf("# HELP %s\n", strings.ReplaceAll(help, "\n", ""))))
+			buffer.Write([]byte(fmt.Sprintf("# HELP %s %s\n", metricName, strings.ReplaceAll(help, "\n", ""))))
 		}
 		t := s.collector.GetType(metricName)
 		if t != "" {
-			buffer.Write([]byte(fmt.Sprintf("# TYPE %s\n", t)))
+			buffer.Write([]byte(fmt.Sprintf("# TYPE %s %s\n", metricName, t)))
 		}
 		for metric, value := range s.collector.GetMetrics(metricName) {
 			buffer.Write([]byte(fmt.Sprintf("%s %f\n", metric.ToString(), value)))
