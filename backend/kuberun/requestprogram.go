@@ -108,7 +108,7 @@ func (session *kubeRunSession) RequestProgram(program string, stdIn io.Reader, s
 
 	spec := session.createPodSpec(program, session.config)
 
-	session.logger.DebugF("Creating pod")
+	session.logger.DebugF("creating pod")
 	pod, err := session.client.CoreV1().Pods(session.config.Pod.Namespace).Create(
 		session.ctx,
 		&core.Pod{
@@ -122,6 +122,7 @@ func (session *kubeRunSession) RequestProgram(program string, stdIn io.Reader, s
 	)
 	if err != nil {
 		session.metric.Increment(MetricBackendError)
+		session.logger.ErrorF("failed to create pod (%v)", err)
 		return err
 	}
 
@@ -206,7 +207,7 @@ func (session *kubeRunSession) handlePodConnection(err error, pod *core.Pod, con
 		return
 	}
 
-	session.logger.DebugF("Streaming input/output")
+	session.logger.DebugF("streaming input/output")
 	err = exec.Stream(remotecommand.StreamOptions{
 		Stdin:             stdIn,
 		Stdout:            stdOut,
@@ -222,7 +223,7 @@ func (session *kubeRunSession) handlePodConnection(err error, pod *core.Pod, con
 }
 
 func (session *kubeRunSession) handleFinishedPod(pod *core.Pod, container core.Container, stdOut io.Writer) {
-	session.logger.DebugF("Pod already finished, streaming logs")
+	session.logger.DebugF("pod already finished, streaming logs")
 	//Try fetching logs in case the container already exited.
 	//Do not move this above the "attach" method otherwise there will be a race condition.
 	request := session.client.CoreV1().Pods(pod.Namespace).GetLogs(pod.Name, &core.PodLogOptions{
@@ -240,7 +241,7 @@ func (session *kubeRunSession) handleFinishedPod(pod *core.Pod, container core.C
 	_, err = io.Copy(stdOut, logStream)
 	if err != nil {
 		session.metric.Increment(MetricBackendError)
-		session.logger.DebugF("Failed to attach or stream logs (%s)", err)
+		session.logger.DebugF("failed to attach or stream logs (%s)", err)
 		return
 	}
 	//todo inform client of the error.

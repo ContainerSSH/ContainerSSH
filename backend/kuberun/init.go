@@ -14,7 +14,7 @@ import (
 )
 
 func createSession(sessionId string, username string, appConfig *config.AppConfig, logger log.Logger, metric *metrics.MetricCollector) (backend.Session, error) {
-	logger.DebugF("Initializing Kubernetes backend")
+	logger.DebugF("initializing Kubernetes backend")
 	connectionConfig := restclient.Config{
 		Host:    appConfig.KubeRun.Connection.Host,
 		APIPath: appConfig.KubeRun.Connection.APIPath,
