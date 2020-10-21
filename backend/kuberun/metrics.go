@@ -7,5 +7,5 @@ import (
 
 var MetricBackendError = metrics.Metric{
 	Name:   backendMetrics.MetricNameBackendError,
-	Labels: map[string]string{backendMetrics.MetricLabelBackend: "dockerrun"},
+	Labels: map[string]string{backendMetrics.MetricLabelBackend: "kuberun"},
 }
