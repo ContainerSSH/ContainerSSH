@@ -13,6 +13,7 @@ import (
 	"github.com/janoszen/containerssh/backend/kuberun"
 	configurationClient "github.com/janoszen/containerssh/config/client"
 	"github.com/janoszen/containerssh/config/util"
+	"github.com/janoszen/containerssh/geoip/dummy"
 	"github.com/janoszen/containerssh/log"
 	"github.com/janoszen/containerssh/metrics"
 	"github.com/janoszen/containerssh/ssh"
@@ -45,7 +46,7 @@ func (server *Server) Start() error {
 	if server.ctx == nil {
 		server.ctx, server.cancel = context.WithCancel(context.Background())
 
-		metricCollector := metrics.New()
+		metricCollector := metrics.New(dummy.New())
 
 		backendRegistry := backend.NewRegistry()
 		dockerrun.Init(backendRegistry, metricCollector)

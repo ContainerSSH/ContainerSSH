@@ -5,6 +5,7 @@ import (
 	authClient "github.com/janoszen/containerssh/auth"
 	"github.com/janoszen/containerssh/config"
 	configClient "github.com/janoszen/containerssh/config/client"
+	"github.com/janoszen/containerssh/geoip/dummy"
 	"github.com/janoszen/containerssh/metrics"
 	"github.com/janoszen/containerssh/test/ssh"
 	"net"
@@ -15,7 +16,7 @@ func (scenario *Scenario) StartSshServer() error {
 	if scenario.SshServer != nil {
 		return fmt.Errorf("SSH server is already running")
 	}
-	metric := metrics.New()
+	metric := metrics.New(dummy.New())
 	ac, err := authClient.NewHttpAuthClient(
 		config.AuthConfig{
 			Url: "http://127.0.0.1:8080",
