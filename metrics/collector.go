@@ -10,7 +10,7 @@ import (
 type MetricCollector struct {
 	mutex               *sync.Mutex
 	metricKeys          map[string]*Metric
-	metrics             map[string]map[*Metric]float64
+	metrics             map[string]map[string]float64
 	help                map[string]string
 	types               map[string]MetricType
 	geoIpLookupProvider geoip.LookupProvider
@@ -20,7 +20,7 @@ func New(geoIpLookupProvider geoip.LookupProvider) *MetricCollector {
 	return &MetricCollector{
 		&sync.Mutex{},
 		make(map[string]*Metric, 0),
-		make(map[string]map[*Metric]float64, 0),
+		make(map[string]map[string]float64, 0),
 		make(map[string]string, 0),
 		make(map[string]MetricType, 0),
 		geoIpLookupProvider,
@@ -54,11 +54,11 @@ func (collector *MetricCollector) GetMetricNames() []string {
 	return names
 }
 
-func (collector *MetricCollector) GetMetrics(name string) map[*Metric]float64 {
+func (collector *MetricCollector) GetMetrics(name string) map[string]float64 {
 	if val, ok := collector.metrics[name]; ok {
 		return val
 	} else {
-		return make(map[*Metric]float64, 0)
+		return make(map[string]float64, 0)
 	}
 }
 
@@ -108,32 +108,24 @@ func (collector *MetricCollector) DecrementGeo(metric Metric, remoteAddr net.IP)
 }
 
 func (collector *MetricCollector) get(metric Metric) float64 {
-	var metricKey *Metric
-	if val, ok := collector.metricKeys[(&metric).ToString()]; ok {
-		metricKey = val
-	} else {
+	if _, ok := collector.metricKeys[(&metric).ToString()]; !ok {
 		collector.metricKeys[(&metric).ToString()] = &metric
-		metricKey = collector.metricKeys[(&metric).ToString()]
 	}
 	if _, ok := collector.metrics[metric.Name]; !ok {
-		collector.metrics[metric.Name] = make(map[*Metric]float64, 0)
+		collector.metrics[metric.Name] = make(map[string]float64, 0)
 		return 0
 	}
-	if _, ok := collector.metrics[metric.Name][metricKey]; ok {
-		return collector.metrics[metric.Name][metricKey]
+	if _, ok := collector.metrics[metric.Name][(&metric).ToString()]; ok {
+		return collector.metrics[metric.Name][(&metric).ToString()]
 	}
 	return 0
 }
 func (collector *MetricCollector) set(metric Metric, value float64) {
-	var metricKey *Metric
-	if val, ok := collector.metricKeys[(&metric).ToString()]; ok {
-		metricKey = val
-	} else {
+	if _, ok := collector.metricKeys[(&metric).ToString()]; !ok {
 		collector.metricKeys[(&metric).ToString()] = &metric
-		metricKey = collector.metricKeys[(&metric).ToString()]
 	}
 	if _, ok := collector.metrics[metric.Name]; !ok {
-		collector.metrics[metric.Name] = make(map[*Metric]float64, 0)
+		collector.metrics[metric.Name] = make(map[string]float64, 0)
 	}
-	collector.metrics[metric.Name][metricKey] = value
+	collector.metrics[metric.Name][(&metric).ToString()] = value
 }

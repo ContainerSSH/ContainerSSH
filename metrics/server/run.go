@@ -20,7 +20,7 @@ func (s *MetricsServer) Handle(writer http.ResponseWriter, _ *http.Request) {
 			buffer.Write([]byte(fmt.Sprintf("# TYPE %s %s\n", metricName, t)))
 		}
 		for metric, value := range s.collector.GetMetrics(metricName) {
-			buffer.Write([]byte(fmt.Sprintf("%s %f\n", metric.ToString(), value)))
+			buffer.Write([]byte(fmt.Sprintf("%s %f\n", metric, value)))
 		}
 	}
 	_, err := writer.Write(buffer.Bytes())

@@ -7,4 +7,4 @@ func Init(metric *metrics.MetricCollector) {
 }
 
 var MetricLabelBackend = "backend"
-var MetricNameBackendError = "backend_errors"
+var MetricNameBackendError = "containerssh_backend_errors"

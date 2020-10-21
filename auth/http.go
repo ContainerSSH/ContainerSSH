@@ -14,20 +14,28 @@ import (
 	"net/http"
 )
 
-var MetricNameAuthBackendFailure = "auth_backend_failures"
+var MetricNameAuthBackendFailure = "containerssh_auth_server_failures"
 var MetricAuthBackendFailure = metrics.Metric{
 	Name:   MetricNameAuthBackendFailure,
 	Labels: map[string]string{},
 }
-var MetricNameAuthFailure = "auth_failures"
-var MetricAuthFailure = metrics.Metric{
+var MetricNameAuthFailure = "containerssh_auth_failures"
+var MetricAuthFailurePubkey = metrics.Metric{
 	Name:   MetricNameAuthFailure,
-	Labels: map[string]string{},
+	Labels: map[string]string{"authtype": "pubkey"},
 }
-var MetricNameAuthSuccess = "auth_success"
-var MetricAuthSuccess = metrics.Metric{
+var MetricAuthFailurePassword = metrics.Metric{
+	Name:   MetricNameAuthFailure,
+	Labels: map[string]string{"authtype": "password"},
+}
+var MetricNameAuthSuccess = "containerssh_auth_success"
+var MetricAuthSuccessPubkey = metrics.Metric{
 	Name:   MetricNameAuthSuccess,
-	Labels: map[string]string{},
+	Labels: map[string]string{"authtype": "pubkey"},
+}
+var MetricAuthSuccessPassword = metrics.Metric{
+	Name:   MetricNameAuthSuccess,
+	Labels: map[string]string{"authtype": "password"},
 }
 
 type HttpAuthClient struct {
@@ -97,10 +105,10 @@ func (client *HttpAuthClient) Password(
 	client.logger.DebugF("Completed password authentication for user %s with password for connection from %s", username, remoteAddr)
 	if authResponse.Success {
 		client.logger.DebugF("Authentication successful %s with password for connection from %s", username, remoteAddr)
-		client.metric.IncrementGeo(MetricAuthSuccess, remoteAddr)
+		client.metric.IncrementGeo(MetricAuthSuccessPassword, remoteAddr)
 	} else {
 		client.logger.DebugF("Authentication failed %s with password for connection from %s", username, remoteAddr)
-		client.metric.IncrementGeo(MetricAuthFailure, remoteAddr)
+		client.metric.IncrementGeo(MetricAuthFailurePassword, remoteAddr)
 	}
 	return authResponse, nil
 }
@@ -131,10 +139,10 @@ func (client *HttpAuthClient) PubKey(
 	client.logger.DebugF("Completed password authentication for user %s with public key for connection from %s", username, remoteAddr)
 	if authResponse.Success {
 		client.logger.DebugF("Authentication successful %s with public key for connection from %s", username, remoteAddr)
-		client.metric.IncrementGeo(MetricAuthSuccess, remoteAddr)
+		client.metric.IncrementGeo(MetricAuthSuccessPubkey, remoteAddr)
 	} else {
 		client.logger.DebugF("Authentication failed %s with public key for connection from %s", username, remoteAddr)
-		client.metric.IncrementGeo(MetricAuthFailure, remoteAddr)
+		client.metric.IncrementGeo(MetricAuthFailurePubkey, remoteAddr)
 	}
 	return authResponse, nil
 }

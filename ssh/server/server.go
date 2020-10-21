@@ -9,27 +9,6 @@ import (
 	"net"
 )
 
-var MetricNameConnections = "ssh_connections"
-var MetricNameSuccessfulHandshake = "ssh_handshake_successful"
-var MetricNameFailedHandshake = "ssh_handshake_failed"
-var MetricNameCurrentConnections = "ssh_current_connections"
-var MetricConnections = metrics.Metric{
-	Name:   MetricNameConnections,
-	Labels: map[string]string{},
-}
-var MetricSuccessfulHandshake = metrics.Metric{
-	Name:   MetricNameSuccessfulHandshake,
-	Labels: map[string]string{},
-}
-var MetricFailedHandshake = metrics.Metric{
-	Name:   MetricNameFailedHandshake,
-	Labels: map[string]string{},
-}
-var MetricCurrentConnections = metrics.Metric{
-	Name:   MetricNameCurrentConnections,
-	Labels: map[string]string{},
-}
-
 type RequestResponse struct {
 	Success bool
 	Payload []byte
@@ -130,13 +109,9 @@ func New(
 	}
 
 	metric.SetMetricMeta(MetricNameConnections, "Number of connections since start", metrics.MetricTypeCounter)
-	metric.Set(MetricConnections, 0)
 	metric.SetMetricMeta(MetricNameSuccessfulHandshake, "Successful SSH handshakes since start", metrics.MetricTypeCounter)
-	metric.Set(MetricSuccessfulHandshake, 0)
 	metric.SetMetricMeta(MetricNameFailedHandshake, "Failed SSH handshakes since start", metrics.MetricTypeCounter)
-	metric.Set(MetricFailedHandshake, 0)
 	metric.SetMetricMeta(MetricNameCurrentConnections, "Current open SSH connections", metrics.MetricTypeGauge)
-	metric.Set(MetricCurrentConnections, 0)
 	return server, err
 }
 
@@ -277,21 +252,22 @@ func (server *Server) Run(ctx context.Context) error {
 				// Assume listen socket closed
 				break
 			}
-			server.metric.Increment(MetricConnections)
+			ip := net.ParseIP(tcpConn.RemoteAddr().String())
+			server.metric.IncrementGeo(MetricConnections, ip)
 			server.logger.DebugF("connection from: %s", tcpConn.RemoteAddr().String())
 			sshConn, chans, reqs, err := ssh.NewServerConn(tcpConn, config)
 			if err != nil {
-				server.metric.Increment(MetricFailedHandshake)
+				server.metric.IncrementGeo(MetricFailedHandshake, ip)
 				server.logger.DebugF("failed to handshake (%v)", err)
 				continue
 			}
 			server.logger.DebugF("new SSH connection from %s for user %s (%s)", sshConn.RemoteAddr(), sshConn.User(), sshConn.ClientVersion())
-			server.metric.Increment(MetricSuccessfulHandshake)
-			server.metric.Increment(MetricCurrentConnections)
+			server.metric.IncrementGeo(MetricSuccessfulHandshake, ip)
+			server.metric.IncrementGeo(MetricCurrentConnections, ip)
 
 			go func() {
 				_ = sshConn.Wait()
-				server.metric.Decrement(MetricCurrentConnections)
+				server.metric.DecrementGeo(MetricCurrentConnections, ip)
 			}()
 
 			if server.connectionHandler == nil {
