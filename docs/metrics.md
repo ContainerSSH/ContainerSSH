@@ -11,14 +11,29 @@ metrics:
 
 You can configure Prometheus to grab the following metrics:
 
-- `containerssh_auth_server_failures`: Number failed requests to the authentication server since start.
-- `containerssh_auth_success`: Number of successful authentications since start. Contains labels for `authtype` (`password` or `pubkey`) and `country` (see below).
-- `containerssh_auth_failures`: Number of failed authentications since start. Contains labels for `authtype` (`password` or `pubkey`) and `country` (see below).
-- `containerssh_config_server_failures`: Number of failed requests to the configuration server since start.
-- `containerssh_ssh_connections`: Number of SSH connections since since start. Contains a label for `country` (see below).
-- `containerssh_ssh_handshake_successful`: Number of successful SSH handshakes since start. Contains a label for `country` (see below).
-- `containerssh_ssh_handshake_failed`: Number of failed SSH handshakes since start. Contains a label for `country` (see below).
-- `containerssh_ssh_current_connections`: Number of currently open SSH connections. Contains a label for `country` (see below).
+`containerssh_auth_server_failures`
+: Number failed requests to the authentication server since start.
+
+`containerssh_auth_success`
+: Number of successful authentications since start. Contains labels for `authtype` (`password` or `pubkey`) and `country` (see below).
+
+`containerssh_auth_failures`
+: Number of failed authentications since start. Contains labels for `authtype` (`password` or `pubkey`) and `country` (see below).
+
+`containerssh_config_server_failures`
+: Number of failed requests to the configuration server since start.
+
+`containerssh_ssh_connections`
+: Number of SSH connections since since start. Contains a label for `country` (see below).
+
+`containerssh_ssh_handshake_successful`
+: Number of successful SSH handshakes since start. Contains a label for `country` (see below).
+
+`containerssh_ssh_handshake_failed`
+: Number of failed SSH handshakes since start. Contains a label for `country` (see below).
+
+`containerssh_ssh_current_connections`
+: Number of currently open SSH connections. Contains a label for `country` (see below).
 
 ## Country identification
 
