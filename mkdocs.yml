@@ -9,6 +9,7 @@ markdown_extensions:
       separator: "-"
 theme:
   name: readthedocs
+  custom_dir: ./.docs-theme/
   include_sidebar: false
   font: false
 

@@ -27,6 +27,6 @@ jobs:
           args: release --rm-dist --snapshot
       -
         name: Deploy docs
-        uses: mhausenblas/mkdocs-deploy-gh-pages@1.15
+        uses: mhausenblas/mkdocs-deploy-gh-pages@1.12
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
