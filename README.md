@@ -8,34 +8,33 @@
 [![LGTM Alerts](https://img.shields.io/lgtm/alerts/github/janoszen/containerssh?style=for-the-badge)](https://lgtm.com/projects/g/janoszen/containerssh/)
 [![GitHub](https://img.shields.io/github/license/janoszen/containerssh?style=for-the-badge)](LICENSE.md)
 
-This is a Proof of Concept SSH server written in Go that sends any shell directly into a Docker container or Kubernetes
-pod instead of launching it on a local machine. It uses an HTTP microservice as an authentication endpoint for SSH
-connections.
+## Offering SSH in a web hosting service?
 
-## What is this?
+ContainerSSH lets you dynamically create and destroy containers when your users connect. Authenticate against your existing user database and mount directories based on your existing permission matrix.
 
-This is an **SSH server that launches containers for every incoming connection**. You can run it on the host or in a
-container. It needs two things: an authentication server and access to your container environment.
+[Read more »](https://projects.pasztor.at/containerssh/usecases/webhosting/)
 
-![Animation: SSH-ing into this SSH server lands you in a container where you can't access the network and you can't see any processes.](https://projects.pasztor.at/containerssh/images/ssh-in-action.gif)
+## Looking for a Linux learning environment?
 
-## Quick start
+With ContainerSSH you can launch Linux-based containers on-demand when your students connect. You can supply your own container image and mount folders with learning and testing material as needed.</p>
 
-This is a quick start guide to get a test server up and running in less than 5 minutes with
-[docker-compose](https://docs.docker.com/compose/).
+[Read more »](https://projects.pasztor.at/containerssh/usecases/learning/)
 
-To run it grab all files from the [example](example/) directory and run `docker-compose build` followed by 
-`docker-compose up` in that directory. This will run the SSH server on your local machine on port 2222. You can log in
-with any password using the user "foo" to get an Ubuntu image and "busybox" to get a Busybox image. 
+## Building a honeypot?
 
-## Use cases
+With the dynamic authentication server of ContainerSSH you can capture usernames and passwords, and you container environment can log commands that are executed.
 
-- **Web hosting:** Imagine user A has access to site X and Y, user B has access to site Y and Z. You can use
-  ContainerSSH to mount the appropriate sites for the SSH session.
-- **Practicing environments:** Launch dummy containers for practice environment.
-- **Honeypot:** Let attackers into an enclosed environment and observe them.
+[Read more »](https://projects.pasztor.at/containerssh/usecases/honeypots/)
+
+## Building a high security environment?
+
+ContainerSSH is being used to provide dynamic console access to an environment with sensitive credentials. Use the authentication and configuration server to dynamically provision credentials in conjunction with secret management systems such as Hashicorp Vault.
+
+[Read more »](https://projects.pasztor.at/containerssh/usecases/security/)
 
 ## How does it work?
+
+![](https://projects.pasztor.at/containerssh/images/ssh-in-action.gif)
 
 ```
 +------+        +--------------+   2.   +-------------------+
@@ -58,8 +57,4 @@ with any password using the user "foo" to get an Ubuntu image and "busybox" to g
    specified configuration. All input from the user is sent directly to the backend, output from the container is sent
    to the user.
    
-> **Curious?** [Learn more about how this works in my blog post.](https://pasztor.at/blog/ssh-direct-to-docker)
-
-## Installing & Using / Documentation
-
-If you are ready to give it a go [head over to the documentation page](http://projects.pasztor.at/containerssh/).
+[Get started »](https://projects.pasztor.at/containerssh/quickstart/)

@@ -1,3 +1,7 @@
+.md-announce a, .md-announce a:focus, .md-announce a:hover {
+    color: #ffffff;
+}
+
 html .wy-side-nav-search {
     background-color:#407dc0ff;
 }

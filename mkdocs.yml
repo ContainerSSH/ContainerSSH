@@ -4,15 +4,22 @@ repo_url: "https://github.com/janoszen/containerssh/"
 edit_uri: "edit/stable/docs/"
 markdown_extensions:
   - admonition
+  - attr_list
   - toc:
       permalink: True
       separator: "-"
 theme:
-  name: readthedocs
-  custom_dir: ./.docs-theme/
-  include_sidebar: false
+  name: material
+  custom_dir: .docs-theme
   font: false
-
+  features:
+    - navigation.tabs
+    - navigation.instant
+    - toc.autohide
+    - search.suggest
+    - search.highlight
+  logo: images/logo.svg
+  favicon: images/logo.svg
   include_search_page: true
   search_index_only: false
 
@@ -30,20 +37,28 @@ plugins:
   - macros
 nav:
   - 'Home': 'index.md'
-  - 'Quick Start': 'quickstart.md'
-  - 'Installation': 'installation.md'
-  - 'Configuration': 'configuration.md'
-  - 'Authentication Server': 'authserver.md'
-  - 'Configuration Server': 'configserver.md'
-  - 'Selecting a Backend': 'backends.md'
-  - 'The dockerrun Backend': 'dockerrun.md'
-  - 'The kuberun Backend': 'kuberun.md'
-  - 'Creating an Image': 'image.md'
-  - 'Logging': 'logging.md'
-  - 'Metrics': 'metrics.md'
-  - 'Hardening': 'hardening.md'
-  - 'FAQ': 'faq.md'
-  - 'API reference':
+  - 'Use cases':
+      - Web hosting: 'usecases/webhosting.md'
+      - Learning environments: 'usecases/learning.md'
+      - Honeypots: 'usecases/honeypots.md'
+      - Security: 'usecases/security.md'
+  - 'Getting started':
+    - 'Quick Start': 'quickstart.md'
+    - 'Installation': 'installation.md'
+    - 'Configuration': 'configuration.md'
+    - 'Authentication Server': 'authserver.md'
+    - 'Configuration Server': 'configserver.md'
+    - 'Selecting a Backend': 'backends.md'
+    - 'The dockerrun Backend': 'dockerrun.md'
+    - 'The kuberun Backend': 'kuberun.md'
+    - FAQ: 'faq.md'
+  - 'Advanced usage':
+    - 'Creating an Image': 'image.md'
+    - 'Logging': 'logging.md'
+    - 'Metrics': 'metrics.md'
+    - 'Hardening': 'hardening.md'
+  - API's:
+      - 'About the API': 'api/index.md'
       - 'The AuthConfig Server ⭧': './api/authconfig/'
 site_favicon: img/favicon.png
 extra_css:
