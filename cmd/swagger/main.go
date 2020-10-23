@@ -38,7 +38,9 @@ func main() {
 	if err != nil {
 		log.Fatalf("failed to download information about the latest go-swagger release (%v)", err)
 	}
-	defer jsonResponse.Body.Close()
+	defer func() {
+		_ = jsonResponse.Body.Close()
+	}()
 
 	if jsonResponse.StatusCode != 200 {
 		log.Fatalf("invalid HTTP response code for release query (%s)", jsonResponse.Status)
@@ -81,7 +83,9 @@ func main() {
 	if err != nil {
 		log.Fatalf("failed to download information about the latest go-swagger release (%v)", err)
 	}
-	defer binaryResponse.Body.Close()
+	defer func() {
+		_ = binaryResponse.Body.Close()
+	}()
 
 	binaryData, err := ioutil.ReadAll(binaryResponse.Body)
 	if err != nil {
@@ -103,6 +107,7 @@ func main() {
 			continue
 		}
 		cmd := exec.Command(fullPath, "generate", "spec", "-mo", arg)
+		log.Printf("Executing: %s", cmd.String())
 		cmd.Dir = cwd
 		err = cmd.Run()
 		if err != nil {

@@ -1,7 +1,7 @@
 before:
   hooks:
     - go install github.com/mitchellh/golicense
-    - go run cmd/swagger/main.go containerssh-authconfig-openapi.json docs/api/authconfig/containerssh-authconfig.json
+    - go run cmd/swagger/main.go containerssh-authconfig-openapi.json
     - go test
 builds:
   - id: containerssh-linux
@@ -63,14 +63,37 @@ dockers:
     goarch: amd64
     binaries:
       - containerssh
+    image_templates:
+      - "containerssh/containerssh:latest"
+      - "containerssh/containerssh:{{ .Major }}.{{ .Minor }}"
+      - "containerssh/containerssh:{{ .Tag }}"
+      - "docker.pkg.github.com/containerssh/containerssh/containerssh:latest"
+      - "docker.pkg.github.com/containerssh/containerssh/containerssh:{{ .Major }}.{{ .Minor }}"
+      - "docker.pkg.github.com/containerssh/containerssh/containerssh:{{ .Tag }}"
+    dockerfile: Dockerfile.goreleaser
+    builds:
+      - containerssh-linux
+    extra_files:
+      - LICENSE.md
+      - NOTICE.md
+    build_flag_templates:
+      - "--label=org.opencontainers.image.created={{.Date}}"
+      - "--label=org.opencontainers.image.name=ContainerSSH"
+      - "--label=org.opencontainers.image.revision={{.FullCommit}}"
+      - "--label=org.opencontainers.image.version={{.Version}}"
+      - "--label=org.opencontainers.image.documentation=https://containerssh.github.io"
+    skip_push: auto
+  - goos: linux
+    goarch: amd64
+    binaries:
       - containerssh-testauthconfigserver
     image_templates:
-      - "janoszen/{{.ProjectName}}:latest"
-      - "janoszen/{{.ProjectName}}:{{ .Major }}.{{ .Minor }}"
-      - "janoszen/{{.ProjectName}}:{{ .Tag }}"
-      - "docker.pkg.github.com/containerssh/containerssh/{{.ProjectName}}:latest"
-      - "docker.pkg.github.com/containerssh/containerssh/{{.ProjectName}}:{{ .Major }}.{{ .Minor }}"
-      - "docker.pkg.github.com/containerssh/containerssh/{{.ProjectName}}:{{ .Tag }}"
+      - "containerssh/containerssh-test-authconfig:latest"
+      - "containerssh/containerssh-test-authconfig:{{ .Major }}.{{ .Minor }}"
+      - "containerssh/containerssh-test-authconfig:{{ .Tag }}"
+      - "docker.pkg.github.com/containerssh/containerssh/containerssh-test-authconfig:latest"
+      - "docker.pkg.github.com/containerssh/containerssh/containerssh-test-authconfig:{{ .Major }}.{{ .Minor }}"
+      - "docker.pkg.github.com/containerssh/containerssh/containerssh-test-authconfig:{{ .Tag }}"
     dockerfile: Dockerfile.goreleaser
     builds:
       - containerssh-linux
@@ -80,9 +103,10 @@ dockers:
       - NOTICE.md
     build_flag_templates:
       - "--label=org.opencontainers.image.created={{.Date}}"
-      - "--label=org.opencontainers.image.name={{.ProjectName}}"
+      - "--label=org.opencontainers.image.name=ContainerSSH Auth-Config Server"
       - "--label=org.opencontainers.image.revision={{.FullCommit}}"
       - "--label=org.opencontainers.image.version={{.Version}}"
+      - "--label=org.opencontainers.image.documentation=https://containerssh.github.io"
     skip_push: auto
 nfpms:
   - vendor: Janos Pasztor
