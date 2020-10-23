@@ -3,8 +3,8 @@ package steps
 import (
 	"encoding/base64"
 	"fmt"
-	"github.com/janoszen/containerssh/config"
-	"github.com/janoszen/containerssh/config/kubeconfig"
+	"github.com/containerssh/containerssh/config"
+	"github.com/containerssh/containerssh/config/kubeconfig"
 	"log"
 	"os/user"
 	"path/filepath"

@@ -3,11 +3,11 @@ package client
 import (
 	"bytes"
 	"encoding/json"
-	"github.com/janoszen/containerssh/config"
-	containerhttp "github.com/janoszen/containerssh/http"
-	"github.com/janoszen/containerssh/log"
-	"github.com/janoszen/containerssh/metrics"
-	"github.com/janoszen/containerssh/protocol"
+	"github.com/containerssh/containerssh/config"
+	containerhttp "github.com/containerssh/containerssh/http"
+	"github.com/containerssh/containerssh/log"
+	"github.com/containerssh/containerssh/metrics"
+	"github.com/containerssh/containerssh/protocol"
 	"net/http"
 )
 

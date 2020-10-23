@@ -1,7 +1,7 @@
 // ContainerSSH Authentication and Configuration Server
 //
 // This OpenAPI document describes the API endpoints that are required for implementing an authentication
-// and configuration server for ContainerSSH. (See https://github.com/janoszen/containerssh for details.)
+// and configuration server for ContainerSSH. (See https://github.com/containerssh/containerssh for details.)
 //
 //     Schemes: http, https
 //     Host: localhost
@@ -23,18 +23,17 @@ import (
 
 	"net/http"
 
-	"github.com/janoszen/containerssh/config"
-	"github.com/janoszen/containerssh/log"
-	"github.com/janoszen/containerssh/log/writer"
-	"github.com/janoszen/containerssh/protocol"
-
+	"github.com/containerssh/containerssh/config"
+	"github.com/containerssh/containerssh/log"
+	"github.com/containerssh/containerssh/log/writer"
+	"github.com/containerssh/containerssh/protocol"
 )
 
 type authConfigServer struct {
 	logger log.Logger
 }
 
-func (s * authConfigServer) authPassword(w http.ResponseWriter, req *http.Request) {
+func (s *authConfigServer) authPassword(w http.ResponseWriter, req *http.Request) {
 	// swagger:operation POST /password Authentication authPassword
 	//
 	// Password authentication
@@ -70,7 +69,7 @@ func (s * authConfigServer) authPassword(w http.ResponseWriter, req *http.Reques
 	_ = json.NewEncoder(w).Encode(authResponse)
 }
 
-func (s * authConfigServer) authPublicKey(w http.ResponseWriter, req *http.Request) {
+func (s *authConfigServer) authPublicKey(w http.ResponseWriter, req *http.Request) {
 	// swagger:operation POST /pubkey Authentication authPubKey
 	//
 	// Public key authentication
@@ -106,7 +105,7 @@ func (s * authConfigServer) authPublicKey(w http.ResponseWriter, req *http.Reque
 	_ = json.NewEncoder(w).Encode(authResponse)
 }
 
-func (s * authConfigServer) configHandler(w http.ResponseWriter, req *http.Request) {
+func (s *authConfigServer) configHandler(w http.ResponseWriter, req *http.Request) {
 	// swagger:operation POST /config Configuration getUserConfiguration
 	//
 	// Fetches the configuration for a user/session

@@ -20,5 +20,5 @@ For good style you may want to run `make build` to give your code the code style
 promise.
 
 Finally, before you send in a pull request feel free to
-[open an issue to discuss your proposal](https://github.com/janoszen/containerssh/issues/new) if you are uncertain about
+[open an issue to discuss your proposal](https://github.com/containerssh/containerssh/issues/new) if you are uncertain about
 it.

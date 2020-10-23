@@ -1,7 +1,7 @@
 package metrics
 
 import (
-	"github.com/janoszen/containerssh/geoip"
+	"github.com/containerssh/containerssh/geoip"
 	"net"
 	"sort"
 	"sync"

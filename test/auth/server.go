@@ -4,8 +4,8 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
-	"github.com/janoszen/containerssh/protocol"
-	testHttp "github.com/janoszen/containerssh/test/http"
+	"github.com/containerssh/containerssh/protocol"
+	testHttp "github.com/containerssh/containerssh/test/http"
 	"net/http"
 	"sync"
 )

@@ -6,7 +6,7 @@ import (
 	"io"
 	"strings"
 
-	"github.com/janoszen/containerssh/config"
+	"github.com/containerssh/containerssh/config"
 
 	"github.com/mattn/go-shellwords"
 	core "k8s.io/api/core/v1"

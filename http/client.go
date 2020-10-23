@@ -2,7 +2,7 @@ package http
 
 import (
 	"fmt"
-	"github.com/janoszen/containerssh/log"
+	"github.com/containerssh/containerssh/log"
 	"runtime"
 	"strings"
 	"time"

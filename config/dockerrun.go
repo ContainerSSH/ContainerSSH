@@ -14,7 +14,7 @@ type DockerRunConfig struct {
 }
 
 type DockerRunContainerConfig struct {
-	ContainerConfig container.Config         `json:"container" yaml:"container" comment:"Config configuration." default:"{\"Image\":\"janoszen/containerssh-image\"}"`
+	ContainerConfig container.Config         `json:"container" yaml:"container" comment:"Config configuration." default:"{\"Image\":\"containerssh/containerssh-guest-image\"}"`
 	HostConfig      container.HostConfig     `json:"host" yaml:"host" comment:"Host configuration"`
 	NetworkConfig   network.NetworkingConfig `json:"network" yaml:"network" comment:"Network configuration"`
 	ContainerName   string                   `json:"containername" yaml:"containername" comment:"Name for the container to be launched"`

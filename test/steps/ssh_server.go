@@ -2,12 +2,12 @@ package steps
 
 import (
 	"fmt"
-	authClient "github.com/janoszen/containerssh/auth"
-	"github.com/janoszen/containerssh/config"
-	configClient "github.com/janoszen/containerssh/config/client"
-	"github.com/janoszen/containerssh/geoip/dummy"
-	"github.com/janoszen/containerssh/metrics"
-	"github.com/janoszen/containerssh/test/ssh"
+	authClient "github.com/containerssh/containerssh/auth"
+	"github.com/containerssh/containerssh/config"
+	configClient "github.com/containerssh/containerssh/config/client"
+	"github.com/containerssh/containerssh/geoip/dummy"
+	"github.com/containerssh/containerssh/metrics"
+	"github.com/containerssh/containerssh/test/ssh"
 	"net"
 	"time"
 )

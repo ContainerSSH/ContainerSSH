@@ -1,6 +1,6 @@
 # ContainerSSH quick start
 
-This is a quick start example for [ContainerSSH](https://github.com/janoszen/containerssh), an SSH server that launches
+This is a quick start example for [ContainerSSH](https://github.com/containerssh/containerssh), an SSH server that launches
 Docker containers and Kubernetes pods.
 
 This example utilizes [docker-compose](https://docs.docker.com/compose/) in a Docker environment to launch ContainerSSH

@@ -3,17 +3,17 @@ package ssh
 import (
 	"context"
 	"fmt"
-	"github.com/janoszen/containerssh/metrics"
+	"github.com/containerssh/containerssh/metrics"
 
 	"encoding/base64"
 
-	"github.com/janoszen/containerssh/backend"
-	"github.com/janoszen/containerssh/config"
-	configurationClient "github.com/janoszen/containerssh/config/client"
-	"github.com/janoszen/containerssh/config/util"
-	"github.com/janoszen/containerssh/log"
-	"github.com/janoszen/containerssh/protocol"
-	"github.com/janoszen/containerssh/ssh/server"
+	"github.com/containerssh/containerssh/backend"
+	"github.com/containerssh/containerssh/config"
+	configurationClient "github.com/containerssh/containerssh/config/client"
+	"github.com/containerssh/containerssh/config/util"
+	"github.com/containerssh/containerssh/log"
+	"github.com/containerssh/containerssh/protocol"
+	"github.com/containerssh/containerssh/ssh/server"
 
 	"github.com/qdm12/reprint"
 	"golang.org/x/crypto/ssh"

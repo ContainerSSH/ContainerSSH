@@ -1,6 +1,6 @@
 package server
 
-import "github.com/janoszen/containerssh/metrics"
+import "github.com/containerssh/containerssh/metrics"
 
 var MetricNameConnections = "containerssh_ssh_connections"
 var MetricNameSuccessfulHandshake = "containerssh_ssh_handshake_successful"

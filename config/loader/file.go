@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"github.com/janoszen/containerssh/config"
+	"github.com/containerssh/containerssh/config"
 	"gopkg.in/yaml.v3"
 	"io"
 	"io/ioutil"

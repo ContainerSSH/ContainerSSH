@@ -2,7 +2,7 @@ package steps
 
 import (
 	"fmt"
-	"github.com/janoszen/containerssh/test/config"
+	"github.com/containerssh/containerssh/test/config"
 )
 
 func (scenario *Scenario) StartConfigServer() error {

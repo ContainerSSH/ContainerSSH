@@ -68,9 +68,9 @@ dockers:
       - "janoszen/{{.ProjectName}}:latest"
       - "janoszen/{{.ProjectName}}:{{ .Major }}.{{ .Minor }}"
       - "janoszen/{{.ProjectName}}:{{ .Tag }}"
-      - "docker.pkg.github.com/janoszen/containerssh/{{.ProjectName}}:latest"
-      - "docker.pkg.github.com/janoszen/containerssh/{{.ProjectName}}:{{ .Major }}.{{ .Minor }}"
-      - "docker.pkg.github.com/janoszen/containerssh/{{.ProjectName}}:{{ .Tag }}"
+      - "docker.pkg.github.com/containerssh/containerssh/{{.ProjectName}}:latest"
+      - "docker.pkg.github.com/containerssh/containerssh/{{.ProjectName}}:{{ .Major }}.{{ .Minor }}"
+      - "docker.pkg.github.com/containerssh/containerssh/{{.ProjectName}}:{{ .Tag }}"
     dockerfile: Dockerfile.goreleaser
     builds:
       - containerssh-linux

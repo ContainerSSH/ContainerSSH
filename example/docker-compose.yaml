@@ -2,7 +2,7 @@
 version: '3.2'
 services:
   containerssh:
-    image: janoszen/containerssh
+    image: containerssh/containerssh
     ports:
       - 127.0.0.1:2222:2222
     volumes:
@@ -16,4 +16,4 @@ services:
       source: /var/run/docker.sock
       target: /var/run/docker.sock
   authconfig:
-    image: janoszen/containerssh-test-authconfig
+    image: containerssh/containerssh-test-authconfig

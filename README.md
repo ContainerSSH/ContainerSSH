@@ -1,40 +1,42 @@
 # ContainerSSH: An SSH server that launches containers
 
-[![Documentation: available](https://img.shields.io/badge/documentation-available-green?style=for-the-badge)](https://projects.pasztor.at/containerssh/)
-[![GitHub Workflow Status](https://img.shields.io/github/workflow/status/janoszen/containerssh/goreleaser?style=for-the-badge)](https://github.com/janoszen/containerssh/actions)
-[![GitHub release (latest SemVer)](https://img.shields.io/github/v/release/janoszen/containerssh?sort=semver&style=for-the-badge)](https://github.com/janoszen/containerssh/releases)
-[![Docker Image Size (latest by date)](https://img.shields.io/docker/image-size/janoszen/containerssh?style=for-the-badge)](http://hub.docker.com/r/janoszen/containerssh)
-[![Go Report Card](https://goreportcard.com/badge/github.com/janoszen/containerssh?style=for-the-badge)](https://goreportcard.com/report/github.com/janoszen/containerssh)
-[![LGTM Alerts](https://img.shields.io/lgtm/alerts/github/janoszen/containerssh?style=for-the-badge)](https://lgtm.com/projects/g/janoszen/containerssh/)
-[![GitHub](https://img.shields.io/github/license/janoszen/containerssh?style=for-the-badge)](LICENSE.md)
+[![Documentation: available](https://img.shields.io/badge/documentation-available-green?style=for-the-badge)](https://containerssh.github.io/)
+[![GitHub Workflow Status](https://img.shields.io/github/workflow/status/containerssh/containerssh/goreleaser?style=for-the-badge)](https://github.com/containerssh/containerssh/actions)
+[![GitHub release (latest SemVer)](https://img.shields.io/github/v/release/containerssh/containerssh?sort=semver&style=for-the-badge)](https://github.com/containerssh/containerssh/releases)
+[![Docker Image Size (latest by date)](https://img.shields.io/docker/image-size/containerssh/containerssh?style=for-the-badge)](http://hub.docker.com/r/containerssh/containerssh)
+[![Go Report Card](https://goreportcard.com/badge/github.com/containerssh/containerssh?style=for-the-badge)](https://goreportcard.com/report/github.com/containerssh/containerssh)
+[![LGTM Alerts](https://img.shields.io/lgtm/alerts/github/containerssh/containerssh?style=for-the-badge)](https://lgtm.com/projects/g/containerssh/containerssh/)
+[![GitHub](https://img.shields.io/github/license/containerssh/containerssh?style=for-the-badge)](LICENSE.md)
+
+**Attention!** ContainerSSH has moved from `janoszen/containerssh` to `containerssh/containerssh`. Please update your image references!
 
 ## Offering SSH in a web hosting service?
 
 ContainerSSH lets you dynamically create and destroy containers when your users connect. Authenticate against your existing user database and mount directories based on your existing permission matrix.
 
-[Read more »](https://projects.pasztor.at/containerssh/usecases/webhosting/)
+[Read more »](https://containerssh.github.io/usecases/webhosting/)
 
 ## Looking for a Linux learning environment?
 
 With ContainerSSH you can launch Linux-based containers on-demand when your students connect. You can supply your own container image and mount folders with learning and testing material as needed.</p>
 
-[Read more »](https://projects.pasztor.at/containerssh/usecases/learning/)
+[Read more »](https://containerssh.github.io/usecases/learning/)
 
 ## Building a honeypot?
 
 With the dynamic authentication server of ContainerSSH you can capture usernames and passwords, and you container environment can log commands that are executed.
 
-[Read more »](https://projects.pasztor.at/containerssh/usecases/honeypots/)
+[Read more »](https://containerssh.github.io/usecases/honeypots/)
 
 ## Building a high security environment?
 
 ContainerSSH is being used to provide dynamic console access to an environment with sensitive credentials. Use the authentication and configuration server to dynamically provision credentials in conjunction with secret management systems such as Hashicorp Vault.
 
-[Read more »](https://projects.pasztor.at/containerssh/usecases/security/)
+[Read more »](https://containerssh.github.io/usecases/security/)
 
 ## How does it work?
 
-![](https://projects.pasztor.at/containerssh/images/ssh-in-action.gif)
+![](https://containerssh.github.io/images/ssh-in-action.gif)
 
 ```
 +------+        +--------------+   2.   +-------------------+
@@ -57,4 +59,4 @@ ContainerSSH is being used to provide dynamic console access to an environment w
    specified configuration. All input from the user is sent directly to the backend, output from the container is sent
    to the user.
    
-[Get started »](https://projects.pasztor.at/containerssh/quickstart/)
+[Get started »](https://containerssh.github.io/quickstart/)

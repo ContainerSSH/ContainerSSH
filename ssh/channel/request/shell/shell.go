@@ -1,10 +1,10 @@
 package shell
 
 import (
-	"github.com/janoszen/containerssh/backend"
-	"github.com/janoszen/containerssh/log"
-	channelRequest "github.com/janoszen/containerssh/ssh/channel/request"
-	"github.com/janoszen/containerssh/ssh/channel/request/util"
+	"github.com/containerssh/containerssh/backend"
+	"github.com/containerssh/containerssh/log"
+	channelRequest "github.com/containerssh/containerssh/ssh/channel/request"
+	"github.com/containerssh/containerssh/ssh/channel/request/util"
 
 	"golang.org/x/crypto/ssh"
 )
@@ -26,7 +26,7 @@ func (c ChannelRequestHandler) GetRequestObject() interface{} {
 	return &requestMsg{}
 }
 
-func (c ChannelRequestHandler) HandleRequest(request interface{}, reply channelRequest.Reply, channel ssh.Channel, session backend.Session) {
+func (c ChannelRequestHandler) HandleRequest(_ interface{}, reply channelRequest.Reply, channel ssh.Channel, session backend.Session) {
 	c.logger.DebugF("shell request")
 	err := util.Run("", channel, session, c.logger)
 	if err != nil {

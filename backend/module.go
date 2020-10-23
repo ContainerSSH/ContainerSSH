@@ -2,9 +2,9 @@ package backend
 
 import (
 	"fmt"
-	"github.com/janoszen/containerssh/config"
-	"github.com/janoszen/containerssh/log"
-	"github.com/janoszen/containerssh/metrics"
+	"github.com/containerssh/containerssh/config"
+	"github.com/containerssh/containerssh/log"
+	"github.com/containerssh/containerssh/metrics"
 	"io"
 )
 

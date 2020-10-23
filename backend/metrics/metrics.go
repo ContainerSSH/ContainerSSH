@@ -1,6 +1,6 @@
 package metrics
 
-import "github.com/janoszen/containerssh/metrics"
+import "github.com/containerssh/containerssh/metrics"
 
 func Init(metric *metrics.MetricCollector) {
 	metric.SetMetricMeta(MetricNameBackendError, "Number of errors in the backend", metrics.MetricTypeCounter)

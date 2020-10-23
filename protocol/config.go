@@ -1,6 +1,6 @@
 package protocol
 
-import "github.com/janoszen/containerssh/config"
+import "github.com/containerssh/containerssh/config"
 
 //
 // swagger:model ConfigRequest

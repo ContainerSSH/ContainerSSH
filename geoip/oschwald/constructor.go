@@ -1,7 +1,7 @@
 package oschwald
 
 import (
-	"github.com/janoszen/containerssh/geoip"
+	"github.com/containerssh/containerssh/geoip"
 	backend "github.com/oschwald/geoip2-golang"
 )
 

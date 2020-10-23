@@ -1,6 +1,6 @@
 package client
 
-import "github.com/janoszen/containerssh/protocol"
+import "github.com/containerssh/containerssh/protocol"
 
 type ConfigClient interface {
 	GetConfig(request protocol.ConfigRequest) (*protocol.ConfigResponse, error)

@@ -2,8 +2,8 @@ package ssh
 
 import (
 	"context"
-	globalRequest "github.com/janoszen/containerssh/ssh/request"
-	"github.com/janoszen/containerssh/ssh/server"
+	globalRequest "github.com/containerssh/containerssh/ssh/request"
+	"github.com/containerssh/containerssh/ssh/server"
 	"golang.org/x/crypto/ssh"
 )
 

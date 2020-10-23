@@ -1,10 +1,10 @@
 package exec
 
 import (
-	"github.com/janoszen/containerssh/backend"
-	"github.com/janoszen/containerssh/log"
-	channelRequest "github.com/janoszen/containerssh/ssh/channel/request"
-	"github.com/janoszen/containerssh/ssh/channel/request/util"
+	"github.com/containerssh/containerssh/backend"
+	"github.com/containerssh/containerssh/log"
+	channelRequest "github.com/containerssh/containerssh/ssh/channel/request"
+	"github.com/containerssh/containerssh/ssh/channel/request/util"
 
 	"golang.org/x/crypto/ssh"
 )

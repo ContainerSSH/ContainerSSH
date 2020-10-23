@@ -1,10 +1,10 @@
 package steps
 
 import (
-	"github.com/janoszen/containerssh/log"
-	"github.com/janoszen/containerssh/test/auth"
-	"github.com/janoszen/containerssh/test/config"
-	"github.com/janoszen/containerssh/test/ssh"
+	"github.com/containerssh/containerssh/log"
+	"github.com/containerssh/containerssh/test/auth"
+	"github.com/containerssh/containerssh/test/config"
+	"github.com/containerssh/containerssh/test/ssh"
 )
 
 // region Context

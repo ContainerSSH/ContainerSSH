@@ -4,11 +4,11 @@ import (
 	"context"
 	"crypto/tls"
 	"crypto/x509"
+	"github.com/containerssh/containerssh/backend"
+	"github.com/containerssh/containerssh/config"
+	"github.com/containerssh/containerssh/log"
+	"github.com/containerssh/containerssh/metrics"
 	"github.com/docker/docker/client"
-	"github.com/janoszen/containerssh/backend"
-	"github.com/janoszen/containerssh/config"
-	"github.com/janoszen/containerssh/log"
-	"github.com/janoszen/containerssh/metrics"
 	"net/http"
 )
 

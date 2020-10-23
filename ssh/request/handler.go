@@ -3,7 +3,7 @@ package request
 import (
 	"fmt"
 
-	"github.com/janoszen/containerssh/log"
+	"github.com/containerssh/containerssh/log"
 
 	"golang.org/x/crypto/ssh"
 )
@@ -17,7 +17,7 @@ type TypeHandler struct {
 
 type Handler struct {
 	globalHandlers map[string]TypeHandler
-	logger log.Logger
+	logger         log.Logger
 }
 
 func NewHandler() *Handler {

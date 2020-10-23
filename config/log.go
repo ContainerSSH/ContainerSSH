@@ -1,6 +1,6 @@
 package config
 
-import "github.com/janoszen/containerssh/log"
+import "github.com/containerssh/containerssh/log"
 
 // swagger:model
 type AppLogConfig struct {

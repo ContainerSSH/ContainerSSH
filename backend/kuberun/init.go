@@ -2,10 +2,10 @@ package kuberun
 
 import (
 	"context"
-	"github.com/janoszen/containerssh/backend"
-	"github.com/janoszen/containerssh/config"
-	"github.com/janoszen/containerssh/log"
-	"github.com/janoszen/containerssh/metrics"
+	"github.com/containerssh/containerssh/backend"
+	"github.com/containerssh/containerssh/config"
+	"github.com/containerssh/containerssh/log"
+	"github.com/containerssh/containerssh/metrics"
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/client-go/kubernetes"
 	restclient "k8s.io/client-go/rest"

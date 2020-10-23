@@ -2,7 +2,7 @@ package steps
 
 import (
 	"fmt"
-	"github.com/janoszen/containerssh/test/auth"
+	"github.com/containerssh/containerssh/test/auth"
 )
 
 func (scenario *Scenario) CreateUser(username string, password string) error {

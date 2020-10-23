@@ -1,10 +1,10 @@
 package util
 
 import (
-	"github.com/janoszen/containerssh/log"
+	"github.com/containerssh/containerssh/log"
 	"sync"
 
-	"github.com/janoszen/containerssh/backend"
+	"github.com/containerssh/containerssh/backend"
 
 	"golang.org/x/crypto/ssh"
 )

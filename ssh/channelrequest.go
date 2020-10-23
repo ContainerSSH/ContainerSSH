@@ -2,17 +2,17 @@ package ssh
 
 import (
 	"context"
-	"github.com/janoszen/containerssh/backend"
-	"github.com/janoszen/containerssh/log"
-	channelRequest "github.com/janoszen/containerssh/ssh/channel/request"
-	"github.com/janoszen/containerssh/ssh/channel/request/env"
-	"github.com/janoszen/containerssh/ssh/channel/request/exec"
-	"github.com/janoszen/containerssh/ssh/channel/request/pty"
-	"github.com/janoszen/containerssh/ssh/channel/request/shell"
-	"github.com/janoszen/containerssh/ssh/channel/request/signal"
-	"github.com/janoszen/containerssh/ssh/channel/request/subsystem"
-	"github.com/janoszen/containerssh/ssh/channel/request/window"
-	"github.com/janoszen/containerssh/ssh/server"
+	"github.com/containerssh/containerssh/backend"
+	"github.com/containerssh/containerssh/log"
+	channelRequest "github.com/containerssh/containerssh/ssh/channel/request"
+	"github.com/containerssh/containerssh/ssh/channel/request/env"
+	"github.com/containerssh/containerssh/ssh/channel/request/exec"
+	"github.com/containerssh/containerssh/ssh/channel/request/pty"
+	"github.com/containerssh/containerssh/ssh/channel/request/shell"
+	"github.com/containerssh/containerssh/ssh/channel/request/signal"
+	"github.com/containerssh/containerssh/ssh/channel/request/subsystem"
+	"github.com/containerssh/containerssh/ssh/channel/request/window"
+	"github.com/containerssh/containerssh/ssh/server"
 	"golang.org/x/crypto/ssh"
 )
 
@@ -21,7 +21,7 @@ type channelRequestHandler struct {
 	session     backend.Session
 }
 
-func (handler *channelRequestHandler) OnChannelRequest(ctx context.Context, sshConn *ssh.ServerConn, channel ssh.Channel, requestType string, payload []byte) server.RequestResponse {
+func (handler *channelRequestHandler) OnChannelRequest(ctx context.Context, _ *ssh.ServerConn, channel ssh.Channel, requestType string, payload []byte) server.RequestResponse {
 	responseChannel := make(chan server.RequestResponse)
 	reply := func(success bool, message []byte) {
 		responseChannel <- server.RequestResponse{
@@ -51,7 +51,7 @@ type ChannelRequestHandlerFactory interface {
 	Make(session backend.Session) *channelRequestHandler
 }
 
-type defaultChannelRequestHandlerFactory struct{
+type defaultChannelRequestHandlerFactory struct {
 	logger log.Logger
 }
 

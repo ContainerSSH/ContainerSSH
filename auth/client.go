@@ -1,7 +1,7 @@
 package auth
 
 import (
-	"github.com/janoszen/containerssh/protocol"
+	"github.com/containerssh/containerssh/protocol"
 	"net"
 )
 

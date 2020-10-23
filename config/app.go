@@ -1,6 +1,6 @@
 package config
 
-import metricsServer "github.com/janoszen/containerssh/metrics/server"
+import metricsServer "github.com/containerssh/containerssh/metrics/server"
 
 // swagger:enum BackendName
 type BackendName string

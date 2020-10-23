@@ -5,9 +5,9 @@ import (
 	"os"
 	"testing"
 
-	"github.com/janoszen/containerssh/log"
-	"github.com/janoszen/containerssh/log/writer"
-	"github.com/janoszen/containerssh/test/steps"
+	"github.com/containerssh/containerssh/log"
+	"github.com/containerssh/containerssh/log/writer"
+	"github.com/containerssh/containerssh/test/steps"
 
 	"github.com/cucumber/godog"
 	"github.com/cucumber/godog/colors"

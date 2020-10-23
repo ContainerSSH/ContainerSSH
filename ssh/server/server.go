@@ -3,8 +3,8 @@ package server
 import (
 	"context"
 	"fmt"
-	"github.com/janoszen/containerssh/log"
-	"github.com/janoszen/containerssh/metrics"
+	"github.com/containerssh/containerssh/log"
+	"github.com/containerssh/containerssh/metrics"
 	"golang.org/x/crypto/ssh"
 	"net"
 )

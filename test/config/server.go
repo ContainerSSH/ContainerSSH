@@ -2,9 +2,9 @@ package config
 
 import (
 	"encoding/json"
-	"github.com/janoszen/containerssh/config"
-	"github.com/janoszen/containerssh/protocol"
-	testHttp "github.com/janoszen/containerssh/test/http"
+	"github.com/containerssh/containerssh/config"
+	"github.com/containerssh/containerssh/protocol"
+	testHttp "github.com/containerssh/containerssh/test/http"
 	"net/http"
 	"sync"
 )

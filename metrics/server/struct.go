@@ -1,8 +1,8 @@
 package server
 
 import (
-	"github.com/janoszen/containerssh/log"
-	"github.com/janoszen/containerssh/metrics"
+	"github.com/containerssh/containerssh/log"
+	"github.com/containerssh/containerssh/metrics"
 )
 
 type MetricsServer struct {

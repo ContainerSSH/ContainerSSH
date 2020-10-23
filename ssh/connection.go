@@ -1,8 +1,8 @@
 package ssh
 
 import (
-	"github.com/janoszen/containerssh/config"
-	"github.com/janoszen/containerssh/ssh/server"
+	"github.com/containerssh/containerssh/config"
+	"github.com/containerssh/containerssh/ssh/server"
 	"golang.org/x/crypto/ssh"
 )
 

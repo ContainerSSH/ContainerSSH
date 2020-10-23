@@ -2,8 +2,8 @@ package request
 
 import (
 	"fmt"
-	"github.com/janoszen/containerssh/backend"
-	"github.com/janoszen/containerssh/log"
+	"github.com/containerssh/containerssh/backend"
+	"github.com/containerssh/containerssh/log"
 	"golang.org/x/crypto/ssh"
 )
 
@@ -16,13 +16,13 @@ type TypeHandler interface {
 
 type Handler struct {
 	channelHandlers map[string]TypeHandler
-	logger log.Logger
+	logger          log.Logger
 }
 
 func NewHandler(logger log.Logger) Handler {
 	return Handler{
 		channelHandlers: map[string]TypeHandler{},
-		logger: logger,
+		logger:          logger,
 	}
 }
 
