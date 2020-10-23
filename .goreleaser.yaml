@@ -134,7 +134,7 @@ source:
 dist: build
 release:
   github:
-    owner: janoszen
+    owner: containerssh
     name: containerssh
   prerelease: auto
   extra_files:
