@@ -18,7 +18,7 @@ ContainerSSH lets you dynamically create and destroy containers when your users 
 
 ## Looking for a Linux learning environment?
 
-With ContainerSSH you can launch Linux-based containers on-demand when your students connect. You can supply your own container image and mount folders with learning and testing material as needed.</p>
+With ContainerSSH you can launch Linux-based containers on demand when your students connect. You can supply your own container image and mount folders with learning and testing material as needed.</p>
 
 [Read more »](https://containerssh.github.io/usecases/learning/)
 
