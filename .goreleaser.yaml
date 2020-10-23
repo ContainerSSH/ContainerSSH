@@ -94,9 +94,8 @@ dockers:
       - "docker.pkg.github.com/containerssh/containerssh/containerssh-test-authconfig:latest"
       - "docker.pkg.github.com/containerssh/containerssh/containerssh-test-authconfig:{{ .Major }}.{{ .Minor }}"
       - "docker.pkg.github.com/containerssh/containerssh/containerssh-test-authconfig:{{ .Tag }}"
-    dockerfile: Dockerfile.goreleaser
+    dockerfile: Dockerfile-testauthconfigserver.goreleaser
     builds:
-      - containerssh-linux
       - containerssh-testauthconfigserver
     extra_files:
       - LICENSE.md
