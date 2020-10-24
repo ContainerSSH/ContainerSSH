@@ -40,7 +40,7 @@ builds:
     binary: "containerssh-auditlog-decoder"
     goos:
       - windows
-      - macos
+      - darwin
       - linux
     goarch:
       - amd64
