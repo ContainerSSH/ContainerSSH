@@ -316,7 +316,7 @@ func (server *Server) Run(ctx context.Context) error {
 				continue
 			}
 			auditConnection.Message(protocol.MessageType_Connect, protocol.MessageConnect{
-				RemoteAddr: ip,
+				RemoteAddr: ip.String(),
 			})
 			server.metric.IncrementGeo(MetricConnections, ip)
 			server.logger.DebugF("connection from: %s", tcpConn.RemoteAddr().String())
