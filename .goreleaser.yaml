@@ -35,6 +35,17 @@ builds:
       - amd64
     env:
       - CGO_ENABLED=0
+  - id: containerssh-auditlog-decoder
+    main: cmd/containerssh-auditlog-decoder/main.go
+    binary: "containerssh-auditlog-decoder"
+    goos:
+      - windows
+      - macos
+      - linux
+    goarch:
+      - amd64
+    env:
+      - CGO_ENABLED=0
   - id: containerssh-testauthconfigserver
     main: cmd/containerssh-testauthconfigserver/main.go
     binary: "containerssh-testauthconfigserver"
@@ -51,6 +62,8 @@ archives:
       - containerssh-linux
       - containerssh-windows
       - containerssh-darwin
+      - containerssh-testauthconfigserver
+      - containerssh-auditlog-decoder
     format_overrides:
       - goos: windows
         format: zip
@@ -116,6 +129,7 @@ nfpms:
     builds:
       - containerssh-linux
       - containerssh-testauthconfigserver
+      - containerssh-auditlog-decoder
     formats:
       - deb
       - rpm
