@@ -14,6 +14,7 @@ require (
 	github.com/imdario/mergo v0.3.11
 	github.com/jinzhu/copier v0.0.0-20190924061706-b57f9002281a
 	github.com/mattn/go-shellwords v1.0.10
+	github.com/mitchellh/mapstructure v1.1.2
 	github.com/opencontainers/go-digest v1.0.0 // indirect
 	github.com/oschwald/geoip2-golang v1.4.0
 	github.com/qdm12/reprint v0.0.0-20200326205758-722754a53494
