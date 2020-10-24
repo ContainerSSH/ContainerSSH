@@ -36,11 +36,15 @@ func (p *Plugin) Message(msg protocol.Message) {
 		fileHandle, err = os.Create(path.Join(p.directory, fileName))
 		if err != nil {
 			p.logger.ErrorF("failed to open audit log file %s (%v)", fileName, err)
+			return
 		}
 		gzipHandle = gzip.NewWriter(fileHandle)
 		encoder = cbor.NewEncoder(gzipHandle, cbor.EncOptions{})
 		err = encoder.StartIndefiniteArray()
-
+		if err != nil {
+			p.logger.ErrorF("failed to start infinite array in audit log file %s (%v)", fileName, err)
+			return
+		}
 		p.connections.Store(fileName, auditLogFile{
 			fileHandle: fileHandle,
 			gzipHandle: gzipHandle,
