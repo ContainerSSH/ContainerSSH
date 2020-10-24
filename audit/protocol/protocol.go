@@ -1,9 +1,5 @@
 package protocol
 
-import (
-	"net"
-)
-
 type MessageType int
 
 const (
@@ -43,7 +39,7 @@ type Message struct {
 }
 
 type MessageConnect struct {
-	RemoteAddr net.IP `json:"remoteAddr" yaml:"remoteAddr"`
+	RemoteAddr string `json:"remoteAddr" yaml:"remoteAddr"`
 }
 
 type MessageAuthPassword struct {
