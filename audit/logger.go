@@ -2,7 +2,7 @@ package audit
 
 import (
 	"crypto/rand"
-	"github.com/containerssh/containerssh/audit/protocol"
+	"github.com/containerssh/containerssh/audit/format"
 	"github.com/containerssh/containerssh/config"
 	"io"
 	"sync"
@@ -11,14 +11,14 @@ import (
 
 type Connection struct {
 	lock          *sync.Mutex
-	nextChannelId protocol.ChannelID
+	nextChannelId format.ChannelID
 	audit         Plugin
 	connectionId  []byte
 	Intercept     config.AuditInterceptConfig
 }
 
 type Channel struct {
-	channelId protocol.ChannelID
+	channelId format.ChannelID
 	*Connection
 }
 
@@ -34,8 +34,8 @@ func GetConnection(audit Plugin, config config.AuditConfig) (*Connection, error)
 	}, err
 }
 
-func (connection *Connection) Message(messageType protocol.MessageType, payload interface{}) {
-	connection.audit.Message(protocol.Message{
+func (connection *Connection) Message(messageType format.MessageType, payload interface{}) {
+	connection.audit.Message(format.Message{
 		ConnectionID: connection.connectionId,
 		Timestamp:    time.Now().UnixNano(),
 		MessageType:  messageType,
@@ -55,8 +55,8 @@ func (connection *Connection) GetChannel() *Channel {
 	}
 }
 
-func (channel *Channel) Message(messageType protocol.MessageType, payload interface{}) {
-	channel.Connection.audit.Message(protocol.Message{
+func (channel *Channel) Message(messageType format.MessageType, payload interface{}) {
+	channel.Connection.audit.Message(format.Message{
 		ConnectionID: channel.Connection.connectionId,
 		Timestamp:    time.Now().UnixNano(),
 		MessageType:  messageType,
@@ -69,21 +69,21 @@ func (channel *Channel) InterceptIo(stdIn io.Reader, stdOut io.Writer, stdErr io
 	if channel.Intercept.Stdin {
 		stdIn = &interceptingReader{
 			backend: stdIn,
-			stream:  protocol.Stream_Stdin,
+			stream:  format.Stream_Stdin,
 			channel: channel,
 		}
 	}
 	if channel.Intercept.Stdout {
 		stdOut = &interceptingWriter{
 			backend: stdOut,
-			stream:  protocol.Stream_StdOut,
+			stream:  format.Stream_StdOut,
 			channel: channel,
 		}
 	}
 	if channel.Intercept.Stderr {
 		stdErr = &interceptingWriter{
 			backend: stdErr,
-			stream:  protocol.Stream_StdErr,
+			stream:  format.Stream_StdErr,
 			channel: channel,
 		}
 	}
@@ -93,13 +93,13 @@ func (channel *Channel) InterceptIo(stdIn io.Reader, stdOut io.Writer, stdErr io
 
 type interceptingReader struct {
 	backend io.Reader
-	stream  protocol.Stream
+	stream  format.Stream
 	channel *Channel
 }
 
 func (i *interceptingReader) Read(p []byte) (n int, err error) {
 	n, err = i.backend.Read(p)
-	i.channel.Message(protocol.MessageType_IO, protocol.MessageIO{
+	i.channel.Message(format.MessageType_IO, format.MessageIO{
 		Stream: i.stream,
 		Data:   p[0:n],
 	})
@@ -108,12 +108,12 @@ func (i *interceptingReader) Read(p []byte) (n int, err error) {
 
 type interceptingWriter struct {
 	backend io.Writer
-	stream  protocol.Stream
+	stream  format.Stream
 	channel *Channel
 }
 
 func (i *interceptingWriter) Write(p []byte) (n int, err error) {
-	i.channel.Message(protocol.MessageType_IO, protocol.MessageIO{
+	i.channel.Message(format.MessageType_IO, format.MessageIO{
 		Stream: i.stream,
 		Data:   p,
 	})

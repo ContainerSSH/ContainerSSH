@@ -1,4 +1,4 @@
-package protocol
+package format
 
 type ChannelID int64
 

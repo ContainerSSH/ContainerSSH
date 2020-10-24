@@ -1,4 +1,4 @@
-package protocol
+package format
 
 type PayloadNewChannel struct {
 	ChannelType string `json:"channelType" yaml:"channelType"`

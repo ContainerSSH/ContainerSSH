@@ -1,4 +1,4 @@
-package protocol
+package format
 
 import (
 	"compress/gzip"
@@ -14,18 +14,21 @@ type DecodedMessage struct {
 	TypeName string `json:"typeName" yaml:"typeName"`
 }
 
-func Decode(reader io.Reader) (<-chan *DecodedMessage, <-chan error) {
+func Decode(reader io.Reader) (<-chan *DecodedMessage, <-chan error, <-chan bool) {
 	result := make(chan *DecodedMessage)
 	errors := make(chan error)
+	done := make(chan bool, 1)
 
 	gzipReader, err := gzip.NewReader(reader)
 	if err != nil {
 		defer func() {
 			errors <- fmt.Errorf("failed to open gzip stream (%v)", err)
+			done <- true
 			close(result)
 			close(errors)
+			close(done)
 		}()
-		return result, errors
+		return result, errors, done
 	}
 
 	cborReader := cbor.NewDecoder(gzipReader)
@@ -36,10 +39,13 @@ func Decode(reader io.Reader) (<-chan *DecodedMessage, <-chan error) {
 	if err != nil {
 		defer func() {
 			errors <- fmt.Errorf("failed to decode messages (%v)", err)
+			done <- true
 			close(result)
 			close(errors)
+			close(done)
+
 		}()
-		return result, errors
+		return result, errors, done
 	}
 
 	go func() {
@@ -111,10 +117,13 @@ func Decode(reader io.Reader) (<-chan *DecodedMessage, <-chan error) {
 			}
 			result <- decodedMessage
 		}
+		done <- true
 		close(result)
 		close(errors)
+		close(done)
+
 	}()
-	return result, errors
+	return result, errors, done
 }
 
 func TypeToName(messageType MessageType) string {

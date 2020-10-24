@@ -7,7 +7,7 @@ import (
 	"path"
 	"sync"
 
-	"github.com/containerssh/containerssh/audit/protocol"
+	"github.com/containerssh/containerssh/audit/format"
 	"github.com/containerssh/containerssh/log"
 
 	"github.com/fxamacker/cbor"
@@ -25,7 +25,7 @@ type Plugin struct {
 	logger      log.Logger
 }
 
-func (p *Plugin) Message(msg protocol.Message) {
+func (p *Plugin) Message(msg format.Message) {
 	fileName := hex.EncodeToString(msg.ConnectionID)
 	auditLogEntry, ok := p.connections.Load(fileName)
 	var fileHandle *os.File
@@ -61,7 +61,7 @@ func (p *Plugin) Message(msg protocol.Message) {
 		p.logger.ErrorF("failed to encode audit log message (%v)", err)
 	}
 
-	if msg.MessageType == protocol.MessageType_Disconnect {
+	if msg.MessageType == format.MessageType_Disconnect {
 		defer p.connections.Delete(fileName)
 		err := encoder.EndIndefinite()
 		if err != nil {

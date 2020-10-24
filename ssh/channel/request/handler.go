@@ -3,7 +3,7 @@ package request
 import (
 	"fmt"
 	"github.com/containerssh/containerssh/audit"
-	"github.com/containerssh/containerssh/audit/protocol"
+	"github.com/containerssh/containerssh/audit/format"
 	"github.com/containerssh/containerssh/backend"
 	"github.com/containerssh/containerssh/log"
 	"golang.org/x/crypto/ssh"
@@ -54,10 +54,10 @@ func (handler *Handler) dispatchRequest(
 	typeHandler, err := handler.getTypeHandler(requestType)
 	if err != nil {
 		handler.logger.InfoE(err)
-		auditChannel.Message(protocol.MessageType_ChannelRequestUnknownType, &protocol.PayloadChannelRequestUnknownType{RequestType: requestType})
+		auditChannel.Message(format.MessageType_ChannelRequestUnknownType, &format.PayloadChannelRequestUnknownType{RequestType: requestType})
 		reply(false, nil)
 	} else if typeHandler == nil {
-		auditChannel.Message(protocol.MessageType_ChannelRequestUnknownType, &protocol.PayloadChannelRequestUnknownType{RequestType: requestType})
+		auditChannel.Message(format.MessageType_ChannelRequestUnknownType, &format.PayloadChannelRequestUnknownType{RequestType: requestType})
 		reply(false, nil)
 	} else {
 		typeHandler.HandleRequest(payload, reply, channel, session, auditChannel)
@@ -71,7 +71,7 @@ func (handler *Handler) AddTypeHandler(requestType string, typeHandler TypeHandl
 func (handler *Handler) OnChannelRequest(requestType string, payload []byte, reply func(success bool, message []byte), channel ssh.Channel, session backend.Session, auditChannel *audit.Channel) {
 	unmarshalledPayload, err := handler.getPayloadObjectForRequestType(requestType)
 	if err != nil {
-		auditChannel.Message(protocol.MessageType_ChannelRequestUnknownType, protocol.PayloadChannelRequestUnknownType{RequestType: requestType})
+		auditChannel.Message(format.MessageType_ChannelRequestUnknownType, format.PayloadChannelRequestUnknownType{RequestType: requestType})
 		handler.logger.InfoE(err)
 		reply(false, nil)
 	}
@@ -80,8 +80,8 @@ func (handler *Handler) OnChannelRequest(requestType string, payload []byte, rep
 		err = ssh.Unmarshal(payload, unmarshalledPayload)
 		if err != nil {
 			auditChannel.Message(
-				protocol.MessageType_ChannelRequestDecodeFailed,
-				protocol.PayloadChannelRequestDecodeFailed{
+				format.MessageType_ChannelRequestDecodeFailed,
+				format.PayloadChannelRequestDecodeFailed{
 					RequestType: requestType,
 					Reason:      err.Error(),
 				})

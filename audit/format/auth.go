@@ -1,4 +1,4 @@
-package protocol
+package format
 
 type PayloadAuthPassword struct {
 	Username string `json:"username" yaml:"username"`

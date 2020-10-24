@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/containerssh/containerssh/audit"
-	"github.com/containerssh/containerssh/audit/protocol"
+	"github.com/containerssh/containerssh/audit/format"
 	"github.com/containerssh/containerssh/config"
 	"github.com/containerssh/containerssh/log"
 	"github.com/containerssh/containerssh/metrics"
@@ -232,25 +232,25 @@ func (server *Server) createConfig(auditConnection *audit.Connection) *ssh.Serve
 			if auditConnection.Intercept.Passwords {
 				auditPassword = password
 			}
-			auditConnection.Message(protocol.MessageType_AuthPassword, protocol.PayloadAuthPassword{
+			auditConnection.Message(format.MessageType_AuthPassword, format.PayloadAuthPassword{
 				Username: conn.User(),
 				Password: auditPassword,
 			})
 			permissions, err := server.serverConfig.PasswordCallback(conn, password)
 			if err != nil {
 				if err == ErrorAuthenticationFailed {
-					auditConnection.Message(protocol.MessageType_AuthPasswordFailed, protocol.PayloadAuthPassword{
+					auditConnection.Message(format.MessageType_AuthPasswordFailed, format.PayloadAuthPassword{
 						Username: conn.User(),
 						Password: auditPassword,
 					})
 				} else {
-					auditConnection.Message(protocol.MessageType_AuthPasswordBackendError, protocol.PayloadAuthPassword{
+					auditConnection.Message(format.MessageType_AuthPasswordBackendError, format.PayloadAuthPassword{
 						Username: conn.User(),
 						Password: auditPassword,
 					})
 				}
 			} else {
-				auditConnection.Message(protocol.MessageType_AuthPasswordSuccessful, protocol.PayloadAuthPassword{
+				auditConnection.Message(format.MessageType_AuthPasswordSuccessful, format.PayloadAuthPassword{
 					Username: conn.User(),
 					Password: auditPassword,
 				})
@@ -258,25 +258,25 @@ func (server *Server) createConfig(auditConnection *audit.Connection) *ssh.Serve
 			return permissions, err
 		},
 		PublicKeyCallback: func(conn ssh.ConnMetadata, key ssh.PublicKey) (*ssh.Permissions, error) {
-			auditConnection.Message(protocol.MessageType_AuthPubKey, protocol.PayloadAuthPubKey{
+			auditConnection.Message(format.MessageType_AuthPubKey, format.PayloadAuthPubKey{
 				Username: conn.User(),
 				Key:      key.Marshal(),
 			})
 			permissions, err := server.serverConfig.PublicKeyCallback(conn, key)
 			if err != nil {
 				if err == ErrorAuthenticationFailed {
-					auditConnection.Message(protocol.MessageType_AuthPubKeyFailed, protocol.PayloadAuthPubKey{
+					auditConnection.Message(format.MessageType_AuthPubKeyFailed, format.PayloadAuthPubKey{
 						Username: conn.User(),
 						Key:      key.Marshal(),
 					})
 				} else {
-					auditConnection.Message(protocol.MessageType_AuthPubKeyBackendError, protocol.PayloadAuthPubKey{
+					auditConnection.Message(format.MessageType_AuthPubKeyBackendError, format.PayloadAuthPubKey{
 						Username: conn.User(),
 						Key:      key.Marshal(),
 					})
 				}
 			} else {
-				auditConnection.Message(protocol.MessageType_AuthPubKeySuccessful, protocol.PayloadAuthPubKey{
+				auditConnection.Message(format.MessageType_AuthPubKeySuccessful, format.PayloadAuthPubKey{
 					Username: conn.User(),
 					Key:      key.Marshal(),
 				})
@@ -312,25 +312,27 @@ func (server *Server) Run(ctx context.Context) error {
 				// Assume listen socket closed
 				break
 			}
-			ip := net.ParseIP(tcpConn.RemoteAddr().String())
+
+			remoteAddr := tcpConn.RemoteAddr().(*net.TCPAddr)
+			ip := net.ParseIP(remoteAddr.IP.String())
 			auditConnection, err := audit.GetConnection(server.audit, server.auditConfig)
 			if err != nil {
 				server.logger.ErrorF("failed to get random ID for connection (%v)", err)
 				_ = tcpConn.Close()
 				continue
 			}
-			auditConnection.Message(protocol.MessageType_Connect, protocol.PayloadConnect{
+			auditConnection.Message(format.MessageType_Connect, format.PayloadConnect{
 				RemoteAddr: ip.String(),
 			})
 			server.metric.IncrementGeo(MetricConnections, ip)
-			server.logger.DebugF("connection from: %s", tcpConn.RemoteAddr().String())
+			server.logger.DebugF("connection from: %s", remoteAddr.IP.String())
 
 			sshConfig := server.createConfig(auditConnection)
 			sshConn, chans, reqs, err := ssh.NewServerConn(tcpConn, sshConfig)
 			if err != nil {
 				server.metric.IncrementGeo(MetricFailedHandshake, ip)
 				server.logger.DebugF("failed handshake (%v)", err)
-				auditConnection.Message(protocol.MessageType_Disconnect, nil)
+				auditConnection.Message(format.MessageType_Disconnect, nil)
 				continue
 			}
 			server.logger.DebugF("new SSH connection from %s for user %s (%s)", sshConn.RemoteAddr(), sshConn.User(), sshConn.ClientVersion())
@@ -339,7 +341,7 @@ func (server *Server) Run(ctx context.Context) error {
 
 			go func() {
 				_ = sshConn.Wait()
-				auditConnection.Message(protocol.MessageType_Disconnect, nil)
+				auditConnection.Message(format.MessageType_Disconnect, nil)
 				server.metric.DecrementGeo(MetricCurrentConnections, ip)
 			}()
 
@@ -416,7 +418,7 @@ func (server *Server) handleChannel(
 	auditConnection *audit.Connection,
 ) {
 	if channelHandler == nil {
-		auditConnection.Message(protocol.MessageType_ChannelRequestUnknownType, protocol.PayloadNewChannel{
+		auditConnection.Message(format.MessageType_ChannelRequestUnknownType, format.PayloadNewChannel{
 			ChannelType: newChannel.ChannelType(),
 		})
 		err := newChannel.Reject(ssh.UnknownChannelType, "no channel channelRequestHandler")

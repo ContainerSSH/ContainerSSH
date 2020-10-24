@@ -2,7 +2,7 @@ package signal
 
 import (
 	"github.com/containerssh/containerssh/audit"
-	"github.com/containerssh/containerssh/audit/protocol"
+	"github.com/containerssh/containerssh/audit/format"
 	"github.com/containerssh/containerssh/backend"
 	"github.com/containerssh/containerssh/log"
 	channelRequest "github.com/containerssh/containerssh/ssh/channel/request"
@@ -30,7 +30,7 @@ func (e ChannelRequestHandler) GetRequestObject() interface{} {
 
 func (e ChannelRequestHandler) HandleRequest(request interface{}, reply channelRequest.Reply, _ ssh.Channel, session backend.Session, auditChannel *audit.Channel) {
 	e.logger.DebugF("Signal request: %s", request.(*requestMsg).signal)
-	auditChannel.Message(protocol.MessageType_ChannelRequestSignal, protocol.PayloadChannelRequestSignal{
+	auditChannel.Message(format.MessageType_ChannelRequestSignal, format.PayloadChannelRequestSignal{
 		Signal: request.(*requestMsg).signal,
 	})
 	//todo should the list of signals allowed be filtered?

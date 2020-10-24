@@ -8,7 +8,7 @@ import (
 
 	"encoding/base64"
 
-	auditProtocol "github.com/containerssh/containerssh/audit/protocol"
+	auditProtocol "github.com/containerssh/containerssh/audit/format"
 	"github.com/containerssh/containerssh/backend"
 	"github.com/containerssh/containerssh/config"
 	configurationClient "github.com/containerssh/containerssh/config/client"
