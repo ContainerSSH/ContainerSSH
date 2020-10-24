@@ -33,7 +33,7 @@ func (e ChannelRequestHandler) GetRequestObject() interface{} {
 
 func (e ChannelRequestHandler) HandleRequest(request interface{}, reply channelRequest.Reply, _ ssh.Channel, session backend.Session, auditChannel *audit.Channel) {
 	e.logger.DebugF("window change request: %dx%d", request.(*requestMsg).Rows, request.(*requestMsg).Columns)
-	auditChannel.Message(protocol.MessageType_ChannelRequestWindow, &protocol.MessageChannelRequestWindow{
+	auditChannel.Message(protocol.MessageType_ChannelRequestWindow, &protocol.PayloadChannelRequestWindow{
 		Columns: uint(request.(*requestMsg).Columns),
 		Rows:    uint(request.(*requestMsg).Rows),
 	})

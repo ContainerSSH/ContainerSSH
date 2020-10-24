@@ -61,8 +61,9 @@ func (handler *ChannelHandler) OnChannel(
 	channelType string,
 	_ []byte,
 ) (server.ChannelRequestHandler, *server.ChannelRejection) {
+	handler.auditConnection.Message(auditProtocol.MessageType_NewChannel, auditProtocol.PayloadNewChannel{ChannelType: channelType})
 	if channelType != "session" {
-		handler.auditConnection.Message(auditProtocol.MessageType_UnknownChannelType, auditProtocol.MessageUnknownChannelType{ChannelType: channelType})
+		handler.auditConnection.Message(auditProtocol.MessageType_NewChannelFailed, auditProtocol.PayloadNewChannelFailed{ChannelType: channelType, Reason: "unknown channel type"})
 		return nil, &server.ChannelRejection{
 			RejectionReason:  ssh.UnknownChannelType,
 			RejectionMessage: "unknown channel type",
@@ -73,7 +74,12 @@ func (handler *ChannelHandler) OnChannel(
 	err := reprint.FromTo(handler.appConfig, &actualConfig)
 	if err != nil {
 		handler.logger.WarningF("failed to copy application config (%v)", err)
-		//Todo audit log?
+		handler.auditConnection.Message(
+			auditProtocol.MessageType_NewChannelFailed,
+			auditProtocol.PayloadNewChannelFailed{
+				ChannelType: channelType,
+				Reason:      fmt.Sprintf("failed to copy application config (%v)", err),
+			})
 		return nil, &server.ChannelRejection{
 			RejectionReason:  ssh.ResourceShortage,
 			RejectionMessage: "failed to create config",
@@ -87,7 +93,12 @@ func (handler *ChannelHandler) OnChannel(
 		})
 		if err != nil {
 			handler.logger.DebugE(err)
-			//Todo audit log?
+			handler.auditConnection.Message(
+				auditProtocol.MessageType_NewChannelFailed,
+				auditProtocol.PayloadNewChannelFailed{
+					ChannelType: channelType,
+					Reason:      fmt.Sprintf("failed to fetch config from server (%v)", err),
+				})
 			return nil, &server.ChannelRejection{
 				RejectionReason:  ssh.ResourceShortage,
 				RejectionMessage: fmt.Sprintf("internal error while calling the config server: %s", err),
@@ -96,7 +107,12 @@ func (handler *ChannelHandler) OnChannel(
 		newConfig, err := util.Merge(&configResponse.Config, &actualConfig)
 		if err != nil {
 			handler.logger.DebugE(err)
-			//Todo audit log?
+			handler.auditConnection.Message(
+				auditProtocol.MessageType_NewChannelFailed,
+				auditProtocol.PayloadNewChannelFailed{
+					ChannelType: channelType,
+					Reason:      fmt.Sprintf("failed to merge config (%v)", err),
+				})
 			return nil, &server.ChannelRejection{
 				RejectionReason:  ssh.ResourceShortage,
 				RejectionMessage: fmt.Sprintf("failed to merge config"),
@@ -108,7 +124,12 @@ func (handler *ChannelHandler) OnChannel(
 	containerBackend, err := handler.backendRegistry.GetBackend(actualConfig.Backend)
 	if err != nil {
 		handler.logger.DebugE(err)
-		//Todo audit log?
+		handler.auditConnection.Message(
+			auditProtocol.MessageType_NewChannelFailed,
+			auditProtocol.PayloadNewChannelFailed{
+				ChannelType: channelType,
+				Reason:      fmt.Sprintf("no such backend (%v)", err),
+			})
 		return nil, &server.ChannelRejection{
 			RejectionReason:  ssh.ResourceShortage,
 			RejectionMessage: fmt.Sprintf("no such backend"),
@@ -124,7 +145,12 @@ func (handler *ChannelHandler) OnChannel(
 	)
 	if err != nil {
 		handler.logger.DebugE(err)
-		//Todo audit log?
+		handler.auditConnection.Message(
+			auditProtocol.MessageType_NewChannelFailed,
+			auditProtocol.PayloadNewChannelFailed{
+				ChannelType: channelType,
+				Reason:      fmt.Sprintf("error while creating backend (%v)", err),
+			})
 		return nil, &server.ChannelRejection{
 			RejectionReason:  ssh.ResourceShortage,
 			RejectionMessage: fmt.Sprintf("internal error while creating backend"),
@@ -132,7 +158,7 @@ func (handler *ChannelHandler) OnChannel(
 	}
 
 	auditChannel := handler.auditConnection.GetChannel()
-	auditChannel.Message(auditProtocol.MessageType_NewChannel, &auditProtocol.MessageNewChannel{
+	auditChannel.Message(auditProtocol.MessageType_NewChannelSuccessful, &auditProtocol.PayloadNewChannelSuccessful{
 		ChannelType: channelType,
 	})
 

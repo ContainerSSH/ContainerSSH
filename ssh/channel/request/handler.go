@@ -54,10 +54,10 @@ func (handler *Handler) dispatchRequest(
 	typeHandler, err := handler.getTypeHandler(requestType)
 	if err != nil {
 		handler.logger.InfoE(err)
-		auditChannel.Message(protocol.MessageType_UnknownChannelRequestType, &protocol.MessageUnknownChannelRequestType{RequestType: requestType})
+		auditChannel.Message(protocol.MessageType_ChannelRequestUnknownType, &protocol.PayloadChannelRequestUnknownType{RequestType: requestType})
 		reply(false, nil)
 	} else if typeHandler == nil {
-		auditChannel.Message(protocol.MessageType_UnknownChannelRequestType, &protocol.MessageUnknownChannelRequestType{RequestType: requestType})
+		auditChannel.Message(protocol.MessageType_ChannelRequestUnknownType, &protocol.PayloadChannelRequestUnknownType{RequestType: requestType})
 		reply(false, nil)
 	} else {
 		typeHandler.HandleRequest(payload, reply, channel, session, auditChannel)
@@ -71,7 +71,7 @@ func (handler *Handler) AddTypeHandler(requestType string, typeHandler TypeHandl
 func (handler *Handler) OnChannelRequest(requestType string, payload []byte, reply func(success bool, message []byte), channel ssh.Channel, session backend.Session, auditChannel *audit.Channel) {
 	unmarshalledPayload, err := handler.getPayloadObjectForRequestType(requestType)
 	if err != nil {
-		auditChannel.Message(protocol.MessageType_UnknownChannelRequestType, protocol.MessageUnknownChannelRequestType{RequestType: requestType})
+		auditChannel.Message(protocol.MessageType_ChannelRequestUnknownType, protocol.PayloadChannelRequestUnknownType{RequestType: requestType})
 		handler.logger.InfoE(err)
 		reply(false, nil)
 	}
@@ -79,7 +79,12 @@ func (handler *Handler) OnChannelRequest(requestType string, payload []byte, rep
 	if payload != nil && len(payload) > 0 {
 		err = ssh.Unmarshal(payload, unmarshalledPayload)
 		if err != nil {
-			auditChannel.Message(protocol.MessageType_FailedToDecodeChannelRequest, protocol.MessageUnknownChannelRequestType{RequestType: requestType})
+			auditChannel.Message(
+				protocol.MessageType_ChannelRequestDecodeFailed,
+				protocol.PayloadChannelRequestDecodeFailed{
+					RequestType: requestType,
+					Reason:      err.Error(),
+				})
 			handler.logger.InfoE(err)
 			reply(false, nil)
 		}

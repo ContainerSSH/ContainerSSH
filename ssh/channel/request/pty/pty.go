@@ -35,7 +35,7 @@ func (c ChannelRequestHandler) GetRequestObject() interface{} {
 
 func (c ChannelRequestHandler) HandleRequest(request interface{}, reply channelRequest.Reply, _ ssh.Channel, session backend.Session, auditChannel *audit.Channel) {
 	c.logger.DebugF("PTY request")
-	auditChannel.Message(protocol.MessageType_ChannelRequestPty, &protocol.MessageChannelRequestPty{
+	auditChannel.Message(protocol.MessageType_ChannelRequestPty, &protocol.PayloadChannelRequestPty{
 		Columns: uint(request.(*requestMsg).Columns),
 		Rows:    uint(request.(*requestMsg).Rows),
 	})

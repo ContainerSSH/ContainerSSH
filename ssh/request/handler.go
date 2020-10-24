@@ -36,7 +36,7 @@ func (handler *Handler) getTypeHandler(requestType string) (*TypeHandler, error)
 	}
 	handler.auditConnection.Message(
 		protocol.MessageType_GlobalRequestUnknown,
-		protocol.MessageGlobalRequestUnknown{
+		protocol.PayloadGlobalRequestUnknown{
 			RequestType: requestType,
 		},
 	)

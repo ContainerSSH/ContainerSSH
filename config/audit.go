@@ -12,12 +12,19 @@ const (
 type AuditConfig struct {
 	// Audit plugin type
 	Plugin AuditPluginType `json:"plugin" yaml:"plugin" default:"none"`
-	// Intecept input/output. Very resource intensive
-	InterceptIO bool `json:"interceptIo" yaml:"interceptIo" default:"false"`
 	// File audit logger configuration
 	File AuditFileConfig `json:"file" yaml:"file"`
+	// What to intercept during the connection
+	Intercept AuditInterceptConfig `json:"intercept" yaml:"intercept"`
+}
+
+type AuditInterceptConfig struct {
+	Stdin     bool `json:"stdin" yaml:"stdin" default:"false"`
+	Stdout    bool `json:"stdout" yaml:"stdout" default:"false"`
+	Stderr    bool `json:"stderr" yaml:"stderr" default:"false"`
+	Passwords bool `json:"passwords" yaml:"passwords" default:"false"`
 }
 
 type AuditFileConfig struct {
-	Directory string `json:"directory" yaml:"directory" default:""`
+	Directory string `json:"directory" yaml:"directory" default:"/var/log/audit"`
 }

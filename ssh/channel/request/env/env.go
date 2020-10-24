@@ -31,7 +31,7 @@ func (e ChannelRequestHandler) GetRequestObject() interface{} {
 
 func (e ChannelRequestHandler) HandleRequest(request interface{}, reply channelRequest.Reply, _ ssh.Channel, session backend.Session, auditChannel *audit.Channel) {
 	e.logger.DebugF("Set env request: %s=%s", request.(*requestMsg).Name, request.(*requestMsg).Value)
-	auditChannel.Message(protocol.MessageType_ChannelRequestSetEnv, protocol.MessageChannelRequestSetEnv{
+	auditChannel.Message(protocol.MessageType_ChannelRequestSetEnv, protocol.PayloadChannelRequestSetEnv{
 		Name:  request.(*requestMsg).Name,
 		Value: request.(*requestMsg).Value,
 	})

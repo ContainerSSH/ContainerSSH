@@ -30,7 +30,7 @@ func (c ChannelRequestHandler) GetRequestObject() interface{} {
 
 func (c ChannelRequestHandler) HandleRequest(_ interface{}, reply channelRequest.Reply, channel ssh.Channel, session backend.Session, auditChannel *audit.Channel) {
 	c.logger.DebugF("shell request")
-	auditChannel.Message(protocol.MessageType_ChannelRequestShell, protocol.MessageChannelRequestShell{})
+	auditChannel.Message(protocol.MessageType_ChannelRequestShell, protocol.PayloadChannelRequestShell{})
 	err := util.Run("", channel, session, c.logger, auditChannel)
 	if err != nil {
 		c.logger.DebugF("failed exec request (%s)", err)

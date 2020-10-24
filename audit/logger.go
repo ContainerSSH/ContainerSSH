@@ -11,14 +11,14 @@ import (
 
 type Connection struct {
 	lock          *sync.Mutex
-	nextChannelId protocol.ChannelId
+	nextChannelId protocol.ChannelID
 	audit         Plugin
 	connectionId  []byte
-	interceptIo   bool
+	Intercept     config.AuditInterceptConfig
 }
 
 type Channel struct {
-	channelId protocol.ChannelId
+	channelId protocol.ChannelID
 	*Connection
 }
 
@@ -30,7 +30,7 @@ func GetConnection(audit Plugin, config config.AuditConfig) (*Connection, error)
 		0,
 		audit,
 		connectionId,
-		config.InterceptIO,
+		config.Intercept,
 	}, err
 }
 
@@ -39,7 +39,7 @@ func (connection *Connection) Message(messageType protocol.MessageType, payload 
 		ConnectionID: connection.connectionId,
 		Timestamp:    time.Now().UnixNano(),
 		MessageType:  messageType,
-		ChannelId:    -1,
+		ChannelID:    -1,
 		Payload:      payload,
 	})
 }
@@ -60,29 +60,35 @@ func (channel *Channel) Message(messageType protocol.MessageType, payload interf
 		ConnectionID: channel.Connection.connectionId,
 		Timestamp:    time.Now().UnixNano(),
 		MessageType:  messageType,
-		ChannelId:    channel.channelId,
+		ChannelID:    channel.channelId,
 		Payload:      payload,
 	})
 }
 
-func (channel *Channel) InterceptIo(stdin io.Reader, stdOut io.Writer, stdErr io.Writer) (io.Reader, io.Writer, io.Writer) {
-	if !channel.interceptIo {
-		return stdin, stdOut, stdErr
-	}
-
-	return &interceptingReader{
-			backend: stdin,
+func (channel *Channel) InterceptIo(stdIn io.Reader, stdOut io.Writer, stdErr io.Writer) (io.Reader, io.Writer, io.Writer) {
+	if channel.Intercept.Stdin {
+		stdIn = &interceptingReader{
+			backend: stdIn,
 			stream:  protocol.Stream_Stdin,
 			channel: channel,
-		}, &interceptingWriter{
+		}
+	}
+	if channel.Intercept.Stdout {
+		stdOut = &interceptingWriter{
 			backend: stdOut,
 			stream:  protocol.Stream_StdOut,
 			channel: channel,
-		}, &interceptingWriter{
+		}
+	}
+	if channel.Intercept.Stderr {
+		stdErr = &interceptingWriter{
 			backend: stdErr,
 			stream:  protocol.Stream_StdErr,
 			channel: channel,
 		}
+	}
+
+	return stdIn, stdOut, stdErr
 }
 
 type interceptingReader struct {
