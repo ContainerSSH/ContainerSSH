@@ -7,6 +7,7 @@ import (
 	"crypto/x509"
 	"encoding/pem"
 	"fmt"
+	"github.com/containerssh/containerssh/audit/none"
 	"github.com/containerssh/containerssh/auth"
 	"github.com/containerssh/containerssh/backend"
 	"github.com/containerssh/containerssh/backend/dockerrun"
@@ -80,6 +81,7 @@ func (server *Server) Start() error {
 			server.logger,
 			server.logWriter,
 			metricCollector,
+			none.New(),
 		)
 		if err != nil {
 			server.logger.EmergencyF("failed to create SSH server (%v)", err)
