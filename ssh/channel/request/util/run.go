@@ -1,6 +1,7 @@
 package util
 
 import (
+	"github.com/containerssh/containerssh/audit"
 	"github.com/containerssh/containerssh/log"
 	"sync"
 
@@ -13,7 +14,7 @@ type responseMsg struct {
 	exitStatus uint32
 }
 
-func Run(program string, channel ssh.Channel, session backend.Session, logger log.Logger) error {
+func Run(program string, channel ssh.Channel, session backend.Session, logger log.Logger, auditChannel *audit.Channel) error {
 	var mutex = &sync.Mutex{}
 	closeSession := func() {
 		mutex.Lock()
@@ -32,7 +33,8 @@ func Run(program string, channel ssh.Channel, session backend.Session, logger lo
 		//Close the channel as described by the RFC
 		_ = channel.Close()
 	}
-	err := session.RequestProgram(program, channel, channel, channel.Stderr(), closeSession)
+	stdIn, stdOut, stdErr := auditChannel.InterceptIo(channel, channel, channel.Stderr())
+	err := session.RequestProgram(program, stdIn, stdOut, stdErr, closeSession)
 	if err != nil {
 		return err
 	}

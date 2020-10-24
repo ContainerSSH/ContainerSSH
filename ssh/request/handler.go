@@ -2,6 +2,8 @@ package request
 
 import (
 	"fmt"
+	"github.com/containerssh/containerssh/audit"
+	"github.com/containerssh/containerssh/audit/protocol"
 
 	"github.com/containerssh/containerssh/log"
 
@@ -16,13 +18,15 @@ type TypeHandler struct {
 }
 
 type Handler struct {
-	globalHandlers map[string]TypeHandler
-	logger         log.Logger
+	auditConnection *audit.Connection
+	globalHandlers  map[string]TypeHandler
+	logger          log.Logger
 }
 
-func NewHandler() *Handler {
+func NewHandler(auditConnection *audit.Connection) *Handler {
 	return &Handler{
-		globalHandlers: map[string]TypeHandler{},
+		auditConnection: auditConnection,
+		globalHandlers:  map[string]TypeHandler{},
 	}
 }
 
@@ -30,6 +34,12 @@ func (handler *Handler) getTypeHandler(requestType string) (*TypeHandler, error)
 	if typeHandler, ok := handler.globalHandlers[requestType]; ok {
 		return &typeHandler, nil
 	}
+	handler.auditConnection.Message(
+		protocol.MessageType_GlobalRequestUnknown,
+		protocol.MessageGlobalRequestUnknown{
+			RequestType: requestType,
+		},
+	)
 	return nil, fmt.Errorf("unsupported request type: %s", requestType)
 }
 

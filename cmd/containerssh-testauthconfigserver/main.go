@@ -161,7 +161,7 @@ func main() {
 	http.HandleFunc("/config", s.configHandler)
 	err = http.ListenAndServe(":8080", nil)
 	if err != nil {
-		logger.CriticalE(err)
+		logger.CriticalF("cannot start server (%v)", err)
 		os.Exit(1)
 	}
 }

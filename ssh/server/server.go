@@ -3,11 +3,16 @@ package server
 import (
 	"context"
 	"fmt"
+	"github.com/containerssh/containerssh/audit"
+	"github.com/containerssh/containerssh/audit/protocol"
+	"github.com/containerssh/containerssh/config"
 	"github.com/containerssh/containerssh/log"
 	"github.com/containerssh/containerssh/metrics"
 	"golang.org/x/crypto/ssh"
 	"net"
 )
+
+var ErrorAuthenticationFailed = fmt.Errorf("authentication failed")
 
 type RequestResponse struct {
 	Success bool
@@ -20,7 +25,7 @@ type ReadyHandler interface {
 }
 
 type ConnectionHandler interface {
-	OnConnection(*ssh.ServerConn) (GlobalRequestHandler, ChannelHandler, error)
+	OnConnection(*ssh.ServerConn, *audit.Connection) (GlobalRequestHandler, ChannelHandler, error)
 }
 
 type GlobalRequestHandler interface {
@@ -52,13 +57,7 @@ type ChannelHandler interface {
 type ChannelRequestHandler interface {
 	// This func will be called when a new requests arrives in a channel. This func can handle the request and return
 	// a response.
-	OnChannelRequest(
-		ctx context.Context,
-		sshConn *ssh.ServerConn,
-		channel ssh.Channel,
-		requestType string,
-		payload []byte,
-	) RequestResponse
+	OnChannelRequest(ctx context.Context, sshConn *ssh.ServerConn, channel ssh.Channel, requestType string, payload []byte) RequestResponse
 }
 
 type Config struct {
@@ -67,14 +66,12 @@ type Config struct {
 	HostKeys     []ssh.Signer
 	NoClientAuth bool
 
-	MaxAuthTries                int
-	PasswordCallback            func(conn ssh.ConnMetadata, password []byte) (*ssh.Permissions, error)
-	PublicKeyCallback           func(conn ssh.ConnMetadata, key ssh.PublicKey) (*ssh.Permissions, error)
-	KeyboardInteractiveCallback func(conn ssh.ConnMetadata, client ssh.KeyboardInteractiveChallenge) (*ssh.Permissions, error)
-	AuthLogCallback             func(conn ssh.ConnMetadata, method string, err error)
-	ServerVersion               string
-	BannerCallback              func(conn ssh.ConnMetadata) string
-	GSSAPIWithMICConfig         *ssh.GSSAPIWithMICConfig
+	MaxAuthTries      int
+	PasswordCallback  func(conn ssh.ConnMetadata, password []byte) (*ssh.Permissions, error)
+	PublicKeyCallback func(conn ssh.ConnMetadata, key ssh.PublicKey) (*ssh.Permissions, error)
+	AuthLogCallback   func(conn ssh.ConnMetadata, method string, err error)
+	ServerVersion     string
+	BannerCallback    func(conn ssh.ConnMetadata) string
 }
 
 type Server struct {
@@ -84,6 +81,8 @@ type Server struct {
 	connectionHandler ConnectionHandler
 	logger            log.Logger
 	metric            *metrics.MetricCollector
+	audit             audit.Plugin
+	auditConfig       config.AuditConfig
 }
 
 func New(
@@ -93,6 +92,8 @@ func New(
 	connectionHandler ConnectionHandler,
 	logger log.Logger,
 	metric *metrics.MetricCollector,
+	audit audit.Plugin,
+	auditConfig config.AuditConfig,
 ) (*Server, error) {
 	server := &Server{
 		listen:            listen,
@@ -101,6 +102,8 @@ func New(
 		connectionHandler: connectionHandler,
 		logger:            logger,
 		metric:            metric,
+		audit:             audit,
+		auditConfig:       auditConfig,
 	}
 
 	err := server.validateConfig()
@@ -219,23 +222,76 @@ func (server *Server) validateConfig() error {
 	return nil
 }
 
-func (server *Server) Run(ctx context.Context) error {
-	config := &ssh.ServerConfig{
-		Config:                      server.serverConfig.Config,
-		NoClientAuth:                server.serverConfig.NoClientAuth,
-		MaxAuthTries:                server.serverConfig.MaxAuthTries,
-		PasswordCallback:            server.serverConfig.PasswordCallback,
-		PublicKeyCallback:           server.serverConfig.PublicKeyCallback,
-		KeyboardInteractiveCallback: server.serverConfig.KeyboardInteractiveCallback,
-		AuthLogCallback:             server.serverConfig.AuthLogCallback,
-		ServerVersion:               server.serverConfig.ServerVersion,
-		BannerCallback:              server.serverConfig.BannerCallback,
-		GSSAPIWithMICConfig:         server.serverConfig.GSSAPIWithMICConfig,
+func (server *Server) createConfig(auditConnection *audit.Connection) *ssh.ServerConfig {
+	cfg := &ssh.ServerConfig{
+		Config:       server.serverConfig.Config,
+		NoClientAuth: server.serverConfig.NoClientAuth,
+		MaxAuthTries: server.serverConfig.MaxAuthTries,
+		PasswordCallback: func(conn ssh.ConnMetadata, password []byte) (*ssh.Permissions, error) {
+			auditConnection.Message(protocol.MessageType_AuthPassword, protocol.MessageAuthPassword{
+				Username: conn.User(),
+				Password: password,
+			})
+			permissions, err := server.serverConfig.PasswordCallback(conn, password)
+			if err != nil {
+				if err == ErrorAuthenticationFailed {
+					auditConnection.Message(protocol.MessageType_AuthPasswordFailed, protocol.MessageAuthPassword{
+						Username: conn.User(),
+						Password: password,
+					})
+				} else {
+					auditConnection.Message(protocol.MessageType_AuthPasswordBackendError, protocol.MessageAuthPassword{
+						Username: conn.User(),
+						Password: password,
+					})
+				}
+			} else {
+				auditConnection.Message(protocol.MessageType_AuthPasswordSuccessful, protocol.MessageAuthPassword{
+					Username: conn.User(),
+					Password: password,
+				})
+			}
+			return permissions, err
+		},
+		PublicKeyCallback: func(conn ssh.ConnMetadata, key ssh.PublicKey) (*ssh.Permissions, error) {
+			auditConnection.Message(protocol.MessageType_AuthPubKey, protocol.MessageAuthPubKey{
+				Username: conn.User(),
+				Key:      key.Marshal(),
+			})
+			permissions, err := server.serverConfig.PublicKeyCallback(conn, key)
+			if err != nil {
+				if err == ErrorAuthenticationFailed {
+					auditConnection.Message(protocol.MessageType_AuthPubKeyFailed, protocol.MessageAuthPubKey{
+						Username: conn.User(),
+						Key:      key.Marshal(),
+					})
+				} else {
+					auditConnection.Message(protocol.MessageType_AuthPubKeyBackendError, protocol.MessageAuthPubKey{
+						Username: conn.User(),
+						Key:      key.Marshal(),
+					})
+				}
+			} else {
+				auditConnection.Message(protocol.MessageType_AuthPubKeySuccessful, protocol.MessageAuthPubKey{
+					Username: conn.User(),
+					Key:      key.Marshal(),
+				})
+			}
+			return permissions, err
+		},
+		AuthLogCallback: server.serverConfig.AuthLogCallback,
+		ServerVersion:   server.serverConfig.ServerVersion,
+		BannerCallback:  server.serverConfig.BannerCallback,
 	}
 
 	for _, hostKey := range server.serverConfig.HostKeys {
-		config.AddHostKey(hostKey)
+		cfg.AddHostKey(hostKey)
 	}
+
+	return cfg
+}
+
+func (server *Server) Run(ctx context.Context) error {
 
 	server.logger.InfoF("starting SSH server on %s", server.listen)
 	netListener, err := net.Listen("tcp", server.listen)
@@ -253,12 +309,24 @@ func (server *Server) Run(ctx context.Context) error {
 				break
 			}
 			ip := net.ParseIP(tcpConn.RemoteAddr().String())
+			auditConnection, err := audit.GetConnection(server.audit, server.auditConfig)
+			if err != nil {
+				server.logger.ErrorF("failed to get random ID for connection (%v)", err)
+				_ = tcpConn.Close()
+				continue
+			}
+			auditConnection.Message(protocol.MessageType_Connect, protocol.MessageConnect{
+				RemoteAddr: ip,
+			})
 			server.metric.IncrementGeo(MetricConnections, ip)
 			server.logger.DebugF("connection from: %s", tcpConn.RemoteAddr().String())
-			sshConn, chans, reqs, err := ssh.NewServerConn(tcpConn, config)
+
+			sshConfig := server.createConfig(auditConnection)
+			sshConn, chans, reqs, err := ssh.NewServerConn(tcpConn, sshConfig)
 			if err != nil {
 				server.metric.IncrementGeo(MetricFailedHandshake, ip)
-				server.logger.DebugF("failed to handshake (%v)", err)
+				server.logger.DebugF("failed handshake (%v)", err)
+				auditConnection.Message(protocol.MessageType_Disconnect, nil)
 				continue
 			}
 			server.logger.DebugF("new SSH connection from %s for user %s (%s)", sshConn.RemoteAddr(), sshConn.User(), sshConn.ClientVersion())
@@ -267,6 +335,7 @@ func (server *Server) Run(ctx context.Context) error {
 
 			go func() {
 				_ = sshConn.Wait()
+				auditConnection.Message(protocol.MessageType_Disconnect, nil)
 				server.metric.DecrementGeo(MetricCurrentConnections, ip)
 			}()
 
@@ -279,7 +348,7 @@ func (server *Server) Run(ctx context.Context) error {
 				continue
 			}
 
-			globalRequestHandler, channelHandler, err := server.connectionHandler.OnConnection(sshConn)
+			globalRequestHandler, channelHandler, err := server.connectionHandler.OnConnection(sshConn, auditConnection)
 			if err != nil {
 				server.logger.DebugF("error from connection handler (%v)", err)
 				err = sshConn.Close()
@@ -290,7 +359,7 @@ func (server *Server) Run(ctx context.Context) error {
 			}
 
 			go server.handleGlobalRequests(ctx, globalRequestHandler, sshConn, reqs)
-			go server.handleChannels(ctx, channelHandler, sshConn, chans)
+			go server.handleChannels(ctx, channelHandler, sshConn, chans, auditConnection)
 		}
 	}()
 
@@ -323,14 +392,29 @@ func (server Server) handleGlobalRequests(ctx context.Context, globalRequestHand
 	}
 }
 
-func (server *Server) handleChannels(ctx context.Context, channelHandler ChannelHandler, sshConn *ssh.ServerConn, chans <-chan ssh.NewChannel) {
+func (server *Server) handleChannels(
+	ctx context.Context,
+	channelHandler ChannelHandler,
+	sshConn *ssh.ServerConn,
+	chans <-chan ssh.NewChannel,
+	auditConnection *audit.Connection,
+) {
 	for newChannel := range chans {
-		go server.handleChannel(ctx, channelHandler, sshConn, newChannel)
+		go server.handleChannel(ctx, channelHandler, sshConn, newChannel, auditConnection)
 	}
 }
 
-func (server *Server) handleChannel(ctx context.Context, channelHandler ChannelHandler, sshConn *ssh.ServerConn, newChannel ssh.NewChannel) {
+func (server *Server) handleChannel(
+	ctx context.Context,
+	channelHandler ChannelHandler,
+	sshConn *ssh.ServerConn,
+	newChannel ssh.NewChannel,
+	auditConnection *audit.Connection,
+) {
 	if channelHandler == nil {
+		auditConnection.Message(protocol.MessageType_UnknownChannelRequestType, protocol.MessageUnknownChannelType{
+			ChannelType: newChannel.ChannelType(),
+		})
 		err := newChannel.Reject(ssh.UnknownChannelType, "no channel channelRequestHandler")
 		if err != nil {
 			server.logger.DebugF("unable to send channel rejection (%v)", err)
@@ -368,13 +452,7 @@ func (server *Server) handleChannel(ctx context.Context, channelHandler ChannelH
 			server.replyRequest(channelRequest, false, []byte(fmt.Sprintf("unknown request type (%s)", req.Type)))
 			continue
 		}
-		response := channelRequestHandler.OnChannelRequest(
-			ctx,
-			sshConn,
-			channel,
-			channelRequest.Type,
-			channelRequest.Payload,
-		)
+		response := channelRequestHandler.OnChannelRequest(ctx, sshConn, channel, channelRequest.Type, channelRequest.Payload)
 		if response.Success {
 			server.replyRequest(channelRequest, true, response.Payload)
 		} else {

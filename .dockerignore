@@ -5,3 +5,4 @@ docker-compose.yaml
 
 build/
 cover.out
+venv

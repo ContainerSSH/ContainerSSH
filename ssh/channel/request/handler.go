@@ -2,6 +2,8 @@ package request
 
 import (
 	"fmt"
+	"github.com/containerssh/containerssh/audit"
+	"github.com/containerssh/containerssh/audit/protocol"
 	"github.com/containerssh/containerssh/backend"
 	"github.com/containerssh/containerssh/log"
 	"golang.org/x/crypto/ssh"
@@ -11,7 +13,7 @@ type Reply func(success bool, message interface{})
 
 type TypeHandler interface {
 	GetRequestObject() interface{}
-	HandleRequest(request interface{}, reply Reply, channel ssh.Channel, session backend.Session)
+	HandleRequest(request interface{}, reply Reply, channel ssh.Channel, session backend.Session, auditChannel *audit.Channel)
 }
 
 type Handler struct {
@@ -47,15 +49,18 @@ func (handler *Handler) dispatchRequest(
 	reply Reply,
 	channel ssh.Channel,
 	session backend.Session,
+	auditChannel *audit.Channel,
 ) {
 	typeHandler, err := handler.getTypeHandler(requestType)
 	if err != nil {
 		handler.logger.InfoE(err)
+		auditChannel.Message(protocol.MessageType_UnknownChannelRequestType, &protocol.MessageUnknownChannelRequestType{RequestType: requestType})
 		reply(false, nil)
 	} else if typeHandler == nil {
+		auditChannel.Message(protocol.MessageType_UnknownChannelRequestType, &protocol.MessageUnknownChannelRequestType{RequestType: requestType})
 		reply(false, nil)
 	} else {
-		typeHandler.HandleRequest(payload, reply, channel, session)
+		typeHandler.HandleRequest(payload, reply, channel, session, auditChannel)
 	}
 }
 
@@ -63,15 +68,10 @@ func (handler *Handler) AddTypeHandler(requestType string, typeHandler TypeHandl
 	handler.channelHandlers[requestType] = typeHandler
 }
 
-func (handler *Handler) OnChannelRequest(
-	requestType string,
-	payload []byte,
-	reply func(success bool, message []byte),
-	channel ssh.Channel,
-	session backend.Session,
-) {
+func (handler *Handler) OnChannelRequest(requestType string, payload []byte, reply func(success bool, message []byte), channel ssh.Channel, session backend.Session, auditChannel *audit.Channel) {
 	unmarshalledPayload, err := handler.getPayloadObjectForRequestType(requestType)
 	if err != nil {
+		auditChannel.Message(protocol.MessageType_UnknownChannelRequestType, protocol.MessageUnknownChannelRequestType{RequestType: requestType})
 		handler.logger.InfoE(err)
 		reply(false, nil)
 	}
@@ -79,6 +79,7 @@ func (handler *Handler) OnChannelRequest(
 	if payload != nil && len(payload) > 0 {
 		err = ssh.Unmarshal(payload, unmarshalledPayload)
 		if err != nil {
+			auditChannel.Message(protocol.MessageType_FailedToDecodeChannelRequest, protocol.MessageUnknownChannelRequestType{RequestType: requestType})
 			handler.logger.InfoE(err)
 			reply(false, nil)
 		}
@@ -92,5 +93,5 @@ func (handler *Handler) OnChannelRequest(
 		}
 	}
 
-	handler.dispatchRequest(requestType, unmarshalledPayload, replyFunc, channel, session)
+	handler.dispatchRequest(requestType, unmarshalledPayload, replyFunc, channel, session, auditChannel)
 }

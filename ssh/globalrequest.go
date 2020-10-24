@@ -2,6 +2,7 @@ package ssh
 
 import (
 	"context"
+	"github.com/containerssh/containerssh/audit"
 	globalRequest "github.com/containerssh/containerssh/ssh/request"
 	"github.com/containerssh/containerssh/ssh/server"
 	"golang.org/x/crypto/ssh"
@@ -41,15 +42,15 @@ func (handler *globalRequestHandler) OnGlobalRequest(
 }
 
 type GlobalRequestHandlerFactory interface {
-	Make() server.GlobalRequestHandler
+	Make(auditConnection *audit.Connection) server.GlobalRequestHandler
 }
 
 type defaultGlobalRequestHandlerFactory struct {
 }
 
-func (factory *defaultGlobalRequestHandlerFactory) Make() server.GlobalRequestHandler {
+func (factory *defaultGlobalRequestHandlerFactory) Make(auditConnection *audit.Connection) server.GlobalRequestHandler {
 	return &globalRequestHandler{
-		globalRequest.NewHandler(),
+		globalRequest.NewHandler(auditConnection),
 	}
 }
 

@@ -1,6 +1,8 @@
 package pty
 
 import (
+	"github.com/containerssh/containerssh/audit"
+	"github.com/containerssh/containerssh/audit/protocol"
 	"github.com/containerssh/containerssh/backend"
 	"github.com/containerssh/containerssh/log"
 	channelRequest "github.com/containerssh/containerssh/ssh/channel/request"
@@ -31,8 +33,12 @@ func (c ChannelRequestHandler) GetRequestObject() interface{} {
 	return &requestMsg{}
 }
 
-func (c ChannelRequestHandler) HandleRequest(request interface{}, reply channelRequest.Reply, _ ssh.Channel, session backend.Session) {
+func (c ChannelRequestHandler) HandleRequest(request interface{}, reply channelRequest.Reply, _ ssh.Channel, session backend.Session, auditChannel *audit.Channel) {
 	c.logger.DebugF("PTY request")
+	auditChannel.Message(protocol.MessageType_ChannelRequestPty, &protocol.MessageChannelRequestPty{
+		Columns: uint(request.(*requestMsg).Columns),
+		Rows:    uint(request.(*requestMsg).Rows),
+	})
 	err := session.SetPty()
 	if err != nil {
 		c.logger.DebugF("failed PTY request (%v)", err)

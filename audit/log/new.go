@@ -1,7 +1,12 @@
-package none
+package log
 
-import "github.com/containerssh/containerssh/audit"
+import (
+	"github.com/containerssh/containerssh/audit"
+	"github.com/containerssh/containerssh/log"
+)
 
-func New() audit.Plugin {
-	return &Plugin{}
+func New(logger log.Logger) audit.Plugin {
+	return &Plugin{
+		logger: logger,
+	}
 }

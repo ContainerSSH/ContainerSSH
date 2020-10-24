@@ -9,13 +9,11 @@ import (
 	"time"
 )
 
-
-
 type Connection struct {
 	lock          *sync.Mutex
 	nextChannelId protocol.ChannelId
 	audit         Plugin
-	connectionId  protocol.MessageConnectionID
+	connectionId  []byte
 	interceptIo   bool
 }
 
@@ -25,12 +23,8 @@ type Channel struct {
 }
 
 func GetConnection(audit Plugin, config config.AuditConfig) (*Connection, error) {
-	tmpConnId := make([]byte, 16)
-	_, err := rand.Read(tmpConnId)
-	var connectionId protocol.MessageConnectionID
-	for i := 0; i < 16; i++ {
-		connectionId[i] = tmpConnId[i]
-	}
+	connectionId := make([]byte, 16)
+	_, err := rand.Read(connectionId)
 	return &Connection{
 		&sync.Mutex{},
 		0,
@@ -41,7 +35,7 @@ func GetConnection(audit Plugin, config config.AuditConfig) (*Connection, error)
 }
 
 func (connection *Connection) Message(messageType protocol.MessageType, payload interface{}) {
-	connection.audit.Message(&protocol.Message{
+	connection.audit.Message(protocol.Message{
 		ConnectionID: connection.connectionId,
 		Timestamp:    time.Now().UnixNano(),
 		MessageType:  messageType,
@@ -62,7 +56,7 @@ func (connection *Connection) GetChannel() *Channel {
 }
 
 func (channel *Channel) Message(messageType protocol.MessageType, payload interface{}) {
-	channel.Connection.audit.Message(&protocol.Message{
+	channel.Connection.audit.Message(protocol.Message{
 		ConnectionID: channel.Connection.connectionId,
 		Timestamp:    time.Now().UnixNano(),
 		MessageType:  messageType,
@@ -93,7 +87,7 @@ func (channel *Channel) InterceptIo(stdin io.Reader, stdOut io.Writer, stdErr io
 
 type interceptingReader struct {
 	backend io.Reader
-	stream protocol.Stream
+	stream  protocol.Stream
 	channel *Channel
 }
 
@@ -101,21 +95,21 @@ func (i *interceptingReader) Read(p []byte) (n int, err error) {
 	n, err = i.backend.Read(p)
 	i.channel.Message(protocol.MessageType_IO, protocol.MessageIO{
 		Stream: i.stream,
-		Data:   p,
+		Data:   p[0:n],
 	})
 	return n, err
 }
 
 type interceptingWriter struct {
 	backend io.Writer
-	stream protocol.Stream
+	stream  protocol.Stream
 	channel *Channel
 }
 
 func (i *interceptingWriter) Write(p []byte) (n int, err error) {
 	i.channel.Message(protocol.MessageType_IO, protocol.MessageIO{
 		Stream: i.stream,
-		Data: p,
+		Data:   p,
 	})
 	n, err = i.backend.Write(p)
 	return n, err

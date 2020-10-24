@@ -1,6 +1,7 @@
 package ssh
 
 import (
+	"github.com/containerssh/containerssh/audit"
 	"github.com/containerssh/containerssh/config"
 	"github.com/containerssh/containerssh/ssh/server"
 	"golang.org/x/crypto/ssh"
@@ -24,8 +25,6 @@ func NewConnectionHandler(
 	}
 }
 
-func (handler ConnectionHandler) OnConnection(
-	_ *ssh.ServerConn,
-) (server.GlobalRequestHandler, server.ChannelHandler, error) {
-	return handler.globalRequestHandlerFactory.Make(), handler.channelHandlerFactory.Make(handler.config), nil
+func (handler ConnectionHandler) OnConnection(_ *ssh.ServerConn, auditConnection *audit.Connection) (server.GlobalRequestHandler, server.ChannelHandler, error) {
+	return handler.globalRequestHandlerFactory.Make(auditConnection), handler.channelHandlerFactory.Make(handler.config, auditConnection), nil
 }

@@ -32,4 +32,6 @@ type AppConfig struct {
 	Metrics metricsServer.Config `json:"metrics" yaml:"metrics" comment:"Metrics configuration."`
 	// GeoIP configuration
 	GeoIP GeoIPConfig `json:"geoip" yaml:"geoip" comment:"GeoIP database"`
+	// Audit configuration
+	Audit AuditConfig `json:"audit" yaml:"audit" comment:"Audit configuration"`
 }

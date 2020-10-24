@@ -3,10 +3,12 @@ package ssh
 import (
 	"context"
 	"fmt"
+	"github.com/containerssh/containerssh/audit"
 	"github.com/containerssh/containerssh/metrics"
 
 	"encoding/base64"
 
+	auditProtocol "github.com/containerssh/containerssh/audit/protocol"
 	"github.com/containerssh/containerssh/backend"
 	"github.com/containerssh/containerssh/config"
 	configurationClient "github.com/containerssh/containerssh/config/client"
@@ -20,7 +22,7 @@ import (
 )
 
 type ChannelHandlerFactory interface {
-	Make(appConfig *config.AppConfig) *ChannelHandler
+	Make(appConfig *config.AppConfig, auditConnection *audit.Connection) *ChannelHandler
 }
 
 type ChannelHandler struct {
@@ -30,6 +32,7 @@ type ChannelHandler struct {
 	channelRequestHandlerFactory ChannelRequestHandlerFactory
 	logger                       log.Logger
 	metric                       *metrics.MetricCollector
+	auditConnection              *audit.Connection
 }
 
 func NewChannelHandler(
@@ -39,6 +42,7 @@ func NewChannelHandler(
 	channelRequestHandlerFactory ChannelRequestHandlerFactory,
 	logger log.Logger,
 	metric *metrics.MetricCollector,
+	auditConnection *audit.Connection,
 ) *ChannelHandler {
 	return &ChannelHandler{
 		appConfig:                    appConfig,
@@ -47,6 +51,7 @@ func NewChannelHandler(
 		channelRequestHandlerFactory: channelRequestHandlerFactory,
 		logger:                       logger,
 		metric:                       metric,
+		auditConnection:              auditConnection,
 	}
 }
 
@@ -57,6 +62,7 @@ func (handler *ChannelHandler) OnChannel(
 	_ []byte,
 ) (server.ChannelRequestHandler, *server.ChannelRejection) {
 	if channelType != "session" {
+		handler.auditConnection.Message(auditProtocol.MessageType_UnknownChannelType, auditProtocol.MessageUnknownChannelType{ChannelType: channelType})
 		return nil, &server.ChannelRejection{
 			RejectionReason:  ssh.UnknownChannelType,
 			RejectionMessage: "unknown channel type",
@@ -67,6 +73,7 @@ func (handler *ChannelHandler) OnChannel(
 	err := reprint.FromTo(handler.appConfig, &actualConfig)
 	if err != nil {
 		handler.logger.WarningF("failed to copy application config (%v)", err)
+		//Todo audit log?
 		return nil, &server.ChannelRejection{
 			RejectionReason:  ssh.ResourceShortage,
 			RejectionMessage: "failed to create config",
@@ -80,6 +87,7 @@ func (handler *ChannelHandler) OnChannel(
 		})
 		if err != nil {
 			handler.logger.DebugE(err)
+			//Todo audit log?
 			return nil, &server.ChannelRejection{
 				RejectionReason:  ssh.ResourceShortage,
 				RejectionMessage: fmt.Sprintf("internal error while calling the config server: %s", err),
@@ -88,6 +96,7 @@ func (handler *ChannelHandler) OnChannel(
 		newConfig, err := util.Merge(&configResponse.Config, &actualConfig)
 		if err != nil {
 			handler.logger.DebugE(err)
+			//Todo audit log?
 			return nil, &server.ChannelRejection{
 				RejectionReason:  ssh.ResourceShortage,
 				RejectionMessage: fmt.Sprintf("failed to merge config"),
@@ -99,6 +108,7 @@ func (handler *ChannelHandler) OnChannel(
 	containerBackend, err := handler.backendRegistry.GetBackend(actualConfig.Backend)
 	if err != nil {
 		handler.logger.DebugE(err)
+		//Todo audit log?
 		return nil, &server.ChannelRejection{
 			RejectionReason:  ssh.ResourceShortage,
 			RejectionMessage: fmt.Sprintf("no such backend"),
@@ -114,13 +124,19 @@ func (handler *ChannelHandler) OnChannel(
 	)
 	if err != nil {
 		handler.logger.DebugE(err)
+		//Todo audit log?
 		return nil, &server.ChannelRejection{
 			RejectionReason:  ssh.ResourceShortage,
 			RejectionMessage: fmt.Sprintf("internal error while creating backend"),
 		}
 	}
 
-	return handler.channelRequestHandlerFactory.Make(backendSession), nil
+	auditChannel := handler.auditConnection.GetChannel()
+	auditChannel.Message(auditProtocol.MessageType_NewChannel, &auditProtocol.MessageNewChannel{
+		ChannelType: channelType,
+	})
+
+	return handler.channelRequestHandlerFactory.Make(backendSession, auditChannel), nil
 }
 
 type channelHandlerFactory struct {
@@ -132,7 +148,7 @@ type channelHandlerFactory struct {
 	metric                       *metrics.MetricCollector
 }
 
-func (factory *channelHandlerFactory) Make(appConfig *config.AppConfig) *ChannelHandler {
+func (factory *channelHandlerFactory) Make(appConfig *config.AppConfig, auditConnection *audit.Connection) *ChannelHandler {
 	logConfig, err := log.NewConfig(appConfig.Log.Level)
 	logger := factory.logger
 	if err != nil {
@@ -148,6 +164,7 @@ func (factory *channelHandlerFactory) Make(appConfig *config.AppConfig) *Channel
 		factory.channelRequestHandlerFactory,
 		logger,
 		factory.metric,
+		auditConnection,
 	)
 }
 

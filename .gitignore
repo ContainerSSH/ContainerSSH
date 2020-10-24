@@ -22,3 +22,4 @@ __pycache__
 containerssh-authconfig-openapi.json
 docs/api/authconfig/containerssh-authconfig.json
 venv
+var

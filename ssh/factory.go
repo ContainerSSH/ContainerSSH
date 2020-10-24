@@ -2,6 +2,7 @@ package ssh
 
 import (
 	"fmt"
+	"github.com/containerssh/containerssh/audit"
 	"github.com/containerssh/containerssh/auth"
 	"github.com/containerssh/containerssh/backend"
 	"github.com/containerssh/containerssh/config"
@@ -23,6 +24,7 @@ func NewServer(
 	logger log.Logger,
 	logWriter log.Writer,
 	metricCollector *metrics.MetricCollector,
+	audit audit.Plugin,
 ) (*server.Server, error) {
 	serverConfig := &server.Config{
 		Config:       ssh.Config{},
@@ -42,7 +44,7 @@ func NewServer(
 				return nil, err
 			}
 			if !authResponse.Success {
-				return nil, fmt.Errorf("authentication failed")
+				return nil, server.ErrorAuthenticationFailed
 			}
 			return &ssh.Permissions{}, nil
 		}
@@ -60,7 +62,7 @@ func NewServer(
 				return nil, err
 			}
 			if !authResponse.Success {
-				return nil, fmt.Errorf("authentication failed")
+				return nil, server.ErrorAuthenticationFailed
 			}
 			return &ssh.Permissions{}, nil
 		}
@@ -102,5 +104,7 @@ func NewServer(
 		),
 		logger,
 		metricCollector,
+		audit,
+		config.Audit,
 	)
 }

@@ -2,6 +2,7 @@ package ssh
 
 import (
 	"context"
+	"github.com/containerssh/containerssh/audit"
 	"github.com/containerssh/containerssh/backend"
 	"github.com/containerssh/containerssh/log"
 	channelRequest "github.com/containerssh/containerssh/ssh/channel/request"
@@ -17,8 +18,9 @@ import (
 )
 
 type channelRequestHandler struct {
-	typeHandler *channelRequest.Handler
-	session     backend.Session
+	typeHandler  *channelRequest.Handler
+	session      backend.Session
+	auditChannel *audit.Channel
 }
 
 func (handler *channelRequestHandler) OnChannelRequest(ctx context.Context, _ *ssh.ServerConn, channel ssh.Channel, requestType string, payload []byte) server.RequestResponse {
@@ -35,6 +37,7 @@ func (handler *channelRequestHandler) OnChannelRequest(ctx context.Context, _ *s
 		reply,
 		channel,
 		handler.session,
+		handler.auditChannel,
 	)
 	select {
 	case response := <-responseChannel:
@@ -48,7 +51,7 @@ func (handler *channelRequestHandler) OnChannelRequest(ctx context.Context, _ *s
 }
 
 type ChannelRequestHandlerFactory interface {
-	Make(session backend.Session) *channelRequestHandler
+	Make(session backend.Session, channel *audit.Channel) *channelRequestHandler
 }
 
 type defaultChannelRequestHandlerFactory struct {
@@ -63,7 +66,7 @@ func NewDefaultChannelRequestHandlerFactory(
 	}
 }
 
-func (factory *defaultChannelRequestHandlerFactory) Make(session backend.Session) *channelRequestHandler {
+func (factory *defaultChannelRequestHandlerFactory) Make(session backend.Session, auditChannel *audit.Channel) *channelRequestHandler {
 	handler := channelRequest.NewHandler(factory.logger)
 	handler.AddTypeHandler("env", env.New(factory.logger))
 	handler.AddTypeHandler("pty-req", pty.New(factory.logger))
@@ -73,7 +76,8 @@ func (factory *defaultChannelRequestHandlerFactory) Make(session backend.Session
 	handler.AddTypeHandler("window-change", window.New(factory.logger))
 	handler.AddTypeHandler("signal", signal.New(factory.logger))
 	return &channelRequestHandler{
-		typeHandler: &handler,
-		session:     session,
+		typeHandler:  &handler,
+		session:      session,
+		auditChannel: auditChannel,
 	}
 }

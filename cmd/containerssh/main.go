@@ -4,6 +4,12 @@ import (
 	"context"
 	"flag"
 	"fmt"
+	"io/ioutil"
+	"os"
+	"os/signal"
+	"syscall"
+
+	auditFactory "github.com/containerssh/containerssh/audit/factory"
 	"github.com/containerssh/containerssh/auth"
 	"github.com/containerssh/containerssh/backend"
 	"github.com/containerssh/containerssh/backend/dockerrun"
@@ -19,10 +25,6 @@ import (
 	"github.com/containerssh/containerssh/metrics"
 	metricsServer "github.com/containerssh/containerssh/metrics/server"
 	"github.com/containerssh/containerssh/ssh"
-	"io/ioutil"
-	"os"
-	"os/signal"
-	"syscall"
 )
 
 func InitBackendRegistry(metric *metrics.MetricCollector) *backend.Registry {
@@ -104,14 +106,14 @@ func main() {
 		fmt.Println("")
 		data, err := ioutil.ReadFile("LICENSE.md")
 		if err != nil {
-			logger.EmergencyF("Missing LICENSE.md, cannot print license information")
+			logger.EmergencyF("missing LICENSE.md, cannot print license information")
 			os.Exit(1)
 		}
 		fmt.Println(string(data))
 		fmt.Println("")
 		data, err = ioutil.ReadFile("NOTICE.md")
 		if err != nil {
-			logger.EmergencyF("Missing NOTICE.md, cannot print third party license information")
+			logger.EmergencyF("missing NOTICE.md, cannot print third party license information")
 			os.Exit(1)
 		}
 		fmt.Println(string(data))
@@ -139,7 +141,13 @@ func main() {
 
 	configClient, err := configurationClient.NewHttpConfigClient(appConfig.ConfigServer, logger, metricCollector)
 	if err != nil {
-		logger.EmergencyF(fmt.Sprintf("Error creating config HTTP client (%s)", err))
+		logger.EmergencyF("error creating config HTTP client (%s)", err)
+		os.Exit(1)
+	}
+
+	audit, err := auditFactory.Get(appConfig.Audit, logger)
+	if err != nil {
+		logger.EmergencyF("failed to create audit backend (%s)", err)
 		os.Exit(1)
 	}
 
@@ -151,6 +159,7 @@ func main() {
 		logger,
 		logWriter,
 		metricCollector,
+		audit,
 	)
 	if err != nil {
 		logger.EmergencyF("failed to create SSH server (%v)", err)

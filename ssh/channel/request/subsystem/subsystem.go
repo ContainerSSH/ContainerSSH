@@ -1,6 +1,8 @@
 package subsystem
 
 import (
+	"github.com/containerssh/containerssh/audit"
+	"github.com/containerssh/containerssh/audit/protocol"
 	"sync"
 
 	"github.com/containerssh/containerssh/backend"
@@ -32,8 +34,11 @@ func (c ChannelRequestHandler) GetRequestObject() interface{} {
 	return &requestMsg{}
 }
 
-func (c ChannelRequestHandler) HandleRequest(request interface{}, reply channelRequest.Reply, channel ssh.Channel, session backend.Session) {
+func (c ChannelRequestHandler) HandleRequest(request interface{}, reply channelRequest.Reply, channel ssh.Channel, session backend.Session, auditChannel *audit.Channel) {
 	c.logger.DebugF("subsystem request: %s", request.(*requestMsg).Subsystem)
+	auditChannel.Message(protocol.MessageType_ChannelRequestSubsystem, protocol.MessageChannelRequestSubsystem{
+		Subsystem: request.(*requestMsg).Subsystem,
+	})
 	var mutex = &sync.Mutex{}
 	closeSession := func() {
 		mutex.Lock()
@@ -52,7 +57,9 @@ func (c ChannelRequestHandler) HandleRequest(request interface{}, reply channelR
 		//Close the channel as described by the RFC
 		_ = channel.Close()
 	}
-	err := session.RequestSubsystem(request.(*requestMsg).Subsystem, channel, channel, channel.Stderr(), closeSession)
+
+	stdIn, stdOut, stdErr := auditChannel.InterceptIo(channel, channel, channel.Stderr())
+	err := session.RequestSubsystem(request.(*requestMsg).Subsystem, stdIn, stdOut, stdErr, closeSession)
 	if err != nil {
 		c.logger.DebugF("failed subsystem request (%v)", err)
 		reply(false, nil)

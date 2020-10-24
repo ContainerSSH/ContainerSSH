@@ -1,6 +1,8 @@
 package shell
 
 import (
+	"github.com/containerssh/containerssh/audit"
+	"github.com/containerssh/containerssh/audit/protocol"
 	"github.com/containerssh/containerssh/backend"
 	"github.com/containerssh/containerssh/log"
 	channelRequest "github.com/containerssh/containerssh/ssh/channel/request"
@@ -26,9 +28,10 @@ func (c ChannelRequestHandler) GetRequestObject() interface{} {
 	return &requestMsg{}
 }
 
-func (c ChannelRequestHandler) HandleRequest(_ interface{}, reply channelRequest.Reply, channel ssh.Channel, session backend.Session) {
+func (c ChannelRequestHandler) HandleRequest(_ interface{}, reply channelRequest.Reply, channel ssh.Channel, session backend.Session, auditChannel *audit.Channel) {
 	c.logger.DebugF("shell request")
-	err := util.Run("", channel, session, c.logger)
+	auditChannel.Message(protocol.MessageType_ChannelRequestShell, protocol.MessageChannelRequestShell{})
+	err := util.Run("", channel, session, c.logger, auditChannel)
 	if err != nil {
 		c.logger.DebugF("failed exec request (%s)", err)
 		reply(false, nil)
