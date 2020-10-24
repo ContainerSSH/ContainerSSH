@@ -39,6 +39,8 @@ func (p *Plugin) Message(msg protocol.Message) {
 		}
 		gzipHandle = gzip.NewWriter(fileHandle)
 		encoder = cbor.NewEncoder(gzipHandle, cbor.EncOptions{})
+		err = encoder.StartIndefiniteArray()
+
 		p.connections.Store(fileName, auditLogFile{
 			fileHandle: fileHandle,
 			gzipHandle: gzipHandle,
@@ -56,13 +58,27 @@ func (p *Plugin) Message(msg protocol.Message) {
 	}
 
 	if msg.MessageType == protocol.MessageType_Disconnect {
-		err := gzipHandle.Close()
+		defer p.connections.Delete(fileName)
+		err := encoder.EndIndefinite()
+		if err != nil {
+			p.logger.WarningF("failed to end audit log infinite array (%v)", err)
+			return
+		}
+
+		err = gzipHandle.Flush()
+		if err != nil {
+			p.logger.WarningF("failed to flush audit log gzip stream (%v)", err)
+			return
+		}
+		err = gzipHandle.Close()
 		if err != nil {
 			p.logger.WarningF("failed to close audit log gzip stream (%v)", err)
+			return
 		}
 		err = fileHandle.Close()
 		if err != nil {
 			p.logger.WarningF("failed to close audit log file %s (%v)", fileName, err)
+			return
 		}
 	}
 }
