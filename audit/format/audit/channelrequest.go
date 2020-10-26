@@ -1,4 +1,4 @@
-package format
+package audit
 
 type PayloadChannelRequestUnknownType struct {
 	RequestType string `json:"requestType" yaml:"requestType"`

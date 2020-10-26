@@ -1,4 +1,4 @@
-package format
+package audit
 
 type PayloadNewChannel struct {
 	ChannelType string `json:"channelType" yaml:"channelType"`

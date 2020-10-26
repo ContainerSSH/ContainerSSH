@@ -4,6 +4,7 @@ go 1.14
 
 require (
 	github.com/Microsoft/go-winio v0.4.14 // indirect
+	github.com/aws/aws-sdk-go v1.35.14
 	github.com/creasty/defaults v1.5.0
 	github.com/cucumber/godog v0.10.0
 	github.com/docker/distribution v2.7.1+incompatible
@@ -11,6 +12,7 @@ require (
 	github.com/docker/go-connections v0.4.0 // indirect
 	github.com/docker/go-units v0.4.0 // indirect
 	github.com/fxamacker/cbor v1.5.1
+	github.com/hhatto/gocloc v0.3.3 // indirect
 	github.com/imdario/mergo v0.3.11
 	github.com/jinzhu/copier v0.0.0-20190924061706-b57f9002281a
 	github.com/mattn/go-shellwords v1.0.10

@@ -1,4 +1,4 @@
-package format
+package audit
 
 import (
 	"compress/gzip"

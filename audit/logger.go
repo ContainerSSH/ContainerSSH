@@ -2,7 +2,7 @@ package audit
 
 import (
 	"crypto/rand"
-	"github.com/containerssh/containerssh/audit/format"
+	"github.com/containerssh/containerssh/audit/format/audit"
 	"github.com/containerssh/containerssh/config"
 	"io"
 	"sync"
@@ -11,14 +11,14 @@ import (
 
 type Connection struct {
 	lock          *sync.Mutex
-	nextChannelId format.ChannelID
+	nextChannelId audit.ChannelID
 	audit         Plugin
 	connectionId  []byte
 	Intercept     config.AuditInterceptConfig
 }
 
 type Channel struct {
-	channelId format.ChannelID
+	channelId audit.ChannelID
 	*Connection
 }
 
@@ -34,8 +34,8 @@ func GetConnection(audit Plugin, config config.AuditConfig) (*Connection, error)
 	}, err
 }
 
-func (connection *Connection) Message(messageType format.MessageType, payload interface{}) {
-	connection.audit.Message(format.Message{
+func (connection *Connection) Message(messageType audit.MessageType, payload interface{}) {
+	connection.audit.Message(audit.Message{
 		ConnectionID: connection.connectionId,
 		Timestamp:    time.Now().UnixNano(),
 		MessageType:  messageType,
@@ -55,8 +55,8 @@ func (connection *Connection) GetChannel() *Channel {
 	}
 }
 
-func (channel *Channel) Message(messageType format.MessageType, payload interface{}) {
-	channel.Connection.audit.Message(format.Message{
+func (channel *Channel) Message(messageType audit.MessageType, payload interface{}) {
+	channel.Connection.audit.Message(audit.Message{
 		ConnectionID: channel.Connection.connectionId,
 		Timestamp:    time.Now().UnixNano(),
 		MessageType:  messageType,
@@ -69,54 +69,24 @@ func (channel *Channel) InterceptIo(stdIn io.Reader, stdOut io.Writer, stdErr io
 	if channel.Intercept.Stdin {
 		stdIn = &interceptingReader{
 			backend: stdIn,
-			stream:  format.Stream_Stdin,
+			stream:  audit.Stream_Stdin,
 			channel: channel,
 		}
 	}
 	if channel.Intercept.Stdout {
 		stdOut = &interceptingWriter{
 			backend: stdOut,
-			stream:  format.Stream_StdOut,
+			stream:  audit.Stream_StdOut,
 			channel: channel,
 		}
 	}
 	if channel.Intercept.Stderr {
 		stdErr = &interceptingWriter{
 			backend: stdErr,
-			stream:  format.Stream_StdErr,
+			stream:  audit.Stream_StdErr,
 			channel: channel,
 		}
 	}
 
 	return stdIn, stdOut, stdErr
-}
-
-type interceptingReader struct {
-	backend io.Reader
-	stream  format.Stream
-	channel *Channel
-}
-
-func (i *interceptingReader) Read(p []byte) (n int, err error) {
-	n, err = i.backend.Read(p)
-	i.channel.Message(format.MessageType_IO, format.MessageIO{
-		Stream: i.stream,
-		Data:   p[0:n],
-	})
-	return n, err
-}
-
-type interceptingWriter struct {
-	backend io.Writer
-	stream  format.Stream
-	channel *Channel
-}
-
-func (i *interceptingWriter) Write(p []byte) (n int, err error) {
-	i.channel.Message(format.MessageType_IO, format.MessageIO{
-		Stream: i.stream,
-		Data:   p,
-	})
-	n, err = i.backend.Write(p)
-	return n, err
 }

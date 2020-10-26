@@ -2,7 +2,7 @@ package window
 
 import (
 	"github.com/containerssh/containerssh/audit"
-	"github.com/containerssh/containerssh/audit/format"
+	audit2 "github.com/containerssh/containerssh/audit/format/audit"
 	"github.com/containerssh/containerssh/backend"
 	"github.com/containerssh/containerssh/log"
 	channelRequest "github.com/containerssh/containerssh/ssh/channel/request"
@@ -33,7 +33,7 @@ func (e ChannelRequestHandler) GetRequestObject() interface{} {
 
 func (e ChannelRequestHandler) HandleRequest(request interface{}, reply channelRequest.Reply, _ ssh.Channel, session backend.Session, auditChannel *audit.Channel) {
 	e.logger.DebugF("window change request: %dx%d", request.(*requestMsg).Rows, request.(*requestMsg).Columns)
-	auditChannel.Message(format.MessageType_ChannelRequestWindow, &format.PayloadChannelRequestWindow{
+	auditChannel.Message(audit2.MessageType_ChannelRequestWindow, &audit2.PayloadChannelRequestWindow{
 		Columns: uint(request.(*requestMsg).Columns),
 		Rows:    uint(request.(*requestMsg).Rows),
 	})

@@ -2,7 +2,7 @@ package subsystem
 
 import (
 	"github.com/containerssh/containerssh/audit"
-	"github.com/containerssh/containerssh/audit/format"
+	audit2 "github.com/containerssh/containerssh/audit/format/audit"
 	"sync"
 
 	"github.com/containerssh/containerssh/backend"
@@ -36,7 +36,7 @@ func (c ChannelRequestHandler) GetRequestObject() interface{} {
 
 func (c ChannelRequestHandler) HandleRequest(request interface{}, reply channelRequest.Reply, channel ssh.Channel, session backend.Session, auditChannel *audit.Channel) {
 	c.logger.DebugF("subsystem request: %s", request.(*requestMsg).Subsystem)
-	auditChannel.Message(format.MessageType_ChannelRequestSubsystem, format.PayloadChannelRequestSubsystem{
+	auditChannel.Message(audit2.MessageType_ChannelRequestSubsystem, audit2.PayloadChannelRequestSubsystem{
 		Subsystem: request.(*requestMsg).Subsystem,
 	})
 	var mutex = &sync.Mutex{}

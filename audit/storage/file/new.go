@@ -2,17 +2,15 @@ package file
 
 import (
 	"fmt"
-	"io/ioutil"
-	"os"
-	"path"
-	"sync"
-
 	"github.com/containerssh/containerssh/audit"
 	"github.com/containerssh/containerssh/config"
 	"github.com/containerssh/containerssh/log"
+	"io/ioutil"
+	"os"
+	"path"
 )
 
-func New(cfg config.AuditFileConfig, logger log.Logger) (audit.Plugin, error) {
+func NewStorage(cfg config.AuditFileConfig, _ log.Logger) (audit.Storage, error) {
 	if cfg.Directory == "" {
 		return nil, fmt.Errorf("invalid audit log directory")
 	}
@@ -27,9 +25,7 @@ func New(cfg config.AuditFileConfig, logger log.Logger) (audit.Plugin, error) {
 	if err != nil {
 		return nil, fmt.Errorf("failed to create file in audit log directory %s (%v)", cfg.Directory, err)
 	}
-	return &Plugin{
-		directory:   cfg.Directory,
-		connections: sync.Map{},
-		logger:      logger,
+	return &Storage{
+		directory: cfg.Directory,
 	}, nil
 }

@@ -33,5 +33,5 @@ type Logger interface {
 	EmergencyE(err error)
 	EmergencyD(data interface{})
 	EmergencyF(format string, args ...interface{})
+	Log(...interface{})
 }
-

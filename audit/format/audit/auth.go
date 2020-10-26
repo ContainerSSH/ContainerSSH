@@ -1,4 +1,4 @@
-package format
+package audit
 
 type PayloadAuthPassword struct {
 	Username string `json:"username" yaml:"username"`

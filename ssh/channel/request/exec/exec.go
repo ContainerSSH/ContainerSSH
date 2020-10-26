@@ -2,7 +2,7 @@ package exec
 
 import (
 	"github.com/containerssh/containerssh/audit"
-	"github.com/containerssh/containerssh/audit/format"
+	audit2 "github.com/containerssh/containerssh/audit/format/audit"
 	"github.com/containerssh/containerssh/backend"
 	"github.com/containerssh/containerssh/log"
 	channelRequest "github.com/containerssh/containerssh/ssh/channel/request"
@@ -31,7 +31,7 @@ func (c ChannelRequestHandler) GetRequestObject() interface{} {
 
 func (c ChannelRequestHandler) HandleRequest(request interface{}, reply channelRequest.Reply, channel ssh.Channel, session backend.Session, auditChannel *audit.Channel) {
 	c.logger.DebugF("Exec request: %s", request.(*requestMsg).Exec)
-	auditChannel.Message(format.MessageType_ChannelRequestExec, format.PayloadChannelRequestExec{
+	auditChannel.Message(audit2.MessageType_ChannelRequestExec, audit2.PayloadChannelRequestExec{
 		Program: request.(*requestMsg).Exec,
 	})
 	err := util.Run(request.(*requestMsg).Exec, channel, session, c.logger, auditChannel)

@@ -3,7 +3,7 @@ package request
 import (
 	"fmt"
 	"github.com/containerssh/containerssh/audit"
-	"github.com/containerssh/containerssh/audit/format"
+	audit2 "github.com/containerssh/containerssh/audit/format/audit"
 
 	"github.com/containerssh/containerssh/log"
 
@@ -35,8 +35,8 @@ func (handler *Handler) getTypeHandler(requestType string) (*TypeHandler, error)
 		return &typeHandler, nil
 	}
 	handler.auditConnection.Message(
-		format.MessageType_GlobalRequestUnknown,
-		format.PayloadGlobalRequestUnknown{
+		audit2.MessageType_GlobalRequestUnknown,
+		audit2.PayloadGlobalRequestUnknown{
 			RequestType: requestType,
 		},
 	)

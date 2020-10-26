@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"flag"
 	"fmt"
-	"github.com/containerssh/containerssh/audit/format"
+	"github.com/containerssh/containerssh/audit/format/audit"
 	"log"
 	"os"
 )
@@ -28,9 +28,9 @@ func main() {
 		log.Fatalf("failed to open audit log file %s (%v)", file, err)
 	}
 
-	messages, errors, done := format.Decode(fh)
+	messages, errors, done := audit.Decode(fh)
 	for {
-		var msg *format.DecodedMessage
+		var msg *audit.DecodedMessage
 		select {
 		case msg = <-messages:
 			if msg == nil {

@@ -81,7 +81,7 @@ func (server *Server) Start() error {
 			server.logger,
 			server.logWriter,
 			metricCollector,
-			none.New(),
+			none.NewPlugin(),
 		)
 		if err != nil {
 			server.logger.EmergencyF("failed to create SSH server (%v)", err)
