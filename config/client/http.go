@@ -56,7 +56,7 @@ func NewHttpConfigClient(
 }
 
 func (client *HttpConfigClient) GetConfig(request protocol.ConfigRequest) (*protocol.ConfigResponse, error) {
-	client.logger.DebugF("Fetching configuration for connection for user %s", request.Username)
+	client.logger.DebugF("fetching configuration for connection for user %s", request.Username)
 	response := protocol.ConfigResponse{}
 	err := client.configServerRequest(request, &response)
 	if err != nil {

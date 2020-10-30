@@ -91,6 +91,12 @@ func main() {
 			logger.EmergencyF("error merging config (%v)", err)
 			os.Exit(1)
 		}
+
+		logConfig, err := log.NewConfig(appConfig.Log.Level)
+		if err != nil {
+			logger.EmergencyF("invalid log level in configuration: %s (%v)", appConfig.Log.Level, err)
+		}
+		logger.SetLogConfig(logConfig)
 	}
 
 	if dumpConfig {

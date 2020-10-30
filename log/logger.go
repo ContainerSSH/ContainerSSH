@@ -1,6 +1,7 @@
 package log
 
 type Logger interface {
+	SetLogConfig(config Config)
 	Debug(message string)
 	DebugF(format string, args ...interface{})
 	DebugE(err error)

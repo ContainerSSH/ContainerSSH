@@ -29,6 +29,9 @@ const (
 	LevelEmergencyString LevelString = "emerg"
 )
 
+func (level LevelString) ToLevel() (Level, error) {
+	return LevelFromString(level)
+}
 
 func LevelFromString(logLevelName LevelString) (Level, error) {
 	switch logLevelName {

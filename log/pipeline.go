@@ -7,6 +7,10 @@ type LoggerPipeline struct {
 	writer Writer
 }
 
+func (pipeline *LoggerPipeline) SetLogConfig(config Config) {
+	pipeline.config = config
+}
+
 type LoggerPipelineFactory struct {
 	writer Writer
 }
@@ -204,7 +208,6 @@ func (pipeline *LoggerPipeline) DebugD(data interface{}) {
 func (pipeline *LoggerPipeline) DebugF(format string, args ...interface{}) {
 	pipeline.writeF(LevelDebug, format, args...)
 }
-
 // endregion
 
 // region Log

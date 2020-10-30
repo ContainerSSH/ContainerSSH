@@ -7,6 +7,7 @@ CMD ["--config", "/etc/containerssh/config.yaml"]
 VOLUME /etc/containerssh
 VOLUME /var/secrets
 VOLUME /var/log/audit
+VOLUME /var/lib/audit
 USER 1022:1022
 EXPOSE 2222
 EXPOSE 9100

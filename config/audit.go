@@ -43,11 +43,13 @@ type AuditFileConfig struct {
 }
 
 type AuditS3Config struct {
+	Local           string `json:"local" yaml:"local" default:"/var/lib/audit"`
 	AccessKey       string `json:"accessKey" yaml:"accessKey"`
 	SecretKey       string `json:"secretKey" yaml:"secretKey"`
 	Bucket          string `json:"bucket" yaml:"bucket"`
 	Region          string `json:"region" yaml:"region"`
 	Endpoint        string `json:"endpoint" yaml:"endpoint"`
 	CaCert          string `json:"cacert" yaml:"cacert"`
-	UploadChunkSize int    `json:"uploadChunkSize" yaml:"uploadChunkSize"`
+	UploadPartSize  uint   `json:"uploadPartSize" yaml:"uploadPartSize"`
+	ParallelUploads uint   `json:"parallelUploads" yaml:"parallelUploads"`
 }

@@ -88,7 +88,7 @@ func (client *HttpAuthClient) Password(
 	//Remote address in IP:port format
 	remoteAddr net.IP,
 ) (*protocol.AuthResponse, error) {
-	client.logger.DebugF("Password authentication attempt user %s with public key for connection from %s", username, remoteAddr)
+	client.logger.DebugF("password authentication attempt user %s with public key for connection from %s", username, remoteAddr)
 	authRequest := protocol.PasswordAuthRequest{
 		User:          username,
 		Username:      username,
@@ -99,15 +99,15 @@ func (client *HttpAuthClient) Password(
 	authResponse := &protocol.AuthResponse{}
 	err := client.authServerRequest(client.endpoint+"/password", authRequest, authResponse)
 	if err != nil {
-		client.logger.DebugF("Failed password authentication for user %s with password for connection from %s", username, remoteAddr)
+		client.logger.DebugF("failed password authentication for user %s with password for connection from %s", username, remoteAddr.String())
 		return nil, err
 	}
-	client.logger.DebugF("Completed password authentication for user %s with password for connection from %s", username, remoteAddr)
+	client.logger.DebugF("completed password authentication for user %s with password for connection from %s", username, remoteAddr.String())
 	if authResponse.Success {
-		client.logger.DebugF("Authentication successful %s with password for connection from %s", username, remoteAddr)
+		client.logger.DebugF("authentication successful %s with password for connection from %s", username, remoteAddr.String())
 		client.metric.IncrementGeo(MetricAuthSuccessPassword, remoteAddr)
 	} else {
-		client.logger.DebugF("Authentication failed %s with password for connection from %s", username, remoteAddr)
+		client.logger.DebugF("authentication failed %s with password for connection from %s", username, remoteAddr.String())
 		client.metric.IncrementGeo(MetricAuthFailurePassword, remoteAddr)
 	}
 	return authResponse, nil
@@ -122,7 +122,7 @@ func (client *HttpAuthClient) PubKey(
 	//Remote address in IP:port format
 	remoteAddr net.IP,
 ) (*protocol.AuthResponse, error) {
-	client.logger.DebugF("Public key authentication attempt user %s with public key for connection from %s", username, remoteAddr)
+	client.logger.DebugF("public key authentication attempt user %s with public key for connection from %s", username, remoteAddr.String())
 	authRequest := protocol.PublicKeyAuthRequest{
 		User:          username,
 		Username:      username,
@@ -133,15 +133,15 @@ func (client *HttpAuthClient) PubKey(
 	authResponse := &protocol.AuthResponse{}
 	err := client.authServerRequest(client.endpoint+"/pubkey", authRequest, authResponse)
 	if err != nil {
-		client.logger.DebugF("Failed public key authentication for user %s with public key for connection from %s", username, remoteAddr)
+		client.logger.DebugF("failed public key authentication for user %s with public key for connection from %s", username, remoteAddr.String())
 		return nil, err
 	}
-	client.logger.DebugF("Completed password authentication for user %s with public key for connection from %s", username, remoteAddr)
+	client.logger.DebugF("completed password authentication for user %s with public key for connection from %s", username, remoteAddr.String())
 	if authResponse.Success {
-		client.logger.DebugF("Authentication successful %s with public key for connection from %s", username, remoteAddr)
+		client.logger.DebugF("authentication successful %s with public key for connection from %s", username, remoteAddr.String())
 		client.metric.IncrementGeo(MetricAuthSuccessPubkey, remoteAddr)
 	} else {
-		client.logger.DebugF("Authentication failed %s with public key for connection from %s", username, remoteAddr)
+		client.logger.DebugF("authentication failed %s with public key for connection from %s", username, remoteAddr.String())
 		client.metric.IncrementGeo(MetricAuthFailurePubkey, remoteAddr)
 	}
 	return authResponse, nil

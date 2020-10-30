@@ -5,6 +5,8 @@ import (
 	"crypto/x509"
 	"fmt"
 	"net/http"
+	"os"
+	"path/filepath"
 
 	"github.com/containerssh/containerssh/audit"
 	"github.com/containerssh/containerssh/config"
@@ -13,7 +15,6 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/credentials"
 	"github.com/aws/aws-sdk-go/aws/session"
-	"github.com/aws/aws-sdk-go/service/s3/s3manager"
 )
 
 func NewStorage(cfg config.AuditS3Config, logger log.Logger) (audit.Storage, error) {
@@ -59,19 +60,40 @@ func NewStorage(cfg config.AuditS3Config, logger log.Logger) (audit.Storage, err
 		HTTPClient: httpClient,
 	}
 
-	chunkSize := 5242880
-	if cfg.UploadChunkSize > 5*1024*1024 {
-		chunkSize = cfg.UploadChunkSize
+	partSize := uint(5242880)
+	if cfg.UploadPartSize > 5242880 {
+		partSize = cfg.UploadPartSize
+	}
+	parallelUploads := uint(20)
+	if cfg.ParallelUploads > 1 {
+		parallelUploads = cfg.ParallelUploads
 	}
 
 	sess := session.Must(session.NewSession(awsConfig))
-	uploader := s3manager.NewUploader(sess)
 
-	return &Storage{
-		session:   sess,
-		uploader:  uploader,
-		logger:    logger,
-		bucket:    cfg.Bucket,
-		chunkSize: chunkSize,
-	}, nil
+	queue := newUploadQueue(
+		cfg.Local,
+		partSize,
+		parallelUploads,
+		cfg.Bucket,
+		sess,
+		logger,
+	)
+
+	if _, err := os.Stat(cfg.Local); err != nil {
+		return nil, fmt.Errorf("invalid local audit directory %s (%v)", cfg.Local, err)
+	}
+
+	if err := filepath.Walk(cfg.Local, func(path string, info os.FileInfo, err error) error {
+		if !info.IsDir() && info.Size() > 0 {
+			if err := queue.recover(info.Name()); err != nil {
+				return fmt.Errorf("failed to enqueue old audit log file %s (%v)", info.Name(), err)
+			}
+		}
+		return nil
+	}); err != nil {
+		return nil, err
+	}
+
+	return queue, nil
 }

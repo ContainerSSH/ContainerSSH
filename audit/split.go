@@ -56,6 +56,7 @@ func (p *SplitAuditPlugin) Message(msg audit.Message) {
 	} else {
 		entry = e.(connectionEntry)
 	}
+
 	entry.messageChannel <- msg
 	if msg.MessageType == audit.MessageType_Disconnect {
 		close(entry.messageChannel)

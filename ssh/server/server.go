@@ -9,6 +9,7 @@ import (
 	"github.com/containerssh/containerssh/log"
 	"github.com/containerssh/containerssh/metrics"
 	"golang.org/x/crypto/ssh"
+	"io"
 	"net"
 )
 
@@ -447,7 +448,7 @@ func (server *Server) handleChannel(
 	}
 	defer func() {
 		err := channel.Close()
-		if err != nil {
+		if err != nil && err != io.EOF {
 			server.logger.DebugF("failed to close channel (%v)", err)
 		}
 	}()
