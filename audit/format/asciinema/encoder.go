@@ -69,7 +69,7 @@ func (e *encoder) Encode(messages <-chan auditFormat.Message, storage audit.Stor
 			username = &payload.Username
 			storage.SetMetadata(startTime/1000000000, ip, username)
 		case auditFormat.MessageType_AuthPubKeySuccessful:
-			payload := msg.Payload.(*auditFormat.PayloadAuthPassword)
+			payload := msg.Payload.(*auditFormat.PayloadAuthPubKey)
 			username = &payload.Username
 			storage.SetMetadata(startTime/1000000000, ip, username)
 		case auditFormat.MessageType_ChannelRequestSetEnv:

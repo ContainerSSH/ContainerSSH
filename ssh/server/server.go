@@ -229,6 +229,9 @@ func (server *Server) createConfig(auditConnection *audit.Connection) *ssh.Serve
 		NoClientAuth: server.serverConfig.NoClientAuth,
 		MaxAuthTries: server.serverConfig.MaxAuthTries,
 		PasswordCallback: func(conn ssh.ConnMetadata, password []byte) (*ssh.Permissions, error) {
+			if server.serverConfig.PasswordCallback == nil {
+				return nil, fmt.Errorf("password authentication is disabled")
+			}
 			var auditPassword []byte
 			if auditConnection.Intercept.Passwords {
 				auditPassword = password
@@ -259,6 +262,9 @@ func (server *Server) createConfig(auditConnection *audit.Connection) *ssh.Serve
 			return permissions, err
 		},
 		PublicKeyCallback: func(conn ssh.ConnMetadata, key ssh.PublicKey) (*ssh.Permissions, error) {
+			if server.serverConfig.PublicKeyCallback == nil {
+				return nil, fmt.Errorf("password authentication is disabled")
+			}
 			auditConnection.Message(audit2.MessageType_AuthPubKey, &audit2.PayloadAuthPubKey{
 				Username: conn.User(),
 				Key:      key.Marshal(),

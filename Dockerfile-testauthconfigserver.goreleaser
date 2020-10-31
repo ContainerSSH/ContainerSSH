@@ -5,4 +5,4 @@ COPY NOTICE.md /
 ENTRYPOINT ["/containerssh-testauthconfigserver"]
 CMD []
 USER 1080:1080
-EXPOSE 9090
+EXPOSE 8080
