@@ -98,7 +98,7 @@ func Decode(reader io.Reader) (<-chan *DecodedMessage, <-chan error, <-chan bool
 			case MessageType_ChannelRequestWindow:
 				payload = &PayloadChannelRequestWindow{}
 			case MessageType_IO:
-				payload = &MessageIO{}
+				payload = &PayloadIO{}
 			default:
 				errors <- fmt.Errorf("invalid message type: %d", v.MessageType)
 			}

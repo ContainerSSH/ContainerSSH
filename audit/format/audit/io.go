@@ -8,7 +8,7 @@ const (
 	Stream_StdErr Stream = 2
 )
 
-type MessageIO struct {
+type PayloadIO struct {
 	Stream Stream `json:"stream" yaml:"stream"`
 	Data   []byte `json:"data" yaml:"data"`
 }

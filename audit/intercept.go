@@ -14,7 +14,7 @@ type interceptingReader struct {
 func (i *interceptingReader) Read(p []byte) (n int, err error) {
 	n, err = i.backend.Read(p)
 	if n > 0 {
-		i.channel.Message(audit.MessageType_IO, audit.MessageIO{
+		i.channel.Message(audit.MessageType_IO, &audit.PayloadIO{
 			Stream: i.stream,
 			Data:   p[0:n],
 		})
@@ -30,7 +30,7 @@ type interceptingWriter struct {
 
 func (i *interceptingWriter) Write(p []byte) (n int, err error) {
 	if len(p) > 0 {
-		i.channel.Message(audit.MessageType_IO, audit.MessageIO{
+		i.channel.Message(audit.MessageType_IO, &audit.PayloadIO{
 			Stream: i.stream,
 			Data:   p,
 		})
