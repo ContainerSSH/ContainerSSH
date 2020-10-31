@@ -2,7 +2,6 @@ package audit
 
 import (
 	"encoding/hex"
-	"io"
 	"sync"
 
 	"github.com/containerssh/containerssh/audit/format/audit"
@@ -26,7 +25,7 @@ type SplitAuditPlugin struct {
 }
 
 type connectionEntry struct {
-	writer         io.WriteCloser
+	writer         StorageWriter
 	messageChannel chan audit.Message
 }
 

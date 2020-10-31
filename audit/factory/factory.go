@@ -2,10 +2,10 @@ package factory
 
 import (
 	"fmt"
+	"github.com/containerssh/containerssh/audit/format"
 
 	"github.com/containerssh/containerssh/audit"
 	"github.com/containerssh/containerssh/audit/format/asciinema"
-	auditFormat "github.com/containerssh/containerssh/audit/format/audit"
 	"github.com/containerssh/containerssh/audit/none"
 	"github.com/containerssh/containerssh/audit/storage/file"
 	"github.com/containerssh/containerssh/audit/storage/s3"
@@ -33,7 +33,7 @@ func GetEncoder(cfg config.AuditConfig, logger containersshLog.Logger) (audit.En
 	case config.AuditFormat_Asciinema:
 		return asciinema.NewEncoder(logger)
 	case config.AuditFormat_Audit:
-		return auditFormat.NewEncoder(logger)
+		return format.NewEncoder(logger)
 	default:
 		return nil, fmt.Errorf("invalid audit log format: %s", cfg.Format)
 	}

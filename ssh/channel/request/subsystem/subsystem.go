@@ -36,7 +36,7 @@ func (c ChannelRequestHandler) GetRequestObject() interface{} {
 
 func (c ChannelRequestHandler) HandleRequest(request interface{}, reply channelRequest.Reply, channel ssh.Channel, session backend.Session, auditChannel *audit.Channel) {
 	c.logger.DebugF("subsystem request: %s", request.(*requestMsg).Subsystem)
-	auditChannel.Message(audit2.MessageType_ChannelRequestSubsystem, audit2.PayloadChannelRequestSubsystem{
+	auditChannel.Message(audit2.MessageType_ChannelRequestSubsystem, &audit2.PayloadChannelRequestSubsystem{
 		Subsystem: request.(*requestMsg).Subsystem,
 	})
 	var mutex = &sync.Mutex{}

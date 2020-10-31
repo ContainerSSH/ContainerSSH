@@ -233,25 +233,25 @@ func (server *Server) createConfig(auditConnection *audit.Connection) *ssh.Serve
 			if auditConnection.Intercept.Passwords {
 				auditPassword = password
 			}
-			auditConnection.Message(audit2.MessageType_AuthPassword, audit2.PayloadAuthPassword{
+			auditConnection.Message(audit2.MessageType_AuthPassword, &audit2.PayloadAuthPassword{
 				Username: conn.User(),
 				Password: auditPassword,
 			})
 			permissions, err := server.serverConfig.PasswordCallback(conn, password)
 			if err != nil {
 				if err == ErrorAuthenticationFailed {
-					auditConnection.Message(audit2.MessageType_AuthPasswordFailed, audit2.PayloadAuthPassword{
+					auditConnection.Message(audit2.MessageType_AuthPasswordFailed, &audit2.PayloadAuthPassword{
 						Username: conn.User(),
 						Password: auditPassword,
 					})
 				} else {
-					auditConnection.Message(audit2.MessageType_AuthPasswordBackendError, audit2.PayloadAuthPassword{
+					auditConnection.Message(audit2.MessageType_AuthPasswordBackendError, &audit2.PayloadAuthPassword{
 						Username: conn.User(),
 						Password: auditPassword,
 					})
 				}
 			} else {
-				auditConnection.Message(audit2.MessageType_AuthPasswordSuccessful, audit2.PayloadAuthPassword{
+				auditConnection.Message(audit2.MessageType_AuthPasswordSuccessful, &audit2.PayloadAuthPassword{
 					Username: conn.User(),
 					Password: auditPassword,
 				})
@@ -259,25 +259,25 @@ func (server *Server) createConfig(auditConnection *audit.Connection) *ssh.Serve
 			return permissions, err
 		},
 		PublicKeyCallback: func(conn ssh.ConnMetadata, key ssh.PublicKey) (*ssh.Permissions, error) {
-			auditConnection.Message(audit2.MessageType_AuthPubKey, audit2.PayloadAuthPubKey{
+			auditConnection.Message(audit2.MessageType_AuthPubKey, &audit2.PayloadAuthPubKey{
 				Username: conn.User(),
 				Key:      key.Marshal(),
 			})
 			permissions, err := server.serverConfig.PublicKeyCallback(conn, key)
 			if err != nil {
 				if err == ErrorAuthenticationFailed {
-					auditConnection.Message(audit2.MessageType_AuthPubKeyFailed, audit2.PayloadAuthPubKey{
+					auditConnection.Message(audit2.MessageType_AuthPubKeyFailed, &audit2.PayloadAuthPubKey{
 						Username: conn.User(),
 						Key:      key.Marshal(),
 					})
 				} else {
-					auditConnection.Message(audit2.MessageType_AuthPubKeyBackendError, audit2.PayloadAuthPubKey{
+					auditConnection.Message(audit2.MessageType_AuthPubKeyBackendError, &audit2.PayloadAuthPubKey{
 						Username: conn.User(),
 						Key:      key.Marshal(),
 					})
 				}
 			} else {
-				auditConnection.Message(audit2.MessageType_AuthPubKeySuccessful, audit2.PayloadAuthPubKey{
+				auditConnection.Message(audit2.MessageType_AuthPubKeySuccessful, &audit2.PayloadAuthPubKey{
 					Username: conn.User(),
 					Key:      key.Marshal(),
 				})
@@ -322,7 +322,7 @@ func (server *Server) Run(ctx context.Context) error {
 				_ = tcpConn.Close()
 				continue
 			}
-			auditConnection.Message(audit2.MessageType_Connect, audit2.PayloadConnect{
+			auditConnection.Message(audit2.MessageType_Connect, &audit2.PayloadConnect{
 				RemoteAddr: ip.String(),
 			})
 			server.metric.IncrementGeo(MetricConnections, ip)
@@ -419,7 +419,7 @@ func (server *Server) handleChannel(
 	auditConnection *audit.Connection,
 ) {
 	if channelHandler == nil {
-		auditConnection.Message(audit2.MessageType_ChannelRequestUnknownType, audit2.PayloadNewChannel{
+		auditConnection.Message(audit2.MessageType_ChannelRequestUnknownType, &audit2.PayloadNewChannel{
 			ChannelType: newChannel.ChannelType(),
 		})
 		err := newChannel.Reject(ssh.UnknownChannelType, "no channel channelRequestHandler")

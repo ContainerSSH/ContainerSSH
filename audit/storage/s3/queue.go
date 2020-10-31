@@ -1,10 +1,13 @@
 package s3
 
 import (
+	"encoding/json"
 	"fmt"
+	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
+	"github.com/containerssh/containerssh/audit"
 	"github.com/containerssh/containerssh/log"
-	"io"
+	"io/ioutil"
 	"os"
 	"path"
 	"sync"
@@ -13,7 +16,28 @@ import (
 var minPartSize = uint(5 * 1024 * 1024)
 var maxPartSize = uint(5 * 1024 * 1024 * 1024)
 
+type queueEntryMetadata struct {
+	StartTime     int64  `json:"startTime" yaml:"startTime"`
+	RemoteAddr    string `json:"remoteAddr" yaml:"remoteAddr"`
+	Authenticated bool   `json:"authenticated" yaml:"authenticated"`
+	Username      string `json:"username" yaml:"username"`
+}
+
+func (meta queueEntryMetadata) ToMap() map[string]*string {
+	var username *string
+	if meta.Authenticated {
+		username = &meta.Username
+	}
+	return map[string]*string{
+		"timestamp":     aws.String(fmt.Sprintf("%d", meta.StartTime)),
+		"ip":            aws.String(meta.RemoteAddr),
+		"authenticated": aws.String(fmt.Sprintf("%t", meta.Authenticated)),
+		"username":      username,
+	}
+}
+
 type queueEntry struct {
+	logger        log.Logger
 	name          string
 	progress      int64
 	finished      bool
@@ -21,6 +45,7 @@ type queueEntry struct {
 	writeHandle   *os.File
 	partAvailable chan bool
 	file          string
+	metadata      queueEntryMetadata
 }
 
 // This method marks the the part as available if it has not been marked yet. This unfreezes the upload loop waiting in
@@ -47,6 +72,9 @@ func (e *queueEntry) remove() error {
 	}
 	if err := os.Remove(e.file); err != nil {
 		return fmt.Errorf("failed to remove audit log file %s (%v)", e.name, err)
+	}
+	if err := os.Remove(fmt.Sprintf("%s.metadata.json", e.file)); err != nil {
+		e.logger.WarningF("failed to remove audit log metadata file %s (%v)", e.name, err)
 	}
 	return nil
 }
@@ -99,7 +127,7 @@ func newUploadQueue(
 	}
 }
 
-func (q *uploadQueue) Open(name string) (io.WriteCloser, error) {
+func (q *uploadQueue) Open(name string) (audit.StorageWriter, error) {
 	file := path.Join(q.directory, name)
 	writeHandle, err := os.Create(file)
 	if err != nil {
@@ -110,6 +138,7 @@ func (q *uploadQueue) Open(name string) (io.WriteCloser, error) {
 		return nil, err
 	}
 	entry := &queueEntry{
+		logger:        q.logger,
 		name:          name,
 		file:          file,
 		progress:      0,
@@ -117,6 +146,12 @@ func (q *uploadQueue) Open(name string) (io.WriteCloser, error) {
 		readHandle:    readHandle,
 		writeHandle:   writeHandle,
 		partAvailable: make(chan bool, 1),
+		metadata: queueEntryMetadata{
+			StartTime:     0,
+			RemoteAddr:    "",
+			Authenticated: false,
+			Username:      "",
+		},
 	}
 	q.queue.Store(name, entry)
 	err = q.upload(name)
@@ -127,6 +162,38 @@ func (q *uploadQueue) Open(name string) (io.WriteCloser, error) {
 	return newMonitoringWriter(
 		writeHandle,
 		q.partSize,
+		func(startTime int64, remoteAddr string, username *string) {
+			entry.metadata.StartTime = startTime
+			entry.metadata.RemoteAddr = remoteAddr
+			if username == nil {
+				entry.metadata.Authenticated = false
+				entry.metadata.Username = ""
+			} else {
+				entry.metadata.Authenticated = true
+				entry.metadata.Username = *username
+			}
+
+			metadataFile := fmt.Sprintf("%s.metadata.json", file)
+			metadataFileHandle, err := os.Create(metadataFile)
+			if err != nil {
+				q.logger.WarningF("failed to create local audit log %s metadata file (%v)", name, err)
+			} else {
+				defer func() {
+					if err := metadataFileHandle.Close(); err != nil {
+						q.logger.WarningF("failed to close audit log %s metadata file (%v)", name, err)
+					}
+				}()
+				jsonData, err := json.Marshal(entry.metadata)
+				if err != nil {
+					q.logger.WarningF("failed to encode audit log %s metadata to JSON (%v)", name, err)
+				} else {
+					_, err := metadataFileHandle.Write(jsonData)
+					if err != nil {
+						q.logger.WarningF("failed to write audit log %s metadata file (%v)", name, err)
+					}
+				}
+			}
+		},
 		func() {
 			entry.markPartAvailable()
 		},
@@ -162,9 +229,27 @@ func (q *uploadQueue) recover(name string) error {
 	if err = q.abortMultiPartUpload(name); err != nil {
 		return fmt.Errorf("failed to recover upload for audit log %s (%v)", name, err)
 	}
+	metadata := &queueEntryMetadata{}
+	metadataHandle, err := os.Open(fmt.Sprintf("%s.metadata.json", file))
+	if err == nil {
+		readBytes, err := ioutil.ReadAll(metadataHandle)
+		if err != nil {
+			q.logger.WarningF("failed to read audit log %s metadata file (%v)", name, err)
+		} else {
+			if err := json.Unmarshal(readBytes, metadata); err != nil {
+				q.logger.WarningF("failed to unmarshal audit log %s JSON (%v)", name, err)
+			}
+		}
+		if err := metadataHandle.Close(); err != nil {
+			q.logger.WarningF("failed to close audit log %s metadata file (%v)", name, err)
+		}
+	} else {
+		q.logger.WarningF("metadata file for recovered audit log %s failed to open (%v)", name, err)
+	}
 
 	// Create a new upload
 	entry := &queueEntry{
+		logger:        q.logger,
 		name:          name,
 		file:          file,
 		progress:      0,
@@ -172,6 +257,7 @@ func (q *uploadQueue) recover(name string) error {
 		readHandle:    readHandle,
 		writeHandle:   nil,
 		partAvailable: make(chan bool, 1),
+		metadata:      *metadata,
 	}
 	q.queue.Store(name, entry)
 	entry.markPartAvailable()

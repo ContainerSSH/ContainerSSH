@@ -2,6 +2,7 @@ package asciinema
 
 import (
 	"encoding/json"
+	"github.com/containerssh/containerssh/audit"
 	auditFormat "github.com/containerssh/containerssh/audit/format/audit"
 	"github.com/containerssh/containerssh/log"
 	"io"
@@ -35,7 +36,7 @@ func (e *encoder) sendFrame(frame AsciicastFrame, storage io.Writer) {
 	}
 }
 
-func (e *encoder) Encode(messages <-chan auditFormat.Message, storage io.Writer) {
+func (e *encoder) Encode(messages <-chan auditFormat.Message, storage audit.StorageWriter) {
 	asciicastHeader := AsciicastHeader{
 		Version:   2,
 		Width:     80,
@@ -47,6 +48,8 @@ func (e *encoder) Encode(messages <-chan auditFormat.Message, storage io.Writer)
 	}
 	startTime := int64(0)
 	headerSent := false
+	var ip = ""
+	var username *string
 	for {
 		msg, ok := <-messages
 		if !ok {
@@ -57,11 +60,23 @@ func (e *encoder) Encode(messages <-chan auditFormat.Message, storage io.Writer)
 			asciicastHeader.Timestamp = int(startTime / 1000000000)
 		}
 		switch msg.MessageType {
+		case auditFormat.MessageType_Connect:
+			payload := msg.Payload.(*auditFormat.PayloadConnect)
+			ip = payload.RemoteAddr
+			storage.SetMetadata(startTime/1000000000, ip, username)
+		case auditFormat.MessageType_AuthPasswordSuccessful:
+			payload := msg.Payload.(*auditFormat.PayloadAuthPassword)
+			username = &payload.Username
+			storage.SetMetadata(startTime/1000000000, ip, username)
+		case auditFormat.MessageType_AuthPubKeySuccessful:
+			payload := msg.Payload.(*auditFormat.PayloadAuthPassword)
+			username = &payload.Username
+			storage.SetMetadata(startTime/1000000000, ip, username)
 		case auditFormat.MessageType_ChannelRequestSetEnv:
 			if headerSent {
 				break
 			}
-			payload := msg.Payload.(auditFormat.PayloadChannelRequestSetEnv)
+			payload := msg.Payload.(*auditFormat.PayloadChannelRequestSetEnv)
 			asciicastHeader.Env[payload.Name] = payload.Value
 		case auditFormat.MessageType_ChannelRequestPty:
 			if headerSent {

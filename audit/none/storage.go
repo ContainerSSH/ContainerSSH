@@ -2,7 +2,6 @@ package none
 
 import (
 	"github.com/containerssh/containerssh/audit"
-	"io"
 )
 
 func NewStorage() audit.Storage {
@@ -12,17 +11,20 @@ func NewStorage() audit.Storage {
 type Storage struct {
 }
 
-func (s Storage) Open(_ string) (io.WriteCloser, error) {
+func (s Storage) Open(_ string) (audit.StorageWriter, error) {
 	return &NullWriteCloser{}, nil
 }
 
 type NullWriteCloser struct {
 }
 
-func (n2 NullWriteCloser) Write(p []byte) (n int, err error) {
+func (w *NullWriteCloser) SetMetadata(_ int64, _ string, _ *string) {
+}
+
+func (w *NullWriteCloser) Write(p []byte) (n int, err error) {
 	return len(p), nil
 }
 
-func (n2 NullWriteCloser) Close() error {
+func (w *NullWriteCloser) Close() error {
 	return nil
 }

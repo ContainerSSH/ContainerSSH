@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"github.com/containerssh/containerssh/audit"
 	"github.com/containerssh/containerssh/config"
@@ -76,6 +77,7 @@ func NewStorage(cfg config.AuditS3Config, logger log.Logger) (audit.Storage, err
 		partSize,
 		parallelUploads,
 		cfg.Bucket,
+		cfg.ACL,
 		sess,
 		logger,
 	)
@@ -85,7 +87,7 @@ func NewStorage(cfg config.AuditS3Config, logger log.Logger) (audit.Storage, err
 	}
 
 	if err := filepath.Walk(cfg.Local, func(path string, info os.FileInfo, err error) error {
-		if !info.IsDir() && info.Size() > 0 {
+		if !info.IsDir() && info.Size() > 0 && !strings.Contains(info.Name(), ".") {
 			if err := queue.recover(info.Name()); err != nil {
 				return fmt.Errorf("failed to enqueue old audit log file %s (%v)", info.Name(), err)
 			}

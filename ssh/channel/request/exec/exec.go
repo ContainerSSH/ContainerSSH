@@ -31,7 +31,7 @@ func (c ChannelRequestHandler) GetRequestObject() interface{} {
 
 func (c ChannelRequestHandler) HandleRequest(request interface{}, reply channelRequest.Reply, channel ssh.Channel, session backend.Session, auditChannel *audit.Channel) {
 	c.logger.DebugF("Exec request: %s", request.(*requestMsg).Exec)
-	auditChannel.Message(audit2.MessageType_ChannelRequestExec, audit2.PayloadChannelRequestExec{
+	auditChannel.Message(audit2.MessageType_ChannelRequestExec, &audit2.PayloadChannelRequestExec{
 		Program: request.(*requestMsg).Exec,
 	})
 	err := util.Run(request.(*requestMsg).Exec, channel, session, c.logger, auditChannel)

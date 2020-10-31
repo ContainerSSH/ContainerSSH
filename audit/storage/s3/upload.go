@@ -10,13 +10,14 @@ import (
 	"github.com/aws/aws-sdk-go/service/s3"
 )
 
-func (q *uploadQueue) initializeMultiPartUpload(s3Connection *s3.S3, name string) (*string, error) {
+func (q *uploadQueue) initializeMultiPartUpload(s3Connection *s3.S3, name string, metadata queueEntryMetadata) (*string, error) {
 	q.logger.DebugF("initializing multipart upload for audit log %s...", name)
 	multipartUpload, err := s3Connection.CreateMultipartUpload(&s3.CreateMultipartUploadInput{
 		Bucket:      aws.String(q.bucket),
 		Key:         aws.String(name),
 		ContentType: aws.String("application/octet-stream"),
 		ACL:         q.acl,
+		Metadata:    metadata.ToMap(),
 	})
 	if err != nil {
 		q.logger.WarningF("failed to upload audit log file %s (%v)", name, err)
@@ -55,7 +56,7 @@ func (q *uploadQueue) processMultiPartUploadPart(
 	return contentLength, etag, nil
 }
 
-func (q *uploadQueue) processSingleUpload(s3Connection *s3.S3, name string, handle *os.File) (int64, error) {
+func (q *uploadQueue) processSingleUpload(s3Connection *s3.S3, name string, handle *os.File, metadata queueEntryMetadata) (int64, error) {
 	q.logger.DebugF("processing single upload for audit log %s...", name)
 	stat, err := handle.Stat()
 	if err != nil {
@@ -67,6 +68,7 @@ func (q *uploadQueue) processSingleUpload(s3Connection *s3.S3, name string, hand
 		Key:         aws.String(name),
 		ContentType: aws.String("application/octet-stream"),
 		ACL:         q.acl,
+		Metadata:    metadata.ToMap(),
 	})
 	if err != nil {
 		q.logger.DebugF("single upload failed for audit log %s (%v)", name, err)
@@ -128,7 +130,7 @@ func (q *uploadQueue) upload(name string) error {
 			if !errorHappened {
 				if entry.finished && uploadedBytes == 0 {
 					// If the entry is finished and nothing has been uploaded yet, upload it as a single file.
-					partBytes, err := q.processSingleUpload(s3Connection, name, entry.readHandle)
+					partBytes, err := q.processSingleUpload(s3Connection, name, entry.readHandle, entry.metadata)
 					if err != nil {
 						q.logger.WarningF("failed to upload audit log %s (%v)", name, err)
 						errorHappened = true
@@ -139,7 +141,7 @@ func (q *uploadQueue) upload(name string) error {
 					// If the entry is finished and there are bytes remaining, upload. Otherwise, we only upload if
 					// more than the part size is available.
 					if uploadId == nil {
-						uploadId, err = q.initializeMultiPartUpload(s3Connection, name)
+						uploadId, err = q.initializeMultiPartUpload(s3Connection, name, entry.metadata)
 						if err != nil {
 							errorHappened = true
 						}

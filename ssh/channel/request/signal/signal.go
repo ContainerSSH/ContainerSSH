@@ -30,7 +30,7 @@ func (e ChannelRequestHandler) GetRequestObject() interface{} {
 
 func (e ChannelRequestHandler) HandleRequest(request interface{}, reply channelRequest.Reply, _ ssh.Channel, session backend.Session, auditChannel *audit.Channel) {
 	e.logger.DebugF("Signal request: %s", request.(*requestMsg).signal)
-	auditChannel.Message(audit2.MessageType_ChannelRequestSignal, audit2.PayloadChannelRequestSignal{
+	auditChannel.Message(audit2.MessageType_ChannelRequestSignal, &audit2.PayloadChannelRequestSignal{
 		Signal: request.(*requestMsg).signal,
 	})
 	//todo should the list of signals allowed be filtered?

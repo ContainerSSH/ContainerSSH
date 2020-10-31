@@ -3,7 +3,6 @@ package none
 import (
 	"github.com/containerssh/containerssh/audit"
 	auditFormat "github.com/containerssh/containerssh/audit/format/audit"
-	"io"
 )
 
 func NewEncoder() (audit.Encoder, error) {
@@ -13,7 +12,7 @@ func NewEncoder() (audit.Encoder, error) {
 type Encoder struct {
 }
 
-func (e Encoder) Encode(messages <-chan auditFormat.Message, _ io.Writer) {
+func (e Encoder) Encode(messages <-chan auditFormat.Message, _ audit.StorageWriter) {
 	for {
 		msg, ok := <-messages
 		if !ok {

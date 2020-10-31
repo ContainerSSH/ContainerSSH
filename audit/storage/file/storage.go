@@ -1,7 +1,7 @@
 package file
 
 import (
-	"io"
+	"github.com/containerssh/containerssh/audit"
 	"os"
 	"path"
 )
@@ -10,6 +10,6 @@ type Storage struct {
 	directory string
 }
 
-func (s Storage) Open(name string) (io.WriteCloser, error) {
-	return os.Create(path.Join(s.directory, name))
+func (s Storage) Open(name string) (audit.StorageWriter, error) {
+	return audit.NewStorageWriterProxy(os.Create(path.Join(s.directory, name)))
 }
