@@ -6,7 +6,7 @@
 //     Schemes: http, https
 //     Host: localhost
 //     BasePath: /
-//     Version: 0.3.0
+//     Version: 0.3.1
 //
 //     Consumes:
 //     - application/json
@@ -62,7 +62,9 @@ func (s *authConfigServer) authPassword(w http.ResponseWriter, req *http.Request
 	authResponse := protocol.AuthResponse{
 		Success: false,
 	}
-	if authRequest.User == "foo" || authRequest.User == "busybox" {
+	if os.Getenv("CONTAINERSSH_ALLOW_ALL") != "0" && os.Getenv("CONTAINERSSH_ALLOW_ALL") != "" {
+		authResponse.Success = true
+	} else if authRequest.User == "foo" || authRequest.User == "busybox" {
 		authResponse.Success = true
 	}
 
@@ -98,7 +100,9 @@ func (s *authConfigServer) authPublicKey(w http.ResponseWriter, req *http.Reques
 	authResponse := protocol.AuthResponse{
 		Success: false,
 	}
-	if authRequest.Username == "foo" || authRequest.Username == "busybox" {
+	if os.Getenv("CONTAINERSSH_ALLOW_ALL") != "0" && os.Getenv("CONTAINERSSH_ALLOW_ALL") != "" {
+		authResponse.Success = true
+	} else if authRequest.User == "foo" || authRequest.User == "busybox" {
 		authResponse.Success = true
 	}
 
