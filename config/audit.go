@@ -50,6 +50,7 @@ type AuditS3Config struct {
 	Region          string `json:"region" yaml:"region"`
 	Endpoint        string `json:"endpoint" yaml:"endpoint"`
 	CaCert          string `json:"cacert" yaml:"cacert"`
+	ACL             string `json:"acl" yaml:"acl"`
 	UploadPartSize  uint   `json:"uploadPartSize" yaml:"uploadPartSize"`
 	ParallelUploads uint   `json:"parallelUploads" yaml:"parallelUploads"`
 }

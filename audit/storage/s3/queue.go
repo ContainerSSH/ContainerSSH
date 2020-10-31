@@ -27,14 +27,14 @@ type queueEntry struct {
 // waitPartAvailable()
 func (e *queueEntry) markPartAvailable() {
 	select {
-		case e.partAvailable <- true:
-		default:
+	case e.partAvailable <- true:
+	default:
 	}
 }
 
 // This method waits for the next part to be available.
 func (e *queueEntry) waitPartAvailable() {
-	<- e.partAvailable
+	<-e.partAvailable
 }
 
 func (e *queueEntry) remove() error {
@@ -50,6 +50,7 @@ func (e *queueEntry) remove() error {
 	}
 	return nil
 }
+
 type uploadQueue struct {
 	directory       string
 	parallelUploads uint
@@ -58,6 +59,7 @@ type uploadQueue struct {
 	logger          log.Logger
 	awsSession      *session.Session
 	bucket          string
+	acl             *string
 	// queue map[string]*queueEntry
 	queue sync.Map
 }
@@ -67,6 +69,7 @@ func newUploadQueue(
 	partSize uint,
 	parallelUploads uint,
 	bucket string,
+	acl string,
 	awsSession *session.Session,
 	logger log.Logger,
 ) *uploadQueue {
@@ -79,6 +82,10 @@ func newUploadQueue(
 	if parallelUploads < 1 {
 		parallelUploads = 1
 	}
+	var realAcl *string = nil
+	if acl != "" {
+		realAcl = &acl
+	}
 	return &uploadQueue{
 		directory:       directory,
 		parallelUploads: parallelUploads,
@@ -88,6 +95,7 @@ func newUploadQueue(
 		awsSession:      awsSession,
 		bucket:          bucket,
 		queue:           sync.Map{},
+		acl:             realAcl,
 	}
 }
 
@@ -157,16 +165,15 @@ func (q *uploadQueue) recover(name string) error {
 
 	// Create a new upload
 	entry := &queueEntry{
-		name:        name,
-		file:        file,
-		progress:    0,
-		finished:    true,
-		readHandle:  readHandle,
-		writeHandle: nil,
+		name:          name,
+		file:          file,
+		progress:      0,
+		finished:      true,
+		readHandle:    readHandle,
+		writeHandle:   nil,
 		partAvailable: make(chan bool, 1),
 	}
 	q.queue.Store(name, entry)
 	entry.markPartAvailable()
 	return q.upload(name)
 }
-

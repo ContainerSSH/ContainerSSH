@@ -16,6 +16,7 @@ func (q *uploadQueue) initializeMultiPartUpload(s3Connection *s3.S3, name string
 		Bucket:      aws.String(q.bucket),
 		Key:         aws.String(name),
 		ContentType: aws.String("application/octet-stream"),
+		ACL:         q.acl,
 	})
 	if err != nil {
 		q.logger.WarningF("failed to upload audit log file %s (%v)", name, err)
@@ -65,6 +66,7 @@ func (q *uploadQueue) processSingleUpload(s3Connection *s3.S3, name string, hand
 		Bucket:      aws.String(q.bucket),
 		Key:         aws.String(name),
 		ContentType: aws.String("application/octet-stream"),
+		ACL:         q.acl,
 	})
 	if err != nil {
 		q.logger.DebugF("single upload failed for audit log %s (%v)", name, err)
@@ -77,12 +79,12 @@ func (q *uploadQueue) processSingleUpload(s3Connection *s3.S3, name string, hand
 func (q *uploadQueue) finalizeUpload(s3Connection *s3.S3, name string, uploadId string, completedParts []*s3.CompletedPart) error {
 	q.logger.DebugF("finalizing multipart upload for audit log %s...", name)
 	_, err := s3Connection.CompleteMultipartUpload(&s3.CompleteMultipartUploadInput{
-		Bucket:          aws.String(q.bucket),
-		Key:             aws.String(name),
+		Bucket: aws.String(q.bucket),
+		Key:    aws.String(name),
 		MultipartUpload: &s3.CompletedMultipartUpload{
 			Parts: completedParts,
 		},
-		UploadId:        aws.String(uploadId),
+		UploadId: aws.String(uploadId),
 	})
 	if err != nil {
 		q.logger.WarningF("finalizing multipart upload failed for audit log %s (%v)", name, err)
