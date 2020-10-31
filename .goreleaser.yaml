@@ -79,10 +79,8 @@ dockers:
     image_templates:
       - "containerssh/containerssh:latest"
       - "containerssh/containerssh:{{ .Major }}.{{ .Minor }}"
-      - "containerssh/containerssh:{{ .Tag }}"
       - "docker.pkg.github.com/containerssh/containerssh/containerssh:latest"
       - "docker.pkg.github.com/containerssh/containerssh/containerssh:{{ .Major }}.{{ .Minor }}"
-      - "docker.pkg.github.com/containerssh/containerssh/containerssh:{{ .Tag }}"
     dockerfile: Dockerfile.goreleaser
     builds:
       - containerssh-linux
@@ -103,10 +101,8 @@ dockers:
     image_templates:
       - "containerssh/containerssh-test-authconfig:latest"
       - "containerssh/containerssh-test-authconfig:{{ .Major }}.{{ .Minor }}"
-      - "containerssh/containerssh-test-authconfig:{{ .Tag }}"
       - "docker.pkg.github.com/containerssh/containerssh/containerssh-test-authconfig:latest"
       - "docker.pkg.github.com/containerssh/containerssh/containerssh-test-authconfig:{{ .Major }}.{{ .Minor }}"
-      - "docker.pkg.github.com/containerssh/containerssh/containerssh-test-authconfig:{{ .Tag }}"
     dockerfile: Dockerfile-testauthconfigserver.goreleaser
     builds:
       - containerssh-testauthconfigserver
@@ -120,6 +116,46 @@ dockers:
       - "--label=org.opencontainers.image.version={{.Version}}"
       - "--label=org.opencontainers.image.documentation=https://containerssh.github.io"
     skip_push: auto
+  - goos: linux
+    goarch: amd64
+    binaries:
+      - containerssh
+    image_templates:
+      - "containerssh/containerssh:{{ .Tag }}"
+      - "docker.pkg.github.com/containerssh/containerssh/containerssh:{{ .Tag }}"
+    dockerfile: Dockerfile.goreleaser
+    builds:
+      - containerssh-linux
+    extra_files:
+      - LICENSE.md
+      - NOTICE.md
+    build_flag_templates:
+      - "--label=org.opencontainers.image.created={{.Date}}"
+      - "--label=org.opencontainers.image.name=ContainerSSH"
+      - "--label=org.opencontainers.image.revision={{.FullCommit}}"
+      - "--label=org.opencontainers.image.version={{.Version}}"
+      - "--label=org.opencontainers.image.documentation=https://containerssh.github.io"
+    skip_push: false
+  - goos: linux
+    goarch: amd64
+    binaries:
+      - containerssh-testauthconfigserver
+    image_templates:
+      - "containerssh/containerssh-test-authconfig:{{ .Tag }}"
+      - "docker.pkg.github.com/containerssh/containerssh/containerssh-test-authconfig:{{ .Tag }}"
+    dockerfile: Dockerfile-testauthconfigserver.goreleaser
+    builds:
+      - containerssh-testauthconfigserver
+    extra_files:
+      - LICENSE.md
+      - NOTICE.md
+    build_flag_templates:
+      - "--label=org.opencontainers.image.created={{.Date}}"
+      - "--label=org.opencontainers.image.name=ContainerSSH Auth-Config Server"
+      - "--label=org.opencontainers.image.revision={{.FullCommit}}"
+      - "--label=org.opencontainers.image.version={{.Version}}"
+      - "--label=org.opencontainers.image.documentation=https://containerssh.github.io"
+    skip_push: false
 nfpms:
   - vendor: Janos Pasztor
     homepage: https://pasztor.at
