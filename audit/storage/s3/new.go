@@ -78,6 +78,8 @@ func NewStorage(cfg config.AuditS3Config, logger log.Logger) (audit.Storage, err
 		parallelUploads,
 		cfg.Bucket,
 		cfg.ACL,
+		cfg.Metadata.Username,
+		cfg.Metadata.IP,
 		sess,
 		logger,
 	)

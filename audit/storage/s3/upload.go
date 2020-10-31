@@ -17,7 +17,7 @@ func (q *uploadQueue) initializeMultiPartUpload(s3Connection *s3.S3, name string
 		Key:         aws.String(name),
 		ContentType: aws.String("application/octet-stream"),
 		ACL:         q.acl,
-		Metadata:    metadata.ToMap(),
+		Metadata:    metadata.ToMap(q.metadataUsername, q.metadataIp),
 	})
 	if err != nil {
 		q.logger.WarningF("failed to upload audit log file %s (%v)", name, err)
@@ -68,7 +68,7 @@ func (q *uploadQueue) processSingleUpload(s3Connection *s3.S3, name string, hand
 		Key:         aws.String(name),
 		ContentType: aws.String("application/octet-stream"),
 		ACL:         q.acl,
-		Metadata:    metadata.ToMap(),
+		Metadata:    metadata.ToMap(q.metadataUsername, q.metadataIp),
 	})
 	if err != nil {
 		q.logger.DebugF("single upload failed for audit log %s (%v)", name, err)

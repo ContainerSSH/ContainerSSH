@@ -23,17 +23,22 @@ type queueEntryMetadata struct {
 	Username      string `json:"username" yaml:"username"`
 }
 
-func (meta queueEntryMetadata) ToMap() map[string]*string {
+func (meta queueEntryMetadata) ToMap(showUsername bool, showIp bool) map[string]*string {
 	var username *string
 	if meta.Authenticated {
 		username = &meta.Username
 	}
-	return map[string]*string{
+	metadata := map[string]*string{
 		"timestamp":     aws.String(fmt.Sprintf("%d", meta.StartTime)),
-		"ip":            aws.String(meta.RemoteAddr),
 		"authenticated": aws.String(fmt.Sprintf("%t", meta.Authenticated)),
-		"username":      username,
 	}
+	if showUsername {
+		metadata["username"] = username
+	}
+	if showIp {
+		metadata["ip"] = aws.String(meta.RemoteAddr)
+	}
+	return metadata
 }
 
 type queueEntry struct {
@@ -89,7 +94,9 @@ type uploadQueue struct {
 	bucket          string
 	acl             *string
 	// queue map[string]*queueEntry
-	queue sync.Map
+	queue            sync.Map
+	metadataIp       bool
+	metadataUsername bool
 }
 
 func newUploadQueue(
@@ -98,6 +105,8 @@ func newUploadQueue(
 	parallelUploads uint,
 	bucket string,
 	acl string,
+	metadataUsername bool,
+	metadataIp bool,
 	awsSession *session.Session,
 	logger log.Logger,
 ) *uploadQueue {
@@ -115,15 +124,17 @@ func newUploadQueue(
 		realAcl = &acl
 	}
 	return &uploadQueue{
-		directory:       directory,
-		parallelUploads: parallelUploads,
-		partSize:        partSize,
-		workerSem:       make(chan int, parallelUploads),
-		logger:          logger,
-		awsSession:      awsSession,
-		bucket:          bucket,
-		queue:           sync.Map{},
-		acl:             realAcl,
+		directory:        directory,
+		parallelUploads:  parallelUploads,
+		partSize:         partSize,
+		workerSem:        make(chan int, parallelUploads),
+		logger:           logger,
+		awsSession:       awsSession,
+		bucket:           bucket,
+		queue:            sync.Map{},
+		acl:              realAcl,
+		metadataIp:       metadataIp,
+		metadataUsername: metadataUsername,
 	}
 }
 
