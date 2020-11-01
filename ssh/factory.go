@@ -88,6 +88,12 @@ func NewServer(
 		serverConfig.HostKeys = append(serverConfig.HostKeys, private)
 	}
 
+	if config.Ssh.Banner != "" {
+		serverConfig.BannerCallback = func(conn ssh.ConnMetadata) string {
+			return config.Ssh.Banner
+		}
+	}
+
 	return server.New(
 		config.Listen,
 		serverConfig,

@@ -5,4 +5,5 @@ type SshConfig struct {
 	KexAlgorithms []string `json:"kex" yaml:"kex" default:"[\"curve25519-sha256@libssh.org\",\"ecdh-sha2-nistp521\",\"ecdh-sha2-nistp384\",\"ecdh-sha2-nistp256\"]" comment:"Key exchange algorithms to use"`
 	Macs          []string `json:"macs" yaml:"macs" default:"[\"hmac-sha2-256-etm@openssh.com\",\"hmac-sha2-256\",\"hmac-sha1\",\"hmac-sha1-96\"]" comment:"MAC algorithms to use"`
 	HostKeys      []string `json:"hostkeys" yaml:"hostkeys" comment:"Host key files to use. Files must be in PEM format."`
+	Banner        string   `json:"banner" yaml:"banner" comment:""`
 }
