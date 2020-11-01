@@ -88,7 +88,7 @@ func (client *HttpAuthClient) Password(
 	//Remote address in IP:port format
 	remoteAddr net.IP,
 ) (*protocol.AuthResponse, error) {
-	client.logger.DebugF("password authentication attempt user %s with public key for connection from %s", username, remoteAddr)
+	client.logger.DebugF("password authentication attempt user %s with public key for connection from %s", username, remoteAddr.String())
 	authRequest := protocol.PasswordAuthRequest{
 		User:          username,
 		Username:      username,

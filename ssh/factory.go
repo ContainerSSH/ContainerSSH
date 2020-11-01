@@ -34,11 +34,12 @@ func NewServer(
 
 	if config.Auth.Password {
 		serverConfig.PasswordCallback = func(conn ssh.ConnMetadata, password []byte) (*ssh.Permissions, error) {
+			remoteAddr := conn.RemoteAddr()
 			authResponse, err := authClient.Password(
 				conn.User(),
 				password,
 				conn.SessionID(),
-				net.ParseIP(conn.RemoteAddr().String()),
+				net.ParseIP(strings.SplitN(remoteAddr.String(), ":", 2)[0]),
 			)
 			if err != nil {
 				return nil, err
@@ -52,11 +53,12 @@ func NewServer(
 
 	if config.Auth.PubKey {
 		serverConfig.PublicKeyCallback = func(conn ssh.ConnMetadata, key ssh.PublicKey) (*ssh.Permissions, error) {
+			remoteAddr := conn.RemoteAddr()
 			authResponse, err := authClient.PubKey(
 				conn.User(),
 				key.Marshal(),
 				conn.SessionID(),
-				net.ParseIP(conn.RemoteAddr().String()),
+				net.ParseIP(strings.SplitN(remoteAddr.String(), ":", 2)[0]),
 			)
 			if err != nil {
 				return nil, err
