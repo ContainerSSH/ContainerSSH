@@ -229,6 +229,7 @@ func (q *uploadQueue) finish(name string) error {
 }
 
 func (q *uploadQueue) recover(name string) error {
+	q.logger.DebugF("recovering previously aborted upload for audit log %s...", name)
 	file := path.Join(q.directory, name)
 
 	readHandle, err := os.Open(file)

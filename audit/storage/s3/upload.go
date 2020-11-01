@@ -20,7 +20,7 @@ func (q *uploadQueue) initializeMultiPartUpload(s3Connection *s3.S3, name string
 		Metadata:    metadata.ToMap(q.metadataUsername, q.metadataIp),
 	})
 	if err != nil {
-		q.logger.WarningF("failed to upload audit log file %s (%v)", name, err)
+		q.logger.WarningF("failed to initialize audit log file upload %s (%v)", name, err)
 		return nil, err
 	}
 	return multipartUpload.UploadId, nil
@@ -62,20 +62,22 @@ func (q *uploadQueue) processSingleUpload(s3Connection *s3.S3, name string, hand
 	if err != nil {
 		return 0, fmt.Errorf("failed to upload audit log %s (%v)", name, err)
 	}
+	contentLength := stat.Size()
 	_, err = s3Connection.PutObject(&s3.PutObjectInput{
-		Body:        handle,
-		Bucket:      aws.String(q.bucket),
-		Key:         aws.String(name),
-		ContentType: aws.String("application/octet-stream"),
-		ACL:         q.acl,
-		Metadata:    metadata.ToMap(q.metadataUsername, q.metadataIp),
+		Body:          handle,
+		Bucket:        aws.String(q.bucket),
+		Key:           aws.String(name),
+		ContentLength: aws.Int64(contentLength),
+		ContentType:   aws.String("application/octet-stream"),
+		ACL:           q.acl,
+		Metadata:      metadata.ToMap(q.metadataUsername, q.metadataIp),
 	})
 	if err != nil {
 		q.logger.DebugF("single upload failed for audit log %s (%v)", name, err)
 	} else {
 		q.logger.DebugF("single upload complete for audit log %s", name)
 	}
-	return stat.Size(), err
+	return contentLength, err
 }
 
 func (q *uploadQueue) finalizeUpload(s3Connection *s3.S3, name string, uploadId string, completedParts []*s3.CompletedPart) error {
@@ -115,6 +117,9 @@ func (q *uploadQueue) upload(name string) error {
 			}
 			entry := rawEntry.(*queueEntry)
 			entry.waitPartAvailable()
+			if len(q.workerSem) == int(q.parallelUploads) {
+				q.logger.DebugF("upload queue is full, waiting to upload audit log %s", name)
+			}
 			q.workerSem <- 42
 			errorHappened = false
 
@@ -181,15 +186,24 @@ func (q *uploadQueue) upload(name string) error {
 							q.logger.WarningF("failed to remove queue entry (%v)", err)
 						}
 						q.queue.Delete(name)
+						<-q.workerSem
 						break
 					}
 				}
 			}
 
+			stat, err = entry.readHandle.Stat()
+			if err == nil {
+				remainingBytes = stat.Size() - uploadedBytes
+			} else {
+				q.logger.WarningF("failed to stat audit queue file %s before upload (%v)", name, err)
+				errorHappened = true
+			}
+
 			<-q.workerSem
-			if errorHappened || (entry.finished && remainingBytes > 0) {
+			if errorHappened || entry.finished {
 				// If an error happened, retry immediately.
-				// Otherwise, if the entry is finished and there are remaining bytes, mark parts available for upload.
+				// Also go back if the entry is finished to finish uploading the parts.
 				entry.markPartAvailable()
 			}
 			if errorHappened {
