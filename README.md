@@ -1,4 +1,7 @@
-# ContainerSSH: An SSH server that launches containers
+[![ContainerSSH - Launch Containers on Demand](https://containerssh.github.io/images/logo-for-embedding.svg)](https://containerssh.github.io/)
+
+<!--suppress HtmlDeprecatedAttribute -->
+<h1 align="center">ContainerSSH: An SSH Server that Launches Containers in Kubernetes and Docker</h1>
 
 [![Documentation: available](https://img.shields.io/badge/documentation-available-green?style=for-the-badge)](https://containerssh.github.io/)
 [![GitHub Workflow Status](https://img.shields.io/github/workflow/status/containerssh/containerssh/goreleaser?style=for-the-badge)](https://github.com/containerssh/containerssh/actions)
@@ -7,8 +10,6 @@
 [![Go Report Card](https://goreportcard.com/badge/github.com/containerssh/containerssh?style=for-the-badge)](https://goreportcard.com/report/github.com/containerssh/containerssh)
 [![LGTM Alerts](https://img.shields.io/lgtm/alerts/github/ContainerSSH/ContainerSSH?style=for-the-badge)](https://lgtm.com/projects/g/ContainerSSH/ContainerSSH/)
 [![GitHub](https://img.shields.io/github/license/containerssh/containerssh?style=for-the-badge)](LICENSE.md)
-
-**Attention!** ContainerSSH has moved from `janoszen/containerssh` to `containerssh/containerssh`. Please update your image references!
 
 ## Offering SSH in a web hosting service?
 
