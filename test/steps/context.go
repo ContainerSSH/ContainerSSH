@@ -1,17 +1,18 @@
 package steps
 
 import (
-	"github.com/containerssh/containerssh/log"
+	"github.com/containerssh/log"
+	"github.com/containerssh/service"
+
 	"github.com/containerssh/containerssh/test/auth"
 	"github.com/containerssh/containerssh/test/config"
-	"github.com/containerssh/containerssh/test/ssh"
 )
 
 // region Context
 type Scenario struct {
-	Logger       log.Logger
-	LogWriter    log.Writer
-	AuthServer   *auth.MemoryAuthServer
-	ConfigServer *config.MemoryConfigServer
-	SshServer    *ssh.Server
+	Logger        log.Logger
+	AuthServer    *auth.MemoryAuthServer
+	ConfigServer  *config.MemoryConfigServer
+	LoggerFactory log.LoggerFactory
+	Lifecycle     service.Lifecycle
 }

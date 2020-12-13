@@ -2,9 +2,10 @@ package steps
 
 import (
 	"fmt"
-	"golang.org/x/crypto/ssh"
 	"io/ioutil"
 	"net"
+
+	"golang.org/x/crypto/ssh"
 )
 
 func (scenario *Scenario) AuthenticationShouldFail(username string, password string) error {

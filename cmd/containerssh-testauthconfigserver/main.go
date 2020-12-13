@@ -19,18 +19,17 @@ package main
 
 import (
 	"encoding/json"
+	"log"
+	"net/http"
 	"os"
 
-	"net/http"
+	"github.com/containerssh/configuration"
+	"github.com/containerssh/structutils"
 
-	"github.com/containerssh/containerssh/config"
-	"github.com/containerssh/containerssh/log"
-	"github.com/containerssh/containerssh/log/writer"
-	"github.com/containerssh/containerssh/protocol"
+	"github.com/containerssh/containerssh/test/protocol"
 )
 
 type authConfigServer struct {
-	logger log.Logger
 }
 
 func (s *authConfigServer) authPassword(w http.ResponseWriter, req *http.Request) {
@@ -57,12 +56,10 @@ func (s *authConfigServer) authPassword(w http.ResponseWriter, req *http.Request
 		return
 	}
 
-	s.logger.DebugF("password authentication request for user %s", authRequest.User)
-
 	authResponse := protocol.AuthResponse{
 		Success: false,
 	}
-	if authRequest.User == "foo" || authRequest.User == "busybox" {
+	if authRequest.Username == "foo" || authRequest.Username == "busybox" {
 		authResponse.Success = true
 	}
 
@@ -92,8 +89,6 @@ func (s *authConfigServer) authPublicKey(w http.ResponseWriter, req *http.Reques
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
-
-	s.logger.DebugF("public key authentication request for user %s", authRequest.Username)
 
 	authResponse := protocol.AuthResponse{
 		Success: false,
@@ -128,40 +123,27 @@ func (s *authConfigServer) configHandler(w http.ResponseWriter, req *http.Reques
 		return
 	}
 
-	defaultConfig := &config.AppConfig{}
+	defaultConfig := configuration.AppConfig{}
+	structutils.Defaults(&defaultConfig)
 
 	response := protocol.ConfigResponse{
-		Config: *defaultConfig,
+		Config: defaultConfig,
 	}
-
-	s.logger.DebugF("config request for user %s", configRequest.Username)
 
 	if configRequest.Username == "busybox" {
 		response.Config.DockerRun.Config.ContainerConfig.Image = "busybox"
 	}
 
-	err = json.NewEncoder(w).Encode(response)
-	if err != nil {
-		s.logger.ErrorE(err)
-	}
+	_ = json.NewEncoder(w).Encode(response)
 }
 
 func main() {
-	logConfig, err := log.NewConfig(log.LevelDebugString)
-	if err != nil {
-		panic(err)
-	}
-	logWriter := writer.NewJsonLogWriter()
-	logger := log.NewLoggerPipeline(logConfig, logWriter)
-	s := &authConfigServer{
-		logger: logger,
-	}
+	s := &authConfigServer{}
 	http.HandleFunc("/pubkey", s.authPublicKey)
 	http.HandleFunc("/password", s.authPassword)
 	http.HandleFunc("/config", s.configHandler)
-	err = http.ListenAndServe(":8080", nil)
-	if err != nil {
-		logger.CriticalE(err)
+	if err := http.ListenAndServe(":8080", nil); err != nil {
+		log.Println(err)
 		os.Exit(1)
 	}
 }

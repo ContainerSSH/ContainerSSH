@@ -1,6 +1,8 @@
 package protocol
 
-import "github.com/containerssh/containerssh/config"
+import (
+	"github.com/containerssh/configuration"
+)
 
 //
 // swagger:model ConfigRequest
@@ -11,7 +13,7 @@ type ConfigRequest struct {
 
 // swagger:model ConfigResponseBody
 type ConfigResponse struct {
-	Config config.AppConfig `json:"config"`
+	Config configuration.AppConfig `json:"config"`
 }
 
 // The configuration response object
