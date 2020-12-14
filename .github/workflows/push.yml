@@ -29,7 +29,7 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
       -
         name: Set up Kubernetes
-        uses: engineerd/setup-kind@v0.4.0
+        uses: engineerd/setup-kind@v0.5.0
       -
         name: Run GoReleaser
         uses: goreleaser/goreleaser-action@v2
