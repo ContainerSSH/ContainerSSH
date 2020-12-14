@@ -16,10 +16,10 @@ jobs:
           go-version: 1.14
       -
         name: Set up Kubernetes
-        uses: engineerd/setup-kind@v0.4.0
+        uses: engineerd/setup-kind@v0.5.0
       -
         name: Run GoReleaser
         uses: goreleaser/goreleaser-action@v2
         with:
           version: latest
-          args: build --rm-dist
+          args: build --rm-dist --snapshot
