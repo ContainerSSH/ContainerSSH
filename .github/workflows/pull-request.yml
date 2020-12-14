@@ -23,3 +23,5 @@ jobs:
         with:
           version: latest
           args: build --rm-dist --snapshot
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
