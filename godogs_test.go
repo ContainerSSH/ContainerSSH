@@ -43,40 +43,7 @@ func InitializeTestSuite(ctx *godog.TestSuiteContext) {
 }
 
 func InitializeScenario(ctx *godog.ScenarioContext) {
-	loggerFactory := log.NewFactory(os.Stdout)
-	logger, err := loggerFactory.Make(
-		log.Config{
-			Level:  log.LevelDebug,
-			Format: log.FormatText,
-		},
-		"test",
-	)
-	if err != nil {
-		panic(err)
-	}
-	scenario := &steps.Scenario{
-		LoggerFactory: loggerFactory,
-		Logger:        logger,
-	}
-
-	ctx.AfterScenario(
-		func(*godog.Scenario, error) {
-			_ = scenario.StopAuthServer()
-			_ = scenario.StopConfigServer()
-			_ = scenario.StopSshServer()
-		},
-	)
-
-	ctx.BeforeStep(func(st *godog.Step) {
-		logger.Debugf("Running step \"%s\"...", st.GetText())
-	})
-	ctx.AfterStep(func(st *godog.Step, err error) {
-		if err != nil {
-			logger.Debugf("Step \"%s\" failed (%v)", st.GetText(), err)
-		} else {
-			logger.Debugf("Step \"%s\" successful", st.GetText())
-		}
-	})
+	scenario := setupSuite(ctx)
 
 	ctx.Step(`^I start(?:|ed) the SSH server$`, scenario.StartSSHServer)
 	ctx.Step(`^I stop(?:|ed) the SSH server$`, scenario.StopSshServer)
@@ -104,4 +71,46 @@ func InitializeScenario(ctx *godog.ScenarioContext) {
 
 	ctx.Step(`^I configure the user "(.*)" to use Kubernetes`, scenario.ConfigureKubernetes)
 	ctx.Step(`^I configure the user "(.*)" to use Docker`, scenario.ConfigureDocker)
+}
+
+func setupSuite(ctx *godog.ScenarioContext) *steps.Scenario {
+	loggerFactory := log.NewFactory(os.Stdout)
+	logger, err := loggerFactory.Make(
+		log.Config{
+			Level:  log.LevelDebug,
+			Format: log.FormatText,
+		},
+		"test",
+	)
+	if err != nil {
+		panic(err)
+	}
+	scenario := &steps.Scenario{
+		LoggerFactory: loggerFactory,
+		Logger:        logger,
+	}
+
+	ctx.AfterScenario(
+		func(*godog.Scenario, error) {
+			_ = scenario.StopAuthServer()
+			_ = scenario.StopConfigServer()
+			_ = scenario.StopSshServer()
+		},
+	)
+
+	ctx.BeforeStep(
+		func(st *godog.Step) {
+			logger.Debugf("Running step \"%s\"...", st.GetText())
+		},
+	)
+	ctx.AfterStep(
+		func(st *godog.Step, err error) {
+			if err != nil {
+				logger.Debugf("Step \"%s\" failed (%v)", st.GetText(), err)
+			} else {
+				logger.Debugf("Step \"%s\" successful", st.GetText())
+			}
+		},
+	)
+	return scenario
 }

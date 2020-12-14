@@ -26,7 +26,7 @@ func main() {
 	lines := strings.Split(data, "\n")
 	noticeFiles := map[string]string{}
 	licenses := map[string]string{}
-	re := regexp.MustCompile("\\s+")
+	re := regexp.MustCompile(`\s+`)
 
 	cmd = exec.Command("go", "mod", "vendor")
 	err = cmd.Run()
@@ -34,6 +34,22 @@ func main() {
 		log.Fatalf("%v", err)
 	}
 
+	extractLicenses(lines, re, licenses, noticeFiles)
+
+	noticeContents := renderNotice(licenses, noticeFiles)
+
+	err = ioutil.WriteFile(os.Args[3], noticeContents, 0644)
+	if err != nil {
+		log.Fatalf("%v", err)
+	}
+
+	err = os.RemoveAll("vendor")
+	if err != nil {
+		log.Fatalf("%v", err)
+	}
+}
+
+func extractLicenses(lines []string, re *regexp.Regexp, licenses map[string]string, noticeFiles map[string]string) {
 	for _, line := range lines {
 		if line == "" {
 			continue
@@ -52,10 +68,12 @@ func main() {
 			noticeFiles[repo] = noticeFileMarkdown
 		}
 	}
+}
 
+func renderNotice(licenses map[string]string, noticeFiles map[string]string) []byte {
 	var finalNotice bytes.Buffer
-	finalNotice.Write([]byte(fmt.Sprintf("# Third party licenses\n\n")))
-	finalNotice.Write([]byte(fmt.Sprintf("This project contains third party packages under the following licenses:\n\n")))
+	finalNotice.Write([]byte("# Third party licenses\n\n"))
+	finalNotice.Write([]byte("This project contains third party packages under the following licenses:\n\n"))
 	for packageName, license := range licenses {
 		finalNotice.Write([]byte(fmt.Sprintf("## [%s](https://%s)\n\n", packageName, packageName)))
 		finalNotice.Write([]byte(fmt.Sprintf("**License:** %s\n\n", license)))
@@ -71,14 +89,6 @@ func main() {
 			}
 		}
 	}
-
-	err = ioutil.WriteFile(os.Args[3], finalNotice.Bytes(), 0644)
-	if err != nil {
-		log.Fatalf("%v", err)
-	}
-
-	err = os.RemoveAll("vendor")
-	if err != nil {
-		log.Fatalf("%v", err)
-	}
+	noticeContents := finalNotice.Bytes()
+	return noticeContents
 }

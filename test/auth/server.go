@@ -22,7 +22,7 @@ func NewMemoryAuthServer() *MemoryAuthServer {
 	httpServer := testHttp.New(8080)
 
 	server := &MemoryAuthServer{
-		passwords: make(map[string]string, 0),
+		passwords: make(map[string]string),
 		keys:      make(map[string][]string),
 		http:      httpServer,
 		mutex:     &sync.Mutex{},
