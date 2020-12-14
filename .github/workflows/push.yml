@@ -7,8 +7,8 @@ on:
     tags-ignore:
       - '*'
 jobs:
-  release:
-    name: Release
+  build:
+    name: Build
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
