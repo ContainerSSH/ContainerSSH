@@ -39,6 +39,9 @@ func (scenario *Scenario) StartSSHServer() error {
 		func(s service.Service, l service.Lifecycle) {
 			running <- struct{}{}
 		})
+	go func() {
+		_ = lifecycle.Run()
+	}()
 	<-running
 	scenario.Lifecycle = lifecycle
 	return nil

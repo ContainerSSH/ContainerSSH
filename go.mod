@@ -5,12 +5,11 @@ go 1.14
 require (
 	github.com/containerssh/auditlogintegration v0.9.1
 	github.com/containerssh/authintegration v0.9.0
-	github.com/containerssh/backend v0.9.0
+	github.com/containerssh/backend v0.9.1
 	github.com/containerssh/configuration v0.9.2
-	github.com/containerssh/dockerrun v0.9.2 //indirect
 	github.com/containerssh/geoip v0.9.3
-	github.com/containerssh/kuberun v0.9.2
-	github.com/containerssh/log v0.9.6
+	github.com/containerssh/kuberun v0.9.3
+	github.com/containerssh/log v0.9.7
 	github.com/containerssh/service v0.9.0
 	github.com/containerssh/sshserver v0.9.14
 	github.com/containerssh/structutils v0.9.0

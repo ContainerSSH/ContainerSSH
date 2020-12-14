@@ -12,7 +12,10 @@ import (
 	"github.com/containerssh/containerssh/test/steps"
 )
 
-var opts = godog.Options{Output: colors.Colored(os.Stdout)}
+var opts = godog.Options{
+	Output: colors.Colored(os.Stdout),
+	Strict: true,
+}
 
 func init() {
 	godog.BindFlags("godog.", flag.CommandLine, &opts)
@@ -63,6 +66,17 @@ func InitializeScenario(ctx *godog.ScenarioContext) {
 			_ = scenario.StopSshServer()
 		},
 	)
+
+	ctx.BeforeStep(func(st *godog.Step) {
+		logger.Debugf("Running step \"%s\"...", st.GetText())
+	})
+	ctx.AfterStep(func(st *godog.Step, err error) {
+		if err != nil {
+			logger.Debugf("Step \"%s\" failed (%v)", st.GetText(), err)
+		} else {
+			logger.Debugf("Step \"%s\" successful", st.GetText())
+		}
+	})
 
 	ctx.Step(`^I start(?:|ed) the SSH server$`, scenario.StartSSHServer)
 	ctx.Step(`^I stop(?:|ed) the SSH server$`, scenario.StopSshServer)
