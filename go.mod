@@ -4,7 +4,7 @@ go 1.14
 
 require (
 	github.com/Microsoft/go-winio v0.4.14 // indirect
-	github.com/creasty/defaults v1.5.0
+	github.com/creasty/defaults v1.5.1
 	github.com/cucumber/godog v0.10.0
 	github.com/docker/distribution v2.7.1+incompatible
 	github.com/docker/docker v1.13.1
@@ -13,7 +13,6 @@ require (
 	github.com/imdario/mergo v0.3.11
 	github.com/jinzhu/copier v0.0.0-20190924061706-b57f9002281a
 	github.com/mattn/go-shellwords v1.0.10
-	github.com/mitchellh/golicense v0.2.0 // indirect
 	github.com/opencontainers/go-digest v1.0.0 // indirect
 	github.com/oschwald/geoip2-golang v1.4.0
 	github.com/qdm12/reprint v0.0.0-20200326205758-722754a53494
