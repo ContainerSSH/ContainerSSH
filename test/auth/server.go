@@ -4,10 +4,11 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
-	"github.com/containerssh/containerssh/protocol"
-	testHttp "github.com/containerssh/containerssh/test/http"
 	"net/http"
 	"sync"
+
+	testHttp "github.com/containerssh/containerssh/test/http"
+	"github.com/containerssh/containerssh/test/protocol"
 )
 
 type MemoryAuthServer struct {
@@ -21,7 +22,7 @@ func NewMemoryAuthServer() *MemoryAuthServer {
 	httpServer := testHttp.New(8080)
 
 	server := &MemoryAuthServer{
-		passwords: make(map[string]string, 0),
+		passwords: make(map[string]string),
 		keys:      make(map[string][]string),
 		http:      httpServer,
 		mutex:     &sync.Mutex{},

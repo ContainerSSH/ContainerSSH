@@ -1,4 +1,9 @@
+#noinspection CucumberUndefinedStep
 Feature: Authentication
+
+  After setting up the SSH and authentication servers we should be able to authenticate via SSH with the correct users
+  and fail with the incorrect ones.
+
   Scenario: Authentication should fail with non-existent users
     Given I started the SSH server
     And I started the authentication server

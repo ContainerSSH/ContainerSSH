@@ -2,16 +2,18 @@ package config
 
 import (
 	"encoding/json"
-	"github.com/containerssh/containerssh/config"
-	"github.com/containerssh/containerssh/protocol"
-	testHttp "github.com/containerssh/containerssh/test/http"
 	"net/http"
 	"sync"
+
+	"github.com/containerssh/configuration"
+
+	testHttp "github.com/containerssh/containerssh/test/http"
+	"github.com/containerssh/containerssh/test/protocol"
 )
 
 type MemoryConfigServer struct {
-	defaultConfig config.AppConfig
-	userConfig    map[string]config.AppConfig
+	defaultConfig configuration.AppConfig
+	userConfig    map[string]configuration.AppConfig
 	server        *testHttp.Server
 	mutex         *sync.Mutex
 }
@@ -20,8 +22,8 @@ func NewMemoryConfigServer() *MemoryConfigServer {
 	httpServer := testHttp.New(8081)
 
 	server := &MemoryConfigServer{
-		defaultConfig: config.AppConfig{},
-		userConfig:    make(map[string]config.AppConfig),
+		defaultConfig: configuration.AppConfig{},
+		userConfig:    make(map[string]configuration.AppConfig),
 		server:        httpServer,
 		mutex:         &sync.Mutex{},
 	}
@@ -60,7 +62,7 @@ func (server *MemoryConfigServer) Stop() error {
 
 func (server *MemoryConfigServer) SetUserConfig(
 	username string,
-	configuration *config.AppConfig,
+	configuration *configuration.AppConfig,
 ) {
 	server.userConfig[username] = *configuration
 }

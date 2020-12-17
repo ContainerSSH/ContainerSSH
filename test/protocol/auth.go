@@ -4,10 +4,6 @@ package protocol
 //
 // swagger:model PasswordAuthRequest
 type PasswordAuthRequest struct {
-	// The username provided for authentication (deprecated, use 'username' instead)
-	//
-	// required: true
-	User string `json:"user"`
 	// The username provided for authentication
 	//
 	// required: true
@@ -30,10 +26,6 @@ type PasswordAuthRequest struct {
 //
 // swagger:model PublicKeyAuthRequest
 type PublicKeyAuthRequest struct {
-	// The username provided for authentication (deprecated, use 'username' instead)
-	//
-	// required: true
-	User string `json:"user"`
 	// The username provided for authentication
 	//
 	// required: true

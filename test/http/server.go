@@ -2,6 +2,7 @@ package http
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"net"
 	"net/http"
@@ -57,7 +58,7 @@ func (server *Server) run() {
 	server.srv = srv
 	server.mutex.Unlock()
 	err := srv.ListenAndServe()
-	if err != nil && err != http.ErrServerClosed {
+	if err != nil && errors.Is(err, http.ErrServerClosed) {
 		server.mutex.Lock()
 		server.cancel()
 		server.ctx = nil

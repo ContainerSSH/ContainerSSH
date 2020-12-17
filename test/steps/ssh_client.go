@@ -2,9 +2,10 @@ package steps
 
 import (
 	"fmt"
-	"golang.org/x/crypto/ssh"
 	"io/ioutil"
 	"net"
+
+	"golang.org/x/crypto/ssh"
 )
 
 func (scenario *Scenario) AuthenticationShouldFail(username string, password string) error {
@@ -22,7 +23,7 @@ func (scenario *Scenario) AuthenticationShouldFail(username string, password str
 	if err != nil {
 		return nil
 	}
-	defer conn.Close()
+	_ = conn.Close()
 	return fmt.Errorf("SSH connection did not fail")
 }
 
@@ -39,7 +40,7 @@ func (scenario *Scenario) AuthenticationShouldSucceed(username string, password 
 	if err != nil {
 		return err
 	}
-	defer conn.Close()
+	_ = conn.Close()
 	return nil
 }
 
@@ -56,14 +57,29 @@ func (scenario *Scenario) RunCommand(username string, password string) error {
 	if err != nil {
 		return err
 	}
-	defer conn.Close()
+	defer func() {
+		_ = conn.Close()
+	}()
 
 	sess, err := conn.NewSession()
 	if err != nil {
 		return err
 	}
-	defer sess.Close()
+	defer func() {
+		_ = sess.Close()
+	}()
+
+	_, err = sess.StdinPipe()
+	if err != nil {
+		return err
+	}
+
 	sessStdOut, err := sess.StdoutPipe()
+	if err != nil {
+		return err
+	}
+
+	_, err = sess.StderrPipe()
 	if err != nil {
 		return err
 	}

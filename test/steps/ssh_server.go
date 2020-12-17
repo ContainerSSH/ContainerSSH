@@ -1,80 +1,61 @@
 package steps
 
 import (
+	"context"
 	"fmt"
-	authClient "github.com/containerssh/containerssh/auth"
-	"github.com/containerssh/containerssh/config"
-	configClient "github.com/containerssh/containerssh/config/client"
-	"github.com/containerssh/containerssh/geoip/dummy"
-	"github.com/containerssh/containerssh/metrics"
-	"github.com/containerssh/containerssh/test/ssh"
-	"net"
-	"time"
+
+	"github.com/containerssh/configuration"
+	"github.com/containerssh/service"
+	"github.com/containerssh/structutils"
+
+	"github.com/containerssh/containerssh"
 )
 
-func (scenario *Scenario) StartSshServer() error {
-	if scenario.SshServer != nil {
+func (scenario *Scenario) StartSSHServer() error {
+	if scenario.Lifecycle != nil {
 		return fmt.Errorf("SSH server is already running")
 	}
-	metric := metrics.New(dummy.New())
-	ac, err := authClient.NewHttpAuthClient(
-		config.AuthConfig{
-			Url: "http://127.0.0.1:8080",
-		},
-		scenario.Logger,
-		metric,
+
+	appConfig := configuration.AppConfig{}
+	structutils.Defaults(&appConfig)
+	if err := appConfig.SSH.GenerateHostKey(); err != nil {
+		return err
+	}
+	appConfig.Auth.URL = "http://127.0.0.1:8080"
+	appConfig.Auth.Password = true
+	appConfig.ConfigServer.URL = "http://127.0.0.1:8081/config"
+
+	srv, err := containerssh.New(
+		appConfig,
+		scenario.LoggerFactory,
 	)
 	if err != nil {
 		return err
 	}
 
-	configClientInstance, err := configClient.NewHttpConfigClient(
-		config.ConfigServerConfig{
-			Url: "http://127.0.0.1:8081/config",
-		},
-		scenario.Logger,
-		metric,
-	)
-	if err != nil {
-		return err
-	}
-
-	scenario.SshServer = ssh.NewServer(
-		scenario.Logger,
-		scenario.LogWriter,
-		ac,
-		configClientInstance,
-	)
-	err = scenario.SshServer.Start()
-	if err != nil {
-		return err
-	}
-	tries := 0
-	for {
-		tcp, err := net.Dial("tcp", "127.0.0.1:2222")
-		if err == nil {
-			_ = tcp.Close()
-			break
-		}
-		tries = tries + 1
-		if tries > 100 {
-			_ = scenario.SshServer.Stop()
-			scenario.SshServer = nil
-			return fmt.Errorf("failed to start SSH server")
-		}
-		time.Sleep(time.Millisecond * 100)
-	}
+	lifecycle := service.NewLifecycle(srv)
+	running := make(chan struct{})
+	lifecycle.OnRunning(
+		func(s service.Service, l service.Lifecycle) {
+			running <- struct{}{}
+		})
+	go func() {
+		_ = lifecycle.Run()
+	}()
+	<-running
+	scenario.Lifecycle = lifecycle
 	return nil
 }
 
 func (scenario *Scenario) StopSshServer() error {
-	if scenario.SshServer == nil {
+	if scenario.Lifecycle == nil {
 		return fmt.Errorf("SSH server is already stopped")
 	}
-	err := scenario.SshServer.Stop()
+	scenario.Lifecycle.Stop(context.Background())
+	err := scenario.Lifecycle.Wait()
 	if err != nil {
 		return err
 	}
-	scenario.SshServer = nil
+	scenario.Lifecycle = nil
 	return nil
 }
