@@ -4,6 +4,11 @@ import (
 	"context"
 	"flag"
 	"fmt"
+	"io/ioutil"
+	"os"
+	"os/signal"
+	"syscall"
+
 	"github.com/containerssh/containerssh/auth"
 	"github.com/containerssh/containerssh/backend"
 	"github.com/containerssh/containerssh/backend/dockerrun"
@@ -19,13 +24,39 @@ import (
 	"github.com/containerssh/containerssh/metrics"
 	metricsServer "github.com/containerssh/containerssh/metrics/server"
 	"github.com/containerssh/containerssh/ssh"
-	"io/ioutil"
-	"os"
-	"os/signal"
-	"syscall"
 )
 
-func InitBackendRegistry(metric *metrics.MetricCollector) *backend.Registry {
+type flags struct {
+	configFile string
+	dumpConfig bool
+	licenses   bool
+}
+
+func parseFlags() (flags flags) {
+	flag.StringVar(
+		&flags.configFile,
+		"config",
+		"",
+		"Configuration file to load (has to end in .yaml, .yml, or .json)",
+	)
+	flag.BoolVar(
+		&flags.dumpConfig,
+		"dump-config",
+		false,
+		"Dump configuration and exit",
+	)
+	flag.BoolVar(
+		&flags.licenses,
+		"licenses",
+		false,
+		"Print license information",
+	)
+	flag.Parse()
+
+	return
+}
+
+func initBackendRegistry(metric *metrics.MetricCollector) *backend.Registry {
 	backendMetrics.Init(metric)
 	registry := backend.NewRegistry()
 	dockerrun.Init(registry, metric)
@@ -39,108 +70,74 @@ func main() {
 		panic(err)
 	}
 	logWriter := writer.NewJsonLogWriter()
-	var logger log.Logger
-	logger = log.NewLoggerPipeline(logConfig, logWriter)
+	logger := log.NewLoggerPipeline(logConfig, logWriter)
+
+	flags := parseFlags()
+
+	if flags.licenses {
+		fmt.Println("# The ContainerSSH license")
+		fmt.Println("")
+
+		for _, f := range []string{"LICENSE.md", "NOTICE.md"} {
+			data, err := ioutil.ReadFile(f)
+			if err != nil {
+				logger.EmergencyF("Missing %s, cannot print license information", f)
+				os.Exit(1)
+			}
+			fmt.Println(string(data))
+			fmt.Println("")
+		}
+
+		return
+	}
 
 	appConfig, err := util.GetDefaultConfig()
 	if err != nil {
 		logger.CriticalF("error getting default config (%v)", err)
-		os.Exit(1)
+		os.Exit(2)
 	}
 
-	configFile := ""
-	dumpConfig := false
-	licenses := false
-	generateHostKeys := false
-	flag.StringVar(
-		&configFile,
-		"config",
-		"",
-		"Configuration file to load (has to end in .yaml, .yml, or .json)",
-	)
-	flag.BoolVar(
-		&dumpConfig,
-		"dump-config",
-		false,
-		"Dump configuration and exit",
-	)
-	flag.BoolVar(
-		&licenses,
-		"licenses",
-		false,
-		"Print license information",
-	)
-	flag.BoolVar(
-		&generateHostKeys,
-		"generate-host-keys",
-		false,
-		"Generate host keys if not present and exit",
-	)
-	flag.Parse()
-
-	if configFile != "" {
-		fileAppConfig, err := loader.LoadFile(configFile)
+	if flags.configFile != "" {
+		fileAppConfig, err := loader.LoadFile(flags.configFile)
 		if err != nil {
 			logger.EmergencyF("error loading config file (%v)", err)
-			os.Exit(1)
+			os.Exit(3)
 		}
 		appConfig, err = util.Merge(fileAppConfig, appConfig)
 		if err != nil {
 			logger.EmergencyF("error merging config (%v)", err)
-			os.Exit(1)
+			os.Exit(4)
 		}
 	}
 
-	if dumpConfig {
+	if flags.dumpConfig {
 		err := loader.Write(appConfig, os.Stdout)
 		if err != nil {
 			logger.EmergencyF("error dumping config (%v)", err)
-			os.Exit(1)
+			os.Exit(5)
 		}
-	}
-
-	if licenses {
-		fmt.Println("# The ContainerSSH license")
-		fmt.Println("")
-		data, err := ioutil.ReadFile("LICENSE.md")
-		if err != nil {
-			logger.EmergencyF("Missing LICENSE.md, cannot print license information")
-			os.Exit(1)
-		}
-		fmt.Println(string(data))
-		fmt.Println("")
-		data, err = ioutil.ReadFile("NOTICE.md")
-		if err != nil {
-			logger.EmergencyF("Missing NOTICE.md, cannot print third party license information")
-			os.Exit(1)
-		}
-		fmt.Println(string(data))
-		fmt.Println("")
-	}
-
-	if dumpConfig || licenses {
 		return
 	}
 
-	geoIpLookupProvider, err := oschwald.New(appConfig.GeoIP.GeoIP2File)
+	geoIPLookupProvider, err := oschwald.New(appConfig.GeoIP.GeoIP2File)
 	if err != nil {
 		logger.WarningF("failed to load GeoIP2 database, falling back to dummy provider (%v)", err)
-		geoIpLookupProvider = dummy.New()
+		geoIPLookupProvider = dummy.New()
 	}
-	metricCollector := metrics.New(geoIpLookupProvider)
+	metricCollector := metrics.New(geoIPLookupProvider)
 
-	backendRegistry := InitBackendRegistry(metricCollector)
+	backendRegistry := initBackendRegistry(metricCollector)
 
 	authClient, err := auth.NewHttpAuthClient(appConfig.Auth, logger, metricCollector)
 	if err != nil {
 		logger.CriticalF("error creating auth HTTP client (%v)", err)
-		os.Exit(1)
+		os.Exit(6)
 	}
 
 	configClient, err := configurationClient.NewHttpConfigClient(appConfig.ConfigServer, logger, metricCollector)
 	if err != nil {
 		logger.EmergencyF(fmt.Sprintf("Error creating config HTTP client (%s)", err))
-		os.Exit(1)
+		os.Exit(7)
 	}
 
 	sshServer, err := ssh.NewServer(
@@ -154,22 +151,17 @@ func main() {
 	)
 	if err != nil {
 		logger.EmergencyF("failed to create SSH server (%v)", err)
-		os.Exit(1)
+		os.Exit(8)
 	}
-
-	ctx, cancel := context.WithCancel(context.Background())
 
 	sigs := make(chan os.Signal, 1)
 	signal.Notify(sigs, syscall.SIGINT, syscall.SIGTERM)
 
+	ctx, cancel := context.WithCancel(context.Background())
+
 	sshErrChannel := make(chan error)
 	go func() {
-		err = sshServer.Run(ctx)
-		if err != nil {
-			sshErrChannel <- err
-		} else {
-			sshErrChannel <- nil
-		}
+		sshErrChannel <- sshServer.Run(ctx)
 	}()
 
 	metricsErrChannel := make(chan error)
@@ -180,12 +172,7 @@ func main() {
 				metricCollector,
 				logger,
 			)
-			err := metricsSrv.Run(ctx)
-			if err != nil {
-				metricsErrChannel <- err
-			} else {
-				metricsErrChannel <- nil
-			}
+			metricsErrChannel <- metricsSrv.Run(ctx)
 		}()
 	} else {
 		metricsErrChannel <- nil
