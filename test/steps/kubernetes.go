@@ -4,7 +4,6 @@ import (
 	"fmt"
 
 	"github.com/containerssh/configuration"
-	"github.com/containerssh/kuberun"
 )
 
 func (scenario *Scenario) ConfigureKubernetes(username string) error {
@@ -13,9 +12,9 @@ func (scenario *Scenario) ConfigureKubernetes(username string) error {
 	}
 
 	appConfig := &configuration.AppConfig{}
-	appConfig.Backend = "kuberun"
+	appConfig.Backend = "kubernetes"
 
-	if err := kuberun.SetConfigFromKubeConfig(&appConfig.KubeRun); err != nil {
+	if err := appConfig.Kubernetes.SetConfigFromKubeConfig(); err != nil {
 		return err
 	}
 

@@ -9,6 +9,7 @@ import (
 	"io/ioutil"
 	"os"
 	"os/signal"
+	"path/filepath"
 	"strings"
 	"syscall"
 	"time"
@@ -21,11 +22,24 @@ import (
 	"github.com/containerssh/containerssh"
 )
 
+type sureFireWriter struct {
+	backend io.Writer
+}
+
+func (s *sureFireWriter) Write(p []byte) (n int, err error) {
+	n, err = s.backend.Write(p)
+	if err != nil {
+		// Ignore errors
+		return len(p), nil
+	}
+	return n, nil
+}
+
 func main() {
 	config := configuration.AppConfig{}
 	structutils.Defaults(&config)
 
-	loggerFactory := log.NewFactory(os.Stdout)
+	loggerFactory := log.NewFactory(&sureFireWriter{os.Stdout})
 	logger, err := loggerFactory.Make(
 		config.Log,
 		"",
@@ -39,6 +53,12 @@ func main() {
 	if configFile != "" {
 		if err = readConfigFile(configFile, loggerFactory, &config); err != nil {
 			logger.Criticalf("failed to read configuration file %s (%v)", configFile, err)
+			os.Exit(1)
+		}
+	} else {
+		configFile, err = filepath.Abs("./config.yaml")
+		if err != nil {
+			logger.Criticalf("failed to fetch current directory")
 			os.Exit(1)
 		}
 	}
@@ -60,6 +80,7 @@ func main() {
 	}
 
 	if len(config.SSH.HostKeys) == 0 {
+
 		logger.Noticef("No host keys found in configuration, generating host keys...")
 		if err := generateHostKeys(configFile, &config, logger); err != nil {
 			logger.Criticalf("failed to generate host keys (%v)", err)
@@ -137,7 +158,8 @@ func startPool(pool service.Service, logger log.Logger) error {
 	<-starting
 
 	signals := make(chan os.Signal, 1)
-	signal.Notify(signals, syscall.SIGINT, syscall.SIGTERM)
+	signalList := []os.Signal{os.Interrupt, os.Kill, syscall.SIGINT, syscall.SIGTERM, syscall.SIGHUP}
+	signal.Notify(signals, signalList...)
 	go func() {
 		if _, ok := <-signals; ok {
 			// ok means the channel wasn't closed
@@ -152,7 +174,7 @@ func startPool(pool service.Service, logger log.Logger) error {
 		}
 	}()
 	err := lifecycle.Wait()
-	signal.Ignore(syscall.SIGINT, syscall.SIGTERM)
+	signal.Ignore(signalList...)
 	close(signals)
 	return err
 }
@@ -162,12 +184,15 @@ func generateHostKeys(configFile string, config *configuration.AppConfig, logger
 		return err
 	}
 
-	tmpFile := fmt.Sprintf("%s~", configFile)
+	dir := filepath.Base(configFile)
+	hostKeyFile := filepath.Join(dir, "ssh_host_rsa_key")
+
+	tmpFile := fmt.Sprintf("%s~", hostKeyFile)
 	fh, err := os.Create(tmpFile)
 	if err != nil {
 		return fmt.Errorf("failed to open temporary file %s for writing (%w)", tmpFile, err)
 	}
-	format := getConfigFileFormat(configFile)
+	format := getConfigFileFormat(hostKeyFile)
 	saver, err := configuration.NewWriterSaver(fh, logger, format)
 	if err != nil {
 		_ = fh.Close()
@@ -181,7 +206,7 @@ func generateHostKeys(configFile string, config *configuration.AppConfig, logger
 		return err
 	}
 
-	if err := os.Rename(tmpFile, configFile); err != nil {
+	if err := os.Rename(tmpFile, hostKeyFile); err != nil {
 		return fmt.Errorf("failed to rename temporary file %s to %s (%w)", tmpFile, configFile, err)
 	}
 

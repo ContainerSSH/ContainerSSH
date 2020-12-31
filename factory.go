@@ -10,6 +10,7 @@ import (
 	"github.com/containerssh/geoip"
 	"github.com/containerssh/geoip/geoipprovider"
 	"github.com/containerssh/log"
+	"github.com/containerssh/metrics"
 	"github.com/containerssh/service"
 	"github.com/containerssh/sshserver"
 )
@@ -19,17 +20,23 @@ func New(config configuration.AppConfig, factory log.LoggerFactory) (service.Ser
 		service.NewLifecycleFactory(),
 	)
 
-	containerBackend, err := createBackend(config, factory)
+	geoIPLookupProvider, err := geoip.New(config.GeoIP)
+	if err != nil {
+		return nil, err
+	}
+
+	metricsCollector := metrics.New(geoIPLookupProvider)
+
+	if err := createMetricsServer(config, factory, metricsCollector, pool); err != nil {
+		return nil, err
+	}
+
+	containerBackend, err := createBackend(config, factory, metricsCollector)
 	if err != nil {
 		return nil, err
 	}
 
 	authHandler, err := createAuthHandler(config, factory, containerBackend)
-	if err != nil {
-		return nil, err
-	}
-
-	geoIPLookupProvider, err := geoip.New(config.GeoIP)
 	if err != nil {
 		return nil, err
 	}
@@ -44,6 +51,43 @@ func New(config configuration.AppConfig, factory log.LoggerFactory) (service.Ser
 	}
 
 	return pool, nil
+}
+
+func createMetricsServer(
+	config configuration.AppConfig,
+	factory log.LoggerFactory,
+	metricsCollector metrics.Collector,
+	pool service.Pool,
+) error {
+	metricsLogger, err := factory.Make(config.Log, "metrics")
+	if err != nil {
+		return err
+	}
+	metricsServer, err := metrics.NewServer(config.Metrics, metricsCollector, metricsLogger)
+	if err != nil {
+		return err
+	}
+	if metricsServer == nil {
+		return nil
+	}
+	pool.Add(metricsServer).OnStarting(
+		func(s service.Service, l service.Lifecycle) {
+			metricsLogger.Noticef("Metrics service is starting...")
+		},
+	).OnRunning(
+		func(s service.Service, l service.Lifecycle) {
+			metricsLogger.Noticef("Metrics service is running at %s", config.Metrics.Listen)
+		},
+	).OnStopping(
+		func(s service.Service, l service.Lifecycle, shutdownContext context.Context) {
+			metricsLogger.Noticef("Metrics service is stopping...")
+		},
+	).OnStopped(
+		func(s service.Service, l service.Lifecycle) {
+			metricsLogger.Noticef("Metrics service has stopped.")
+		},
+	)
+	return nil
 }
 
 func createSSHServer(
@@ -119,12 +163,12 @@ func createAuthHandler(
 	)
 }
 
-func createBackend(config configuration.AppConfig, factory log.LoggerFactory) (sshserver.Handler, error) {
+func createBackend(config configuration.AppConfig, factory log.LoggerFactory, metricsCollector metrics.Collector) (sshserver.Handler, error) {
 	backendLogger, err := factory.Make(config.Log, "backend")
 	if err != nil {
 		return nil, err
 	}
-	containerBackend, err := backend.New(config, backendLogger, factory, sshserver.AuthResponseUnavailable)
+	containerBackend, err := backend.New(config, backendLogger, factory, metricsCollector, sshserver.AuthResponseUnavailable)
 	if err != nil {
 		return nil, err
 	}
