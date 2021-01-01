@@ -35,6 +35,12 @@ jobs:
           registry: docker.pkg.github.com
           username: ${{ secrets.GH_USERNAME }}
           password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Import signing key
+        run: echo "${GPG_KEY}" | base64 -d | gpg --batch --import && echo "${GPG_KEY}" | base64 -d >/tmp/signing.gpg
+        env:
+          GPG_KEY: ${{ secrets.GPG_KEY }}
+      - name: Install packages
+        run: sudo apt-get install dpkg-sig rpm
       - name: Set up Kubernetes
         uses: engineerd/setup-kind@v0.5.0
       - name: Run GoReleaser

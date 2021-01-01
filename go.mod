@@ -3,6 +3,7 @@ module github.com/containerssh/containerssh
 go 1.14
 
 require (
+	github.com/containerssh/auditlog v0.9.6
 	github.com/containerssh/auditlogintegration v0.9.1
 	github.com/containerssh/authintegration v0.9.0
 	github.com/containerssh/backend v0.9.3

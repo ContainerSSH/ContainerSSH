@@ -35,6 +35,17 @@ builds:
       - amd64
     env:
       - CGO_ENABLED=0
+  - id: containerssh-auditlog-decoder
+    main: cmd/containerssh-auditlog-decoder/main.go
+    binary: "containerssh-auditlog-decoder"
+    goos:
+      - linux
+      - darwin
+      - windows
+    goarch:
+      - amd64
+    env:
+      - CGO_ENABLED=0
   - id: containerssh-testauthconfigserver
     main: cmd/containerssh-testauthconfigserver/main.go
     binary: "containerssh-testauthconfigserver"
@@ -51,6 +62,7 @@ archives:
       - containerssh-linux
       - containerssh-windows
       - containerssh-darwin
+      - containerssh-auditlog-decoder
     format_overrides:
       - goos: windows
         format: zip
@@ -70,6 +82,9 @@ dockers:
       - "docker.pkg.github.com/containerssh/containerssh/containerssh:latest"
       - "docker.pkg.github.com/containerssh/containerssh/containerssh:{{ .Major }}.{{ .Minor }}"
       - "docker.pkg.github.com/containerssh/containerssh/containerssh:{{ .Tag }}"
+      - "quay.io/containerssh/containerssh:latest"
+      - "quay.io/containerssh/containerssh:{{ .Major }}.{{ .Minor }}"
+      - "quay.io/containerssh/containerssh:{{ .Tag }}"
     dockerfile: Dockerfile.goreleaser
     builds:
       - containerssh-linux
@@ -81,7 +96,7 @@ dockers:
       - "--label=org.opencontainers.image.name=ContainerSSH"
       - "--label=org.opencontainers.image.revision={{.FullCommit}}"
       - "--label=org.opencontainers.image.version={{.Version}}"
-      - "--label=org.opencontainers.image.documentation=https://containerssh.github.io"
+      - "--label=org.opencontainers.image.documentation=https://containerssh.io"
     skip_push: auto
   - goos: linux
     goarch: amd64
@@ -94,6 +109,9 @@ dockers:
       - "docker.pkg.github.com/containerssh/containerssh/containerssh-test-authconfig:latest"
       - "docker.pkg.github.com/containerssh/containerssh/containerssh-test-authconfig:{{ .Major }}.{{ .Minor }}"
       - "docker.pkg.github.com/containerssh/containerssh/containerssh-test-authconfig:{{ .Tag }}"
+      - "quay.io/containerssh/containerssh-test-authconfig:latest"
+      - "quay.io/containerssh/containerssh-test-authconfig:{{ .Major }}.{{ .Minor }}"
+      - "quay.io/containerssh/containerssh-test-authconfig:{{ .Tag }}"
     dockerfile: Dockerfile-testauthconfigserver.goreleaser
     builds:
       - containerssh-testauthconfigserver
@@ -105,17 +123,18 @@ dockers:
       - "--label=org.opencontainers.image.name=ContainerSSH Auth-Config Server"
       - "--label=org.opencontainers.image.revision={{.FullCommit}}"
       - "--label=org.opencontainers.image.version={{.Version}}"
-      - "--label=org.opencontainers.image.documentation=https://containerssh.github.io"
+      - "--label=org.opencontainers.image.documentation=https://containerssh.io"
     skip_push: auto
 nfpms:
-  - vendor: Janos Pasztor
-    homepage: https://pasztor.at
-    maintainer: Janos Pasztor <janos@pasztor.at>
+  - vendor: ContainerSSH
+    homepage: https://containerssh.io
+    maintainer: Janos Pasztor <handshake@containerssh.io>
     description: An SSH server that launches Docker containers and Kubernetes pods
     license: MIT
     builds:
       - containerssh-linux
       - containerssh-testauthconfigserver
+      - containerssh-auditlog-decoder
     formats:
       - deb
       - rpm
@@ -130,6 +149,16 @@ nfpms:
         type: config
       - src: LICENSE.md
         dst: /usr/share/doc/containerssh/LICENSE.md
+signs:
+  - id: sign-deb-package
+    artifacts: all
+    cmd: /bin/bash
+    args:
+      - '-c'
+      # HACK: the 'ids' parameter seems to not work on deb packages.
+      - if [[ "${artifact}" == *.deb ]]; then dpkg-sig -k handshake@containerssh.io -s "builder" ${artifact}; fi
+  - id: sign-all
+    artifacts: all
 source:
   enabled: true
   name_template: '{{ .ProjectName }}-{{ .Version }}-source'
