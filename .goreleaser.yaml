@@ -1,8 +1,8 @@
 before:
   hooks:
-#    - go install github.com/mitchellh/golicense
-#    - go run cmd/swagger/main.go containerssh-authconfig-openapi.json
-#    - go test
+    - go install github.com/mitchellh/golicense
+    - go run cmd/swagger/main.go containerssh-authconfig-openapi.json
+    - go test
 builds:
   - id: containerssh-linux
     main: cmd/containerssh/main.go
@@ -13,10 +13,10 @@ builds:
       - amd64
     env:
       - CGO_ENABLED=0
-#    hooks:
-#      post:
-#        - cmd: go run cmd/license-report/main.go golicense.json build/containerssh-linux_linux_amd64/containerssh NOTICE.md
-#          dir: "{{ dir .Path }}/../../"
+    hooks:
+      post:
+        - cmd: go run cmd/license-report/main.go golicense.json build/containerssh-linux_linux_amd64/containerssh NOTICE.md
+          dir: "{{ dir .Path }}/../../"
   - id: containerssh-windows
     main: cmd/containerssh/main.go
     binary: "containerssh"
@@ -124,10 +124,12 @@ nfpms:
     bindir: /usr/sbin
     suggests:
       - docker
-    files:
-      LICENSE.md: /usr/share/doc/containerssh/LICENSE.md
-    config_files:
-      config.example.yaml: /etc/containerssh/config.yaml
+    contents:
+      - src: config.example.yaml
+        dst: /etc/containerssh/config.yaml
+        type: config
+      - src: LICENSE.md
+        dst: /usr/share/doc/containerssh/LICENSE.md
 source:
   enabled: true
   name_template: '{{ .ProjectName }}-{{ .Version }}-source'
