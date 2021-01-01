@@ -21,7 +21,7 @@ func init() {
 	godog.BindFlags("godog.", flag.CommandLine, &opts)
 }
 
-func TestMain(m *testing.M) {
+func TestFeatureTestsShouldPass(t *testing.T) {
 	flag.Parse()
 	opts.Paths = flag.Args()
 
@@ -32,10 +32,9 @@ func TestMain(m *testing.M) {
 		Options:              &opts,
 	}.Run()
 
-	if st := m.Run(); st > status {
-		status = st
+	if status != 0 {
+		t.Fail()
 	}
-	os.Exit(status)
 }
 
 func InitializeTestSuite(ctx *godog.TestSuiteContext) {
@@ -71,6 +70,8 @@ func InitializeScenario(ctx *godog.ScenarioContext) {
 
 	ctx.Step(`^I configure the user "(.*)" to use Kubernetes`, scenario.ConfigureKubernetes)
 	ctx.Step(`^I configure the user "(.*)" to use Docker`, scenario.ConfigureDocker)
+
+	ctx.Step(`the "(.*)" metric should be visible`, scenario.MetricIsVisible)
 }
 
 func setupSuite(ctx *godog.ScenarioContext) *steps.Scenario {

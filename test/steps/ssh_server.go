@@ -24,6 +24,7 @@ func (scenario *Scenario) StartSSHServer() error {
 	appConfig.Auth.URL = "http://127.0.0.1:8080"
 	appConfig.Auth.Password = true
 	appConfig.ConfigServer.URL = "http://127.0.0.1:8081/config"
+	appConfig.Metrics.Enable = true
 
 	srv, err := containerssh.New(
 		appConfig,

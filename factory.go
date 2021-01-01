@@ -11,10 +11,12 @@ import (
 	"github.com/containerssh/geoip/geoipprovider"
 	"github.com/containerssh/log"
 	"github.com/containerssh/metrics"
+	"github.com/containerssh/metricsintegration"
 	"github.com/containerssh/service"
 	"github.com/containerssh/sshserver"
 )
 
+// New creates a new instance of ContainerSSH.
 func New(config configuration.AppConfig, factory log.LoggerFactory) (service.Service, error) {
 	pool := service.NewPool(
 		service.NewLifecycleFactory(),
@@ -46,11 +48,28 @@ func New(config configuration.AppConfig, factory log.LoggerFactory) (service.Ser
 		return nil, err
 	}
 
-	if err := createSSHServer(config, factory, auditLogHandler, pool); err != nil {
+	metricsHandler, err := createMetricsBackend(config, metricsCollector, auditLogHandler)
+	if err != nil {
+		return nil, err
+	}
+
+	if err := createSSHServer(config, factory, metricsHandler, pool); err != nil {
 		return nil, err
 	}
 
 	return pool, nil
+}
+
+func createMetricsBackend(
+	config configuration.AppConfig,
+	collector metrics.Collector,
+	handler sshserver.Handler,
+) (sshserver.Handler, error) {
+	return metricsintegration.NewHandler(
+		config.Metrics,
+		collector,
+		handler,
+	)
 }
 
 func createMetricsServer(
