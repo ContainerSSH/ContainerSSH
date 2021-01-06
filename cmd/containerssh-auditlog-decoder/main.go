@@ -8,7 +8,6 @@ import (
 	"os"
 
 	"github.com/containerssh/auditlog/codec/binary"
-	"github.com/containerssh/auditlog/message"
 )
 
 func main() {
@@ -33,10 +32,9 @@ func main() {
 	decoder := binary.NewDecoder()
 	messages, errors := decoder.Decode(fh)
 	for {
-		var msg *message.Message
 		select {
-		case msg = <-messages:
-			if msg == nil {
+		case msg, ok := <-messages:
+			if !ok {
 				break
 			}
 

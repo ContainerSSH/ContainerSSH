@@ -3,8 +3,7 @@ Feature: Command execution
 
   After starting the SSH and metrics server the documented metrics should be visible in the output.
 
-  Scenario: Metrics visibility
-    Given I started the SSH server
+  Scenario: Documented metrics should be visible on the output
     Then the "containerssh_auth_server_failures" metric should be visible
     And the "containerssh_auth_success" metric should be visible
     And the "containerssh_auth_failures" metric should be visible

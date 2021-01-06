@@ -1,21 +1,13 @@
 #noinspection CucumberUndefinedStep
-Feature: Command execution
+Feature: Execution
 
-  After setting up the SSH and the authentication and configuration servers we should be able to execute a command
-  via SSH and return the result.
+  After setting up ContainerSSH we should be able to execute programs.
 
-  Scenario: Simple command execution via Docker
-    Given I started the SSH server
-    And I started the authentication server
-    And I started the configuration server
-    And I created the user "moby" with the password "bar"
-    And I configure the user "moby" to use Docker
-    Then I should be able to execute a command with user "moby" and password "bar"
-
-  Scenario: Simple command execution via Kubernetes
-    Given I started the SSH server
-    And I started the authentication server
-    And I started the configuration server
-    And I created the user "foo" with the password "bar"
-    And I configure the user "foo" to use Kubernetes
-    Then I should be able to execute a command with user "foo" and password "bar"
+  Scenario: Command execution should work and the output should be returned.
+    Given I created the user "moby" with the password "bar"
+    When I open an SSH connection with the user "moby" and the password "bar"
+    And I open an SSH session
+    And I set the environment variable "MESSAGE" to the value "Hello world!"
+    And I execute the command "echo \"$MESSAGE\""
+    Then I should see "Hello world!" in the output
+    And the session should exit with the code "0"
