@@ -114,6 +114,8 @@ github.com/containerssh/log v0.9.6/go.mod h1:P/tea/If6kzzfqlZdmqNp5SOpD6CD/Ovmvc
 github.com/containerssh/log v0.9.7/go.mod h1:NBMzkhOLZ4z45ShSBKQ/Ij6Hqqg15DgOKy6HlSITx0s=
 github.com/containerssh/log v0.9.8 h1:DJfM/um/kXvs2acCWAvSotuwSuiGEsnheFJp6n7wKAI=
 github.com/containerssh/log v0.9.8/go.mod h1:NBMzkhOLZ4z45ShSBKQ/Ij6Hqqg15DgOKy6HlSITx0s=
+github.com/containerssh/log v0.9.9 h1:JNgeUs5PxCy1qT80RgNSjGBHsS6ukwsKRsZphVJ4yLY=
+github.com/containerssh/log v0.9.9/go.mod h1:NBMzkhOLZ4z45ShSBKQ/Ij6Hqqg15DgOKy6HlSITx0s=
 github.com/containerssh/metrics v0.9.2/go.mod h1:1JGLXVZTdZtWRRYafgt4YThdGcIXQof2Ss+f+BrPAWA=
 github.com/containerssh/metrics v0.9.4/go.mod h1:vWSPzmiVZznPBFdPnt89cHzWLuEGiExEmeUkTJRDne0=
 github.com/containerssh/metrics v0.9.5/go.mod h1:vWSPzmiVZznPBFdPnt89cHzWLuEGiExEmeUkTJRDne0=
