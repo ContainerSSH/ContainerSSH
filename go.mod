@@ -15,6 +15,6 @@ require (
 	github.com/containerssh/service v0.9.0
 	github.com/containerssh/sshserver v0.9.14
 	github.com/containerssh/structutils v0.9.0
-	github.com/cucumber/godog v0.10.0
+	github.com/cucumber/godog v0.11.0
 	golang.org/x/crypto v0.0.0-20201221181555-eec23a3978ad
 )
