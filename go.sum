@@ -82,8 +82,8 @@ github.com/containerssh/auditlogintegration v0.9.1/go.mod h1:wPSwu23vq0YKojr8BJ7
 github.com/containerssh/auth v0.9.2/go.mod h1:aoyvrcLcpnMX/htKYpF4/x4/eJQ2OaLN7hVslAXO2ss=
 github.com/containerssh/auth v0.9.3 h1:4C2uDxrSlxzybqnI2tkVApVU8TSeAg4opDcvEILSUuw=
 github.com/containerssh/auth v0.9.3/go.mod h1:f8ddGlP5+b5dQ82+mxc0b64VWHOKyVa8HqBXfNfyAvw=
-github.com/containerssh/authintegration v0.9.0 h1:aVZCrMIE3ecyGTstFvEOeu8guLgC0ZBc+Zb/vXyscBY=
-github.com/containerssh/authintegration v0.9.0/go.mod h1:ZfNdjQATCzuQ41Q/bMmVu85whImsg58bAkc2Wqb9Ntg=
+github.com/containerssh/authintegration v0.9.1 h1:lVdCnUTxo/24kh/1zgPwgMGhkLuv9Y0GJhffozjVwHk=
+github.com/containerssh/authintegration v0.9.1/go.mod h1:qlnLE6FWiMqNrXarZzb0Nsz/4BkbfbK+daqhTFWhVdI=
 github.com/containerssh/backend v0.9.3 h1:VOect+C11tY0nvT5jK2Uyx7D7BTWqWg0bNUWeKD3GRA=
 github.com/containerssh/backend v0.9.3/go.mod h1:YEmLlbTwgMMO/QJQdyi3/lpHbEXGD1ayX4l9BaL8QDY=
 github.com/containerssh/configuration v0.9.1/go.mod h1:DYo0Z22A5vguRSe8vpr8OGuhM12578uOBl6HdcvZdK0=
@@ -114,6 +114,8 @@ github.com/containerssh/log v0.9.6/go.mod h1:P/tea/If6kzzfqlZdmqNp5SOpD6CD/Ovmvc
 github.com/containerssh/log v0.9.7/go.mod h1:NBMzkhOLZ4z45ShSBKQ/Ij6Hqqg15DgOKy6HlSITx0s=
 github.com/containerssh/log v0.9.8 h1:DJfM/um/kXvs2acCWAvSotuwSuiGEsnheFJp6n7wKAI=
 github.com/containerssh/log v0.9.8/go.mod h1:NBMzkhOLZ4z45ShSBKQ/Ij6Hqqg15DgOKy6HlSITx0s=
+github.com/containerssh/log v0.9.9 h1:JNgeUs5PxCy1qT80RgNSjGBHsS6ukwsKRsZphVJ4yLY=
+github.com/containerssh/log v0.9.9/go.mod h1:NBMzkhOLZ4z45ShSBKQ/Ij6Hqqg15DgOKy6HlSITx0s=
 github.com/containerssh/metrics v0.9.2/go.mod h1:1JGLXVZTdZtWRRYafgt4YThdGcIXQof2Ss+f+BrPAWA=
 github.com/containerssh/metrics v0.9.4/go.mod h1:vWSPzmiVZznPBFdPnt89cHzWLuEGiExEmeUkTJRDne0=
 github.com/containerssh/metrics v0.9.5/go.mod h1:vWSPzmiVZznPBFdPnt89cHzWLuEGiExEmeUkTJRDne0=
@@ -128,9 +130,10 @@ github.com/containerssh/service v0.9.0/go.mod h1:otAKYF1MWy2eB0K7Sk7YQIECQMTHR3y
 github.com/containerssh/sshserver v0.9.8/go.mod h1:sX9Z1ch2yFk30MXQvOKLa8h9V4wex0Nct2mNGYHBTbY=
 github.com/containerssh/sshserver v0.9.9/go.mod h1:HNqF8jgLd+nFJV0K29tV7oUD1KJC8b/49fRZNnCpO00=
 github.com/containerssh/sshserver v0.9.10/go.mod h1:HNqF8jgLd+nFJV0K29tV7oUD1KJC8b/49fRZNnCpO00=
-github.com/containerssh/sshserver v0.9.11/go.mod h1:GOr/SHQvoJpt/yoztX0a9QfKMbixd42GrLZk6YASSvw=
 github.com/containerssh/sshserver v0.9.14 h1:cIc11NbzF2QfnO5SVSgYH6YTBeIORUd9x0chzvaEfrQ=
 github.com/containerssh/sshserver v0.9.14/go.mod h1:GOr/SHQvoJpt/yoztX0a9QfKMbixd42GrLZk6YASSvw=
+github.com/containerssh/sshserver v0.9.16 h1:vnvYbu2m1Hdzq5mHF883fAz3h6KzD0gYlxyyWIS+vfs=
+github.com/containerssh/sshserver v0.9.16/go.mod h1:cMdDoIt0l24KsoaSQezS0aA/891j/gf4QiPjRyDYvyY=
 github.com/containerssh/structutils v0.9.0 h1:pz4xl5ZrPnpdSx7B/ru8Fj3oU3vOtx1jprIuSkm5s7o=
 github.com/containerssh/structutils v0.9.0/go.mod h1:zirdwNXan3kuTpsJp9Gl3W6VQz0fexqMySqxmfviSjw=
 github.com/containerssh/unixutils v0.9.0 h1:9Bh2UiQW6DIuVW6upc1uUU38tKK1IUn2hxZqi9w3cQc=
@@ -269,6 +272,8 @@ github.com/google/renameio v0.1.0/go.mod h1:KWCgfxg9yswjAJkECMjeO8J8rahYeXnNhOm4
 github.com/google/uuid v1.1.1/go.mod h1:TIyPZe4MgqvfeYDBFedMoGGpEw/LqOeaOT+nhxU+yHo=
 github.com/google/uuid v1.1.2 h1:EVhdT+1Kseyi1/pUmXKaFxYsDNy9RQYkMWRH68J/W7Y=
 github.com/google/uuid v1.1.2/go.mod h1:TIyPZe4MgqvfeYDBFedMoGGpEw/LqOeaOT+nhxU+yHo=
+github.com/google/uuid v1.1.4 h1:0ecGp3skIrHWPNGPJDaBIghfA6Sp7Ruo2Io8eLKzWm0=
+github.com/google/uuid v1.1.4/go.mod h1:TIyPZe4MgqvfeYDBFedMoGGpEw/LqOeaOT+nhxU+yHo=
 github.com/googleapis/gax-go/v2 v2.0.4/go.mod h1:0Wqv26UfaUD9n4G6kQubkQ+KchISgw+vpHVxEJEs9eg=
 github.com/googleapis/gax-go/v2 v2.0.5/go.mod h1:DWXyrwAJ9X0FpwwEdw+IPEYBICEFu5mhpdKc/us6bOk=
 github.com/googleapis/gnostic v0.4.1 h1:DLJCy1n/vrD4HPjOvYcT8aYQXpPIzoRZONaYwyycI+I=
