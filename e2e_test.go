@@ -5,6 +5,7 @@ import (
 	"flag"
 	"fmt"
 	"os"
+	"strings"
 	"sync"
 	"testing"
 
@@ -12,11 +13,10 @@ import (
 	"github.com/containerssh/log"
 	"github.com/containerssh/structutils"
 	"github.com/cucumber/godog"
-	"github.com/cucumber/godog/colors"
 )
 
 var opts = godog.Options{
-	Output: colors.Colored(os.Stdout),
+	Output: os.Stdout,
 	Strict: true,
 }
 
@@ -51,13 +51,17 @@ func processTestingAspect(t *testing.T, aspects []TestingAspect, factors []Testi
 		}
 
 		var startedFactors = &[]TestingFactor{}
-		loggerFactory := log.NewLoggerPipelineFactory(os.Stdout)
+		loggerFactory := log.NewLoggerPipelineFactory(
+			&testLogWriter{
+				t: t,
+			},
+		)
 		defer stopFactors(t, startedFactors, loggerFactory, config)()
 		for _, factor := range factors {
 			logger, err := loggerFactory.Make(
 				log.Config{
 					Level:  log.LevelDebug,
-					Format: log.FormatLJSON,
+					Format: log.FormatText,
 				},
 				factor.String(),
 			)
@@ -150,9 +154,9 @@ func runTestSuite(
 ) {
 	hardError := false
 	testSuite := godog.TestSuite{
-		Name: t.Name(),
+		Name:                t.Name(),
 		ScenarioInitializer: scenarioInitializer(t, factors, loggerFactory, config, &hardError),
-		Options: &opts,
+		Options:             &opts,
 	}
 	if testSuite.Run() != 0 {
 		if hardError {
@@ -217,4 +221,13 @@ func scenarioInitializer(
 			}
 		}
 	}
+}
+
+type testLogWriter struct {
+	t *testing.T
+}
+
+func (t *testLogWriter) Write(p []byte) (n int, err error) {
+	t.t.Log(strings.TrimSpace(string(p)))
+	return len(p), nil
 }

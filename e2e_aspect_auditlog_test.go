@@ -10,6 +10,10 @@ import (
 	"sync"
 	"time"
 
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/credentials"
+	"github.com/aws/aws-sdk-go/aws/session"
+	awsS3 "github.com/aws/aws-sdk-go/service/s3"
 	"github.com/containerssh/auditlog"
 	"github.com/containerssh/configuration"
 	"github.com/containerssh/log"
@@ -40,21 +44,21 @@ func (a *auditLogAspect) Factors() []TestingFactor {
 	}
 
 	return []TestingFactor{
-		&auditLogFactor {
-			aspect: a,
+		&auditLogFactor{
+			aspect:  a,
 			storage: auditlog.StorageNone,
-			lock: a.lock,
+			lock:    a.lock,
 		},
-		&auditLogFactor {
-			aspect: a,
+		&auditLogFactor{
+			aspect:  a,
 			storage: auditlog.StorageFile,
-			lock: a.lock,
+			lock:    a.lock,
 		},
-		&auditLogFactor {
-			aspect: a,
-			storage: auditlog.StorageS3,
+		&auditLogFactor{
+			aspect:       a,
+			storage:      auditlog.StorageS3,
 			dockerClient: cli,
-			lock: a.lock,
+			lock:         a.lock,
 		},
 	}
 }
@@ -94,7 +98,7 @@ func (a *auditLogFactor) ModifyConfiguration(config *configuration.AppConfig) er
 		config.Audit.S3.PathStyleAccess = true
 		config.Audit.S3.Bucket = "auditlog"
 		config.Audit.S3.Region = "us-east-1"
-		config.Audit.S3.Endpoint = "https://127.0.0.1:9000"
+		config.Audit.S3.Endpoint = "http://127.0.0.1:9000"
 		tmpDir, err := ioutil.TempDir(os.TempDir(), "containerssh-audit-*")
 		if err != nil {
 			return err
@@ -116,7 +120,11 @@ func (a *auditLogFactor) StartBackingServices(
 		return nil
 	}
 	a.lock.Lock()
-	reader, err := a.dockerClient.ImagePull(context.Background(), "docker.io/minio/minio", types.ImagePullOptions{})
+	reader, err := a.dockerClient.ImagePull(
+		context.Background(),
+		"docker.io/minio/minio",
+		types.ImagePullOptions{},
+	)
 	if err != nil {
 		a.lock.Unlock()
 		return err
@@ -124,39 +132,7 @@ func (a *auditLogFactor) StartBackingServices(
 	if _, err := io.Copy(os.Stdout, reader); err != nil {
 		return err
 	}
-	env := []string{
-		fmt.Sprintf("MINIO_ACCESS_KEY=%s", config.Audit.S3.AccessKey),
-		fmt.Sprintf("MINIO_SECRET_KEY=%s", config.Audit.S3.AccessKey),
-	}
-
-	resp, err := a.dockerClient.ContainerCreate(
-		context.Background(),
-		&container.Config{
-			Image: "minio/minio",
-			Cmd:   []string{"server", "/data"},
-			Env:   env,
-
-		},
-		&container.HostConfig{
-			Binds:           nil,
-			ContainerIDFile: "",
-			LogConfig:       container.LogConfig{},
-			NetworkMode:     "",
-			PortBindings: map[nat.Port][]nat.PortBinding{
-				"9000/tcp": {
-					{
-						HostIP:   "127.0.0.1",
-						HostPort: "9000",
-					},
-				},
-			},
-
-			AutoRemove:      true,
-		},
-		nil,
-		nil,
-		"",
-	)
+	resp, err := a.createMinio(config)
 	if err != nil {
 		a.lock.Unlock()
 		return err
@@ -168,9 +144,11 @@ func (a *auditLogFactor) StartBackingServices(
 		a.containerID,
 		types.ContainerStartOptions{},
 	); err != nil {
-		_ = a.dockerClient.ContainerRemove(context.Background(), a.containerID, types.ContainerRemoveOptions{
-			Force:         true,
-		})
+		_ = a.dockerClient.ContainerRemove(
+			context.Background(), a.containerID, types.ContainerRemoveOptions{
+				Force: true,
+			},
+		)
 		a.lock.Unlock()
 		return err
 	}
@@ -179,7 +157,72 @@ func (a *auditLogFactor) StartBackingServices(
 		a.lock.Unlock()
 		return err
 	}
+
+	if err := a.setupS3(
+		config.Audit.S3.AccessKey,
+		config.Audit.S3.SecretKey,
+		config.Audit.S3.Endpoint,
+		config.Audit.S3.Region,
+		config.Audit.S3.Bucket,
+	); err != nil {
+		a.lock.Unlock()
+		return err
+
+	}
 	return nil
+}
+
+func (a *auditLogFactor) setupS3(accessKey string, secretKey string, endpoint string, region string, bucket string) error {
+	awsConfig := &aws.Config{
+		CredentialsChainVerboseErrors: nil,
+		Credentials: credentials.NewCredentials(&credentials.StaticProvider{
+			Value: credentials.Value{
+				AccessKeyID:     accessKey,
+				SecretAccessKey: secretKey,
+			},
+		}),
+		Endpoint:         aws.String(endpoint),
+		Region:           aws.String(region),
+		S3ForcePathStyle: aws.Bool(true),
+	}
+	sess := session.Must(session.NewSession(awsConfig))
+	s3Connection := awsS3.New(sess)
+	if _, err := s3Connection.CreateBucket(&awsS3.CreateBucketInput{
+		Bucket: aws.String(bucket),
+	}); err != nil {
+		return err
+	}
+	return nil
+}
+
+func (a *auditLogFactor) createMinio(config configuration.AppConfig) (container.ContainerCreateCreatedBody, error) {
+	env := []string{
+		fmt.Sprintf("MINIO_ACCESS_KEY=%s", config.Audit.S3.AccessKey),
+		fmt.Sprintf("MINIO_SECRET_KEY=%s", config.Audit.S3.AccessKey),
+	}
+
+	return a.dockerClient.ContainerCreate(
+		context.Background(),
+		&container.Config{
+			Image: "minio/minio",
+			Cmd:   []string{"server", "/data"},
+			Env:   env,
+		},
+		&container.HostConfig{
+			PortBindings: map[nat.Port][]nat.PortBinding{
+				"9000/tcp": {
+					{
+						HostIP:   "127.0.0.1",
+						HostPort: "9000",
+					},
+				},
+			},
+			AutoRemove: true,
+		},
+		nil,
+		nil,
+		"",
+	)
 }
 
 func (a *auditLogFactor) waitForMinio() error {
@@ -223,12 +266,9 @@ func (a *auditLogFactor) StopBackingServices(
 }
 
 func (a *auditLogFactor) GetSteps(
-	config configuration.AppConfig,
-	logger log.Logger,
-	loggerFactory log.LoggerFactory,
+	_ configuration.AppConfig,
+	_ log.Logger,
+	_ log.LoggerFactory,
 ) []Step {
-	return []Step {
-	}
+	return []Step{}
 }
-
-

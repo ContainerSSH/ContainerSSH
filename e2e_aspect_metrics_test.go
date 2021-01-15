@@ -15,7 +15,6 @@ func NewMetricsTestingAspect() TestingAspect {
 }
 
 type metricsTestingAspect struct {
-
 }
 
 func (m *metricsTestingAspect) String() string {
@@ -26,11 +25,11 @@ func (m *metricsTestingAspect) Factors() []TestingFactor {
 	return []TestingFactor{
 		&metricsFactor{
 			enabled: true,
-			aspect: m,
+			aspect:  m,
 		},
 		&metricsFactor{
 			enabled: false,
-			aspect: m,
+			aspect:  m,
 		},
 	}
 }
@@ -70,7 +69,7 @@ func (m *metricsFactor) StartBackingServices(
 func (m *metricsFactor) GetSteps(
 	config configuration.AppConfig,
 	logger log.Logger,
-	loggerFactory log.LoggerFactory,
+	_ log.LoggerFactory,
 ) []Step {
 	step := &metricsStep{
 		config: config,
@@ -95,7 +94,8 @@ type metricsStep struct {
 
 func (m *metricsStep) TheMetricShouldBeVisible(metricName string) error {
 	if !m.config.Metrics.Enable {
-		return fmt.Errorf("test skipped, metrics not enabled (%w)", ErrSkipped)
+		m.logger.Noticef("test skipped, metrics not enabled")
+		return nil
 	}
 	metricsResponse, err := http.Get("http://" + m.config.Metrics.Listen + m.config.Metrics.Path)
 	if err != nil {
@@ -108,10 +108,8 @@ func (m *metricsStep) TheMetricShouldBeVisible(metricName string) error {
 	if err := metricsResponse.Body.Close(); err != nil {
 		return err
 	}
-	if !strings.Contains(string(body), "# TYPE " + metricName + " ") {
+	if !strings.Contains(string(body), "# TYPE "+metricName+" ") {
 		return fmt.Errorf("metric %s not found in metrics output:\n%s", metricName, string(body))
 	}
 	return nil
 }
-
-

@@ -2,21 +2,22 @@ package containerssh_test
 
 import (
 	"context"
+	"time"
 
 	"github.com/containerssh/service"
 )
 
 type SimpleLifecycle struct {
 	lifecycle service.Lifecycle
-	running chan struct{}
-	stopped chan struct{}
+	running   chan struct{}
+	stopped   chan struct{}
 }
 
 func NewSimpleLifecycle(srv service.Service) *SimpleLifecycle {
 	l := &SimpleLifecycle{
 		lifecycle: service.NewLifecycle(srv),
-		running: make(chan struct{}, 1),
-		stopped: make(chan struct{}, 1),
+		running:   make(chan struct{}, 1),
+		stopped:   make(chan struct{}, 1),
 	}
 	l.lifecycle.OnRunning(
 		func(service.Service, service.Lifecycle) {
@@ -41,7 +42,9 @@ func (s *SimpleLifecycle) Start() error {
 }
 
 func (s *SimpleLifecycle) Stop() error {
-	s.lifecycle.Stop(context.Background())
+	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	defer cancel()
+	s.lifecycle.Stop(ctx)
 	<-s.stopped
 	return s.lifecycle.Wait()
 }
