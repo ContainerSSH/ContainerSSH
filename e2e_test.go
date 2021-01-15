@@ -174,32 +174,53 @@ func scenarioInitializer(
 	return func(ctx *godog.ScenarioContext) {
 		scenarioWG := map[string]*sync.WaitGroup{}
 		testings := map[string]*testing.T{}
+		mu := &sync.Mutex{}
 		ctx.BeforeScenario(
 			func(sc *godog.Scenario) {
-				scenarioWG[sc.Name] = &sync.WaitGroup{}
-				scenarioWG[sc.Name].Add(1)
+				mu.Lock()
+				defer mu.Unlock()
+				if _, ok := scenarioWG[sc.Name]; !ok {
+					scenarioWG[sc.Name] = &sync.WaitGroup{}
+					scenarioWG[sc.Name].Add(1)
+				}
 
 				go t.Run(
 					sc.Name,
 					func(t *testing.T) {
 						testings[sc.Name] = t
-						scenarioWG[sc.Name].Wait()
+						mu.Lock()
+						var ok bool
+						var wg *sync.WaitGroup
+						if wg, ok = scenarioWG[sc.Name]; ok {
+							mu.Unlock()
+							wg.Wait()
+						} else {
+							mu.Unlock()
+						}
 					},
 				)
 			},
 		)
 		ctx.AfterScenario(
 			func(sc *godog.Scenario, err error) {
+				mu.Lock()
+				defer mu.Unlock()
 				if err != nil {
 					if errors.Is(err, ErrSkipped) {
-						testings[sc.Name].Skipf("%v", err)
+						if _, ok := testings[sc.Name]; ok {
+							testings[sc.Name].Skipf("%v", err)
+						}
 					} else {
 						*hardError = true
-						testings[sc.Name].Errorf("%v", err)
-						testings[sc.Name].Fail()
+						if _, ok := testings[sc.Name]; ok {
+							testings[sc.Name].Errorf("%v", err)
+							testings[sc.Name].Fail()
+						}
 					}
 				}
-				scenarioWG[sc.Name].Done()
+				if _, ok := scenarioWG[sc.Name]; ok {
+					scenarioWG[sc.Name].Done()
+				}
 				delete(testings, sc.Name)
 				delete(scenarioWG, sc.Name)
 			},
