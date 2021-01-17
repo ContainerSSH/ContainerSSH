@@ -74,6 +74,8 @@ func processTestingAspect(t *testing.T, aspects []TestingAspect, factors []Testi
 			if err = factor.StartBackingServices(config, logger, loggerFactory); err != nil {
 				t.Errorf("failed to start backing services for %s=%s (%v)", factor.Aspect().String(), factor.String(), err)
 				t.Fail()
+
+				_ = factor.StopBackingServices(config, logger, loggerFactory)
 				return
 			}
 			logger.Noticef("Backing services for %s=%s running.", factor.Aspect().String(), factor.String())

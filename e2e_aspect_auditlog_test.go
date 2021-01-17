@@ -169,8 +169,10 @@ func (a *auditLogFactor) StartBackingServices(
 	); err != nil {
 		a.lock.Unlock()
 		return err
-
 	}
+
+	time.Sleep(10 * time.Second)
+
 	return nil
 }
 
