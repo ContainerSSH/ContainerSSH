@@ -128,7 +128,6 @@ func (a *auditLogFactor) StartBackingServices(
 		types.ImagePullOptions{},
 	)
 	if err != nil {
-		a.lock.Unlock()
 		return err
 	}
 	if _, err := io.Copy(os.Stdout, reader); err != nil {
@@ -136,7 +135,6 @@ func (a *auditLogFactor) StartBackingServices(
 	}
 	resp, err := a.createMinio(config)
 	if err != nil {
-		a.lock.Unlock()
 		return err
 	}
 	a.containerID = resp.ID
@@ -151,12 +149,10 @@ func (a *auditLogFactor) StartBackingServices(
 				Force: true,
 			},
 		)
-		a.lock.Unlock()
 		return err
 	}
 
 	if err := a.waitForMinio(); err != nil {
-		a.lock.Unlock()
 		return err
 	}
 
@@ -167,7 +163,6 @@ func (a *auditLogFactor) StartBackingServices(
 		config.Audit.S3.Region,
 		config.Audit.S3.Bucket,
 	); err != nil {
-		a.lock.Unlock()
 		return err
 	}
 
