@@ -43,6 +43,8 @@ func (a *auditLogAspect) Factors() []TestingFactor {
 		panic(err)
 	}
 
+	cli.NegotiateAPIVersion(context.Background())
+
 	return []TestingFactor{
 		&auditLogFactor{
 			aspect:  a,
