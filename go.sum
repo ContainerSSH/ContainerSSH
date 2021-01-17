@@ -71,6 +71,8 @@ github.com/containerssh/auditlog v0.9.6 h1:ovy6Qq3nQY5CjUd/u2IfJQV3o9Rv7MSxUrZkO
 github.com/containerssh/auditlog v0.9.6/go.mod h1:RFosX/1+kIFHOq/IhcQokZYTra3ZXVThBTYrm3SeAAo=
 github.com/containerssh/auditlog v0.9.7 h1:P6p0mAEJsFzfJgM8fe+WcaO++NUxgbpP47694A6k/3c=
 github.com/containerssh/auditlog v0.9.7/go.mod h1:l2FHX/XRij2Gc+WJIaycLt4C4QbAOLaRgUFn5IZ6zRU=
+github.com/containerssh/auditlog v0.9.8 h1:JpEUCitqKNVz7P4yZoEfqwMVBG8HyJn6JF0HlQ9fQXg=
+github.com/containerssh/auditlog v0.9.8/go.mod h1:d14Nqpfyzr66lT9QNw3mnyh9Q2AI6yx9/IJutYdN8h0=
 github.com/containerssh/auditlogintegration v0.9.4 h1:rDxDu9ZBLBDI4PO03Tll52CpV+31sdIMxqfsxQToElw=
 github.com/containerssh/auditlogintegration v0.9.4/go.mod h1:gzBouryMcBQNRamaxbFUDN+g4w7SWfq4dsLfMJ0VW9I=
 github.com/containerssh/auth v0.9.3 h1:4C2uDxrSlxzybqnI2tkVApVU8TSeAg4opDcvEILSUuw=

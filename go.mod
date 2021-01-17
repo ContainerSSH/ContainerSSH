@@ -6,7 +6,7 @@ require (
 
 	// Direct dependencies
 
-	github.com/containerssh/auditlog v0.9.7
+	github.com/containerssh/auditlog v0.9.8
 	github.com/containerssh/auditlogintegration v0.9.4
 	github.com/containerssh/auth v0.9.3
 	github.com/containerssh/authintegration v0.9.2
