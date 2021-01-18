@@ -186,12 +186,23 @@ func (a *auditLogFactor) setupS3(accessKey string, secretKey string, endpoint st
 	}
 	sess := session.Must(session.NewSession(awsConfig))
 	s3Connection := awsS3.New(sess)
-	if _, err := s3Connection.CreateBucket(&awsS3.CreateBucketInput{
-		Bucket: aws.String(bucket),
-	}); err != nil {
-		return err
+	tries := 0
+	var lastError error
+	for {
+		if tries > 30 {
+			return lastError
+		}
+		if _, err := s3Connection.CreateBucket(
+			&awsS3.CreateBucketInput{
+				Bucket: aws.String(bucket),
+			},
+		); err != nil {
+			lastError = err
+			tries++
+			time.Sleep(time.Second)
+		}
+		return nil
 	}
-	return nil
 }
 
 func (a *auditLogFactor) createMinio(config configuration.AppConfig) (container.ContainerCreateCreatedBody, error) {
@@ -232,10 +243,25 @@ func (a *auditLogFactor) waitForMinio() error {
 			_ = a.dockerClient.ContainerStop(context.Background(), a.containerID, &timeout)
 			return fmt.Errorf("minio failed to come up within 30 seconds")
 		}
+		inspectResult, err := a.dockerClient.ContainerInspect(context.Background(), a.containerID)
+		if err != nil {
+			tries++
+			time.Sleep(time.Second)
+			continue
+		}
+		if inspectResult.State != nil {
+			if !inspectResult.State.Running {
+				tries++
+				time.Sleep(time.Second)
+				continue
+			}
+		}
+
 		sock, err := net.Dial("tcp", "127.0.0.1:9000")
 		if err != nil {
 			tries++
 			time.Sleep(time.Second)
+			continue
 		} else {
 			_ = sock.Close()
 
