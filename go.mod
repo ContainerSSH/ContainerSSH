@@ -4,6 +4,9 @@ go 1.14
 
 require (
 
+	// Test dependencies
+
+	github.com/aws/aws-sdk-go v1.36.27
 	// Direct dependencies
 
 	github.com/containerssh/auditlog v0.9.8
@@ -20,11 +23,7 @@ require (
 	github.com/containerssh/service v0.9.0
 	github.com/containerssh/sshserver v0.9.16
 	github.com/containerssh/structutils v0.9.0
-
-	// Test dependencies
-
-	github.com/aws/aws-sdk-go v1.36.27
-	github.com/cucumber/godog v0.10.0
+	github.com/cucumber/godog v0.11.0
 	github.com/docker/docker v20.10.2+incompatible
 	github.com/docker/go-connections v0.4.0
 
