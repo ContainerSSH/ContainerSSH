@@ -177,56 +177,10 @@ func scenarioInitializer(
 		scenarioWG := map[string]*sync.WaitGroup{}
 		testings := map[string]*testing.T{}
 		mu := &sync.Mutex{}
-		ctx.BeforeScenario(
-			func(sc *godog.Scenario) {
-				mu.Lock()
-				defer mu.Unlock()
-				if _, ok := scenarioWG[sc.Name]; !ok {
-					scenarioWG[sc.Name] = &sync.WaitGroup{}
-					scenarioWG[sc.Name].Add(1)
-				}
-
-				go t.Run(
-					sc.Name,
-					func(t *testing.T) {
-						testings[sc.Name] = t
-						mu.Lock()
-						var ok bool
-						var wg *sync.WaitGroup
-						if wg, ok = scenarioWG[sc.Name]; ok {
-							mu.Unlock()
-							wg.Wait()
-						} else {
-							mu.Unlock()
-						}
-					},
-				)
-			},
-		)
-		ctx.AfterScenario(
-			func(sc *godog.Scenario, err error) {
-				mu.Lock()
-				defer mu.Unlock()
-				if err != nil {
-					if errors.Is(err, ErrSkipped) {
-						if _, ok := testings[sc.Name]; ok {
-							testings[sc.Name].Skipf("%v", err)
-						}
-					} else {
-						*hardError = true
-						if _, ok := testings[sc.Name]; ok {
-							testings[sc.Name].Errorf("%v", err)
-							testings[sc.Name].Fail()
-						}
-					}
-				}
-				if _, ok := scenarioWG[sc.Name]; ok {
-					scenarioWG[sc.Name].Done()
-				}
-				delete(testings, sc.Name)
-				delete(scenarioWG, sc.Name)
-			},
-		)
+		beforeScenario := createBeforeContext(mu, scenarioWG, t, testings)
+		afterScenario := createAfterScenario(mu, testings, hardError, scenarioWG)
+		ctx.BeforeScenario(beforeScenario)
+		ctx.AfterScenario(afterScenario)
 
 		for _, factor := range factors {
 			logger, err := loggerFactory.Make(
@@ -244,6 +198,70 @@ func scenarioInitializer(
 			}
 		}
 	}
+}
+
+func createAfterScenario(
+	mu *sync.Mutex,
+	testings map[string]*testing.T,
+	hardError *bool,
+	scenarioWG map[string]*sync.WaitGroup,
+) func(sc *godog.Scenario, err error) {
+	afterScenario := func(sc *godog.Scenario, err error) {
+		mu.Lock()
+		defer mu.Unlock()
+		if err != nil {
+			if errors.Is(err, ErrSkipped) {
+				if _, ok := testings[sc.Name]; ok {
+					testings[sc.Name].Skipf("%v", err)
+				}
+			} else {
+				*hardError = true
+				if _, ok := testings[sc.Name]; ok {
+					testings[sc.Name].Errorf("%v", err)
+					testings[sc.Name].Fail()
+				}
+			}
+		}
+		if _, ok := scenarioWG[sc.Name]; ok {
+			scenarioWG[sc.Name].Done()
+		}
+		delete(testings, sc.Name)
+		delete(scenarioWG, sc.Name)
+	}
+	return afterScenario
+}
+
+func createBeforeContext(
+	mu *sync.Mutex,
+	scenarioWG map[string]*sync.WaitGroup,
+	t *testing.T,
+	testings map[string]*testing.T,
+) func(sc *godog.Scenario) {
+	beforeScenario := func(sc *godog.Scenario) {
+		mu.Lock()
+		defer mu.Unlock()
+		if _, ok := scenarioWG[sc.Name]; !ok {
+			scenarioWG[sc.Name] = &sync.WaitGroup{}
+			scenarioWG[sc.Name].Add(1)
+		}
+
+		go t.Run(
+			sc.Name,
+			func(t *testing.T) {
+				testings[sc.Name] = t
+				mu.Lock()
+				var ok bool
+				var wg *sync.WaitGroup
+				if wg, ok = scenarioWG[sc.Name]; ok {
+					mu.Unlock()
+					wg.Wait()
+				} else {
+					mu.Unlock()
+				}
+			},
+		)
+	}
+	return beforeScenario
 }
 
 type testLogWriter struct {

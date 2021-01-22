@@ -192,16 +192,16 @@ func (a *auditLogFactor) setupS3(accessKey string, secretKey string, endpoint st
 		if tries > 30 {
 			return lastError
 		}
-		if _, err := s3Connection.CreateBucket(
+		if _, lastError = s3Connection.CreateBucket(
 			&awsS3.CreateBucketInput{
 				Bucket: aws.String(bucket),
 			},
-		); err != nil {
-			lastError = err
+		); lastError != nil {
 			tries++
 			time.Sleep(time.Second)
+		} else {
+			return nil
 		}
-		return nil
 	}
 }
 
