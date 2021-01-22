@@ -150,13 +150,6 @@ nfpms:
       - src: LICENSE.md
         dst: /usr/share/doc/containerssh/LICENSE.md
 signs:
-  - id: sign-deb-package
-    artifacts: all
-    cmd: /bin/bash
-    args:
-      - '-c'
-      # HACK: the 'ids' parameter seems to not work on deb packages.
-      - if [[ "${artifact}" == *.deb ]]; then dpkg-sig -k handshake@containerssh.io -s "builder" ${artifact}; fi
   - id: sign-all
     artifacts: all
 source:
