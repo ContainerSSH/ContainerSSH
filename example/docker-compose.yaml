@@ -1,3 +1,8 @@
+# This file is provided as a quick way to deploy ContainerSSH for
+# testing purposes. It should not be used for production.
+#
+# Please see the ContainerSSH reference manual for a detailed guide:
+# https://containerssh.io/reference/
 ---
 version: '3.2'
 services:
