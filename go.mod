@@ -3,10 +3,9 @@ module github.com/containerssh/containerssh
 go 1.14
 
 require (
-
 	// Test dependencies
 
-	github.com/aws/aws-sdk-go v1.36.27
+	github.com/aws/aws-sdk-go v1.37.13
 	// Direct dependencies
 
 	github.com/containerssh/auditlog v0.9.8
