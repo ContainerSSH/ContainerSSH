@@ -3,7 +3,6 @@ module github.com/containerssh/containerssh
 go 1.14
 
 require (
-
 	// Test dependencies
 
 	github.com/aws/aws-sdk-go v1.36.27
@@ -17,7 +16,7 @@ require (
 	github.com/containerssh/configuration v0.9.7
 	github.com/containerssh/geoip v0.9.4
 	github.com/containerssh/http v0.9.5
-	github.com/containerssh/log v0.9.9
+	github.com/containerssh/log v0.9.10
 	github.com/containerssh/metrics v0.9.6
 	github.com/containerssh/metricsintegration v0.9.2
 	github.com/containerssh/service v0.9.0
