@@ -3,7 +3,6 @@ module github.com/containerssh/containerssh
 go 1.14
 
 require (
-
 	// Test dependencies
 
 	github.com/aws/aws-sdk-go v1.36.27
@@ -24,7 +23,7 @@ require (
 	github.com/containerssh/sshserver v0.9.16
 	github.com/containerssh/structutils v0.9.0
 	github.com/cucumber/godog v0.11.0
-	github.com/docker/docker v20.10.2+incompatible
+	github.com/docker/docker v20.10.5+incompatible
 	github.com/docker/go-connections v0.4.0
 
 	// Indirect dependencies
