@@ -6,14 +6,14 @@ require (
 	github.com/aws/aws-sdk-go v1.37.26
 	github.com/containerssh/auditlog v0.9.9
 	github.com/containerssh/auditlogintegration v0.9.4
-	github.com/containerssh/auth v0.9.5
+	github.com/containerssh/auth v0.9.6
 	github.com/containerssh/authintegration v0.9.4
 	github.com/containerssh/backend v0.9.8
-	github.com/containerssh/configuration v0.9.8
+	github.com/containerssh/configuration v0.9.9
 	github.com/containerssh/geoip v0.9.4
-	github.com/containerssh/http v0.9.8
+	github.com/containerssh/http v0.9.9
 	github.com/containerssh/log v0.9.13
-	github.com/containerssh/metrics v0.9.7
+	github.com/containerssh/metrics v0.9.8
 	github.com/containerssh/metricsintegration v0.9.3
 	github.com/containerssh/service v0.9.3
 	github.com/containerssh/sshserver v0.9.19
@@ -47,4 +47,5 @@ replace (
 	golang.org/x/text v0.3.2 => golang.org/x/text v0.3.3
 )
 
+// Exclude this package because it got renamed to /moby/ which breaks packages.
 exclude github.com/docker/spdystream v0.2.0
