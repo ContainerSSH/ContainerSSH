@@ -19,7 +19,7 @@ type TestingFactor interface {
 	Aspect() TestingAspect
 	String() string
 	ModifyConfiguration(config *configuration.AppConfig) error
-	StartBackingServices(config configuration.AppConfig, logger log.Logger, loggerFactory log.LoggerFactory) error
-	GetSteps(config configuration.AppConfig, logger log.Logger, loggerFactory log.LoggerFactory,) []Step
-	StopBackingServices(config configuration.AppConfig, logger log.Logger, loggerFactory log.LoggerFactory) error
+	StartBackingServices(config configuration.AppConfig, logger log.Logger) error
+	GetSteps(config configuration.AppConfig, logger log.Logger) []Step
+	StopBackingServices(config configuration.AppConfig, logger log.Logger) error
 }

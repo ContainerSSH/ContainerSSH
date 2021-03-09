@@ -49,23 +49,21 @@ func (k *kubernetesTestingFactor) ModifyConfiguration(config *configuration.AppC
 	return nil
 }
 
-func (k *kubernetesTestingFactor) StartBackingServices(configuration.AppConfig, log.Logger, log.LoggerFactory) error {
+func (k *kubernetesTestingFactor) StartBackingServices(_ configuration.AppConfig, _ log.Logger) error {
 	// Assume Kubernetes is already running
 	return nil
 }
 
 func (k *kubernetesTestingFactor) GetSteps(
-	config configuration.AppConfig,
-	logger log.Logger,
-	loggerFactory log.LoggerFactory,
+	_ configuration.AppConfig,
+	_ log.Logger,
 ) []Step {
 	return []Step{}
 }
 
-func (k *kubernetesTestingFactor) StopBackingServices(configuration.AppConfig, log.Logger, log.LoggerFactory) error {
+func (k *kubernetesTestingFactor) StopBackingServices(_ configuration.AppConfig, _ log.Logger) error {
 	return nil
 }
-
 
 type dockerTestingFactor struct {
 	aspect *backendTestingAspect
@@ -85,22 +83,18 @@ func (d *dockerTestingFactor) ModifyConfiguration(config *configuration.AppConfi
 	return nil
 }
 
-func (d *dockerTestingFactor) StartBackingServices(configuration.AppConfig, log.Logger, log.LoggerFactory) error {
+func (d *dockerTestingFactor) StartBackingServices(_ configuration.AppConfig, _ log.Logger) error {
 	// Assume Docker is already running
 	return nil
 }
 
 func (d *dockerTestingFactor) GetSteps(
-	config configuration.AppConfig,
-	logger log.Logger,
-	loggerFactory log.LoggerFactory,
+	_ configuration.AppConfig,
+	_ log.Logger,
 ) []Step {
 	return []Step{}
 }
 
-func (d *dockerTestingFactor) StopBackingServices(configuration.AppConfig, log.Logger, log.LoggerFactory) error {
+func (d *dockerTestingFactor) StopBackingServices(_ configuration.AppConfig, _ log.Logger) error {
 	return nil
 }
-
-
-

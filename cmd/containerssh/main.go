@@ -22,50 +22,44 @@ import (
 	"github.com/containerssh/containerssh"
 )
 
-type sureFireWriter struct {
-	backend io.Writer
-}
-
-func (s *sureFireWriter) Write(p []byte) (n int, err error) {
-	n, err = s.backend.Write(p)
-	if err != nil {
-		// Ignore errors
-		return len(p), nil
-	}
-	return n, nil
-}
-
 func main() {
 	config := configuration.AppConfig{}
 	structutils.Defaults(&config)
 
-	loggerFactory := log.NewFactory(&sureFireWriter{os.Stdout})
+	loggerFactory := log.NewLoggerFactory()
 	logger, err := loggerFactory.Make(
 		config.Log,
-		"",
 	)
 	if err != nil {
 		panic(err)
 	}
 
+	logger = logger.WithLabel("module", "core")
+
 	configFile, actionDumpConfig, actionLicenses := getArguments()
 
 	if configFile != "" {
+		realConfigFile, err := filepath.Abs(configFile)
+		if err != nil {
+			logger.Critical(log.Wrap(err, containerssh.EConfig, "Failed to fetch absolute path for configuration file %s", configFile))
+			os.Exit(1)
+		}
+		configFile = realConfigFile
 		if err = readConfigFile(configFile, loggerFactory, &config); err != nil {
-			logger.Criticalf("failed to read configuration file %s (%v)", configFile, err)
+			logger.Critical(log.Wrap(err, containerssh.EConfig, "Invalid configuration in file %s", configFile))
 			os.Exit(1)
 		}
 	} else {
 		configFile, err = filepath.Abs("./config.yaml")
 		if err != nil {
-			logger.Criticalf("failed to fetch current directory")
+			logger.Critical(log.Wrap(err, containerssh.EConfig, "ContainerSSH configuration file does not exist: ./config.yaml"))
 			os.Exit(1)
 		}
 	}
 
 	if actionDumpConfig {
 		if err = dumpConfig(os.Stdout, loggerFactory, &config); err != nil {
-			logger.Criticalf("error dumping config (%v)", err)
+			logger.Critical(err)
 			os.Exit(1)
 		}
 		os.Exit(0)
@@ -73,24 +67,42 @@ func main() {
 
 	if actionLicenses {
 		if err := printLicenses(os.Stdout); err != nil {
-			logger.Criticale(err)
+			logger.Critical(err)
 			os.Exit(1)
 		}
 		os.Exit(0)
 	}
+
+	runContainerSSH(loggerFactory, config, configFile)
+}
+
+func runContainerSSH(
+	loggerFactory log.LoggerFactory,
+	config configuration.AppConfig,
+	configFile string,
+) {
+	logger, err := loggerFactory.Make(config.Log)
+	if err != nil {
+		panic(err)
+	}
+
+	logger.Debug(log.NewMessage(containerssh.MConfigFile, "Using configuration file %s...", configFile))
 
 	if len(config.SSH.HostKeys) == 0 {
-
-		logger.Noticef("No host keys found in configuration, generating host keys...")
+		logger.Warning(
+			log.NewMessage(
+				containerssh.ECoreNoHostKeys,
+				"No host keys found in configuration, generating temporary host keys and updating configuration...",
+			),
+		)
 		if err := generateHostKeys(configFile, &config, logger); err != nil {
-			logger.Criticalf("failed to generate host keys (%v)", err)
+			logger.Critical(log.Wrap(err, containerssh.ECoreHostKeyGenerationFailed, "failed to generate host keys"))
 			os.Exit(1)
 		}
-		os.Exit(0)
 	}
 
-	if err := startServices(config, logger, loggerFactory); err != nil {
-		logger.Criticale(err)
+	if err := startServices(config, loggerFactory); err != nil {
+		logger.Critical(err)
 		os.Exit(1)
 	}
 	os.Exit(0)
@@ -122,46 +134,37 @@ func getArguments() (string, bool, bool) {
 	return configFile, actionDumpConfig, actionLicenses
 }
 
-func startServices(config configuration.AppConfig, logger log.Logger, loggerFactory log.LoggerFactory) error {
+func startServices(config configuration.AppConfig, loggerFactory log.LoggerFactory) error {
 	pool, err := containerssh.New(config, loggerFactory)
 	if err != nil {
 		return err
 	}
 
-	return startPool(pool, logger)
+	return startPool(pool)
 }
 
-func startPool(pool service.Service, logger log.Logger) error {
+func startPool(pool containerssh.Service) error {
 	lifecycle := service.NewLifecycle(pool)
 	starting := make(chan struct{})
 	lifecycle.OnStarting(
 		func(s service.Service, l service.Lifecycle) {
-			logger.Noticef("Services are starting...")
 			starting <- struct{}{}
 		},
 	)
-	lifecycle.OnRunning(
-		func(s service.Service, l service.Lifecycle) {
-			logger.Noticef("All services are now running.")
-		},
-	)
-	lifecycle.OnStopping(
-		func(s service.Service, l service.Lifecycle, shutdownContext context.Context) {
-			logger.Noticef("Services are shutting down...")
-		},
-	)
-
 	go func() {
 		_ = lifecycle.Run()
 	}()
 
 	<-starting
 
-	signals := make(chan os.Signal, 1)
-	signalList := []os.Signal{os.Interrupt, os.Kill, syscall.SIGINT, syscall.SIGTERM, syscall.SIGHUP}
-	signal.Notify(signals, signalList...)
+	exitSignalList := []os.Signal{os.Interrupt, os.Kill, syscall.SIGINT, syscall.SIGTERM}
+	rotateSignalList := []os.Signal{syscall.SIGHUP}
+	exitSignals := make(chan os.Signal, 1)
+	rotateSignals := make(chan os.Signal, 1)
+	signal.Notify(exitSignals, exitSignalList...)
+	signal.Notify(rotateSignals, rotateSignalList...)
 	go func() {
-		if _, ok := <-signals; ok {
+		if _, ok := <-exitSignals; ok {
 			// ok means the channel wasn't closed
 			shutdownContext, cancelFunc := context.WithTimeout(
 				context.Background(),
@@ -173,9 +176,22 @@ func startPool(pool service.Service, logger log.Logger) error {
 			)
 		}
 	}()
+	go func() {
+		for {
+			if _, ok := <-rotateSignals; ok {
+				err := pool.RotateLogs()
+				if err != nil {
+					panic(err)
+				}
+			} else {
+				break
+			}
+		}
+	}()
 	err := lifecycle.Wait()
-	signal.Ignore(signalList...)
-	close(signals)
+	signal.Ignore(rotateSignalList...)
+	signal.Ignore(exitSignalList...)
+	close(exitSignals)
 	return err
 }
 
@@ -184,29 +200,31 @@ func generateHostKeys(configFile string, config *configuration.AppConfig, logger
 		return err
 	}
 
-	dir := filepath.Base(configFile)
-	hostKeyFile := filepath.Join(dir, "ssh_host_rsa_key")
-
-	tmpFile := fmt.Sprintf("%s~", hostKeyFile)
+	tmpFile := fmt.Sprintf("%s~", configFile)
 	fh, err := os.Create(tmpFile)
 	if err != nil {
-		return fmt.Errorf("failed to open temporary file %s for writing (%w)", tmpFile, err)
+		logger.Warning(log.Wrap(err, containerssh.ECannotWriteConfigFile, "Cannot create temporary configuration file at %s with updated host keys.", tmpFile).Label("tmpFile", configFile))
+		return nil
 	}
-	format := getConfigFileFormat(hostKeyFile)
+	format := getConfigFileFormat(configFile)
 	saver, err := configuration.NewWriterSaver(fh, logger, format)
 	if err != nil {
 		_ = fh.Close()
-		return err
+		logger.Warning(log.Wrap(err, containerssh.ECannotWriteConfigFile, "Cannot initialize temporary configuration file at %s with updated host keys.", tmpFile).Label("tmpFile", configFile))
+		return nil
 	}
 	if err := saver.Save(config); err != nil {
 		_ = fh.Close()
-		return err
+		logger.Warning(log.Wrap(err, containerssh.ECannotWriteConfigFile, "Cannot save temporary configuration file at %s with updated host keys.", tmpFile).Label("tmpFile", configFile))
+		return nil
 	}
 	if err := fh.Close(); err != nil {
-		return err
+		logger.Warning(log.Wrap(err, containerssh.ECannotWriteConfigFile, "Cannot close temporary configuration file at %s with updated host keys.", tmpFile).Label("tmpFile", configFile))
+		return nil
 	}
 
-	if err := os.Rename(tmpFile, hostKeyFile); err != nil {
+	if err := os.Rename(tmpFile, configFile); err != nil {
+		logger.Warning(log.Wrap(err, containerssh.ECannotWriteConfigFile, "Failed to rename temporary file %s to %s with updated host keys.", tmpFile, configFile).Label("file", configFile).Label("tmpFile", tmpFile))
 		return fmt.Errorf("failed to rename temporary file %s to %s (%w)", tmpFile, configFile, err)
 	}
 
@@ -238,7 +256,6 @@ func printLicenses(writer io.Writer) error {
 func dumpConfig(writer io.Writer, loggerFactory log.LoggerFactory, config *configuration.AppConfig) error {
 	configLogger, err := loggerFactory.Make(
 		config.Log,
-		"config",
 	)
 	if err != nil {
 		return err
@@ -261,7 +278,6 @@ func readConfigFile(
 ) error {
 	configLogger, err := loggerFactory.Make(
 		config.Log,
-		"config",
 	)
 	if err != nil {
 		return err

@@ -18,7 +18,6 @@ func NewSSHTestingAspect() TestingAspect {
 }
 
 type sshTestingAspect struct {
-
 }
 
 func (r *sshTestingAspect) String() string {
@@ -59,7 +58,6 @@ func (r *sshInProcess) ModifyConfiguration(*configuration.AppConfig) error {
 func (r *sshInProcess) StartBackingServices(
 	config configuration.AppConfig,
 	_ log.Logger,
-	loggerFactory log.LoggerFactory,
 ) error {
 	if err := config.SSH.GenerateHostKey(); err != nil {
 		return err
@@ -67,7 +65,7 @@ func (r *sshInProcess) StartBackingServices(
 	r.config = config
 	srv, err := containerssh.New(
 		config,
-		loggerFactory,
+		log.NewLoggerFactory(),
 	)
 	if err != nil {
 		return err
@@ -78,8 +76,8 @@ func (r *sshInProcess) StartBackingServices(
 
 func (r *sshInProcess) getConfig(user string, password string) *ssh.ClientConfig {
 	return &ssh.ClientConfig{
-		User:              user,
-		Auth:              []ssh.AuthMethod{
+		User: user,
+		Auth: []ssh.AuthMethod{
 			ssh.Password(password),
 		},
 		HostKeyCallback: func(hostname string, remote net.Addr, key ssh.PublicKey) error {
@@ -88,14 +86,14 @@ func (r *sshInProcess) getConfig(user string, password string) *ssh.ClientConfig
 	}
 }
 
-func (r *sshInProcess) StopBackingServices(configuration.AppConfig, log.Logger, log.LoggerFactory) error {
+func (r *sshInProcess) StopBackingServices(_ configuration.AppConfig, _ log.Logger) error {
 	if r.sshConnection != nil {
 		_ = r.sshConnection.Close()
 	}
 	return r.lifecycle.Stop()
 }
 
-func (r *sshInProcess) GetSteps(configuration.AppConfig, log.Logger, log.LoggerFactory,) []Step {
+func (r *sshInProcess) GetSteps(_ configuration.AppConfig, _ log.Logger) []Step {
 	return []Step{
 		{
 			`^authentication with user "(.*)" and password "(.*)" (?:should fail|should have failed)$`,

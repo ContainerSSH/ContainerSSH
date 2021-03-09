@@ -59,7 +59,9 @@ func (s *authConfigServer) authPassword(w http.ResponseWriter, req *http.Request
 	authResponse := protocol.AuthResponse{
 		Success: false,
 	}
-	if authRequest.Username == "foo" || authRequest.Username == "busybox" {
+	if os.Getenv("CONTAINERSSH_ALLOW_ALL") == "1" ||
+		authRequest.Username == "foo" ||
+		authRequest.Username == "busybox" {
 		authResponse.Success = true
 	}
 

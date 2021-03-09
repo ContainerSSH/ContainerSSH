@@ -54,13 +54,14 @@ func (m *metricsFactor) String() string {
 
 func (m *metricsFactor) ModifyConfiguration(config *configuration.AppConfig) error {
 	config.Metrics.Enable = m.enabled
+	// Change the metrics port because 9100 is often the printer port on desktop OS, which can lead to weird conflicts.
+	config.Metrics.Listen = "0.0.0.0:9101"
 	return nil
 }
 
 func (m *metricsFactor) StartBackingServices(
 	config configuration.AppConfig,
 	_ log.Logger,
-	_ log.LoggerFactory,
 ) error {
 	m.config = config
 	return nil
@@ -69,7 +70,6 @@ func (m *metricsFactor) StartBackingServices(
 func (m *metricsFactor) GetSteps(
 	config configuration.AppConfig,
 	logger log.Logger,
-	_ log.LoggerFactory,
 ) []Step {
 	step := &metricsStep{
 		config: config,
@@ -83,7 +83,7 @@ func (m *metricsFactor) GetSteps(
 	}
 }
 
-func (m *metricsFactor) StopBackingServices(configuration.AppConfig, log.Logger, log.LoggerFactory) error {
+func (m *metricsFactor) StopBackingServices(_ configuration.AppConfig, _ log.Logger) error {
 	return nil
 }
 
@@ -94,10 +94,11 @@ type metricsStep struct {
 
 func (m *metricsStep) TheMetricShouldBeVisible(metricName string) error {
 	if !m.config.Metrics.Enable {
-		m.logger.Noticef("test skipped, metrics not enabled")
+		m.logger.Notice(log.NewMessage(log.MTest, "test skipped, metrics not enabled"))
 		return nil
 	}
-	metricsResponse, err := http.Get("http://" + m.config.Metrics.Listen + m.config.Metrics.Path)
+	metricsResponse, err := http.Get(
+		"http://" + strings.Replace(m.config.Metrics.Listen, "0.0.0.0:", "127.0.0.1:", 1) + m.config.Metrics.Path)
 	if err != nil {
 		return err
 	}

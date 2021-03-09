@@ -1,7 +1,9 @@
 package containerssh
 
 import (
-	"context"
+	"github.com/containerssh/log"
+	"github.com/containerssh/service"
+	"github.com/containerssh/sshserver"
 
 	"github.com/containerssh/auditlogintegration"
 	"github.com/containerssh/authintegration"
@@ -9,17 +11,24 @@ import (
 	"github.com/containerssh/configuration"
 	"github.com/containerssh/geoip"
 	"github.com/containerssh/geoip/geoipprovider"
-	"github.com/containerssh/log"
 	"github.com/containerssh/metrics"
 	"github.com/containerssh/metricsintegration"
-	"github.com/containerssh/service"
-	"github.com/containerssh/sshserver"
 )
 
 // New creates a new instance of ContainerSSH.
-func New(config configuration.AppConfig, factory log.LoggerFactory) (service.Service, error) {
+func New(config configuration.AppConfig, factory log.LoggerFactory) (Service, error) {
+	if err := config.Validate(false); err != nil {
+		return nil, log.Wrap(err, EConfig, "invalid ContainerSSH configuration")
+	}
+
+	logger, err := factory.Make(config.Log)
+	if err != nil {
+		return nil, err
+	}
+
 	pool := service.NewPool(
 		service.NewLifecycleFactory(),
+		logger.WithLabel("module", "service"),
 	)
 
 	geoIPLookupProvider, err := geoip.New(config.GeoIP)
@@ -29,21 +38,21 @@ func New(config configuration.AppConfig, factory log.LoggerFactory) (service.Ser
 
 	metricsCollector := metrics.New(geoIPLookupProvider)
 
-	if err := createMetricsServer(config, factory, metricsCollector, pool); err != nil {
+	if err := createMetricsServer(config, logger, metricsCollector, pool); err != nil {
 		return nil, err
 	}
 
-	containerBackend, err := createBackend(config, factory, metricsCollector)
+	containerBackend, err := createBackend(config, logger, metricsCollector)
 	if err != nil {
 		return nil, err
 	}
 
-	authHandler, err := createAuthHandler(config, factory, containerBackend)
+	authHandler, err := createAuthHandler(config, logger, containerBackend, metricsCollector)
 	if err != nil {
 		return nil, err
 	}
 
-	auditLogHandler, err := createAuditLogHandler(config, factory, authHandler, geoIPLookupProvider)
+	auditLogHandler, err := createAuditLogHandler(config, logger, authHandler, geoIPLookupProvider)
 	if err != nil {
 		return nil, err
 	}
@@ -53,11 +62,23 @@ func New(config configuration.AppConfig, factory log.LoggerFactory) (service.Ser
 		return nil, err
 	}
 
-	if err := createSSHServer(config, factory, metricsHandler, pool); err != nil {
+	if err := createSSHServer(config, logger, metricsHandler, pool); err != nil {
 		return nil, err
 	}
 
-	return pool, nil
+	return &servicePool{
+		pool,
+		logger,
+	}, nil
+}
+
+type servicePool struct {
+	service.Pool
+	logger log.Logger
+}
+
+func (s servicePool) RotateLogs() error {
+	return s.logger.Rotate()
 }
 
 func createMetricsBackend(
@@ -74,14 +95,11 @@ func createMetricsBackend(
 
 func createMetricsServer(
 	config configuration.AppConfig,
-	factory log.LoggerFactory,
+	logger log.Logger,
 	metricsCollector metrics.Collector,
 	pool service.Pool,
 ) error {
-	metricsLogger, err := factory.Make(config.Log, "metrics")
-	if err != nil {
-		return err
-	}
+	metricsLogger := logger.WithLabel("module", "metrics")
 	metricsServer, err := metrics.NewServer(config.Metrics, metricsCollector, metricsLogger)
 	if err != nil {
 		return err
@@ -89,36 +107,17 @@ func createMetricsServer(
 	if metricsServer == nil {
 		return nil
 	}
-	pool.Add(metricsServer).OnStarting(
-		func(s service.Service, l service.Lifecycle) {
-			metricsLogger.Noticef("Metrics service is starting...")
-		},
-	).OnRunning(
-		func(s service.Service, l service.Lifecycle) {
-			metricsLogger.Noticef("Metrics service is running at %s", config.Metrics.Listen)
-		},
-	).OnStopping(
-		func(s service.Service, l service.Lifecycle, shutdownContext context.Context) {
-			metricsLogger.Noticef("Metrics service is stopping...")
-		},
-	).OnStopped(
-		func(s service.Service, l service.Lifecycle) {
-			metricsLogger.Noticef("Metrics service has stopped.")
-		},
-	)
+	pool.Add(metricsServer)
 	return nil
 }
 
 func createSSHServer(
 	config configuration.AppConfig,
-	factory log.LoggerFactory,
+	logger log.Logger,
 	auditLogHandler sshserver.Handler,
 	pool service.Pool,
 ) error {
-	sshLogger, err := factory.Make(config.Log, "ssh")
-	if err != nil {
-		return err
-	}
+	sshLogger := logger.WithLabel("module", "ssh")
 	sshServer, err := sshserver.New(
 		config.SSH,
 		auditLogHandler,
@@ -127,36 +126,17 @@ func createSSHServer(
 	if err != nil {
 		return err
 	}
-	pool.Add(sshServer).OnStarting(
-		func(s service.Service, l service.Lifecycle) {
-			sshLogger.Noticef("SSH service is starting...")
-		},
-	).OnRunning(
-		func(s service.Service, l service.Lifecycle) {
-			sshLogger.Noticef("SSH service is running at %s", config.SSH.Listen)
-		},
-	).OnStopping(
-		func(s service.Service, l service.Lifecycle, shutdownContext context.Context) {
-			sshLogger.Noticef("SSH service is stopping...")
-		},
-	).OnStopped(
-		func(s service.Service, l service.Lifecycle) {
-			sshLogger.Noticef("SSH service has stopped.")
-		},
-	)
+	pool.Add(sshServer)
 	return nil
 }
 
 func createAuditLogHandler(
 	config configuration.AppConfig,
-	factory log.LoggerFactory,
+	logger log.Logger,
 	authHandler sshserver.Handler,
 	geoIPLookupProvider geoipprovider.LookupProvider,
 ) (sshserver.Handler, error) {
-	auditLogger, err := factory.Make(config.Log, "audit")
-	if err != nil {
-		return nil, err
-	}
+	auditLogger := logger.WithLabel("module", "audit")
 	return auditlogintegration.New(
 		config.Audit,
 		authHandler,
@@ -167,27 +147,23 @@ func createAuditLogHandler(
 
 func createAuthHandler(
 	config configuration.AppConfig,
-	factory log.LoggerFactory,
+	logger log.Logger,
 	backend sshserver.Handler,
+	metricsCollector metrics.Collector,
 ) (sshserver.Handler, error) {
-	authLogger, err := factory.Make(config.Log, "auth")
-	if err != nil {
-		return nil, err
-	}
+	authLogger := logger.WithLabel("module", "auth")
 	return authintegration.New(
 		config.Auth,
 		backend,
 		authLogger,
+		metricsCollector,
 		authintegration.BehaviorNoPassthrough,
 	)
 }
 
-func createBackend(config configuration.AppConfig, factory log.LoggerFactory, metricsCollector metrics.Collector) (sshserver.Handler, error) {
-	backendLogger, err := factory.Make(config.Log, "backend")
-	if err != nil {
-		return nil, err
-	}
-	containerBackend, err := backend.New(config, backendLogger, factory, metricsCollector, sshserver.AuthResponseUnavailable)
+func createBackend(config configuration.AppConfig, logger log.Logger, metricsCollector metrics.Collector) (sshserver.Handler, error) {
+	backendLogger := logger.WithLabel("module", "backend")
+	containerBackend, err := backend.New(config, backendLogger, metricsCollector, sshserver.AuthResponseUnavailable)
 	if err != nil {
 		return nil, err
 	}

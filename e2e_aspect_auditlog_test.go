@@ -14,13 +14,14 @@ import (
 	"github.com/aws/aws-sdk-go/aws/credentials"
 	"github.com/aws/aws-sdk-go/aws/session"
 	awsS3 "github.com/aws/aws-sdk-go/service/s3"
-	"github.com/containerssh/auditlog"
-	"github.com/containerssh/configuration"
 	"github.com/containerssh/log"
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/client"
 	"github.com/docker/go-connections/nat"
+
+	"github.com/containerssh/auditlog"
+	"github.com/containerssh/configuration"
 )
 
 func NewAuditLogTestingAspect() TestingAspect {
@@ -116,7 +117,6 @@ func (a *auditLogFactor) ModifyConfiguration(config *configuration.AppConfig) er
 func (a *auditLogFactor) StartBackingServices(
 	config configuration.AppConfig,
 	_ log.Logger,
-	_ log.LoggerFactory,
 ) error {
 	if config.Audit.Storage != auditlog.StorageS3 {
 		return nil
@@ -274,7 +274,6 @@ func (a *auditLogFactor) waitForMinio() error {
 func (a *auditLogFactor) StopBackingServices(
 	config configuration.AppConfig,
 	_ log.Logger,
-	_ log.LoggerFactory,
 ) error {
 	if a.storage == auditlog.StorageFile {
 		return os.RemoveAll(config.Audit.File.Directory)
@@ -293,7 +292,6 @@ func (a *auditLogFactor) StopBackingServices(
 func (a *auditLogFactor) GetSteps(
 	_ configuration.AppConfig,
 	_ log.Logger,
-	_ log.LoggerFactory,
 ) []Step {
 	return []Step{}
 }

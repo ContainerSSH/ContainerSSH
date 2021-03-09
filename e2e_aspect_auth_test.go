@@ -21,14 +21,14 @@ func (a *authTestingAspect) String() string {
 func (a *authTestingAspect) Factors() []TestingFactor {
 	return []TestingFactor{
 		&authTestingFactor{
-			aspect: a,
+			aspect:    a,
 			passwords: map[string]string{},
 		},
 	}
 }
 
 type authTestingFactor struct {
-	aspect *authTestingAspect
+	aspect    *authTestingAspect
 	passwords map[string]string
 	lifecycle *SimpleLifecycle
 }
@@ -44,7 +44,7 @@ func (a *authTestingFactor) OnPassword(
 	_ string,
 ) (bool, error) {
 	if password, ok := a.passwords[Username]; ok && password == string(Password) {
-		 return true, nil
+		return true, nil
 	}
 	return false, nil
 }
@@ -68,7 +68,8 @@ func (a *authTestingFactor) ModifyConfiguration(config *configuration.AppConfig)
 }
 
 func (a *authTestingFactor) StartBackingServices(
-	_ configuration.AppConfig, logger log.Logger, _ log.LoggerFactory) error {
+	_ configuration.AppConfig, logger log.Logger,
+) error {
 	srv, err := auth.NewServer(
 		http.ServerConfiguration{
 			Listen: "127.0.0.1:8080",
@@ -83,17 +84,17 @@ func (a *authTestingFactor) StartBackingServices(
 	return a.lifecycle.Start()
 }
 
-func (a *authTestingFactor) GetSteps(configuration.AppConfig, log.Logger, log.LoggerFactory,) []Step {
+func (a *authTestingFactor) GetSteps(_ configuration.AppConfig, _ log.Logger) []Step {
 	return []Step{
 		{
-			Match:  `^I create(?:|d) the user "([^"]*)" with the password "([^"]*)"$`,
+			Match: `^I create(?:|d) the user "([^"]*)" with the password "([^"]*)"$`,
 			Method: func(user string, password string) error {
 				a.passwords[user] = password
 				return nil
 			},
 		},
 		{
-			Match:  `^I delete(?:|d) user "([^"]*)"$`,
+			Match: `^I delete(?:|d) user "([^"]*)"$`,
 			Method: func(user string) error {
 				delete(a.passwords, user)
 				return nil
@@ -102,6 +103,6 @@ func (a *authTestingFactor) GetSteps(configuration.AppConfig, log.Logger, log.Lo
 	}
 }
 
-func (a *authTestingFactor) StopBackingServices(configuration.AppConfig, log.Logger, log.LoggerFactory) error {
+func (a *authTestingFactor) StopBackingServices(_ configuration.AppConfig, _ log.Logger) error {
 	return a.lifecycle.Stop()
 }

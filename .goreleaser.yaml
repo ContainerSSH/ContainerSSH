@@ -1,8 +1,8 @@
-before:
-  hooks:
-    - go install github.com/mitchellh/golicense
-    - go run cmd/swagger/main.go containerssh-authconfig-openapi.json
-    - go test
+#before:
+#  hooks:
+#    - go install github.com/mitchellh/golicense
+#    - go run cmd/swagger/main.go containerssh-authconfig-openapi.json
+#    - go test
 builds:
   - id: containerssh-linux
     main: cmd/containerssh/main.go
@@ -13,10 +13,10 @@ builds:
       - amd64
     env:
       - CGO_ENABLED=0
-    hooks:
-      post:
-        - cmd: go run cmd/license-report/main.go golicense.json build/containerssh-linux_linux_amd64/containerssh NOTICE.md
-          dir: "{{ dir .Path }}/../../"
+#    hooks:
+#      post:
+#        - cmd: go run cmd/license-report/main.go golicense.json build/containerssh-linux_linux_amd64/containerssh NOTICE.md
+#          dir: "{{ dir .Path }}/../../"
   - id: containerssh-windows
     main: cmd/containerssh/main.go
     binary: "containerssh"
@@ -73,8 +73,8 @@ archives:
 dockers:
   - goos: linux
     goarch: amd64
-    binaries:
-      - containerssh
+    ids:
+      - containerssh-linux
     image_templates:
       - "containerssh/containerssh:latest"
       - "containerssh/containerssh:{{ .Major }}.{{ .Minor }}"
@@ -86,8 +86,6 @@ dockers:
       - "quay.io/containerssh/containerssh:{{ .Major }}.{{ .Minor }}"
       - "quay.io/containerssh/containerssh:{{ .Tag }}"
     dockerfile: Dockerfile.goreleaser
-    builds:
-      - containerssh-linux
     extra_files:
       - LICENSE.md
       - NOTICE.md
@@ -100,7 +98,7 @@ dockers:
     skip_push: auto
   - goos: linux
     goarch: amd64
-    binaries:
+    ids:
       - containerssh-testauthconfigserver
     image_templates:
       - "containerssh/containerssh-test-authconfig:latest"
@@ -113,8 +111,6 @@ dockers:
       - "quay.io/containerssh/containerssh-test-authconfig:{{ .Major }}.{{ .Minor }}"
       - "quay.io/containerssh/containerssh-test-authconfig:{{ .Tag }}"
     dockerfile: Dockerfile-testauthconfigserver.goreleaser
-    builds:
-      - containerssh-testauthconfigserver
     extra_files:
       - LICENSE.md
       - NOTICE.md

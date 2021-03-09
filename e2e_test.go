@@ -5,7 +5,6 @@ import (
 	"flag"
 	"fmt"
 	"os"
-	"strings"
 	"sync"
 	"testing"
 
@@ -51,38 +50,22 @@ func processTestingAspect(t *testing.T, aspects []TestingAspect, factors []Testi
 		}
 
 		var startedFactors = &[]TestingFactor{}
-		loggerFactory := log.NewLoggerPipelineFactory(
-			&testLogWriter{
-				t: t,
-			},
-		)
-		defer stopFactors(t, startedFactors, loggerFactory, config)()
+		defer stopFactors(t, startedFactors, config)()
 		for _, factor := range factors {
-			logger, err := loggerFactory.Make(
-				log.Config{
-					Level:  log.LevelDebug,
-					Format: log.FormatText,
-				},
-				factor.String(),
-			)
-			if err != nil {
-				t.Errorf("failed to create logger for factor %s (%v)", factor.String(), err)
-				t.Fail()
-				return
-			}
-			logger.Noticef("Starting backing services for %s=%s...", factor.Aspect().String(), factor.String())
-			if err = factor.StartBackingServices(config, logger, loggerFactory); err != nil {
+			logger := log.NewTestLogger(t)
+			logger.Notice(log.NewMessage(log.MTest, "Starting backing services for %s=%s...", factor.Aspect().String(), factor.String()))
+			if err := factor.StartBackingServices(config, logger); err != nil {
 				t.Errorf("failed to start backing services for %s=%s (%v)", factor.Aspect().String(), factor.String(), err)
 				t.Fail()
 
-				_ = factor.StopBackingServices(config, logger, loggerFactory)
+				_ = factor.StopBackingServices(config, logger)
 				return
 			}
-			logger.Noticef("Backing services for %s=%s running.", factor.Aspect().String(), factor.String())
+			logger.Notice(log.NewMessage(log.MTest, "Backing services for %s=%s running.", factor.Aspect().String(), factor.String()))
 			*startedFactors = append(*startedFactors, factor)
 		}
 
-		runTestSuite(t, factors, loggerFactory, config)
+		runTestSuite(t, factors, config)
 		return
 	}
 
@@ -105,7 +88,6 @@ func processTestingAspect(t *testing.T, aspects []TestingAspect, factors []Testi
 func stopFactors(
 	t *testing.T,
 	startedFactors *[]TestingFactor,
-	loggerFactory log.LoggerFactory,
 	config configuration.AppConfig,
 ) func() {
 	return func() {
@@ -113,25 +95,16 @@ func stopFactors(
 			return
 		}
 		for _, factor := range *startedFactors {
-			logger, err := loggerFactory.Make(
-				log.Config{
-					Level:  log.LevelDebug,
-					Format: log.FormatLJSON,
-				},
-				factor.String(),
-			)
-			if err != nil {
-				panic(err)
-			}
+			logger := log.NewTestLogger(t)
 
-			logger.Noticef("Stopping backing services for %s=%s...", factor.Aspect().String(), factor.String())
-			err = factor.StopBackingServices(config, nil, nil)
+			logger.Notice(log.NewMessage(log.MTest, "Stopping backing services for %s=%s...", factor.Aspect().String(), factor.String()))
+			err := factor.StopBackingServices(config, logger)
 			if err != nil {
 				t.Errorf("failed to stop backing services for %s=%s (%v)", factor.Aspect().String(), factor.String(), err)
 				t.Fail()
 				return
 			}
-			logger.Noticef("Backing services for %s=%s stopped.", factor.Aspect().String(), factor.String())
+			logger.Notice(log.NewMessage(log.MTest, "Backing services for %s=%s stopped.", factor.Aspect().String(), factor.String()))
 		}
 	}
 }
@@ -151,13 +124,12 @@ func modifyConfiguration(t *testing.T, factors []TestingFactor, config *configur
 func runTestSuite(
 	t *testing.T,
 	factors []TestingFactor,
-	loggerFactory log.LoggerFactory,
 	config configuration.AppConfig,
 ) {
 	hardError := false
 	testSuite := godog.TestSuite{
 		Name:                t.Name(),
-		ScenarioInitializer: scenarioInitializer(t, factors, loggerFactory, config, &hardError),
+		ScenarioInitializer: scenarioInitializer(t, factors, config, &hardError),
 		Options:             &opts,
 	}
 	if testSuite.Run() != 0 {
@@ -169,7 +141,6 @@ func runTestSuite(
 func scenarioInitializer(
 	t *testing.T,
 	factors []TestingFactor,
-	loggerFactory log.LoggerFactory,
 	config configuration.AppConfig,
 	hardError *bool,
 ) func(ctx *godog.ScenarioContext) {
@@ -183,17 +154,8 @@ func scenarioInitializer(
 		ctx.AfterScenario(afterScenario)
 
 		for _, factor := range factors {
-			logger, err := loggerFactory.Make(
-				log.Config{
-					Level:  log.LevelDebug,
-					Format: log.FormatText,
-				},
-				factor.String(),
-			)
-			if err != nil {
-				panic(err)
-			}
-			for _, step := range factor.GetSteps(config, logger, loggerFactory) {
+			logger := log.NewTestLogger(t)
+			for _, step := range factor.GetSteps(config, logger) {
 				ctx.Step(step.Match, step.Method)
 			}
 		}
@@ -262,13 +224,4 @@ func createBeforeContext(
 		)
 	}
 	return beforeScenario
-}
-
-type testLogWriter struct {
-	t *testing.T
-}
-
-func (t *testLogWriter) Write(p []byte) (n int, err error) {
-	t.t.Log(strings.TrimSpace(string(p)))
-	return len(p), nil
 }
