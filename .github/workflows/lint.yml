@@ -17,5 +17,5 @@ jobs:
         uses: golangci/golangci-lint-action@v2
         with:
           version: v1.32.2
-          args: --out-format=colored-line-number -E asciicheck -E bodyclose -E dupl -E errorlint -E exportloopref -E funlen
+          args: --timeout=5m --out-format=colored-line-number -E asciicheck -E bodyclose -E dupl -E errorlint -E exportloopref -E funlen
 
