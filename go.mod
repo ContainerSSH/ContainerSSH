@@ -3,7 +3,7 @@ module github.com/containerssh/containerssh
 go 1.16
 
 require (
-	github.com/aws/aws-sdk-go v1.37.26
+	github.com/aws/aws-sdk-go v1.37.28
 	github.com/containerssh/auditlog v0.9.9
 	github.com/containerssh/auditlogintegration v0.9.4
 	github.com/containerssh/auth v0.9.6
