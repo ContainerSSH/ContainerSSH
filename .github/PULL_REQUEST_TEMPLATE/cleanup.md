@@ -4,7 +4,6 @@ about: Make the code more beautiful or add a build tool
 title: ''
 labels: cleanup
 assignees: janoszen
-
 ---
 
 ## Please describe what your cleanup is all about

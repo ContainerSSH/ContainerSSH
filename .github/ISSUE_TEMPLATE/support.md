@@ -1,20 +1,24 @@
 ---
 name: Support request
-about: If you need help using ContainerSSH
+about: If you need help with ContainerSSH
 title: ''
 labels: support
-assignees: janoszen
+assignees: @ContainerSSH/support
 
 ---
 
-## Please describe what you need help with
+## Please describe what you need help with:
 
 ...
 
-## Have you read the readme in its entirety?
+## Have you read the [troubleshooting guide](https://containerssh.io/reference/troubleshooting/)?
+
+Knowing this information helps us avoid unnecessary questions. 
 
 ...
 
 ## What have you tried to resolve this problem?
+
+Describing the steps you went through helps us not ask unnecessary questions.
 
 ...

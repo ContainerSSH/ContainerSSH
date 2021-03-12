@@ -1,4 +1,4 @@
-[![ContainerSSH - Launch Containers on Demand](https://containerssh.github.io/images/logo-for-embedding.svg)](https://containerssh.github.io/)
+[![ContainerSSH - Launch Containers on Demand](https://containerssh.github.io/images/logo-for-embedding.svg)](https://containerssh.io/)
 
 <!--suppress HtmlDeprecatedAttribute -->
 <h1 align="center">An SSH Server that Launches Containers in Kubernetes and Docker</h1>
@@ -15,43 +15,29 @@
 
 ContainerSSH lets you dynamically create and destroy containers when your users connect. Authenticate against your existing user database and mount directories based on your existing permission matrix.
 
-[Read more »](https://containerssh.github.io/usecases/webhosting/)
+[Read more »](https://containerssh.io/usecases/webhosting/)
 
 ## Looking for a Linux learning environment?
 
 With ContainerSSH you can launch Linux-based containers on demand when your students connect. You can supply your own container image and mount folders with learning and testing material as needed.</p>
 
-[Read more »](https://containerssh.github.io/usecases/learning/)
+[Read more »](https://containerssh.io/usecases/learning/)
 
 ## Building a honeypot?
 
 With the dynamic authentication server of ContainerSSH you can capture usernames and passwords, and you container environment can log commands that are executed.
 
-[Read more »](https://containerssh.github.io/usecases/honeypots/)
+[Read more »](https://containerssh.io/usecases/honeypots/)
 
 ## Building a high security environment?
 
 ContainerSSH is being used to provide dynamic console access to an environment with sensitive credentials. Use the authentication and configuration server to dynamically provision credentials in conjunction with secret management systems such as Hashicorp Vault.
 
-[Read more »](https://containerssh.github.io/usecases/security/)
+[Read more »](https://containerssh.io/usecases/security/)
 
 ## How does it work?
 
-![](https://containerssh.github.io/images/ssh-in-action.gif)
-
-```
-+------+        +--------------+   2.   +-------------------+
-|      |        |              | -----> |    Auth server    |
-|      |        |              |        +-------------------+
-|      |        |              |   
-|      |   1.   |              |   3.   +-------------------+
-| User | -----> | ContainerSSH | -----> |   Config server   |
-|      |        |              |        +-------------------+
-|      |        |              |   
-|      |        |              |   4.   +-------------------+
-|      |        |              | -----> | Container Backend |
-+------+        +--------------+        +-------------------+
-```
+![](https://containerssh.io/images/architecture.svg)
 
 1. The user opens an SSH connection to ContainerSSH.
 2. ContainerSSH calls the authentication server with the users username and password/pubkey to check if its valid.
@@ -60,4 +46,8 @@ ContainerSSH is being used to provide dynamic console access to an environment w
    specified configuration. All input from the user is sent directly to the backend, output from the container is sent
    to the user.
    
-[Get started »](https://containerssh.github.io/quickstart/)
+[Get started »](https://containerssh.io/quickstart/)
+
+## Demo
+
+![](https://containerssh.io/images/ssh-in-action.gif)

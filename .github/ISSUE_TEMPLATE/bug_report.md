@@ -3,32 +3,30 @@ name: Bug report
 about: Create a report to help us improve
 title: ''
 labels: bug
-assignees: janoszen
-
+assignees: @ContainerSSH/developers
 ---
 
-<details>
-<summary><h2>Describe the bug</h2></summary>
-A clear and concise description of what the bug is.
-</details>
+## Describe the bug
 
-<details>
-<summary><h2>To Reproduce</h2></summary>
-1. Run containerssh with these parameters
+Please enter a clear and concise description of what the bug is.
+
+## To Reproduce
+
+If you can please provide the steps to reproduce the issue.
+
+1. Run ContainerSSH with these parameters
 2. Do something else...
 3. ...
-</details>
 
-<details>
-<summary><h2>Expected behavior</h2></summary>
-A clear and concise description of what you expected to happen.
-</details>
+## Expected behavior
 
-<details>
-<summary><h2>Version</h2></summary>
-Please insert the output of `go version` here:
+Please describe what you would expect to happen.
+
+## Version
+
+If you can please insert the output of `containerssh --version` here:
+
 ```
-$ go version
-...
+$ containerssh --version
+
 ```
-</details>
