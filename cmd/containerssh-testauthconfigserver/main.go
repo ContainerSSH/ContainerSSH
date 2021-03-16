@@ -6,7 +6,7 @@
 //     Schemes: http, https
 //     Host: localhost
 //     BasePath: /
-//     Version: 0.3.0
+//     Version: 0.4.0
 //
 //     Consumes:
 //     - application/json
@@ -18,134 +18,164 @@
 package main
 
 import (
-	"encoding/json"
-	"log"
-	"net/http"
+	"context"
+	goHttp "net/http"
 	"os"
+	"os/signal"
+	"syscall"
 
+	"github.com/containerssh/auth"
 	"github.com/containerssh/configuration"
-	"github.com/containerssh/structutils"
-
-	"github.com/containerssh/containerssh/test/protocol"
+	"github.com/containerssh/http"
+	"github.com/containerssh/log"
+	"github.com/containerssh/service"
 )
 
-type authConfigServer struct {
+type authHandler struct {
 }
 
-func (s *authConfigServer) authPassword(w http.ResponseWriter, req *http.Request) {
-	// swagger:operation POST /password Authentication authPassword
-	//
-	// Password authentication
-	//
-	// ---
-	// parameters:
-	// - name: request
-	//   in: body
-	//   description: The authentication request
-	//   required: true
-	//   schema:
-	//     "$ref": "#/definitions/PasswordAuthRequest"
-	// responses:
-	//   "200":
-	//     "$ref": "#/responses/AuthResponse"
-
-	var authRequest protocol.PasswordAuthRequest
-	err := json.NewDecoder(req.Body).Decode(&authRequest)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
-		return
-	}
-
-	authResponse := protocol.AuthResponse{
-		Success: false,
-	}
+// swagger:operation POST /password Authentication authPassword
+//
+// Password authentication
+//
+// ---
+// parameters:
+// - name: request
+//   in: body
+//   description: The authentication request
+//   required: true
+//   schema:
+//     "$ref": "#/definitions/PasswordAuthRequest"
+// responses:
+//   "200":
+//     "$ref": "#/responses/AuthResponse"
+func (a *authHandler) OnPassword(Username string, _ []byte, _ string, _ string) (
+	bool,
+	error,
+) {
 	if os.Getenv("CONTAINERSSH_ALLOW_ALL") == "1" ||
-		authRequest.Username == "foo" ||
-		authRequest.Username == "busybox" {
-		authResponse.Success = true
+		Username == "foo" ||
+		Username == "busybox" {
+		return true, nil
 	}
-
-	_ = json.NewEncoder(w).Encode(authResponse)
+	return false, nil
 }
 
-func (s *authConfigServer) authPublicKey(w http.ResponseWriter, req *http.Request) {
-	// swagger:operation POST /pubkey Authentication authPubKey
-	//
-	// Public key authentication
-	//
-	// ---
-	// parameters:
-	// - name: request
-	//   in: body
-	//   description: The authentication request
-	//   required: true
-	//   schema:
-	//     "$ref": "#/definitions/PublicKeyAuthRequest"
-	// responses:
-	//   "200":
-	//     "$ref": "#/responses/AuthResponse"
-
-	var authRequest protocol.PublicKeyAuthRequest
-	err := json.NewDecoder(req.Body).Decode(&authRequest)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
-		return
+// swagger:operation POST /pubkey Authentication authPubKey
+//
+// Public key authentication
+//
+// ---
+// parameters:
+// - name: request
+//   in: body
+//   description: The authentication request
+//   required: true
+//   schema:
+//     "$ref": "#/definitions/PublicKeyAuthRequest"
+// responses:
+//   "200":
+//     "$ref": "#/responses/AuthResponse"
+func (a *authHandler) OnPubKey(Username string, _ string, _ string, _ string) (
+	bool,
+	error,
+) {
+	if Username == "foo" || Username == "busybox" {
+		return true, nil
 	}
-
-	authResponse := protocol.AuthResponse{
-		Success: false,
-	}
-	if authRequest.Username == "foo" || authRequest.Username == "busybox" {
-		authResponse.Success = true
-	}
-
-	_ = json.NewEncoder(w).Encode(authResponse)
+	return false, nil
 }
 
-func (s *authConfigServer) configHandler(w http.ResponseWriter, req *http.Request) {
-	// swagger:operation POST /config Configuration getUserConfiguration
-	//
-	// Fetches the configuration for a user/session
-	//
-	// ---
-	// parameters:
-	// - name: request
-	//   in: body
-	//   description: The configuration request
-	//   schema:
-	//     "$ref": "#/definitions/ConfigRequest"
-	// responses:
-	//   "200":
-	//     "$ref": "#/responses/ConfigResponse"
+type configHandler struct {
+}
 
-	var configRequest protocol.ConfigRequest
-	err := json.NewDecoder(req.Body).Decode(&configRequest)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
-		return
+// swagger:operation POST /config Configuration getUserConfiguration
+//
+// Fetches the configuration for a user/session
+//
+// ---
+// parameters:
+// - name: request
+//   in: body
+//   description: The configuration request
+//   schema:
+//     "$ref": "#/definitions/ConfigRequest"
+// responses:
+//   "200":
+//     "$ref": "#/responses/ConfigResponse"
+
+func (c *configHandler) OnConfig(request configuration.ConfigRequest) (configuration.AppConfig, error) {
+	config := configuration.AppConfig{}
+
+	if request.Username == "busybox" {
+		config.Docker.Execution.Launch.ContainerConfig.Image = "busybox"
+		config.DockerRun.Config.ContainerConfig.Image = "busybox"
 	}
 
-	defaultConfig := configuration.AppConfig{}
-	structutils.Defaults(&defaultConfig)
+	return config, nil
+}
 
-	response := protocol.ConfigResponse{
-		Config: defaultConfig,
+type handler struct {
+	auth   goHttp.Handler
+	config goHttp.Handler
+}
+
+func (h *handler) ServeHTTP(writer goHttp.ResponseWriter, request *goHttp.Request) {
+	switch request.URL.Path {
+	case "/password":
+		fallthrough
+	case "/pubkey":
+		h.auth.ServeHTTP(writer, request)
+	case "/config":
+		h.config.ServeHTTP(writer, request)
+	default:
+		writer.WriteHeader(404)
 	}
-
-	if configRequest.Username == "busybox" {
-		response.Config.DockerRun.Config.ContainerConfig.Image = "busybox"
-	}
-
-	_ = json.NewEncoder(w).Encode(response)
 }
 
 func main() {
-	s := &authConfigServer{}
-	http.HandleFunc("/pubkey", s.authPublicKey)
-	http.HandleFunc("/password", s.authPassword)
-	http.HandleFunc("/config", s.configHandler)
-	if err := http.ListenAndServe(":8080", nil); err != nil {
-		log.Println(err)
-		os.Exit(1)
+	logger, err := log.NewLogger(log.Config{
+		Level:       log.LevelDebug,
+		Format:      log.FormatLJSON,
+		Destination: log.DestinationStdout,
+	})
+	if err != nil {
+		panic(err)
+	}
+	authHTTPHandler := auth.NewHandler(&authHandler{}, logger)
+	configHTTPHandler, err := configuration.NewHandler(&configHandler{}, logger)
+	if err != nil {
+		panic(err)
+	}
+
+	srv, err := http.NewServer(
+		"authconfig",
+		http.ServerConfiguration{
+			Listen: "0.0.0.0:8080",
+		},
+		&handler{
+			auth:   authHTTPHandler,
+			config: configHTTPHandler,
+		},
+		logger,
+		func(s string) {
+
+		},
+	)
+	if err != nil {
+		panic(err)
+	}
+
+	lifecycle := service.NewLifecycle(srv)
+	exitSignalList := []os.Signal{os.Interrupt, os.Kill, syscall.SIGINT, syscall.SIGTERM}
+	exitSignals := make(chan os.Signal, 1)
+	signal.Notify(exitSignals, exitSignalList...)
+	go func() {
+		if _, ok := <-exitSignals; ok {
+			lifecycle.Stop(context.Background())
+		}
+	}()
+	if err := srv.RunWithLifecycle(lifecycle); err != nil {
+		panic(err)
 	}
 }
