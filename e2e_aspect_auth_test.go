@@ -43,7 +43,8 @@ func (a *authTestingFactor) OnPassword(
 	_ string,
 	_ string,
 ) (bool, error) {
-	if password, ok := a.passwords[Username]; ok && password == string(Password) {
+	if password, ok := a.passwords[Username]; ok &&
+		password == string(Password) {
 		return true, nil
 	}
 	return false, nil
