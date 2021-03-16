@@ -3,7 +3,7 @@ name: Support request
 about: If you need help with ContainerSSH
 title: ''
 labels: support
-assignees: @ContainerSSH/support
+assignees: janoszen
 
 ---
 

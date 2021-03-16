@@ -3,7 +3,7 @@ name: Feature request
 about: Suggest an idea for this project
 title: ''
 labels: feature
-assignees: @ContainerSSH/developers
+assignees: janoszen
 ---
 
 ## Please describe what you would like to see in ContainerSSH

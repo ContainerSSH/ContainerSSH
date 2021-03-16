@@ -3,7 +3,7 @@ name: Documentation request
 about: If you think something is not well described in ContainerSSH
 title: ''
 labels: documentation
-assignees: @ContainerSSH/website
+assignees: janoszen
 ---
 
 ## Please describe what information about ContainerSSH you were trying to find
