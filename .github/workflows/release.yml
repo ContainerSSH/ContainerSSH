@@ -5,6 +5,8 @@ on:
       - '*'
     tags:
       - '*'
+  schedule:
+    - cron: "0 3 * * *"
 jobs:
   release:
     name: Release
