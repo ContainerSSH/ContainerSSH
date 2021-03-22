@@ -1,12 +1,4 @@
----
-name: Bug fix
-about: Fix a bug
-title: ''
-labels: bug
-assignees: janoszen
----
-
-## Please describe the bug you have fixed
+## Please describe the change you are making
 
 ...
 
