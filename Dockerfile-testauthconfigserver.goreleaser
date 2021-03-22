@@ -1,8 +1,0 @@
-FROM alpine
-COPY containerssh-testauthconfigserver /
-COPY LICENSE.md /
-COPY NOTICE.md /
-ENTRYPOINT ["/containerssh-testauthconfigserver"]
-CMD []
-USER 1080:1080
-EXPOSE 9090

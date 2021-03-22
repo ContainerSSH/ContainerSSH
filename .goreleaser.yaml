@@ -4,7 +4,7 @@ before:
     - go run cmd/swagger/main.go containerssh-authconfig-openapi.json
     - go test
 builds:
-  - id: containerssh-linux
+  - id: license-check
     main: cmd/containerssh/main.go
     binary: "containerssh"
     goos:
@@ -15,54 +15,67 @@ builds:
       - CGO_ENABLED=0
     hooks:
       post:
-        - cmd: go run cmd/license-report/main.go golicense.json build/containerssh-linux_linux_amd64/containerssh NOTICE.md
+        - cmd: go run cmd/license-report/main.go build/license-check_linux_amd64/containerssh NOTICE.md
           dir: "{{ dir .Path }}/../../"
-  - id: containerssh-windows
+  - id: containerssh
     main: cmd/containerssh/main.go
     binary: "containerssh"
     goos:
+      - freebsd
       - windows
-    goarch:
-      - amd64
-    env:
-      - CGO_ENABLED=0
-  - id: containerssh-darwin
-    main: cmd/containerssh/main.go
-    binary: "containerssh"
-    goos:
       - darwin
+      - linux
     goarch:
       - amd64
+      - '386'
+      - arm
+      - arm64
+    ignore:
+      - goos: darwin
+        goarch: '386'
     env:
       - CGO_ENABLED=0
   - id: containerssh-auditlog-decoder
     main: cmd/containerssh-auditlog-decoder/main.go
     binary: "containerssh-auditlog-decoder"
     goos:
-      - linux
-      - darwin
+      - freebsd
       - windows
+      - darwin
+      - linux
     goarch:
       - amd64
+      - '386'
+      - arm
+      - arm64
+    ignore:
+      - goos: darwin
+        goarch: '386'
     env:
       - CGO_ENABLED=0
   - id: containerssh-testauthconfigserver
     main: cmd/containerssh-testauthconfigserver/main.go
     binary: "containerssh-testauthconfigserver"
     goos:
-      - linux
-      - darwin
+      - freebsd
       - windows
+      - darwin
+      - linux
     goarch:
       - amd64
+      - '386'
+      - arm
+      - arm64
+    ignore:
+      - goos: darwin
+        goarch: '386'
     env:
       - CGO_ENABLED=0
 archives:
   - builds:
-      - containerssh-linux
-      - containerssh-windows
-      - containerssh-darwin
+      - containerssh
       - containerssh-auditlog-decoder
+      - containerssh-testauthconfigserver
     format_overrides:
       - goos: windows
         format: zip
@@ -77,12 +90,13 @@ nfpms:
     description: An SSH server that launches Docker containers and Kubernetes pods
     license: MIT
     builds:
-      - containerssh-linux
+      - containerssh
       - containerssh-testauthconfigserver
       - containerssh-auditlog-decoder
     formats:
       - deb
       - rpm
+      - apk
     empty_folders:
       - /etc/containerssh
     bindir: /usr/sbin
@@ -94,6 +108,8 @@ nfpms:
         type: config
       - src: LICENSE.md
         dst: /usr/share/doc/containerssh/LICENSE.md
+      - src: NOTICE.md
+        dst: /usr/share/doc/containerssh/NOTICE.md
 signs:
   - id: sign-all
     artifacts: all
