@@ -3,13 +3,13 @@
 <!--suppress HtmlDeprecatedAttribute -->
 <h1 align="center">An SSH Server that Launches Containers in Kubernetes and Docker</h1>
 
-[![Documentation: available](https://img.shields.io/badge/documentation-available-green?style=for-the-badge)](https://containerssh.github.io/)
+[![Documentation: available](https://img.shields.io/badge/documentation-available-green?style=for-the-badge)](https://containerssh.io/)
 [![GitHub Workflow Status](https://img.shields.io/github/workflow/status/containerssh/containerssh/goreleaser?style=for-the-badge)](https://github.com/containerssh/containerssh/actions)
 [![GitHub release (latest SemVer)](https://img.shields.io/github/v/release/containerssh/containerssh?sort=semver&style=for-the-badge)](https://github.com/containerssh/containerssh/releases)
 [![Docker Image Size (latest by date)](https://img.shields.io/docker/image-size/containerssh/containerssh?style=for-the-badge)](http://hub.docker.com/r/containerssh/containerssh)
 [![Go Report Card](https://goreportcard.com/badge/github.com/containerssh/containerssh?style=for-the-badge)](https://goreportcard.com/report/github.com/containerssh/containerssh)
 [![LGTM Alerts](https://img.shields.io/lgtm/alerts/github/ContainerSSH/ContainerSSH?style=for-the-badge)](https://lgtm.com/projects/g/ContainerSSH/ContainerSSH/)
-[![GitHub](https://img.shields.io/github/license/containerssh/containerssh?style=for-the-badge)](LICENSE.md)
+[![License: MIT-0](https://img.shields.io/badge/license-MIT--0-green?style=for-the-badge)](LICENSE.md)
 
 ## Offering SSH in a web hosting service?
 
