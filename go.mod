@@ -3,7 +3,7 @@ module github.com/containerssh/containerssh
 go 1.16
 
 require (
-	github.com/aws/aws-sdk-go v1.38.2
+	github.com/aws/aws-sdk-go v1.38.4
 	github.com/containerd/containerd v1.4.4 // indirect
 	github.com/containerssh/auditlog v0.9.9
 	github.com/containerssh/auditlogintegration v0.9.4
@@ -27,9 +27,7 @@ require (
 	github.com/golang/protobuf v1.5.1 // indirect
 	github.com/google/gofuzz v1.2.0 // indirect
 	github.com/googleapis/gnostic v0.5.4 // indirect
-	github.com/magefile/mage v1.11.0 // indirect
 	github.com/oschwald/geoip2-golang v1.5.0 // indirect
-	github.com/oschwald/maxminddb-golang v1.8.0 // indirect
 	github.com/sirupsen/logrus v1.8.1 // indirect
 	golang.org/x/crypto v0.0.0-20210314154223-e6e6c4f2bb5b
 	golang.org/x/net v0.0.0-20210316092652-d523dce5a7f4 // indirect
