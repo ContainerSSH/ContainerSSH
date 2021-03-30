@@ -18,7 +18,7 @@ import (
 )
 
 type goLicenseConfig struct {
-	Allow []string `json:"allow"`
+	Allow    []string          `json:"allow"`
 	Override map[string]string `json:"override"`
 }
 
@@ -82,7 +82,7 @@ func NewLicenseReport(config *goLicenseConfig) (*licenseReport, error) {
 	}
 	return &licenseReport{
 		goPath: goPath,
-		cwd: cwd,
+		cwd:    cwd,
 		config: config,
 	}, nil
 }
@@ -262,9 +262,9 @@ func (l *licenseReport) readNoticeFile(noticeFile string) (string, error) {
 }
 
 type moduleLicense struct {
-	Module string
-	License string
-	Notice string
+	Module   string
+	License  string
+	Notice   string
 	Accepted bool
 }
 
@@ -273,7 +273,7 @@ func (l moduleLicense) Print() {
 	if l.Accepted {
 		sign = "✔️"
 	}
-	fmt.Printf("%s %s has license %s\n", sign, l.Module, l.License)
+	fmt.Println(fmt.Printf("%s %s has license %s", sign, l.Module, l.License))
 }
 
 func (l *licenseReport) Run() (map[string]moduleLicense, error) {
@@ -308,7 +308,7 @@ func renderNotice(licenses map[string]moduleLicense) []byte {
 
 		trimmedNotice := strings.TrimSpace(license.Notice)
 		if trimmedNotice != "" {
-			finalNotice.Write([]byte(fmt.Sprintf("%s\n\n", "> " + strings.ReplaceAll(trimmedNotice, "\n", "\n> "))))
+			finalNotice.Write([]byte(fmt.Sprintf("%s\n\n", "> "+strings.ReplaceAll(trimmedNotice, "\n", "\n> "))))
 		}
 	}
 	noticeContents := finalNotice.Bytes()
