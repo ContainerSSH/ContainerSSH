@@ -21,6 +21,7 @@ builds:
     main: cmd/containerssh/main.go
     binary: "containerssh"
     goos:
+      - freebsd
       - windows
       - darwin
       - linux
@@ -39,12 +40,7 @@ builds:
       - linux
     goarch:
       - amd64
-      - '386'
-      - arm
       - arm64
-    ignore:
-      - goos: darwin
-        goarch: '386'
     env:
       - CGO_ENABLED=0
   - id: containerssh-testauthconfigserver
@@ -57,12 +53,7 @@ builds:
       - linux
     goarch:
       - amd64
-      - '386'
-      - arm
       - arm64
-    ignore:
-      - goos: darwin
-        goarch: '386'
     env:
       - CGO_ENABLED=0
 archives:
