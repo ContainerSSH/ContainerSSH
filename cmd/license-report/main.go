@@ -23,6 +23,7 @@ type goLicenseConfig struct {
 }
 
 func main() {
+	log.SetFlags(0)
 	config, err := getGoLicenseConfig("golicense.json")
 	if err != nil {
 		log.Print(err.Error())
@@ -182,27 +183,30 @@ func (l *licenseReport) processModule(mod module.Module) (
 		return moduleLicense{}, fmt.Errorf("failed to create filer for mod path %s (%w)", modPath, err)
 	}
 	licenseFound := ""
+	licenseOk := false
 	if overrideLicense, ok := l.config.Override[mod.Path]; ok {
 		licenseFound = overrideLicense
+		for _, allowedLicense := range l.config.Allow {
+			if licenseFound == allowedLicense {
+				licenseOk = true
+			}
+		}
 	} else {
 		match, err := licensedb.Detect(f)
 		if err != nil {
 			log.Printf("failed to detect license for %s (%v)", mod.Path, err)
 		} else {
+		loop:
 			for licenseName, licenseMatch := range match {
 				if licenseMatch.Confidence > 0.9 {
 					licenseFound = licenseName
-					break
+					for _, allowedLicense := range l.config.Allow {
+						if licenseName == allowedLicense {
+							licenseOk = true
+							break loop
+						}
+					}
 				}
-			}
-		}
-	}
-	licenseOk := false
-	if licenseFound != "" {
-		for _, allowedLicense := range l.config.Allow {
-			if licenseFound == allowedLicense {
-				licenseOk = true
-				break
 			}
 		}
 	}
@@ -273,7 +277,7 @@ func (l moduleLicense) Print() {
 	if l.Accepted {
 		sign = "✔️"
 	}
-	fmt.Println(fmt.Printf("%s %s has license %s", sign, l.Module, l.License))
+	log.Printf("%s %s has license %s", sign, l.Module, l.License)
 }
 
 func (l *licenseReport) Run() (map[string]moduleLicense, error) {
