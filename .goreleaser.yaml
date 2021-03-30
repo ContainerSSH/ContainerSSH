@@ -21,16 +21,12 @@ builds:
     main: cmd/containerssh/main.go
     binary: "containerssh"
     goos:
-      - freebsd
       - windows
       - darwin
       - linux
     goarch:
       - amd64
       - arm64
-    ignore:
-      - goos: darwin
-        goarch: '386'
     env:
       - CGO_ENABLED=0
   - id: containerssh-auditlog-decoder
