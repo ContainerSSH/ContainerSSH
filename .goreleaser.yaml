@@ -1,22 +1,9 @@
 before:
   hooks:
-    - go install github.com/mitchellh/golicense
-    - go run cmd/swagger/main.go containerssh-authconfig-openapi.json
+    - go vet
+    - go generate
     - go test
 builds:
-  - id: license-check
-    main: cmd/containerssh/main.go
-    binary: "containerssh"
-    goos:
-      - linux
-    goarch:
-      - amd64
-    env:
-      - CGO_ENABLED=0
-    hooks:
-      post:
-        - cmd: go run cmd/license-report/main.go build/license-check_linux_amd64/containerssh NOTICE.md
-          dir: "{{ dir .Path }}/../../"
   - id: containerssh
     main: cmd/containerssh/main.go
     binary: "containerssh"
