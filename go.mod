@@ -3,7 +3,7 @@ module github.com/containerssh/containerssh
 go 1.16
 
 require (
-	github.com/aws/aws-sdk-go v1.38.8
+	github.com/aws/aws-sdk-go v1.38.9
 	github.com/containerd/containerd v1.4.4 // indirect
 	github.com/containerssh/auditlog v0.9.9
 	github.com/containerssh/auditlogintegration v0.9.4
@@ -37,7 +37,6 @@ require (
 	golang.org/x/oauth2 v0.0.0-20210323180902-22b0adad7558 // indirect
 	golang.org/x/sys v0.0.0-20210326220804-49726bf1d181 // indirect
 	golang.org/x/term v0.0.0-20210317153231-de623e64d2a6 // indirect
-	golang.org/x/text v0.3.5 // indirect
 	google.golang.org/appengine v1.6.7 // indirect
 	google.golang.org/genproto v0.0.0-20210329143202-679c6ae281ee // indirect
 	k8s.io/client-go v0.20.5 // indirect
