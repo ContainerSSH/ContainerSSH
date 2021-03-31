@@ -2,10 +2,8 @@ name: Build
 on:
   pull_request:
   push:
-    branches-ignore:
-      - 'main'
     branches:
-      - '*'
+      - 'main'
     tags-ignore:
       - '*'
 jobs:
@@ -23,12 +21,8 @@ jobs:
         uses: docker/setup-buildx-action@v1
       - name: Set up Kubernetes
         uses: engineerd/setup-kind@v0.5.0
-      - name: Import signing key
-        run: echo "${GPG_KEY}" | base64 -d | gpg --batch --import && echo "${GPG_KEY}" | base64 -d >/tmp/signing.gpg
-        env:
-          GPG_KEY: ${{ secrets.GPG_KEY }}
       - name: Run GoReleaser
         uses: goreleaser/goreleaser-action@v2
         with:
           version: latest
-          args: build --snapshot --skip-publish --rm-dist
+          args: --snapshot --skip-publish --rm-dist
