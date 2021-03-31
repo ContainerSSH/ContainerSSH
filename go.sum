@@ -141,8 +141,8 @@ github.com/containerssh/service v0.9.3/go.mod h1:Yeq3hwfM6js9TfpkrQAQhv5IRfurrGE
 github.com/containerssh/sshserver v0.9.16/go.mod h1:cMdDoIt0l24KsoaSQezS0aA/891j/gf4QiPjRyDYvyY=
 github.com/containerssh/sshserver v0.9.18/go.mod h1:l0UPVd5Imb89KNuwzW32krVkK73TJHx7UOUoXd5aV0c=
 github.com/containerssh/sshserver v0.9.19/go.mod h1:NA4hs/2nZB9RX5TS4jniYdO08lfXxBFHvRxV/Pf4bW4=
-github.com/containerssh/sshserver v0.9.23 h1:mJjwvyk+x1COOwf3e9dHxIJRhydBamoozBUvKrqw4jA=
-github.com/containerssh/sshserver v0.9.23/go.mod h1:3mD1e+prsW/YM4QtkW8mYeiWjlsngiv0te1lGL5doGw=
+github.com/containerssh/sshserver v0.9.25 h1:fCfLTTJfaJ1lGJ6KjZGMBjxugPf1YpbAKgwd6Hz3x0g=
+github.com/containerssh/sshserver v0.9.25/go.mod h1:3mD1e+prsW/YM4QtkW8mYeiWjlsngiv0te1lGL5doGw=
 github.com/containerssh/structutils v0.9.0 h1:pz4xl5ZrPnpdSx7B/ru8Fj3oU3vOtx1jprIuSkm5s7o=
 github.com/containerssh/structutils v0.9.0/go.mod h1:zirdwNXan3kuTpsJp9Gl3W6VQz0fexqMySqxmfviSjw=
 github.com/containerssh/unixutils v0.9.0 h1:9Bh2UiQW6DIuVW6upc1uUU38tKK1IUn2hxZqi9w3cQc=

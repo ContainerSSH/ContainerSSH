@@ -18,7 +18,7 @@ require (
 	github.com/containerssh/metricsintegration v0.9.3
 	github.com/containerssh/security v0.9.8 // indirect
 	github.com/containerssh/service v0.9.3
-	github.com/containerssh/sshserver v0.9.23
+	github.com/containerssh/sshserver v0.9.25
 	github.com/containerssh/structutils v0.9.0
 	github.com/cucumber/godog v0.11.0
 	github.com/docker/docker v20.10.5+incompatible
@@ -37,7 +37,6 @@ require (
 	golang.org/x/oauth2 v0.0.0-20210323180902-22b0adad7558 // indirect
 	golang.org/x/sys v0.0.0-20210326220804-49726bf1d181 // indirect
 	golang.org/x/term v0.0.0-20210317153231-de623e64d2a6 // indirect
-	golang.org/x/text v0.3.5 // indirect
 	google.golang.org/appengine v1.6.7 // indirect
 	google.golang.org/genproto v0.0.0-20210329143202-679c6ae281ee // indirect
 	k8s.io/client-go v0.20.5 // indirect
