@@ -4,8 +4,6 @@ on:
   push:
     branches-ignore:
       - 'main'
-    branches:
-      - '*'
     tags-ignore:
       - '*'
 jobs:
