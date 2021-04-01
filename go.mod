@@ -3,14 +3,14 @@ module github.com/containerssh/containerssh
 go 1.16
 
 require (
-	github.com/aws/aws-sdk-go v1.38.8
+	github.com/aws/aws-sdk-go v1.38.10
 	github.com/containerd/containerd v1.4.4 // indirect
 	github.com/containerssh/auditlog v0.9.9
 	github.com/containerssh/auditlogintegration v0.9.4
 	github.com/containerssh/auth v0.9.6
 	github.com/containerssh/authintegration v0.9.4
-	github.com/containerssh/backend v0.9.8
-	github.com/containerssh/configuration v0.9.9
+	github.com/containerssh/backend v0.9.9
+	github.com/containerssh/configuration v0.9.10
 	github.com/containerssh/geoip v0.9.4
 	github.com/containerssh/http v0.9.9
 	github.com/containerssh/log v0.9.13
@@ -18,7 +18,7 @@ require (
 	github.com/containerssh/metricsintegration v0.9.3
 	github.com/containerssh/security v0.9.8 // indirect
 	github.com/containerssh/service v0.9.3
-	github.com/containerssh/sshserver v0.9.23
+	github.com/containerssh/sshserver v0.9.25
 	github.com/containerssh/structutils v0.9.0
 	github.com/cucumber/godog v0.11.0
 	github.com/docker/docker v20.10.5+incompatible
@@ -32,14 +32,14 @@ require (
 	github.com/oschwald/geoip2-golang v1.5.0 // indirect
 	github.com/rsc/goversion v1.2.0
 	github.com/sirupsen/logrus v1.8.1 // indirect
-	golang.org/x/crypto v0.0.0-20210314154223-e6e6c4f2bb5b
-	golang.org/x/net v0.0.0-20210329181859-df645c7b52b1 // indirect
+	golang.org/x/crypto v0.0.0-20210322153248-0c34fe9e7dc2
+	golang.org/x/net v0.0.0-20210331212208-0fccb6fa2b5c // indirect
 	golang.org/x/oauth2 v0.0.0-20210323180902-22b0adad7558 // indirect
-	golang.org/x/sys v0.0.0-20210326220804-49726bf1d181 // indirect
+	golang.org/x/sys v0.0.0-20210331175145-43e1dd70ce54 // indirect
 	golang.org/x/term v0.0.0-20210317153231-de623e64d2a6 // indirect
 	golang.org/x/text v0.3.5 // indirect
 	google.golang.org/appengine v1.6.7 // indirect
-	google.golang.org/genproto v0.0.0-20210329143202-679c6ae281ee // indirect
+	google.golang.org/genproto v0.0.0-20210331142528-b7513248f0ba // indirect
 	k8s.io/client-go v0.20.5 // indirect
 	k8s.io/klog/v2 v2.8.0 // indirect
 	k8s.io/utils v0.0.0-20210305010621-2afb4311ab10 // indirect
