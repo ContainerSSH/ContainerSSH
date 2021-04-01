@@ -31,11 +31,12 @@ func main() {
 
 	decoder := binary.NewDecoder()
 	messages, errors := decoder.Decode(fh)
+loop:
 	for {
 		select {
 		case msg, ok := <-messages:
 			if !ok {
-				break
+				break loop
 			}
 
 			var data []byte
@@ -53,7 +54,10 @@ func main() {
 			} else {
 				break
 			}
-		case channelError := <-errors:
+		case channelError, ok := <-errors:
+			if !ok {
+				break loop
+			}
 			if channelError != nil {
 				structuredError := map[string]string{
 					"error": channelError.Error(),
