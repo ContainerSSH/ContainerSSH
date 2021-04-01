@@ -14,7 +14,6 @@ builds:
       - linux
     goarch:
       - amd64
-      - arm64
     env:
       - CGO_ENABLED=0
   - id: containerssh-auditlog-decoder
@@ -27,7 +26,6 @@ builds:
       - linux
     goarch:
       - amd64
-      - arm64
     env:
       - CGO_ENABLED=0
   - id: containerssh-testauthconfigserver
@@ -40,7 +38,6 @@ builds:
       - linux
     goarch:
       - amd64
-      - arm64
     env:
       - CGO_ENABLED=0
 archives:
