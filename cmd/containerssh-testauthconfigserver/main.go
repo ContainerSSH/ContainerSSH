@@ -166,16 +166,31 @@ func main() {
 		panic(err)
 	}
 
+	running := make(chan struct{})
+	stopped := make(chan struct{})
 	lifecycle := service.NewLifecycle(srv)
+	lifecycle.OnRunning(
+		func(s service.Service, l service.Lifecycle) {
+			println("Test Auth-Config Server is now running...")
+			close(running)
+		}).OnStopped(
+		func(s service.Service, l service.Lifecycle) {
+			close(stopped)
+		})
 	exitSignalList := []os.Signal{os.Interrupt, os.Kill, syscall.SIGINT, syscall.SIGTERM}
 	exitSignals := make(chan os.Signal, 1)
 	signal.Notify(exitSignals, exitSignalList...)
 	go func() {
-		if _, ok := <-exitSignals; ok {
-			lifecycle.Stop(context.Background())
+		if err := lifecycle.Run(); err != nil {
+			panic(err)
 		}
 	}()
-	if err := srv.RunWithLifecycle(lifecycle); err != nil {
-		panic(err)
+	select {
+	case <-running:
+		if _, ok := <-exitSignals; ok {
+			println("Stopping Test Auth-Config Server...")
+			lifecycle.Stop(context.Background())
+		}
+	case <-stopped:
 	}
 }
