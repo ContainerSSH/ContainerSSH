@@ -40,7 +40,7 @@ loop:
 			}
 
 			var data []byte
-			data, err = json.Marshal(msg)
+			data, err = json.Marshal(msg.GetExtendedMessage())
 			if err != nil {
 				structuredError := map[string]string{
 					"error": fmt.Sprintf("JSON encoding error: (%v)", err),
