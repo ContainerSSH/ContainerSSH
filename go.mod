@@ -4,21 +4,20 @@ go 1.16
 
 require (
 	github.com/aws/aws-sdk-go v1.38.10
-	github.com/containerssh/auditlog v0.9.10
-	github.com/containerssh/auditlogintegration v0.9.4
-	github.com/containerssh/auth v0.9.6
-	github.com/containerssh/authintegration v0.9.4
-	github.com/containerssh/backend v0.9.9
-	github.com/containerssh/configuration v0.9.10
-	github.com/containerssh/geoip v0.9.4
-	github.com/containerssh/http v0.9.9
-	github.com/containerssh/log v0.9.13
-	github.com/containerssh/metrics v0.9.8
-	github.com/containerssh/metricsintegration v0.9.3
-	github.com/containerssh/service v0.9.3
-	github.com/containerssh/sshproxy v0.9.1 // indirect
-	github.com/containerssh/sshserver v0.9.26
-	github.com/containerssh/structutils v0.9.0
+	github.com/containerssh/auditlog v1.0.0
+	github.com/containerssh/auditlogintegration v1.0.0
+	github.com/containerssh/auth v1.0.0
+	github.com/containerssh/authintegration v1.0.0
+	github.com/containerssh/backend v1.0.0
+	github.com/containerssh/configuration v1.0.0
+	github.com/containerssh/geoip v1.0.0
+	github.com/containerssh/http v1.0.0
+	github.com/containerssh/log v1.0.0
+	github.com/containerssh/metrics v1.0.0
+	github.com/containerssh/metricsintegration v1.0.0
+	github.com/containerssh/service v1.0.0
+	github.com/containerssh/sshserver v1.0.0
+	github.com/containerssh/structutils v1.0.0
 	github.com/cucumber/godog v0.11.0
 	github.com/docker/docker v20.10.5+incompatible
 	github.com/docker/go-connections v0.4.0
@@ -26,9 +25,6 @@ require (
 	github.com/mitchellh/golicense v0.2.0
 	github.com/rsc/goversion v1.2.0
 	golang.org/x/crypto v0.0.0-20210322153248-0c34fe9e7dc2
-	golang.org/x/net v0.0.0-20210331212208-0fccb6fa2b5c // indirect
-	golang.org/x/sys v0.0.0-20210331175145-43e1dd70ce54 // indirect
-	google.golang.org/genproto v0.0.0-20210331142528-b7513248f0ba // indirect
 )
 
 // Exclude this package because it got renamed to /moby/ which breaks packages.
