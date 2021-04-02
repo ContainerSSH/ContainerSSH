@@ -21,7 +21,7 @@ require (
 	github.com/cucumber/godog v0.11.0
 	github.com/docker/docker v20.10.5+incompatible
 	github.com/docker/go-connections v0.4.0
-	github.com/go-enry/go-license-detector/v4 v4.1.0
+	github.com/go-enry/go-license-detector/v4 v4.1.1
 	github.com/mitchellh/golicense v0.2.0
 	github.com/rsc/goversion v1.2.0
 	golang.org/x/crypto v0.0.0-20210322153248-0c34fe9e7dc2
