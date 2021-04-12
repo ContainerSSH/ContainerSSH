@@ -11,7 +11,7 @@ require (
 	github.com/containerssh/backend v1.0.0
 	github.com/containerssh/configuration v1.0.0
 	github.com/containerssh/geoip v1.0.0
-	github.com/containerssh/http v1.0.0
+	github.com/containerssh/http v1.0.1
 	github.com/containerssh/log v1.0.0
 	github.com/containerssh/metrics v1.0.0
 	github.com/containerssh/metricsintegration v1.0.0

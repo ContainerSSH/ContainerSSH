@@ -104,8 +104,9 @@ github.com/containerssh/docker v1.0.0 h1:fyXzSntVXXuBSboRqARy9t1maoNLK1HOhqrQHRU
 github.com/containerssh/docker v1.0.0/go.mod h1:470SZ+aNLVWzlftHuQi/VY3rK4rExykX5f41X/vSGaI=
 github.com/containerssh/geoip v1.0.0 h1:7igZyJW9g6jwBhoYqCOVQ9hRXbW1p0DNyiz0/bXL0qY=
 github.com/containerssh/geoip v1.0.0/go.mod h1:W6gNUH6EXmYb5Tk0EG5Qp57YsySLxmQGCMlYufinYuo=
-github.com/containerssh/http v1.0.0 h1:tHkqLI5gAD3l4uxcJLYub/SMhExglXHJPpfnNnXFxQk=
 github.com/containerssh/http v1.0.0/go.mod h1:tHVp3sGCX1J7NITtgn67aVQhj7QJv8s+KNrWeey/CSc=
+github.com/containerssh/http v1.0.1 h1:SBE+c2e6dOWtiGiNd0imqIuMT9CSuhmNKul4RVqoSXQ=
+github.com/containerssh/http v1.0.1/go.mod h1:tHVp3sGCX1J7NITtgn67aVQhj7QJv8s+KNrWeey/CSc=
 github.com/containerssh/kubernetes v1.0.0 h1:YJJyVbQ39TGixYF93ZThR2l8eg1vglKFwJGrKtb+Mag=
 github.com/containerssh/kubernetes v1.0.0/go.mod h1:9yWOXX/nV2erdEr2RNEPsL/QGn5LgPE0RlVxploZlQQ=
 github.com/containerssh/log v1.0.0 h1:nOSqNqh7cXIa+Iy+Lx2CA+wpkrqDqcQh4EVoEvSaxU8=
