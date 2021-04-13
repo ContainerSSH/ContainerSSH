@@ -19,7 +19,7 @@ require (
 	github.com/containerssh/sshserver v1.0.0
 	github.com/containerssh/structutils v1.0.0
 	github.com/cucumber/godog v0.11.0
-	github.com/docker/docker v20.10.5+incompatible
+	github.com/docker/docker v20.10.6+incompatible
 	github.com/docker/go-connections v0.4.0
 	github.com/go-enry/go-license-detector/v4 v4.1.0
 	github.com/mitchellh/golicense v0.2.0
