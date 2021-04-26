@@ -104,8 +104,9 @@ github.com/containerssh/docker v1.0.0 h1:fyXzSntVXXuBSboRqARy9t1maoNLK1HOhqrQHRU
 github.com/containerssh/docker v1.0.0/go.mod h1:470SZ+aNLVWzlftHuQi/VY3rK4rExykX5f41X/vSGaI=
 github.com/containerssh/geoip v1.0.0 h1:7igZyJW9g6jwBhoYqCOVQ9hRXbW1p0DNyiz0/bXL0qY=
 github.com/containerssh/geoip v1.0.0/go.mod h1:W6gNUH6EXmYb5Tk0EG5Qp57YsySLxmQGCMlYufinYuo=
-github.com/containerssh/http v1.0.0 h1:tHkqLI5gAD3l4uxcJLYub/SMhExglXHJPpfnNnXFxQk=
 github.com/containerssh/http v1.0.0/go.mod h1:tHVp3sGCX1J7NITtgn67aVQhj7QJv8s+KNrWeey/CSc=
+github.com/containerssh/http v1.1.0 h1:N3nYCra07//pYyVCW/ryZTDh/G4CHFzd5ht27pUtKu0=
+github.com/containerssh/http v1.1.0/go.mod h1:0czFGNEJTPpEjkSp/YcPseNzJSOvwc8H5rMRpQQ+Kj4=
 github.com/containerssh/kubernetes v1.0.0 h1:YJJyVbQ39TGixYF93ZThR2l8eg1vglKFwJGrKtb+Mag=
 github.com/containerssh/kubernetes v1.0.0/go.mod h1:9yWOXX/nV2erdEr2RNEPsL/QGn5LgPE0RlVxploZlQQ=
 github.com/containerssh/log v1.0.0 h1:nOSqNqh7cXIa+Iy+Lx2CA+wpkrqDqcQh4EVoEvSaxU8=
@@ -303,6 +304,8 @@ github.com/googleapis/gnostic v0.5.4/go.mod h1:TRWw1s4gxBGjSe301Dai3c7wXJAZy57+/
 github.com/gopherjs/gopherjs v0.0.0-20181017120253-0766667cb4d1/go.mod h1:wJfORRmW1u3UXTncJ5qlYoELFm8eSnnEO6hX4iZ3EWY=
 github.com/gorilla/mux v1.8.0 h1:i40aqfkR1h2SlN9hojwV5ZA91wcXFOvkdNIeFDP5koI=
 github.com/gorilla/mux v1.8.0/go.mod h1:DVbg23sWSpFRCP0SfiEN6jmj59UnW/n46BH5rLB71So=
+github.com/gorilla/schema v1.2.0 h1:YufUaxZYCKGFuAq3c96BOhjgd5nmXiOY9NGzF247Tsc=
+github.com/gorilla/schema v1.2.0/go.mod h1:kgLaKoK1FELgZqMAVxx/5cbj0kT+57qxUrAlIO2eleU=
 github.com/gorilla/websocket v1.4.2/go.mod h1:YR8l580nyteQvAITg2hZ9XVh4b55+EU/adAjf1fMHhE=
 github.com/gosuri/uilive v0.0.0-20170323041506-ac356e6e42cd/go.mod h1:qkLSc0A5EXSP6B04TrN4oQoxqFI7A8XvoXSlJi8cwk8=
 github.com/gregjones/httpcache v0.0.0-20180305231024-9cad4c3443a7/go.mod h1:FecbI9+v66THATjSRHfNgh1IVFe/9kFxbXtjV0ctIMA=
