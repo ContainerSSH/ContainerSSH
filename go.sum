@@ -110,6 +110,8 @@ github.com/containerssh/kubernetes v1.0.0 h1:YJJyVbQ39TGixYF93ZThR2l8eg1vglKFwJG
 github.com/containerssh/kubernetes v1.0.0/go.mod h1:9yWOXX/nV2erdEr2RNEPsL/QGn5LgPE0RlVxploZlQQ=
 github.com/containerssh/log v1.0.0 h1:nOSqNqh7cXIa+Iy+Lx2CA+wpkrqDqcQh4EVoEvSaxU8=
 github.com/containerssh/log v1.0.0/go.mod h1:7Gy+sx0H1UDtjYBySvK0CnXRRHPHZPXMsa9MYmLBI0I=
+github.com/containerssh/log v1.1.2 h1:6SQECTGS5gOaqaC597VF6i4WkcT5MpvPn10MdV96GGo=
+github.com/containerssh/log v1.1.2/go.mod h1:JER/AjoAHhb8arGN6bsAPF1r1S8p6sUAnvBOL4s32ZU=
 github.com/containerssh/metrics v1.0.0 h1:F7VLIzqZLrTJ6ayxoVtBZQ4kyHiE1AIYOOwZ3+8yNko=
 github.com/containerssh/metrics v1.0.0/go.mod h1:4k7i71jHFJVpeBL+6uU6h5p/E0suHK+YF0KFZs5rCqs=
 github.com/containerssh/metricsintegration v1.0.0 h1:oRSAwKt45WlR/hUkp/q3N0UoaQABa+yMwpy47O2zlbE=
