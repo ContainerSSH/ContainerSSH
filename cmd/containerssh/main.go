@@ -45,14 +45,17 @@ func main() {
 			os.Exit(1)
 		}
 		configFile = realConfigFile
-		if err = readConfigFile(configFile, loggerFactory, &config); err != nil {
-			logger.Critical(log.Wrap(err, containerssh.EConfig, "Invalid configuration in file %s", configFile))
-			os.Exit(1)
-		}
 	} else {
 		configFile, err = filepath.Abs("./config.yaml")
 		if err != nil {
 			logger.Critical(log.Wrap(err, containerssh.EConfig, "ContainerSSH configuration file does not exist: ./config.yaml"))
+			os.Exit(1)
+		}
+	}
+
+	if _, err := os.Stat(configFile); err == nil {
+		if err = readConfigFile(configFile, loggerFactory, &config); err != nil {
+			logger.Critical(log.Wrap(err, containerssh.EConfig, "Invalid configuration in file %s", configFile))
 			os.Exit(1)
 		}
 	}
