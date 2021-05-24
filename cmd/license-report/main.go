@@ -178,23 +178,51 @@ func (l *licenseReport) processModule(mod module.Module) (
 	moduleLicense,
 	error,
 ) {
+	license, licenseModPath, licenseOk, err := l.findModPathLicense(mod)
+	if err != nil {
+		return moduleLicense{}, err
+	}
+	noticeFile, err := l.findNoticeFile(licenseModPath)
+	if err != nil {
+		return moduleLicense{}, err
+	}
+	notice, err := l.readNoticeFile(noticeFile)
+	if err != nil {
+		return moduleLicense{}, err
+	}
+	result := moduleLicense{
+		Module:   mod.Path,
+		License:  license,
+		Accepted: licenseOk,
+		Notice:   notice,
+	}
+	result.Print()
+	return result, nil
+}
+
+func (l *licenseReport) findModPathLicense(mod module.Module) (string, string, bool, error) {
 	modPaths := []string{
 		path.Join(l.cwd, "vendor", mod.Path),
 		path.Join(
 			l.cwd,
 			"vendor",
 			mod.Path,
-			regexp.MustCompile(`\..*$`).ReplaceAllString(mod.Version, "")),
+			regexp.MustCompile(`\..*$`).ReplaceAllString(mod.Version, ""),
+		),
 	}
 	licenseFound := ""
 	licenseOk := false
 	licenseModPath := ""
 	var lastError error
-	loop:
+loop:
 	for _, modPath := range modPaths {
 		f, err := filer.FromDirectory(modPath)
 		if err != nil {
-			return moduleLicense{}, fmt.Errorf("failed to create filer for mod path %s (%w)", modPath, err)
+			return "", "", false, fmt.Errorf(
+				"failed to create filer for mod path %s (%w)",
+				modPath,
+				err,
+			)
 		}
 		if overrideLicense, ok := l.config.Override[mod.Path]; ok {
 			licenseFound = overrideLicense
@@ -206,6 +234,7 @@ func (l *licenseReport) processModule(mod module.Module) (
 				}
 			}
 		} else {
+			lastError = nil
 			match, err := licensedb.Detect(f)
 			if err != nil {
 				lastError = err
@@ -221,31 +250,16 @@ func (l *licenseReport) processModule(mod module.Module) (
 								break loop
 							}
 						}
+						log.Printf("detected disallowed license %s for %s", licenseName, mod.Path)
 					}
 				}
 			}
 		}
 	}
-	if !licenseOk {
+	if lastError != nil {
 		log.Printf("failed to detect license for %s (%v)", mod.Path, lastError)
-		return moduleLicense{}, lastError
 	}
-	noticeFile, err := l.findNoticeFile(licenseModPath)
-	if err != nil {
-		return moduleLicense{}, err
-	}
-	notice, err := l.readNoticeFile(noticeFile)
-	if err != nil {
-		return moduleLicense{}, err
-	}
-	result := moduleLicense{
-		Module:   mod.Path,
-		License:  licenseFound,
-		Accepted: licenseOk,
-		Notice:   notice,
-	}
-	result.Print()
-	return result, nil
+	return licenseFound, licenseModPath, licenseOk, nil
 }
 
 func (l *licenseReport) findNoticeFile(modPath string) (string, error) {
