@@ -2,7 +2,7 @@ package containerssh_test
 
 import (
 	"github.com/containerssh/auth"
-	"github.com/containerssh/configuration"
+	"github.com/containerssh/configuration/v2"
 	"github.com/containerssh/http"
 	"github.com/containerssh/log"
 )

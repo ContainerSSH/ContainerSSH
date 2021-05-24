@@ -21,7 +21,7 @@ import (
 	"github.com/docker/go-connections/nat"
 
 	"github.com/containerssh/auditlog"
-	"github.com/containerssh/configuration"
+	"github.com/containerssh/configuration/v2"
 )
 
 func NewAuditLogTestingAspect() TestingAspect {

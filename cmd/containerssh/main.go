@@ -14,7 +14,7 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/containerssh/configuration"
+	"github.com/containerssh/configuration/v2"
 	"github.com/containerssh/log"
 	"github.com/containerssh/service"
 	"github.com/containerssh/structutils"

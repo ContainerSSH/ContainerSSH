@@ -1,6 +1,7 @@
 build/
 cover.out
 config.yaml
+config.*.yaml
 ssh_host_rsa_key
 vendor
 NOTICE.md

@@ -7,8 +7,8 @@ import (
 
 	"github.com/containerssh/auditlogintegration"
 	"github.com/containerssh/authintegration"
-	"github.com/containerssh/backend"
-	"github.com/containerssh/configuration"
+	"github.com/containerssh/backend/v2"
+	"github.com/containerssh/configuration/v2"
 	"github.com/containerssh/geoip"
 	"github.com/containerssh/geoip/geoipprovider"
 	"github.com/containerssh/metrics"
