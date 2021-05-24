@@ -9,6 +9,7 @@ import (
 	"os"
 	"os/exec"
 	"path"
+	"regexp"
 	"strings"
 
 	"github.com/go-enry/go-license-detector/v4/licensedb"
@@ -177,40 +178,59 @@ func (l *licenseReport) processModule(mod module.Module) (
 	moduleLicense,
 	error,
 ) {
-	modPath := path.Join(l.cwd, "vendor", mod.Path)
-	f, err := filer.FromDirectory(modPath)
-	if err != nil {
-		return moduleLicense{}, fmt.Errorf("failed to create filer for mod path %s (%w)", modPath, err)
+	modPaths := []string{
+		path.Join(l.cwd, "vendor", mod.Path),
+		path.Join(
+			l.cwd,
+			"vendor",
+			mod.Path,
+			regexp.MustCompile(`\..*$`).ReplaceAllString(mod.Version, "")),
 	}
 	licenseFound := ""
 	licenseOk := false
-	if overrideLicense, ok := l.config.Override[mod.Path]; ok {
-		licenseFound = overrideLicense
-		for _, allowedLicense := range l.config.Allow {
-			if licenseFound == allowedLicense {
-				licenseOk = true
-			}
-		}
-	} else {
-		match, err := licensedb.Detect(f)
+	licenseModPath := ""
+	var lastError error
+	loop:
+	for _, modPath := range modPaths {
+		f, err := filer.FromDirectory(modPath)
 		if err != nil {
-			log.Printf("failed to detect license for %s (%v)", mod.Path, err)
+			return moduleLicense{}, fmt.Errorf("failed to create filer for mod path %s (%w)", modPath, err)
+		}
+		if overrideLicense, ok := l.config.Override[mod.Path]; ok {
+			licenseFound = overrideLicense
+			for _, allowedLicense := range l.config.Allow {
+				if licenseFound == allowedLicense {
+					licenseOk = true
+					licenseModPath = modPath
+					break loop
+				}
+			}
 		} else {
-		loop:
-			for licenseName, licenseMatch := range match {
-				if licenseMatch.Confidence > 0.9 {
-					licenseFound = licenseName
-					for _, allowedLicense := range l.config.Allow {
-						if licenseName == allowedLicense {
-							licenseOk = true
-							break loop
+			match, err := licensedb.Detect(f)
+			if err != nil {
+				lastError = err
+				continue
+			} else {
+				for licenseName, licenseMatch := range match {
+					if licenseMatch.Confidence > 0.9 {
+						licenseFound = licenseName
+						for _, allowedLicense := range l.config.Allow {
+							if licenseName == allowedLicense {
+								licenseOk = true
+								licenseModPath = modPath
+								break loop
+							}
 						}
 					}
 				}
 			}
 		}
 	}
-	noticeFile, err := l.findNoticeFile(modPath)
+	if !licenseOk {
+		log.Printf("failed to detect license for %s (%v)", mod.Path, lastError)
+		return moduleLicense{}, lastError
+	}
+	noticeFile, err := l.findNoticeFile(licenseModPath)
 	if err != nil {
 		return moduleLicense{}, err
 	}
