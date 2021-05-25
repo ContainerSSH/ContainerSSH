@@ -26,6 +26,7 @@ import (
 
 	"github.com/containerssh/auth"
 	"github.com/containerssh/configuration/v2"
+	"github.com/containerssh/docker/v2"
 	"github.com/containerssh/http"
 	"github.com/containerssh/log"
 	"github.com/containerssh/service"
@@ -109,11 +110,14 @@ func (c *configHandler) OnConfig(request configuration.ConfigRequest) (configura
 	config := configuration.AppConfig{}
 
 	if request.Username == "busybox" {
-		config.Docker.Execution.Launch.ContainerConfig = &container.Config{}
 		config.DockerRun.Config.ContainerConfig = &container.Config{}
-
-		config.Docker.Execution.Launch.ContainerConfig.Image = "busybox"
 		config.DockerRun.Config.ContainerConfig.Image = "busybox"
+
+		config.Docker.Execution.Launch.ContainerConfig = &container.Config{}
+		config.Docker.Execution.Launch.ContainerConfig.Image = "busybox"
+		config.Docker.Execution.DisableAgent = true
+		config.Docker.Execution.Mode = docker.ExecutionModeSession
+		config.Docker.Execution.ShellCommand = []string{"/bin/sh"}
 	}
 
 	return config, nil
