@@ -3,13 +3,15 @@ module github.com/containerssh/containerssh
 go 1.16
 
 require (
-	github.com/aws/aws-sdk-go v1.38.45
+	github.com/aws/aws-sdk-go v1.38.46
 	github.com/containerssh/auditlog v1.0.0
 	github.com/containerssh/auditlogintegration v1.0.0
 	github.com/containerssh/auth v1.0.1
 	github.com/containerssh/authintegration v1.0.0
+	github.com/containerssh/backend v1.0.0 // indirect
 	github.com/containerssh/backend/v2 v2.0.2
 	github.com/containerssh/configuration/v2 v2.0.1
+	github.com/containerssh/docker/v2 v2.0.1
 	github.com/containerssh/geoip v1.0.0
 	github.com/containerssh/http v1.1.0
 	github.com/containerssh/log v1.1.6
