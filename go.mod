@@ -3,13 +3,14 @@ module github.com/containerssh/containerssh
 go 1.16
 
 require (
-	github.com/aws/aws-sdk-go v1.38.45
+	github.com/aws/aws-sdk-go v1.38.47
 	github.com/containerssh/auditlog v1.0.0
 	github.com/containerssh/auditlogintegration v1.0.0
 	github.com/containerssh/auth v1.0.1
 	github.com/containerssh/authintegration v1.0.0
 	github.com/containerssh/backend/v2 v2.0.2
 	github.com/containerssh/configuration/v2 v2.0.1
+	github.com/containerssh/docker/v2 v2.0.1
 	github.com/containerssh/geoip v1.0.0
 	github.com/containerssh/http v1.1.0
 	github.com/containerssh/log v1.1.6
@@ -22,9 +23,13 @@ require (
 	github.com/docker/docker v20.10.6+incompatible
 	github.com/docker/go-connections v0.4.0
 	github.com/go-enry/go-license-detector/v4 v4.1.0
+	github.com/google/go-cmp v0.5.6 // indirect
 	github.com/mitchellh/golicense v0.2.0
 	github.com/rsc/goversion v1.2.0
 	golang.org/x/crypto v0.0.0-20210513164829-c07d793c2f9a
+	golang.org/x/net v0.0.0-20210525063256-abc453219eb5 // indirect
+	golang.org/x/sys v0.0.0-20210525143221-35b2ab0089ea // indirect
+	google.golang.org/genproto v0.0.0-20210524171403-669157292da3 // indirect
 )
 
 // Fixes CVE-2020-9283
