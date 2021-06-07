@@ -1,6 +1,7 @@
 package containerssh
 
 import (
+	"github.com/containerssh/health"
 	"github.com/containerssh/log"
 	"github.com/containerssh/service"
 	"github.com/containerssh/sshserver"
@@ -30,6 +31,12 @@ func New(config configuration.AppConfig, factory log.LoggerFactory) (Service, er
 		service.NewLifecycleFactory(),
 		logger.WithLabel("module", "service"),
 	)
+
+	healthService, err := health.New(config.Health, logger.WithLabel("module", "health"))
+	if err != nil {
+		return nil, err
+	}
+	pool.Add(healthService)
 
 	geoIPLookupProvider, err := geoip.New(config.GeoIP)
 	if err != nil {

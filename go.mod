@@ -9,9 +9,10 @@ require (
 	github.com/containerssh/auth v1.0.1
 	github.com/containerssh/authintegration v1.0.0
 	github.com/containerssh/backend/v2 v2.0.2
-	github.com/containerssh/configuration/v2 v2.0.1
+	github.com/containerssh/configuration/v2 v2.1.0
 	github.com/containerssh/docker/v2 v2.0.1
 	github.com/containerssh/geoip v1.0.0
+	github.com/containerssh/health v1.0.1 // indirect
 	github.com/containerssh/http v1.1.0
 	github.com/containerssh/log v1.1.6
 	github.com/containerssh/metrics v1.0.0
