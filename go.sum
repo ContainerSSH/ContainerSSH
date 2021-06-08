@@ -99,8 +99,8 @@ github.com/aslakhellesoy/gox v1.0.100/go.mod h1:AJl542QsKKG96COVsv0N74HHzVQgDIQP
 github.com/aws/aws-sdk-go v1.15.11/go.mod h1:mFuSZ37Z9YOHbQEwBWztmVzqXrEkub65tZoCYDt7FT0=
 github.com/aws/aws-sdk-go v1.38.10/go.mod h1:hcU610XS61/+aQV88ixoOzUoG7v3b31pl2zKMmprdro=
 github.com/aws/aws-sdk-go v1.38.45/go.mod h1:hcU610XS61/+aQV88ixoOzUoG7v3b31pl2zKMmprdro=
-github.com/aws/aws-sdk-go v1.38.47 h1:yWOz6zlDCiY3zvebYOZrI1LqCq6zWPWC5Cfe+mBcPos=
-github.com/aws/aws-sdk-go v1.38.47/go.mod h1:hcU610XS61/+aQV88ixoOzUoG7v3b31pl2zKMmprdro=
+github.com/aws/aws-sdk-go v1.38.56 h1:JI5bnuDfjVLgnBaDHeZO5btxGbYCQ5QA3P0maYtwPQw=
+github.com/aws/aws-sdk-go v1.38.56/go.mod h1:hcU610XS61/+aQV88ixoOzUoG7v3b31pl2zKMmprdro=
 github.com/beorn7/perks v0.0.0-20160804104726-4c0e84591b9a/go.mod h1:Dwedo/Wpr24TaqPxmxbtue+5NUziq4I4S80YR8gNf3Q=
 github.com/beorn7/perks v0.0.0-20180321164747-3a771d992973/go.mod h1:Dwedo/Wpr24TaqPxmxbtue+5NUziq4I4S80YR8gNf3Q=
 github.com/beorn7/perks v1.0.0/go.mod h1:KWe93zE9D1o94FZ5RNwFwVgaQK1VOXiVxmqh+CedLV8=
@@ -230,7 +230,6 @@ github.com/containerssh/backend/v2 v2.0.2 h1:ArGIMgas9mVlLNjpN4F7GxTAeKXZrBGewKi
 github.com/containerssh/backend/v2 v2.0.2/go.mod h1:rTxdkdfITz3iSOyvo0j3QMTiVvnN5JyGNtS2I/wt3Y8=
 github.com/containerssh/configuration v1.0.0 h1:zB6fYPIdrymPK/8cvTe0nDyZ3EHGQwh+x7cBYMUYqvA=
 github.com/containerssh/configuration v1.0.0/go.mod h1:l7vON1x4NscyaVD8nl+kbBeCBgXNkc2VjkLlHC1W50c=
-github.com/containerssh/configuration/v2 v2.0.1 h1:ZbFBbOSs1AOeJ7Cd7jlcORFH4fhtPISrRMU187qror0=
 github.com/containerssh/configuration/v2 v2.0.1/go.mod h1:v3KBTlb+FnygFtz6yr6LyYMJtB8/MvICHboU7cTYAQs=
 github.com/containerssh/configuration/v2 v2.1.0 h1:q71LdvJdCz5WBYqfPH6DZmMYemb4UccOTuw8L665rJk=
 github.com/containerssh/configuration/v2 v2.1.0/go.mod h1:/IWiWOBjw6Oqi5RsCnMmODFMOPLoQcWqTh9FX1yESYs=
