@@ -12,5 +12,11 @@ const ECoreHostKeyGenerationFailed = "CORE_HOST_KEY_GENERATION_FAILED"
 // ContainerSSH cannot update the configuration file with the new host keys and will only use the host key for the current run.
 const ECannotWriteConfigFile = "CORE_CONFIG_CANNOT_WRITE_FILE"
 
-// ContainerSSH is reading the configuration file
+// ContainerSSH is reading the configuration file.
 const MConfigFile = "CORE_CONFIG_FILE"
+
+// A ContainerSSH health check failed.
+const EHealthCheckFailed = "CORE_HEALTH_CHECK_FAILED"
+
+// The health check was successful.
+const MHealthCheckSuccessful = "CORE_HEALTH_CHECK_SUCCESSFUL"

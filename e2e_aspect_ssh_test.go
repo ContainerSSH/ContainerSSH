@@ -63,14 +63,14 @@ func (r *sshInProcess) StartBackingServices(
 		return err
 	}
 	r.config = config
-	srv, err := containerssh.New(
+	_, lifecycle, err := containerssh.New(
 		config,
 		log.NewLoggerFactory(),
 	)
 	if err != nil {
 		return err
 	}
-	r.lifecycle = NewSimpleLifecycle(srv)
+	r.lifecycle = NewSimpleLifecycle(lifecycle)
 	return r.lifecycle.Start()
 }
 

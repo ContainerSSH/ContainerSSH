@@ -1,6 +1,9 @@
 package containerssh
 
 import (
+	"context"
+
+	"github.com/containerssh/configuration/v2"
 	"github.com/containerssh/health"
 	"github.com/containerssh/log"
 	"github.com/containerssh/service"
@@ -9,7 +12,6 @@ import (
 	"github.com/containerssh/auditlogintegration"
 	"github.com/containerssh/authintegration"
 	"github.com/containerssh/backend/v2"
-	"github.com/containerssh/configuration/v2"
 	"github.com/containerssh/geoip"
 	"github.com/containerssh/geoip/geoipprovider"
 	"github.com/containerssh/metrics"
@@ -17,14 +19,14 @@ import (
 )
 
 // New creates a new instance of ContainerSSH.
-func New(config configuration.AppConfig, factory log.LoggerFactory) (Service, error) {
+func New(config configuration.AppConfig, factory log.LoggerFactory) (Service, service.Lifecycle, error) {
 	if err := config.Validate(false); err != nil {
-		return nil, log.Wrap(err, EConfig, "invalid ContainerSSH configuration")
+		return nil, nil, log.Wrap(err, EConfig, "invalid ContainerSSH configuration")
 	}
 
 	logger, err := factory.Make(config.Log)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
 	pool := service.NewPool(
@@ -34,49 +36,73 @@ func New(config configuration.AppConfig, factory log.LoggerFactory) (Service, er
 
 	healthService, err := health.New(config.Health, logger.WithLabel("module", "health"))
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 	pool.Add(healthService)
 
 	geoIPLookupProvider, err := geoip.New(config.GeoIP)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
 	metricsCollector := metrics.New(geoIPLookupProvider)
 
 	if err := createMetricsServer(config, logger, metricsCollector, pool); err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
 	containerBackend, err := createBackend(config, logger, metricsCollector)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
 	authHandler, err := createAuthHandler(config, logger, containerBackend, metricsCollector)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
 	auditLogHandler, err := createAuditLogHandler(config, logger, authHandler, geoIPLookupProvider)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
 	metricsHandler, err := createMetricsBackend(config, metricsCollector, auditLogHandler)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
 	if err := createSSHServer(config, logger, metricsHandler, pool); err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
-	return &servicePool{
+	return setUpService(pool, logger, healthService)
+}
+
+func setUpService(pool service.Pool, logger log.Logger, healthService health.Service) (
+	Service,
+	service.Lifecycle,
+	error,
+) {
+	poolWrapper := &servicePool{
 		pool,
 		logger,
-	}, nil
+	}
+	lifecycle := service.NewLifecycle(poolWrapper)
+	lifecycle.OnRunning(
+		func(s service.Service, l service.Lifecycle) {
+			healthService.ChangeStatus(true)
+		},
+	).OnStopping(
+		func(s service.Service, l service.Lifecycle, shutdownContext context.Context) {
+			healthService.ChangeStatus(false)
+		},
+	).OnCrashed(
+		func(s service.Service, l service.Lifecycle, err error) {
+			healthService.ChangeStatus(false)
+		},
+	)
+
+	return poolWrapper, lifecycle, nil
 }
 
 type servicePool struct {

@@ -5,6 +5,7 @@ import (
 	"github.com/containerssh/configuration/v2"
 	"github.com/containerssh/http"
 	"github.com/containerssh/log"
+	"github.com/containerssh/service"
 )
 
 func NewAuthTestingAspect() TestingAspect {
@@ -81,7 +82,7 @@ func (a *authTestingFactor) StartBackingServices(
 	if err != nil {
 		return err
 	}
-	a.lifecycle = NewSimpleLifecycle(srv)
+	a.lifecycle = NewSimpleLifecycle(service.NewLifecycle(srv))
 	return a.lifecycle.Start()
 }
 

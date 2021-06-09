@@ -13,9 +13,9 @@ type SimpleLifecycle struct {
 	stopped   chan struct{}
 }
 
-func NewSimpleLifecycle(srv service.Service) *SimpleLifecycle {
+func NewSimpleLifecycle(lifecycle service.Lifecycle) *SimpleLifecycle {
 	l := &SimpleLifecycle{
-		lifecycle: service.NewLifecycle(srv),
+		lifecycle: lifecycle,
 		running:   make(chan struct{}, 1),
 		stopped:   make(chan struct{}, 1),
 	}
