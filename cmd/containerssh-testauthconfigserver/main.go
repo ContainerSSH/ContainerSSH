@@ -6,7 +6,11 @@
 //     Schemes: http, https
 //     Host: localhost
 //     BasePath: /
+<<<<<<< HEAD
 //     Version: 0.4.1
+=======
+//     Version: 0.5.0
+>>>>>>> 56f7de5 (Issue #56: Keyboard-interactive authentication)
 //
 //     Consumes:
 //     - application/json
@@ -24,9 +28,14 @@ import (
 	"os/signal"
 	"syscall"
 
+<<<<<<< HEAD
 	"github.com/containerssh/auth"
 	"github.com/containerssh/configuration/v2"
 	"github.com/containerssh/docker/v2"
+=======
+	"github.com/containerssh/auth/v2"
+	"github.com/containerssh/configuration/v3"
+>>>>>>> 56f7de5 (Issue #56: Keyboard-interactive authentication)
 	"github.com/containerssh/http"
 	"github.com/containerssh/log"
 	"github.com/containerssh/service"
@@ -53,14 +62,15 @@ type authHandler struct {
 //     "$ref": "#/responses/AuthResponse"
 func (a *authHandler) OnPassword(Username string, _ []byte, _ string, _ string) (
 	bool,
+	map[string]string,
 	error,
 ) {
 	if os.Getenv("CONTAINERSSH_ALLOW_ALL") == "1" ||
 		Username == "foo" ||
 		Username == "busybox" {
-		return true, nil
+		return true, nil, nil
 	}
-	return false, nil
+	return false, nil, nil
 }
 
 // swagger:operation POST /pubkey Authentication authPubKey
@@ -80,12 +90,13 @@ func (a *authHandler) OnPassword(Username string, _ []byte, _ string, _ string) 
 //     "$ref": "#/responses/AuthResponse"
 func (a *authHandler) OnPubKey(Username string, _ string, _ string, _ string) (
 	bool,
+	map[string]string,
 	error,
 ) {
 	if Username == "foo" || Username == "busybox" {
-		return true, nil
+		return true, nil, nil
 	}
-	return false, nil
+	return false, nil, nil
 }
 
 type configHandler struct {
@@ -105,7 +116,6 @@ type configHandler struct {
 // responses:
 //   "200":
 //     "$ref": "#/responses/ConfigResponse"
-
 func (c *configHandler) OnConfig(request configuration.ConfigRequest) (configuration.AppConfig, error) {
 	config := configuration.AppConfig{}
 

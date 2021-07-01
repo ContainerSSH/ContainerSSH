@@ -3,19 +3,18 @@ package containerssh
 import (
 	"context"
 
-	"github.com/containerssh/configuration/v2"
-	"github.com/containerssh/health"
-	"github.com/containerssh/log"
-	"github.com/containerssh/service"
-	"github.com/containerssh/sshserver"
-
-	"github.com/containerssh/auditlogintegration"
-	"github.com/containerssh/authintegration"
-	"github.com/containerssh/backend/v2"
+	"github.com/containerssh/auditlogintegration/v2"
+	"github.com/containerssh/authintegration/v2"
+	"github.com/containerssh/backend/v3"
+	"github.com/containerssh/configuration/v3"
 	"github.com/containerssh/geoip"
 	"github.com/containerssh/geoip/geoipprovider"
+	"github.com/containerssh/health"
+	"github.com/containerssh/log"
 	"github.com/containerssh/metrics"
 	"github.com/containerssh/metricsintegration"
+	"github.com/containerssh/service"
+	"github.com/containerssh/sshserver/v2"
 )
 
 // New creates a new instance of ContainerSSH.
@@ -56,7 +55,7 @@ func New(config configuration.AppConfig, factory log.LoggerFactory) (Service, se
 		return nil, nil, err
 	}
 
-	authHandler, err := createAuthHandler(config, logger, containerBackend, metricsCollector)
+	authHandler, err := createAuthHandler(config, logger, containerBackend, metricsCollector, pool)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -183,15 +182,23 @@ func createAuthHandler(
 	logger log.Logger,
 	backend sshserver.Handler,
 	metricsCollector metrics.Collector,
+	pool service.Pool,
 ) (sshserver.Handler, error) {
 	authLogger := logger.WithLabel("module", "auth")
-	return authintegration.New(
+	handler, svc, err := authintegration.New(
 		config.Auth,
 		backend,
 		authLogger,
 		metricsCollector,
 		authintegration.BehaviorNoPassthrough,
 	)
+	if err != nil {
+		return nil, err
+	}
+	if svc != nil {
+		pool.Add(svc)
+	}
+	return handler, nil
 }
 
 func createBackend(config configuration.AppConfig, logger log.Logger, metricsCollector metrics.Collector) (sshserver.Handler, error) {

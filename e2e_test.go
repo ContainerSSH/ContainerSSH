@@ -8,7 +8,7 @@ import (
 	"sync"
 	"testing"
 
-	"github.com/containerssh/configuration/v2"
+	"github.com/containerssh/configuration/v3"
 	"github.com/containerssh/log"
 	"github.com/containerssh/structutils"
 	"github.com/cucumber/godog"

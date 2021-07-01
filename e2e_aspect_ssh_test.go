@@ -6,7 +6,7 @@ import (
 	"net"
 	"strings"
 
-	"github.com/containerssh/configuration/v2"
+	"github.com/containerssh/configuration/v3"
 	"github.com/containerssh/log"
 	"golang.org/x/crypto/ssh"
 

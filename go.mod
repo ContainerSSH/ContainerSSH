@@ -5,13 +5,11 @@ go 1.16
 require (
 	github.com/aws/aws-sdk-go v1.38.47
 	github.com/containerssh/auditlog v1.0.0
-	github.com/containerssh/auditlogintegration v1.0.0
+	github.com/containerssh/auditlogintegration/v2 v2.0.0
 	github.com/containerssh/auth v1.0.1
-	github.com/containerssh/authintegration v1.0.0
-	github.com/containerssh/backend v1.0.0 // indirect
-	github.com/containerssh/backend/v2 v2.0.2
-	github.com/containerssh/configuration/v2 v2.1.0
-	github.com/containerssh/docker/v2 v2.0.1
+	github.com/containerssh/authintegration/v2 v2.0.0
+	github.com/containerssh/backend/v3 v3.0.0
+	github.com/containerssh/configuration/v3 v3.0.0
 	github.com/containerssh/geoip v1.0.0
 	github.com/containerssh/health v1.1.0
 	github.com/containerssh/http v1.2.0
@@ -19,7 +17,7 @@ require (
 	github.com/containerssh/metrics v1.0.0
 	github.com/containerssh/metricsintegration v1.0.0
 	github.com/containerssh/service v1.0.0
-	github.com/containerssh/sshserver v1.0.0
+	github.com/containerssh/sshserver/v2 v2.0.0
 	github.com/containerssh/structutils v1.1.0
 	github.com/cucumber/godog v0.11.0
 	github.com/docker/docker v20.10.6+incompatible
@@ -60,3 +58,25 @@ replace (
 	gopkg.in/yaml.v2 v2.2.6 => gopkg.in/yaml.v2 v2.2.8
 	gopkg.in/yaml.v2 v2.2.7 => gopkg.in/yaml.v2 v2.2.8
 )
+
+replace github.com/containerssh/backend/v3 v3.0.0 => ../backend
+
+replace github.com/containerssh/metricsintegration v1.0.0 => ../metricsintegration
+
+replace github.com/containerssh/configuration/v3 v3.0.0 => ../configuration
+
+replace github.com/containerssh/docker/v3 v3.0.0 => ../docker
+
+replace github.com/containerssh/kubernetes/v3 v3.0.0 => ../kubernetes
+
+replace github.com/containerssh/sshproxy/v2 v2.0.0 => ../sshproxy
+
+replace github.com/containerssh/sshserver/v2 v2.0.0 => ../sshserver
+
+replace github.com/containerssh/auditlogintegration/v2 v2.0.0 => ../auditlogintegration
+
+replace github.com/containerssh/authintegration/v2 v2.0.0 => ../authintegration
+
+replace github.com/containerssh/auth/v2 v2.0.0 => ../auth
+
+replace github.com/containerssh/security/v2 v2.0.0 => ../security

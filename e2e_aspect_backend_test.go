@@ -1,7 +1,7 @@
 package containerssh_test
 
 import (
-	"github.com/containerssh/configuration/v2"
+	"github.com/containerssh/configuration/v3"
 	"github.com/containerssh/log"
 	"github.com/containerssh/structutils"
 )
