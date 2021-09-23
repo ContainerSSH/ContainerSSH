@@ -244,8 +244,9 @@ github.com/containerssh/health v1.1.0 h1:MbEtecX2eUF0t8/Mb7I0WPqAUUJsJP2QOSadmE1
 github.com/containerssh/health v1.1.0/go.mod h1:cGETo2XgO6ziuttov8yU4/ZwwdiAqKEsnmOh9QuJ6PU=
 github.com/containerssh/http v1.0.0/go.mod h1:tHVp3sGCX1J7NITtgn67aVQhj7QJv8s+KNrWeey/CSc=
 github.com/containerssh/http v1.1.0/go.mod h1:0czFGNEJTPpEjkSp/YcPseNzJSOvwc8H5rMRpQQ+Kj4=
-github.com/containerssh/http v1.2.0 h1:PH6LxDErDZyryLfGJduI4F15puVlOyUP6MApwS8yV4k=
 github.com/containerssh/http v1.2.0/go.mod h1:aUBi5CsAZsvYBn6NYeT3oUwnvzZRkneL/k2o2pOMdU0=
+github.com/containerssh/http v1.3.0 h1:DKpXot2SqNgDh+bY7ebx5bXu09ZjGqRSInnsBVCsx5g=
+github.com/containerssh/http v1.3.0/go.mod h1:6Cq0n0WYaM40y2yt2p5Svq1U+/scKWnT59kAqqvDapU=
 github.com/containerssh/kubernetes v1.0.0 h1:YJJyVbQ39TGixYF93ZThR2l8eg1vglKFwJGrKtb+Mag=
 github.com/containerssh/kubernetes v1.0.0/go.mod h1:9yWOXX/nV2erdEr2RNEPsL/QGn5LgPE0RlVxploZlQQ=
 github.com/containerssh/kubernetes/v2 v2.0.1 h1:0i49ExbgwkP6ti5VwcDf2lgDH/inm3ASjZH3/vEJ1no=

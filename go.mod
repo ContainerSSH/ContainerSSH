@@ -14,7 +14,7 @@ require (
 	github.com/containerssh/docker/v2 v2.0.1
 	github.com/containerssh/geoip v1.0.0
 	github.com/containerssh/health v1.1.0
-	github.com/containerssh/http v1.2.0
+	github.com/containerssh/http v1.3.0
 	github.com/containerssh/log v1.1.6
 	github.com/containerssh/metrics v1.0.0
 	github.com/containerssh/metricsintegration v1.0.0
