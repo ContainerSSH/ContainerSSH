@@ -3,33 +3,36 @@ module github.com/containerssh/containerssh
 go 1.16
 
 require (
+	github.com/Microsoft/go-winio v0.5.1 // indirect
 	github.com/aws/aws-sdk-go v1.38.47
-	github.com/containerssh/auditlog v1.0.0
-	github.com/containerssh/auditlogintegration/v2 v2.0.0
-	github.com/containerssh/auth v1.0.1
-	github.com/containerssh/authintegration/v2 v2.0.0
-	github.com/containerssh/backend/v3 v3.0.0
-	github.com/containerssh/configuration/v3 v3.0.0
-	github.com/containerssh/geoip v1.0.0
-	github.com/containerssh/health v1.1.0
-	github.com/containerssh/http v1.2.0
-	github.com/containerssh/log v1.1.6
-	github.com/containerssh/metrics v1.0.0
-	github.com/containerssh/metricsintegration v1.0.0
-	github.com/containerssh/service v1.0.0
-	github.com/containerssh/sshserver/v2 v2.0.0
-	github.com/containerssh/structutils v1.1.0
+	github.com/containerd/containerd v1.5.7 // indirect
+	github.com/creasty/defaults v1.5.1
 	github.com/cucumber/godog v0.11.0
+	github.com/docker/distribution v2.7.1+incompatible
 	github.com/docker/docker v20.10.6+incompatible
 	github.com/docker/go-connections v0.4.0
+	github.com/fxamacker/cbor v1.5.1 // indirect
 	github.com/go-enry/go-license-detector/v4 v4.1.0
-	github.com/google/go-cmp v0.5.6 // indirect
+	github.com/google/go-cmp v0.5.6
+	github.com/google/uuid v1.3.0
+	github.com/gorilla/schema v1.2.0
+	github.com/imdario/mergo v0.3.12
+	github.com/jcmturner/gokrb5/v8 v8.4.2
+	github.com/mattn/go-shellwords v1.0.12 // indirect
 	github.com/mitchellh/golicense v0.2.0
+	github.com/opencontainers/image-spec v1.0.1
+	github.com/oschwald/geoip2-golang v1.5.0
+	github.com/qdm12/reprint v0.0.0-20200326205758-722754a53494
 	github.com/rsc/goversion v1.2.0
-	golang.org/x/crypto v0.0.0-20210513164829-c07d793c2f9a
+	github.com/stretchr/testify v1.7.0
+	golang.org/x/crypto v0.0.0-20210711020723-a769d52b0f97
 	golang.org/x/net v0.0.0-20210525063256-abc453219eb5 // indirect
-	golang.org/x/sys v0.0.0-20210525143221-35b2ab0089ea // indirect
 	google.golang.org/genproto v0.0.0-20210524171403-669157292da3 // indirect
+	gopkg.in/yaml.v3 v3.0.0-20210107192922-496545a6307b
+	k8s.io/api v0.21.1
+	k8s.io/apimachinery v0.21.1
+	k8s.io/client-go v0.21.1
+	sigs.k8s.io/yaml v1.2.0
 )
 
 // Fixes CVE-2020-9283

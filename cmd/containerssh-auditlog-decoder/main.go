@@ -7,7 +7,7 @@ import (
 	"log"
 	"os"
 
-	"github.com/containerssh/auditlog/codec/binary"
+	"github.com/containerssh/containerssh/auditlog/codec"
 )
 
 func main() {
@@ -29,7 +29,7 @@ func main() {
 		log.Fatalf("failed to open audit log file %s (%v)", file, err)
 	}
 
-	decoder := binary.NewDecoder()
+	decoder := codec.NewBinaryDecoder()
 	messages, errors := decoder.Decode(fh)
 loop:
 	for {

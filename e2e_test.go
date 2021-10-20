@@ -8,8 +8,9 @@ import (
 	"sync"
 	"testing"
 
-	"github.com/containerssh/configuration/v3"
-	"github.com/containerssh/log"
+	error2 "github.com/containerssh/containerssh/error"
+	"github.com/containerssh/containerssh/log"
+	"github.com/containerssh/containerssh/message"
 	"github.com/containerssh/structutils"
 	"github.com/cucumber/godog"
 )
@@ -53,7 +54,7 @@ func processTestingAspect(t *testing.T, aspects []TestingAspect, factors []Testi
 		defer stopFactors(t, startedFactors, config)()
 		for _, factor := range factors {
 			logger := log.NewTestLogger(t)
-			logger.Notice(log.NewMessage(log.MTest, "Starting backing services for %s=%s...", factor.Aspect().String(), factor.String()))
+			logger.Notice(message.NewMessage(error2.MTest, "Starting backing services for %s=%s...", factor.Aspect().String(), factor.String()))
 			if err := factor.StartBackingServices(config, logger); err != nil {
 				t.Errorf("failed to start backing services for %s=%s (%v)", factor.Aspect().String(), factor.String(), err)
 				t.Fail()
@@ -61,7 +62,7 @@ func processTestingAspect(t *testing.T, aspects []TestingAspect, factors []Testi
 				_ = factor.StopBackingServices(config, logger)
 				return
 			}
-			logger.Notice(log.NewMessage(log.MTest, "Backing services for %s=%s running.", factor.Aspect().String(), factor.String()))
+			logger.Notice(message.NewMessage(error2.MTest, "Backing services for %s=%s running.", factor.Aspect().String(), factor.String()))
 			*startedFactors = append(*startedFactors, factor)
 		}
 
@@ -97,14 +98,14 @@ func stopFactors(
 		for _, factor := range *startedFactors {
 			logger := log.NewTestLogger(t)
 
-			logger.Notice(log.NewMessage(log.MTest, "Stopping backing services for %s=%s...", factor.Aspect().String(), factor.String()))
+			logger.Notice(message.NewMessage(error2.MTest, "Stopping backing services for %s=%s...", factor.Aspect().String(), factor.String()))
 			err := factor.StopBackingServices(config, logger)
 			if err != nil {
 				t.Errorf("failed to stop backing services for %s=%s (%v)", factor.Aspect().String(), factor.String(), err)
 				t.Fail()
 				return
 			}
-			logger.Notice(log.NewMessage(log.MTest, "Backing services for %s=%s stopped.", factor.Aspect().String(), factor.String()))
+			logger.Notice(message.NewMessage(error2.MTest, "Backing services for %s=%s stopped.", factor.Aspect().String(), factor.String()))
 		}
 	}
 }

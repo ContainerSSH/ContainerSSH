@@ -14,14 +14,12 @@ import (
 	"github.com/aws/aws-sdk-go/aws/credentials"
 	"github.com/aws/aws-sdk-go/aws/session"
 	awsS3 "github.com/aws/aws-sdk-go/service/s3"
-	"github.com/containerssh/log"
+	"github.com/containerssh/containerssh/config"
+	"github.com/containerssh/containerssh/log"
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/client"
 	"github.com/docker/go-connections/nat"
-
-	"github.com/containerssh/auditlog"
-	"github.com/containerssh/configuration/v3"
 )
 
 func NewAuditLogTestingAspect() TestingAspect {
@@ -35,7 +33,7 @@ type auditLogAspect struct {
 }
 
 func (a *auditLogAspect) String() string {
-	return "Auditlog Storage"
+	return "Auditlog AuditLogStorage"
 }
 
 func (a *auditLogAspect) Factors() []TestingFactor {
@@ -49,17 +47,17 @@ func (a *auditLogAspect) Factors() []TestingFactor {
 	return []TestingFactor{
 		&auditLogFactor{
 			aspect:  a,
-			storage: auditlog.StorageNone,
+			storage: config.AuditLogStorageNone,
 			lock:    a.lock,
 		},
 		&auditLogFactor{
 			aspect:  a,
-			storage: auditlog.StorageFile,
+			storage: config.AuditLogStorageFile,
 			lock:    a.lock,
 		},
 		&auditLogFactor{
 			aspect:       a,
-			storage:      auditlog.StorageS3,
+			storage:      config.AuditLogStorageS3,
 			dockerClient: cli,
 			lock:         a.lock,
 		},
@@ -68,7 +66,7 @@ func (a *auditLogAspect) Factors() []TestingFactor {
 
 type auditLogFactor struct {
 	aspect       *auditLogAspect
-	storage      auditlog.Storage
+	storage      config.AuditLogStorage
 	dockerClient *client.Client
 	containerID  string
 	lock         *sync.Mutex
@@ -82,43 +80,43 @@ func (a *auditLogFactor) String() string {
 	return string(a.storage)
 }
 
-func (a *auditLogFactor) ModifyConfiguration(config *configuration.AppConfig) error {
+func (a *auditLogFactor) ModifyConfiguration(cfg *config.AppConfig) error {
 	switch a.storage {
-	case auditlog.StorageNone:
-		config.Audit.Enable = false
-	case auditlog.StorageFile:
-		config.Audit.Enable = true
+	case config.AuditLogStorageNone:
+		cfg.Audit.Enable = false
+	case config.AuditLogStorageFile:
+		cfg.Audit.Enable = true
 		tmpDir, err := ioutil.TempDir(os.TempDir(), "containerssh-audit-*")
 		if err != nil {
 			return err
 		}
 
-		config.Audit.File.Directory = tmpDir
-	case auditlog.StorageS3:
-		config.Audit.Enable = true
-		config.Audit.S3.AccessKey = "auditlog"
-		config.Audit.S3.SecretKey = "auditlog"
-		config.Audit.S3.PathStyleAccess = true
-		config.Audit.S3.Bucket = "auditlog"
-		config.Audit.S3.Region = "us-east-1"
-		config.Audit.S3.Endpoint = "http://127.0.0.1:9000"
+		cfg.Audit.File.Directory = tmpDir
+	case config.AuditLogStorageS3:
+		cfg.Audit.Enable = true
+		cfg.Audit.S3.AccessKey = "auditlog"
+		cfg.Audit.S3.SecretKey = "auditlog"
+		cfg.Audit.S3.PathStyleAccess = true
+		cfg.Audit.S3.Bucket = "auditlog"
+		cfg.Audit.S3.Region = "us-east-1"
+		cfg.Audit.S3.Endpoint = "http://127.0.0.1:9000"
 		tmpDir, err := ioutil.TempDir(os.TempDir(), "containerssh-audit-*")
 		if err != nil {
 			return err
 		}
-		config.Audit.S3.Local = tmpDir
+		cfg.Audit.S3.Local = tmpDir
 	}
 
-	config.Audit.Storage = a.storage
-	config.Audit.Format = auditlog.FormatBinary
+	cfg.Audit.Storage = a.storage
+	cfg.Audit.Format = config.AuditLogFormatBinary
 	return nil
 }
 
 func (a *auditLogFactor) StartBackingServices(
-	config configuration.AppConfig,
+	cfg config.AppConfig,
 	_ log.Logger,
 ) error {
-	if config.Audit.Storage != auditlog.StorageS3 {
+	if cfg.Audit.Storage != config.AuditLogStorageS3 {
 		return nil
 	}
 	a.lock.Lock()
@@ -133,7 +131,7 @@ func (a *auditLogFactor) StartBackingServices(
 	if _, err := io.Copy(os.Stdout, reader); err != nil {
 		return err
 	}
-	resp, err := a.createMinio(config)
+	resp, err := a.createMinio(cfg)
 	if err != nil {
 		return err
 	}
@@ -157,11 +155,11 @@ func (a *auditLogFactor) StartBackingServices(
 	}
 
 	if err := a.setupS3(
-		config.Audit.S3.AccessKey,
-		config.Audit.S3.SecretKey,
-		config.Audit.S3.Endpoint,
-		config.Audit.S3.Region,
-		config.Audit.S3.Bucket,
+		cfg.Audit.S3.AccessKey,
+		cfg.Audit.S3.SecretKey,
+		cfg.Audit.S3.Endpoint,
+		cfg.Audit.S3.Region,
+		cfg.Audit.S3.Bucket,
 	); err != nil {
 		return err
 	}
@@ -205,17 +203,17 @@ func (a *auditLogFactor) setupS3(accessKey string, secretKey string, endpoint st
 	}
 }
 
-func (a *auditLogFactor) createMinio(config configuration.AppConfig) (container.ContainerCreateCreatedBody, error) {
+func (a *auditLogFactor) createMinio(cfg config.AppConfig) (container.ContainerCreateCreatedBody, error) {
 	env := []string{
-		fmt.Sprintf("MINIO_ACCESS_KEY=%s", config.Audit.S3.AccessKey),
-		fmt.Sprintf("MINIO_SECRET_KEY=%s", config.Audit.S3.AccessKey),
+		fmt.Sprintf("MINIO_ACCESS_KEY=%s", cfg.Audit.S3.AccessKey),
+		fmt.Sprintf("MINIO_SECRET_KEY=%s", cfg.Audit.S3.AccessKey),
 	}
 
 	return a.dockerClient.ContainerCreate(
 		context.Background(),
 		&container.Config{
 			Image: "minio/minio",
-			Cmd:   []string{"server", "/data"},
+			Cmd:   []string{"server", "/testdata"},
 			Env:   env,
 		},
 		&container.HostConfig{
@@ -272,12 +270,12 @@ func (a *auditLogFactor) waitForMinio() error {
 }
 
 func (a *auditLogFactor) StopBackingServices(
-	config configuration.AppConfig,
+	cfg config.AppConfig,
 	_ log.Logger,
 ) error {
-	if a.storage == auditlog.StorageFile {
-		return os.RemoveAll(config.Audit.File.Directory)
-	} else if a.storage == auditlog.StorageNone {
+	if a.storage == config.AuditLogStorageFile {
+		return os.RemoveAll(cfg.Audit.File.Directory)
+	} else if a.storage == config.AuditLogStorageNone {
 		return nil
 	} else {
 		defer a.lock.Unlock()
@@ -285,12 +283,12 @@ func (a *auditLogFactor) StopBackingServices(
 		if err := a.dockerClient.ContainerStop(context.Background(), a.containerID, &timeout); err != nil {
 			return err
 		}
-		return os.RemoveAll(config.Audit.S3.Local)
+		return os.RemoveAll(cfg.Audit.S3.Local)
 	}
 }
 
 func (a *auditLogFactor) GetSteps(
-	_ configuration.AppConfig,
+	_ config.AppConfig,
 	_ log.Logger,
 ) []Step {
 	return []Step{}

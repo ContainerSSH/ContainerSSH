@@ -2,7 +2,7 @@ package containerssh_test
 
 import (
 	"github.com/containerssh/configuration/v3"
-	"github.com/containerssh/log"
+	"github.com/containerssh/containerssh/log"
 )
 
 // TestingAspect describes one aspect that is being tested. For example, an aspect may be the status of audit logs being

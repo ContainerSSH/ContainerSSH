@@ -3,7 +3,7 @@ package containerssh_test
 import (
 	"testing"
 
-	"github.com/containerssh/log"
+	"github.com/containerssh/containerssh/log"
 )
 
 func TestMain(m *testing.M) {

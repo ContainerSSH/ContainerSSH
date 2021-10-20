@@ -3,27 +3,28 @@ package containerssh
 import (
 	"context"
 
-	"github.com/containerssh/auditlogintegration/v2"
-	"github.com/containerssh/authintegration/v2"
-	"github.com/containerssh/backend/v3"
-	"github.com/containerssh/configuration/v3"
-	"github.com/containerssh/geoip"
-	"github.com/containerssh/geoip/geoipprovider"
-	"github.com/containerssh/health"
-	"github.com/containerssh/log"
-	"github.com/containerssh/metrics"
-	"github.com/containerssh/metricsintegration"
-	"github.com/containerssh/service"
-	"github.com/containerssh/sshserver/v2"
+	"github.com/containerssh/containerssh/config"
+	"github.com/containerssh/containerssh/internal/auditlogintegration"
+	"github.com/containerssh/containerssh/internal/authintegration"
+	"github.com/containerssh/containerssh/internal/backend"
+	"github.com/containerssh/containerssh/internal/geoip"
+	"github.com/containerssh/containerssh/internal/geoip/geoipprovider"
+	"github.com/containerssh/containerssh/internal/health"
+	"github.com/containerssh/containerssh/internal/metrics"
+	"github.com/containerssh/containerssh/internal/metricsintegration"
+	"github.com/containerssh/containerssh/internal/sshserver"
+	"github.com/containerssh/containerssh/log"
+	"github.com/containerssh/containerssh/message"
+	"github.com/containerssh/containerssh/service"
 )
 
 // New creates a new instance of ContainerSSH.
-func New(config configuration.AppConfig, factory log.LoggerFactory) (Service, service.Lifecycle, error) {
-	if err := config.Validate(false); err != nil {
-		return nil, nil, log.Wrap(err, EConfig, "invalid ContainerSSH configuration")
+func New(cfg config.AppConfig, factory log.LoggerFactory) (Service, service.Lifecycle, error) {
+	if err := cfg.Validate(false); err != nil {
+		return nil, nil, message.Wrap(err, message.ECoreConfig, "invalid ContainerSSH configuration")
 	}
 
-	logger, err := factory.Make(config.Log)
+	logger, err := factory.Make(cfg.Log)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -33,44 +34,44 @@ func New(config configuration.AppConfig, factory log.LoggerFactory) (Service, se
 		logger.WithLabel("module", "service"),
 	)
 
-	healthService, err := health.New(config.Health, logger.WithLabel("module", "health"))
+	healthService, err := health.New(cfg.Health, logger.WithLabel("module", "health"))
 	if err != nil {
 		return nil, nil, err
 	}
 	pool.Add(healthService)
 
-	geoIPLookupProvider, err := geoip.New(config.GeoIP)
+	geoIPLookupProvider, err := geoip.New(cfg.GeoIP)
 	if err != nil {
 		return nil, nil, err
 	}
 
 	metricsCollector := metrics.New(geoIPLookupProvider)
 
-	if err := createMetricsServer(config, logger, metricsCollector, pool); err != nil {
+	if err := createMetricsServer(cfg, logger, metricsCollector, pool); err != nil {
 		return nil, nil, err
 	}
 
-	containerBackend, err := createBackend(config, logger, metricsCollector)
+	containerBackend, err := createBackend(cfg, logger, metricsCollector)
 	if err != nil {
 		return nil, nil, err
 	}
 
-	authHandler, err := createAuthHandler(config, logger, containerBackend, metricsCollector, pool)
+	authHandler, err := createAuthHandler(cfg, logger, containerBackend, metricsCollector, pool)
 	if err != nil {
 		return nil, nil, err
 	}
 
-	auditLogHandler, err := createAuditLogHandler(config, logger, authHandler, geoIPLookupProvider)
+	auditLogHandler, err := createAuditLogHandler(cfg, logger, authHandler, geoIPLookupProvider)
 	if err != nil {
 		return nil, nil, err
 	}
 
-	metricsHandler, err := createMetricsBackend(config, metricsCollector, auditLogHandler)
+	metricsHandler, err := createMetricsBackend(cfg, metricsCollector, auditLogHandler)
 	if err != nil {
 		return nil, nil, err
 	}
 
-	if err := createSSHServer(config, logger, metricsHandler, pool); err != nil {
+	if err := createSSHServer(cfg, logger, metricsHandler, pool); err != nil {
 		return nil, nil, err
 	}
 
@@ -114,25 +115,25 @@ func (s servicePool) RotateLogs() error {
 }
 
 func createMetricsBackend(
-	config configuration.AppConfig,
+	cfg config.AppConfig,
 	collector metrics.Collector,
 	handler sshserver.Handler,
 ) (sshserver.Handler, error) {
 	return metricsintegration.NewHandler(
-		config.Metrics,
+		cfg.Metrics,
 		collector,
 		handler,
 	)
 }
 
 func createMetricsServer(
-	config configuration.AppConfig,
+	cfg config.AppConfig,
 	logger log.Logger,
 	metricsCollector metrics.Collector,
 	pool service.Pool,
 ) error {
 	metricsLogger := logger.WithLabel("module", "metrics")
-	metricsServer, err := metrics.NewServer(config.Metrics, metricsCollector, metricsLogger)
+	metricsServer, err := metrics.NewServer(cfg.Metrics, metricsCollector, metricsLogger)
 	if err != nil {
 		return err
 	}
@@ -144,14 +145,14 @@ func createMetricsServer(
 }
 
 func createSSHServer(
-	config configuration.AppConfig,
+	cfg config.AppConfig,
 	logger log.Logger,
 	auditLogHandler sshserver.Handler,
 	pool service.Pool,
 ) error {
 	sshLogger := logger.WithLabel("module", "ssh")
 	sshServer, err := sshserver.New(
-		config.SSH,
+		cfg.SSH,
 		auditLogHandler,
 		sshLogger,
 	)
@@ -163,14 +164,14 @@ func createSSHServer(
 }
 
 func createAuditLogHandler(
-	config configuration.AppConfig,
+	cfg config.AppConfig,
 	logger log.Logger,
 	authHandler sshserver.Handler,
 	geoIPLookupProvider geoipprovider.LookupProvider,
 ) (sshserver.Handler, error) {
 	auditLogger := logger.WithLabel("module", "audit")
 	return auditlogintegration.New(
-		config.Audit,
+		cfg.Audit,
 		authHandler,
 		geoIPLookupProvider,
 		auditLogger,
@@ -178,7 +179,7 @@ func createAuditLogHandler(
 }
 
 func createAuthHandler(
-	config configuration.AppConfig,
+	cfg config.AppConfig,
 	logger log.Logger,
 	backend sshserver.Handler,
 	metricsCollector metrics.Collector,
@@ -186,7 +187,7 @@ func createAuthHandler(
 ) (sshserver.Handler, error) {
 	authLogger := logger.WithLabel("module", "auth")
 	handler, svc, err := authintegration.New(
-		config.Auth,
+		cfg.Auth,
 		backend,
 		authLogger,
 		metricsCollector,
@@ -201,9 +202,9 @@ func createAuthHandler(
 	return handler, nil
 }
 
-func createBackend(config configuration.AppConfig, logger log.Logger, metricsCollector metrics.Collector) (sshserver.Handler, error) {
+func createBackend(cfg config.AppConfig, logger log.Logger, metricsCollector metrics.Collector) (sshserver.Handler, error) {
 	backendLogger := logger.WithLabel("module", "backend")
-	containerBackend, err := backend.New(config, backendLogger, metricsCollector, sshserver.AuthResponseUnavailable)
+	containerBackend, err := backend.New(cfg, backendLogger, metricsCollector, sshserver.AuthResponseUnavailable)
 	if err != nil {
 		return nil, err
 	}

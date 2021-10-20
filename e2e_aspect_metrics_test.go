@@ -6,8 +6,9 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/containerssh/configuration/v3"
-	"github.com/containerssh/log"
+	error2 "github.com/containerssh/containerssh/error"
+	"github.com/containerssh/containerssh/log"
+	"github.com/containerssh/containerssh/message"
 )
 
 func NewMetricsTestingAspect() TestingAspect {
@@ -94,7 +95,7 @@ type metricsStep struct {
 
 func (m *metricsStep) TheMetricShouldBeVisible(metricName string) error {
 	if !m.config.Metrics.Enable {
-		m.logger.Notice(log.NewMessage(log.MTest, "test skipped, metrics not enabled"))
+		m.logger.Notice(message.NewMessage(error2.MTest, "test skipped, metrics not enabled"))
 		return nil
 	}
 	metricsResponse, err := http.Get(

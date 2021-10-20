@@ -1,7 +1,7 @@
-package containerssh
+package message
 
 // ContainerSSH encountered an error in the configuration.
-const EConfig = "CORE_CONFIG_ERROR"
+const ECoreConfig = "CORE_CONFIG_ERROR"
 
 // The configuration does not contain host keys. ContainerSSH will attempt to generate host keys and update the configuration file.
 const ECoreNoHostKeys = "CORE_NO_HOST_KEYS"
@@ -13,10 +13,10 @@ const ECoreHostKeyGenerationFailed = "CORE_HOST_KEY_GENERATION_FAILED"
 const ECannotWriteConfigFile = "CORE_CONFIG_CANNOT_WRITE_FILE"
 
 // ContainerSSH is reading the configuration file.
-const MConfigFile = "CORE_CONFIG_FILE"
+const MCoreConfigFile = "CORE_CONFIG_FILE"
 
 // A ContainerSSH health check failed.
-const EHealthCheckFailed = "CORE_HEALTH_CHECK_FAILED"
+const ECoreHealthCheckFailed = "CORE_HEALTH_CHECK_FAILED"
 
 // The health check was successful.
-const MHealthCheckSuccessful = "CORE_HEALTH_CHECK_SUCCESSFUL"
+const MCoreHealthCheckSuccessful = "CORE_HEALTH_CHECK_SUCCESSFUL"

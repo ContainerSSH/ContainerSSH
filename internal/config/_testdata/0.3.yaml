@@ -1,0 +1,241 @@
+listen: 0.0.0.0:2222
+ssh:
+  ciphers:
+    - chacha20-poly1305@openssh.com
+    - aes256-gcm@openssh.com
+    - aes128-gcm@openssh.com
+    - aes256-ctr
+    - aes192-ctr
+    - aes128-ctr
+  kex:
+    - curve25519-sha256@libssh.org
+    - ecdh-sha2-nistp521
+    - ecdh-sha2-nistp384
+    - ecdh-sha2-nistp256
+  macs:
+    - hmac-sha2-256-etm@openssh.com
+    - hmac-sha2-256
+    - hmac-sha1
+    - hmac-sha1-96
+  hostkeys: []
+configserver:
+  timeout: 2s
+  url: ""
+  cacert: ""
+  cert: ""
+  key: ""
+auth:
+  url: "http://localhost:8080"
+  cacert: ""
+  timeout: 2s
+  cert: ""
+  key: ""
+  password: true
+  pubkey: false
+backend: dockerrun
+dockerrun:
+  host: unix:///var/run/docker.sock
+  cacert: ""
+  cert: ""
+  key: ""
+  config:
+    container:
+      hostname: ""
+      domainname: ""
+      user: ""
+      attachstdin: false
+      attachstdout: false
+      attachstderr: false
+      exposedports: {}
+      tty: false
+      openstdin: false
+      stdinonce: false
+      env: []
+      cmd: []
+      healthcheck: null
+      argsescaped: false
+      image: janoszen/containerssh-image
+      volumes: {}
+      workingdir: ""
+      entrypoint: []
+      networkdisabled: false
+      macaddress: ""
+      onbuild: []
+      labels: {}
+      stopsignal: ""
+      stoptimeout: null
+      shell: []
+    host:
+      binds: []
+      containeridfile: ""
+      logconfig:
+        type: ""
+        config: {}
+      networkmode: ""
+      portbindings: {}
+      restartpolicy:
+        name: ""
+        maximumretrycount: 0
+      autoremove: false
+      volumedriver: ""
+      volumesfrom: []
+      capadd: []
+      capdrop: []
+      dns: []
+      dnsoptions: []
+      dnssearch: []
+      extrahosts: []
+      groupadd: []
+      ipcmode: ""
+      cgroup: ""
+      links: []
+      oomscoreadj: 0
+      pidmode: ""
+      privileged: false
+      publishallports: false
+      readonlyrootfs: false
+      securityopt: []
+      storageopt: {}
+      tmpfs: {}
+      utsmode: ""
+      usernsmode: ""
+      shmsize: 0
+      sysctls: {}
+      runtime: ""
+      consolesize:
+        - 0
+        - 0
+      isolation: ""
+      resources:
+        cpushares: 0
+        memory: 0
+        nanocpus: 0
+        cgroupparent: ""
+        blkioweight: 0
+        blkioweightdevice: []
+        blkiodevicereadbps: []
+        blkiodevicewritebps: []
+        blkiodevicereadiops: []
+        blkiodevicewriteiops: []
+        cpuperiod: 0
+        cpuquota: 0
+        cpurealtimeperiod: 0
+        cpurealtimeruntime: 0
+        cpusetcpus: ""
+        cpusetmems: ""
+        devices: []
+        diskquota: 0
+        kernelmemory: 0
+        memoryreservation: 0
+        memoryswap: 0
+        memoryswappiness: null
+        oomkilldisable: null
+        pidslimit: 0
+        ulimits: []
+        cpucount: 0
+        cpupercent: 0
+        iomaximumiops: 0
+        iomaximumbandwidth: 0
+      mounts: []
+      init: null
+      initpath: ""
+    network:
+      endpointsconfig: {}
+    containername: ""
+    subsystems:
+      sftp: /usr/lib/openssh/sftp-server
+    disableCommand: false
+kuberun:
+  connection:
+    host: kubernetes.default.svc
+    path: /api
+    username: ""
+    password: ""
+    insecure: false
+    serverName: ""
+    certFile: /var/run/secrets/kubernetes.io/serviceaccount/ca.crt
+    keyFile: ""
+    cacertFile: ""
+    cert: ""
+    key: ""
+    cacert: ""
+    bearerToken: ""
+    bearerTokenFile: ""
+    qps: 5
+    burst: 10
+    timeout: 0s
+  pod:
+    namespace: default
+    consoleContainerNumber: 0
+    podSpec:
+      volumes: []
+      initcontainers: []
+      containers:
+        - name: shell
+          image: janoszen/containerssh-image
+          command: []
+          args: []
+          workingdir: ""
+          ports: []
+          envfrom: []
+          env: []
+          resources:
+            limits: {}
+            requests: {}
+          volumemounts: []
+          volumedevices: []
+          livenessprobe: null
+          readinessprobe: null
+          startupprobe: null
+          lifecycle: null
+          terminationmessagepath: ""
+          terminationmessagepolicy: ""
+          imagepullpolicy: ""
+          securitycontext: null
+          stdin: false
+          stdinonce: false
+          tty: false
+      ephemeralcontainers: []
+      restartpolicy: ""
+      terminationgraceperiodseconds: null
+      activedeadlineseconds: null
+      dnspolicy: ""
+      nodeselector: {}
+      serviceaccountname: ""
+      deprecatedserviceaccount: ""
+      automountserviceaccounttoken: null
+      nodename: ""
+      hostnetwork: false
+      hostpid: false
+      hostipc: false
+      shareprocessnamespace: null
+      securitycontext: null
+      imagepullsecrets: []
+      hostname: ""
+      subdomain: ""
+      affinity: null
+      schedulername: ""
+      tolerations: []
+      hostaliases: []
+      priorityclassname: ""
+      priority: null
+      dnsconfig: null
+      readinessgates: []
+      runtimeclassname: null
+      enableservicelinks: null
+      preemptionpolicy: null
+      overhead: {}
+      topologyspreadconstraints: []
+      sethostnameasfqdn: null
+    subsystems:
+      sftp: /usr/lib/openssh/sftp-server
+    disableCommand: false
+  timeout: 1m0s
+log:
+  level: info
+metrics:
+  enable: false
+  listen: 0.0.0.0:9100
+  path: /metrics
+geoip:
+  maxmind-geoip2-file: /var/lib/GeoIP/GeoIP2-Country.mmdb

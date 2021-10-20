@@ -14,22 +14,23 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/containerssh/configuration/v3"
-	"github.com/containerssh/health"
-	"github.com/containerssh/log"
-	"github.com/containerssh/service"
-	"github.com/containerssh/structutils"
+	"github.com/containerssh/configuration/v2"
+	"github.com/containerssh/containerssh/config"
+	"github.com/containerssh/containerssh/internal/structutils"
+	"github.com/containerssh/containerssh/log"
+	"github.com/containerssh/containerssh/message"
+	"github.com/containerssh/containerssh/service"
 
 	"github.com/containerssh/containerssh"
 )
 
 func main() {
-	config := configuration.AppConfig{}
-	structutils.Defaults(&config)
+	cfg := config.AppConfig{}
+	structutils.Defaults(&cfg)
 
 	loggerFactory := log.NewLoggerFactory()
 	logger, err := loggerFactory.Make(
-		config.Log,
+		cfg.Log,
 	)
 	if err != nil {
 		panic(err)
@@ -44,52 +45,54 @@ func main() {
 	}
 	realConfigFile, err := filepath.Abs(configFile)
 	if err != nil {
-		logger.Critical(log.Wrap(
-			err,
-			containerssh.EConfig,
-			"Failed to fetch absolute path for configuration file %s",
-			configFile,
-		))
+		logger.Critical(
+			message.Wrap(
+				err,
+				message.ECoreConfig,
+				"Failed to fetch absolute path for configuration file %s",
+				configFile,
+			))
 		os.Exit(1)
 	}
 	configFile = realConfigFile
-	if err = readConfigFile(configFile, loggerFactory, &config); err != nil {
-		logger.Critical(log.Wrap(
-			err,
-			containerssh.EConfig,
-			"Invalid configuration in file %s",
-			configFile,
-		))
+	if err = readConfigFile(configFile, loggerFactory, &cfg); err != nil {
+		logger.Critical(
+			message.Wrap(
+				err,
+				message.ECoreConfig,
+				"Invalid configuration in file %s",
+				configFile,
+			))
 		os.Exit(1)
 	}
 
 	configuredLogger, err := loggerFactory.Make(
-		config.Log,
+		cfg.Log,
 	)
 	if err != nil {
 		logger.Critical(err)
 		os.Exit(1)
 	}
-	configuredLogger.Debug(log.NewMessage(containerssh.MConfigFile, "Using configuration file %s...", configFile))
+	configuredLogger.Debug(message.NewMessage(message.MCoreConfigFile, "Using configuration file %s...", configFile))
 
 	switch {
 	case actionDumpConfig:
-		runDumpConfig(config, configuredLogger)
+		runDumpConfig(cfg, configuredLogger)
 	case actionLicenses:
 		runActionLicenses(configuredLogger)
 	case actionHealthCheck:
-		runHealthCheck(config, configuredLogger)
+		runHealthCheck(cfg, configuredLogger)
 	default:
-		runContainerSSH(loggerFactory, configuredLogger, config, configFile)
+		runContainerSSH(loggerFactory, configuredLogger, cfg, configFile)
 	}
 }
 
-func runHealthCheck(config configuration.AppConfig, logger log.Logger) {
+func runHealthCheck(cfg config.AppConfig, logger log.Logger) {
 	if err := healthCheck(config, logger); err != nil {
 		logger.Critical(err)
 		os.Exit(1)
 	}
-	logger.Info(log.NewMessage(containerssh.MHealthCheckSuccessful, "Health check successful."))
+	logger.Info(message.NewMessage(message.MCoreHealthCheckSuccessful, "Health check successful."))
 	os.Exit(0)
 }
 
@@ -101,8 +104,8 @@ func runActionLicenses(logger log.Logger) {
 	os.Exit(0)
 }
 
-func runDumpConfig(config configuration.AppConfig, logger log.Logger) {
-	if err := dumpConfig(os.Stdout, logger, &config); err != nil {
+func runDumpConfig(cfg config.AppConfig, logger log.Logger) {
+	if err := dumpConfig(os.Stdout, logger, &cfg); err != nil {
 		logger.Critical(err)
 		os.Exit(1)
 	}
@@ -112,22 +115,23 @@ func runDumpConfig(config configuration.AppConfig, logger log.Logger) {
 func runContainerSSH(
 	loggerFactory log.LoggerFactory,
 	logger log.Logger,
-	config configuration.AppConfig,
+	cfg config.AppConfig,
 	configFile string,
 ) {
-	if len(config.SSH.HostKeys) == 0 {
+	if len(cfg.SSH.HostKeys) == 0 {
 		logger.Warning(
-			log.NewMessage(
-				containerssh.ECoreNoHostKeys,
+			message.NewMessage(
+				message.ECoreNoHostKeys,
 				"No host keys found in configuration, generating temporary host keys and updating configuration...",
 			),
 		)
 		if err := generateHostKeys(configFile, &config, logger); err != nil {
-			logger.Critical(log.Wrap(
-				err,
-				containerssh.ECoreHostKeyGenerationFailed,
-				"failed to generate host keys",
-			))
+			logger.Critical(
+				message.Wrap(
+					err,
+					message.ECoreHostKeyGenerationFailed,
+					"failed to generate host keys",
+				))
 			os.Exit(1)
 		}
 	}
@@ -172,7 +176,7 @@ func getArguments() (string, bool, bool, bool) {
 	return configFile, actionDumpConfig, actionLicenses, healthCheck
 }
 
-func startServices(config configuration.AppConfig, loggerFactory log.LoggerFactory) error {
+func startServices(cfg config.AppConfig, loggerFactory log.LoggerFactory) error {
 	pool, lifecycle, err := containerssh.New(config, loggerFactory)
 	if err != nil {
 		return err
@@ -232,51 +236,56 @@ func startPool(pool containerssh.Service, lifecycle service.Lifecycle) error {
 	return err
 }
 
-func generateHostKeys(configFile string, config *configuration.AppConfig, logger log.Logger) error {
-	if err := config.SSH.GenerateHostKey(); err != nil {
+func generateHostKeys(configFile string, cfg *config.AppConfig, logger log.Logger) error {
+	if err := cfg.SSH.GenerateHostKey(); err != nil {
 		return err
 	}
 
 	tmpFile := fmt.Sprintf("%s~", configFile)
 	fh, err := os.Create(tmpFile)
 	if err != nil {
-		logger.Warning(log.Wrap(
-			err,
-			containerssh.ECannotWriteConfigFile,
-			"Cannot create temporary configuration file at %s with updated host keys.",
-			tmpFile,
-		).Label("tmpFile", configFile))
+		logger.Warning(
+			message.Wrap(
+				err,
+				message.ECannotWriteConfigFile,
+				"Cannot create temporary configuration file at %s with updated host keys.",
+				tmpFile,
+			).Label("tmpFile", configFile))
 		return nil
 	}
 	format := getConfigFileFormat(configFile)
-	saver, err := configuration.NewWriterSaver(fh, logger, format)
+	saver, err := config.NewWriterSaver(fh, logger, format)
 	if err != nil {
 		_ = fh.Close()
-		logger.Warning(log.Wrap(
-			err,
-			containerssh.ECannotWriteConfigFile,
-			"Cannot initialize temporary configuration file at %s with updated host keys.",
-			tmpFile,
-		).Label("tmpFile", configFile))
+		logger.Warning(
+			message.Wrap(
+				err,
+				message.ECannotWriteConfigFile,
+				"Cannot initialize temporary configuration file at %s with updated host keys.",
+				tmpFile,
+			).Label("tmpFile", configFile))
 		return nil
 	}
-	if err := saver.Save(config); err != nil {
+	if err := saver.Save(cfg); err != nil {
 		_ = fh.Close()
-		logger.Warning(log.Wrap(
-			err,
-			containerssh.ECannotWriteConfigFile,
-			"Cannot save temporary configuration file at %s with updated host keys.",
-			tmpFile,
-		).Label("tmpFile", configFile))
+		logger.Warning(
+			message.Wrap(
+				err,
+				message.ECannotWriteConfigFile,
+				"Cannot save temporary configuration file at %s with updated host keys.",
+				tmpFile,
+			).Label("tmpFile", configFile))
 		return nil
 	}
 	if err := fh.Close(); err != nil {
-		logger.Warning(log.Wrap(err, containerssh.ECannotWriteConfigFile, "Cannot close temporary configuration file at %s with updated host keys.", tmpFile).Label("tmpFile", configFile))
+		logger.Warning(message.Wrap(err,
+			message.ECannotWriteConfigFile, "Cannot close temporary configuration file at %s with updated host keys.", tmpFile).Label("tmpFile", configFile))
 		return nil
 	}
 
 	if err := os.Rename(tmpFile, configFile); err != nil {
-		logger.Warning(log.Wrap(err, containerssh.ECannotWriteConfigFile, "Failed to rename temporary file %s to %s with updated host keys.", tmpFile, configFile).Label("file", configFile).Label("tmpFile", tmpFile))
+		logger.Warning(message.Wrap(err,
+			message.ECannotWriteConfigFile, "Failed to rename temporary file %s to %s with updated host keys.", tmpFile, configFile).Label("file", configFile).Label("tmpFile", tmpFile))
 		return fmt.Errorf("failed to rename temporary file %s to %s (%w)", tmpFile, configFile, err)
 	}
 
@@ -292,7 +301,7 @@ func healthCheck(config configuration.AppConfig, logger log.Logger) error {
 		return nil
 	}
 	if !healthClient.Run() {
-		return log.NewMessage(containerssh.EHealthCheckFailed, "Health check failed")
+		return message.NewMessage(message.ECoreHealthCheckFailed, "Health check failed")
 	}
 	return nil
 }
@@ -333,10 +342,10 @@ func dumpConfig(writer io.Writer, logger log.Logger, config *configuration.AppCo
 func readConfigFile(
 	configFile string,
 	loggerFactory log.LoggerFactory,
-	config *configuration.AppConfig,
+	cfg *config.AppConfig,
 ) error {
 	configLogger, err := loggerFactory.Make(
-		config.Log,
+		cfg.Log,
 	)
 	if err != nil {
 		return err
@@ -346,18 +355,18 @@ func readConfigFile(
 		return err
 	}
 	format := getConfigFileFormat(configFile)
-	configLoader, err := configuration.NewReaderLoader(configFH, configLogger, format)
+	configLoader, err := config.NewReaderLoader(configFH, configLogger, format)
 	if err != nil {
 		return err
 	}
-	if err := configLoader.Load(context.Background(), config); err != nil {
+	if err := configLoader.Load(context.Background(), cfg); err != nil {
 		return fmt.Errorf("failed to read configuration file %s (%w)", configFile, err)
 	}
 	return nil
 }
 
 func getConfigFileFormat(configFile string) configuration.Format {
-	var format configuration.Format
+	var format config.Format
 	if strings.HasSuffix(configFile, ".json") {
 		format = configuration.FormatJSON
 	} else {

@@ -1,7 +1,7 @@
 package containerssh
 
 import (
-	"github.com/containerssh/service"
+	"github.com/containerssh/containerssh/service"
 )
 
 // Service is the core ContainerSSH service.

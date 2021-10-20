@@ -7,7 +7,7 @@ import (
 	"strings"
 
 	"github.com/containerssh/configuration/v3"
-	"github.com/containerssh/log"
+	"github.com/containerssh/containerssh/log"
 	"golang.org/x/crypto/ssh"
 
 	"github.com/containerssh/containerssh"

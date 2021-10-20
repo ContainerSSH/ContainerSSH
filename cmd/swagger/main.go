@@ -82,7 +82,7 @@ func getLatestGoSwaggerURL(client *http.Client, file string) (string) {
 	releaseResponse := &GithubReleaseResponse{}
 	err = json.NewDecoder(jsonResponse.Body).Decode(releaseResponse)
 	if err != nil {
-		log.Fatalf("failed to decode github release data (%v)", err)
+		log.Fatalf("failed to decode github release testdata (%v)", err)
 	}
 
 	url = ""

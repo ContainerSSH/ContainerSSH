@@ -6,11 +6,7 @@
 //     Schemes: http, https
 //     Host: localhost
 //     BasePath: /
-<<<<<<< HEAD
-//     Version: 0.4.1
-=======
 //     Version: 0.5.0
->>>>>>> 56f7de5 (Issue #56: Keyboard-interactive authentication)
 //
 //     Consumes:
 //     - application/json
@@ -28,17 +24,11 @@ import (
 	"os/signal"
 	"syscall"
 
-<<<<<<< HEAD
-	"github.com/containerssh/auth"
-	"github.com/containerssh/configuration/v2"
-	"github.com/containerssh/docker/v2"
-=======
-	"github.com/containerssh/auth/v2"
-	"github.com/containerssh/configuration/v3"
->>>>>>> 56f7de5 (Issue #56: Keyboard-interactive authentication)
-	"github.com/containerssh/http"
-	"github.com/containerssh/log"
-	"github.com/containerssh/service"
+	"github.com/containerssh/containerssh/config"
+	configWebhook "github.com/containerssh/containerssh/config/webhook"
+	"github.com/containerssh/containerssh/http"
+	"github.com/containerssh/containerssh/log"
+	"github.com/containerssh/containerssh/service"
 	"github.com/docker/docker/api/types/container"
 )
 
@@ -116,21 +106,18 @@ type configHandler struct {
 // responses:
 //   "200":
 //     "$ref": "#/responses/ConfigResponse"
-func (c *configHandler) OnConfig(request configuration.ConfigRequest) (configuration.AppConfig, error) {
-	config := configuration.AppConfig{}
+func (c *configHandler) OnConfig(request config.ConfigRequest) (config.AppConfig, error) {
+	cfg := config.AppConfig{}
 
 	if request.Username == "busybox" {
-		config.DockerRun.Config.ContainerConfig = &container.Config{}
-		config.DockerRun.Config.ContainerConfig.Image = "busybox"
-
-		config.Docker.Execution.Launch.ContainerConfig = &container.Config{}
-		config.Docker.Execution.Launch.ContainerConfig.Image = "busybox"
-		config.Docker.Execution.DisableAgent = true
-		config.Docker.Execution.Mode = docker.ExecutionModeSession
-		config.Docker.Execution.ShellCommand = []string{"/bin/sh"}
+		cfg.Docker.Execution.Launch.ContainerConfig = &container.Config{}
+		cfg.Docker.Execution.Launch.ContainerConfig.Image = "busybox"
+		cfg.Docker.Execution.DisableAgent = true
+		cfg.Docker.Execution.Mode = config.DockerExecutionModeSession
+		cfg.Docker.Execution.ShellCommand = []string{"/bin/sh"}
 	}
 
-	return config, nil
+	return cfg, nil
 }
 
 type handler struct {
@@ -152,23 +139,23 @@ func (h *handler) ServeHTTP(writer goHttp.ResponseWriter, request *goHttp.Reques
 }
 
 func main() {
-	logger, err := log.NewLogger(log.Config{
-		Level:       log.LevelDebug,
-		Format:      log.FormatLJSON,
-		Destination: log.DestinationStdout,
+	logger, err := log.NewLogger(config.LogConfig{
+		Level:       config.LogLevelDebug,
+		Format:      config.LogFormatLJSON,
+		Destination: config.LogDestinationStdout,
 	})
 	if err != nil {
 		panic(err)
 	}
 	authHTTPHandler := auth.NewHandler(&authHandler{}, logger)
-	configHTTPHandler, err := configuration.NewHandler(&configHandler{}, logger)
+	configHTTPHandler, err := configWebhook.NewHandler(&configHandler{}, logger)
 	if err != nil {
 		panic(err)
 	}
 
 	srv, err := http.NewServer(
 		"authconfig",
-		http.ServerConfiguration{
+		config.HTTPServerConfiguration{
 			Listen: "0.0.0.0:8080",
 		},
 		&handler{

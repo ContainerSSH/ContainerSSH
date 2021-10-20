@@ -1,11 +1,10 @@
 package containerssh_test
 
 import (
-	"github.com/containerssh/auth"
-	"github.com/containerssh/configuration/v3"
-	"github.com/containerssh/http"
-	"github.com/containerssh/log"
-	"github.com/containerssh/service"
+	configuration "github.com/containerssh/containerssh/config"
+	"github.com/containerssh/containerssh/internal/auth"
+	"github.com/containerssh/containerssh/log"
+	"github.com/containerssh/containerssh/service"
 )
 
 func NewAuthTestingAspect() TestingAspect {
@@ -73,7 +72,7 @@ func (a *authTestingFactor) StartBackingServices(
 	_ configuration.AppConfig, logger log.Logger,
 ) error {
 	srv, err := auth.NewServer(
-		http.ServerConfiguration{
+		configuration.HTTPServerConfiguration{
 			Listen: "127.0.0.1:8080",
 		},
 		a,
