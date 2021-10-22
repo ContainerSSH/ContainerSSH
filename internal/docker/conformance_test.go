@@ -2,66 +2,41 @@ package docker_test
 
 import (
 	"net"
-	"os"
 	"testing"
 
-	"github.com/containerssh/geoip"
+	"github.com/containerssh/containerssh/config"
+	"github.com/containerssh/containerssh/internal/docker"
+	"github.com/containerssh/containerssh/internal/geoip/dummy"
+	"github.com/containerssh/containerssh/internal/metrics"
+	"github.com/containerssh/containerssh/internal/sshserver"
+	"github.com/containerssh/containerssh/internal/structutils"
 	"github.com/containerssh/containerssh/log"
-	"github.com/containerssh/metrics"
-	sshserver "github.com/containerssh/sshserver/v2"
-	"github.com/containerssh/structutils"
-	"gopkg.in/yaml.v3"
-
-	"github.com/containerssh/docker"
 )
 
 func TestConformance(t *testing.T) {
 	var factories = map[string]func(logger log.Logger) (sshserver.NetworkConnectionHandler, error){
-		"dockerrun": func(logger log.Logger) (sshserver.NetworkConnectionHandler, error) {
-			//goland:noinspection GoDeprecation
-			config := docker.DockerRunConfig{}
-			structutils.Defaults(&config)
-
-			testFile, err := os.Open("testdata/config-0.3.yaml")
-			if err != nil {
-				return nil, err
-			}
-			unmarshaller := yaml.NewDecoder(testFile)
-			unmarshaller.KnownFields(true)
-			if err := unmarshaller.Decode(&config); err != nil {
-				return nil, err
-			}
-
-			return getDockerRun(config, logger)
-		},
 		"session": func(logger log.Logger) (sshserver.NetworkConnectionHandler, error) {
-			config := docker.Config{}
-			structutils.Defaults(&config)
+			cfg := config.DockerConfig{}
+			structutils.Defaults(&cfg)
 
-			config.Execution.Mode = docker.ExecutionModeSession
-			return getDocker(config, logger)
+			cfg.Execution.Mode = config.DockerExecutionModeSession
+			return getDocker(cfg, logger)
 		},
 		"connection": func(logger log.Logger) (sshserver.NetworkConnectionHandler, error) {
-			config := docker.Config{}
-			structutils.Defaults(&config)
+			cfg := config.DockerConfig{}
+			structutils.Defaults(&cfg)
 
-			config.Execution.Mode = docker.ExecutionModeConnection
-			return getDocker(config, logger)
+			cfg.Execution.Mode = config.DockerExecutionModeConnection
+			return getDocker(cfg, logger)
 		},
 	}
 
 	sshserver.RunConformanceTests(t, factories)
 }
 
-func getDocker(config docker.Config, logger log.Logger) (sshserver.NetworkConnectionHandler, error) {
+func getDocker(cfg config.DockerConfig, logger log.Logger) (sshserver.NetworkConnectionHandler, error) {
 	connectionID := sshserver.GenerateConnectionID()
-	geoipProvider, err := geoip.New(geoip.Config{
-		Provider: geoip.DummyProvider,
-	})
-	if err != nil {
-		return nil, err
-	}
-	collector := metrics.New(geoipProvider)
+	collector := metrics.New(dummy.New())
 	return docker.New(
 		net.TCPAddr{
 			IP:   net.ParseIP("127.0.0.1"),
@@ -69,30 +44,7 @@ func getDocker(config docker.Config, logger log.Logger) (sshserver.NetworkConnec
 			Zone: "",
 		},
 		connectionID,
-		config,
-		logger,
-		collector.MustCreateCounter("backend_requests", "", ""),
-		collector.MustCreateCounter("backend_failures", "", ""),
-	)
-}
-
-//goland:noinspection GoDeprecation
-func getDockerRun(config docker.DockerRunConfig, logger log.Logger) (sshserver.NetworkConnectionHandler, error) {
-	geoipProvider, err := geoip.New(geoip.Config{
-		Provider: geoip.DummyProvider,
-	})
-	if err != nil {
-		return nil, err
-	}
-	collector := metrics.New(geoipProvider)
-	return docker.NewDockerRun(
-		net.TCPAddr{
-			IP:   net.ParseIP("127.0.0.1"),
-			Port: 2222,
-			Zone: "",
-		},
-		sshserver.GenerateConnectionID(),
-		config,
+		cfg,
 		logger,
 		collector.MustCreateCounter("backend_requests", "", ""),
 		collector.MustCreateCounter("backend_failures", "", ""),

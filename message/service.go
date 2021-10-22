@@ -1,4 +1,4 @@
-package service
+package message
 
 // ContainerSSH is starting a component service
 const MServiceStarting = "SERVICE_STARTING"

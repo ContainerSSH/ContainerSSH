@@ -6,7 +6,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
-	"github.com/containerssh/metrics"
+	"github.com/containerssh/containerssh/internal/metrics"
 )
 
 // TestCounterGeo tests the functionality of the Geo counter

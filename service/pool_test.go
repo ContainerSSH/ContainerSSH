@@ -6,9 +6,8 @@ import (
 	"testing"
 
 	"github.com/containerssh/containerssh/log"
+	"github.com/containerssh/containerssh/service"
 	"github.com/stretchr/testify/assert"
-
-	"github.com/containerssh/service"
 )
 
 func TestEmptyPool(t *testing.T) {

@@ -7,22 +7,22 @@ import (
 	"sync"
 	"time"
 
-	config2 "github.com/containerssh/containerssh/config"
+	"github.com/containerssh/containerssh/config"
+	"github.com/containerssh/containerssh/internal/metrics"
 	"github.com/containerssh/containerssh/log"
 	"github.com/containerssh/containerssh/message"
-	"github.com/containerssh/metrics"
 	"golang.org/x/crypto/ssh"
 
-	sshserver "github.com/containerssh/sshserver/v2"
+	"github.com/containerssh/containerssh/internal/sshserver"
 )
 
 type networkConnectionHandler struct {
 	lock                  *sync.Mutex
 	wg                    *sync.WaitGroup
 	client                net.TCPAddr
-	connectionID string
-	config       config2.SSHProxyConfig
-	logger       log.Logger
+	connectionID          string
+	config                config.SSHProxyConfig
+	logger                log.Logger
 	backendRequestsMetric metrics.SimpleCounter
 	backendFailuresMetric metrics.SimpleCounter
 	tcpConn               net.Conn
@@ -66,7 +66,11 @@ func (s *networkConnectionHandler) OnAuthKeyboardInteractive(
 
 func (s *networkConnectionHandler) OnHandshakeFailed(_ error) {}
 
-func (s *networkConnectionHandler) OnHandshakeSuccess(username string, clientVersion string, metadata map[string]string) (
+func (s *networkConnectionHandler) OnHandshakeSuccess(
+	username string,
+	clientVersion string,
+	metadata map[string]string,
+) (
 	connection sshserver.SSHConnectionHandler,
 	failureReason error,
 ) {
@@ -190,11 +194,12 @@ loop:
 		s.backendFailuresMetric.Increment(metrics.Label("failure", "tcp"))
 		s.logger.Debug(
 			message.WrapUser(
-			lastError,
+				lastError,
 				message.ESSHProxyBackendConnectionFailed,
-			"service currently unavailable",
-			"connection to SSH backend failed, retrying in 10 seconds",
-		))
+				"service currently unavailable",
+				"connection to SSH backend failed, retrying in 10 seconds",
+			),
+		)
 		select {
 		case <-ctx.Done():
 			break loop
@@ -212,23 +217,42 @@ loop:
 }
 
 func (s *networkConnectionHandler) OnDisconnect() {
-	s.logger.Debug(message.NewMessage(message.MSSHProxyDisconnected, "Client disconnected, waiting for network connection lock..."))
+	s.logger.Debug(
+		message.NewMessage(
+			message.MSSHProxyDisconnected,
+			"Client disconnected, waiting for network connection lock...",
+		),
+	)
 	s.lock.Lock()
 	defer s.lock.Unlock()
-	s.logger.Debug(message.NewMessage(message.MSSHProxyDisconnected, "Client disconnected, waiting for all sessions to terminate..."))
+	s.logger.Debug(
+		message.NewMessage(
+			message.MSSHProxyDisconnected,
+			"Client disconnected, waiting for all sessions to terminate...",
+		),
+	)
 	s.wg.Wait()
 	s.done = true
 	s.disconnected = true
 	if s.tcpConn != nil {
 		s.logger.Debug(message.NewMessage(message.MSSHProxyBackendDisconnecting, "Disconnecting backend connection..."))
 		if err := s.tcpConn.Close(); err != nil {
-			s.logger.Debug(message.Wrap(err,
-				message.MSSHProxyBackendDisconnectFailed, "Failed to disconnect backend connection."))
+			s.logger.Debug(
+				message.Wrap(
+					err,
+					message.MSSHProxyBackendDisconnectFailed, "Failed to disconnect backend connection.",
+				),
+			)
 		} else {
 			s.logger.Debug(message.NewMessage(message.MSSHProxyBackendDisconnected, "Backend connection disconnected."))
 		}
 	} else {
-		s.logger.Debug(message.NewMessage(message.MSSHProxyBackendDisconnected, "Backend connection already disconnected."))
+		s.logger.Debug(
+			message.NewMessage(
+				message.MSSHProxyBackendDisconnected,
+				"Backend connection already disconnected.",
+			),
+		)
 	}
 }
 

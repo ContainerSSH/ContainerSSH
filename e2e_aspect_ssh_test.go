@@ -6,7 +6,7 @@ import (
 	"net"
 	"strings"
 
-	"github.com/containerssh/configuration/v3"
+	"github.com/containerssh/containerssh/config"
 	"github.com/containerssh/containerssh/log"
 	"golang.org/x/crypto/ssh"
 
@@ -35,7 +35,7 @@ func (r *sshTestingAspect) Factors() []TestingFactor {
 
 type sshInProcess struct {
 	lifecycle     *SimpleLifecycle
-	config        configuration.AppConfig
+	config        config.AppConfig
 	sshConnection *ssh.Client
 	session       *ssh.Session
 	result        []byte
@@ -51,12 +51,12 @@ func (r *sshInProcess) String() string {
 	return "In-Process"
 }
 
-func (r *sshInProcess) ModifyConfiguration(*configuration.AppConfig) error {
+func (r *sshInProcess) ModifyConfiguration(_ *config.AppConfig) error {
 	return nil
 }
 
 func (r *sshInProcess) StartBackingServices(
-	config configuration.AppConfig,
+	config config.AppConfig,
 	_ log.Logger,
 ) error {
 	if err := config.SSH.GenerateHostKey(); err != nil {
@@ -86,14 +86,14 @@ func (r *sshInProcess) getConfig(user string, password string) *ssh.ClientConfig
 	}
 }
 
-func (r *sshInProcess) StopBackingServices(_ configuration.AppConfig, _ log.Logger) error {
+func (r *sshInProcess) StopBackingServices(_ config.AppConfig, _ log.Logger) error {
 	if r.sshConnection != nil {
 		_ = r.sshConnection.Close()
 	}
 	return r.lifecycle.Stop()
 }
 
-func (r *sshInProcess) GetSteps(_ configuration.AppConfig, _ log.Logger) []Step {
+func (r *sshInProcess) GetSteps(_ config.AppConfig, _ log.Logger) []Step {
 	return []Step{
 		{
 			`^authentication with user "(.*)" and password "(.*)" (?:should fail|should have failed)$`,

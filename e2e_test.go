@@ -8,10 +8,10 @@ import (
 	"sync"
 	"testing"
 
-	error2 "github.com/containerssh/containerssh/error"
+	"github.com/containerssh/containerssh/config"
+	"github.com/containerssh/containerssh/internal/structutils"
 	"github.com/containerssh/containerssh/log"
 	"github.com/containerssh/containerssh/message"
-	"github.com/containerssh/structutils"
 	"github.com/cucumber/godog"
 )
 
@@ -43,30 +43,30 @@ var ErrSkipped = errors.New("SKIPPED")
 
 func processTestingAspect(t *testing.T, aspects []TestingAspect, factors []TestingFactor) {
 	if len(aspects) == 0 {
-		config := configuration.AppConfig{}
-		structutils.Defaults(&config)
+		cfg := config.AppConfig{}
+		structutils.Defaults(&cfg)
 
-		if modifyConfiguration(t, factors, &config) {
+		if modifyConfiguration(t, factors, &cfg) {
 			return
 		}
 
 		var startedFactors = &[]TestingFactor{}
-		defer stopFactors(t, startedFactors, config)()
+		defer stopFactors(t, startedFactors, cfg)()
 		for _, factor := range factors {
 			logger := log.NewTestLogger(t)
-			logger.Notice(message.NewMessage(error2.MTest, "Starting backing services for %s=%s...", factor.Aspect().String(), factor.String()))
-			if err := factor.StartBackingServices(config, logger); err != nil {
+			logger.Notice(message.NewMessage(message.MTest, "Starting backing services for %s=%s...", factor.Aspect().String(), factor.String()))
+			if err := factor.StartBackingServices(cfg, logger); err != nil {
 				t.Errorf("failed to start backing services for %s=%s (%v)", factor.Aspect().String(), factor.String(), err)
 				t.Fail()
 
-				_ = factor.StopBackingServices(config, logger)
+				_ = factor.StopBackingServices(cfg, logger)
 				return
 			}
-			logger.Notice(message.NewMessage(error2.MTest, "Backing services for %s=%s running.", factor.Aspect().String(), factor.String()))
+			logger.Notice(message.NewMessage(message.MTest, "Backing services for %s=%s running.", factor.Aspect().String(), factor.String()))
 			*startedFactors = append(*startedFactors, factor)
 		}
 
-		runTestSuite(t, factors, config)
+		runTestSuite(t, factors, cfg)
 		return
 	}
 
@@ -89,7 +89,7 @@ func processTestingAspect(t *testing.T, aspects []TestingAspect, factors []Testi
 func stopFactors(
 	t *testing.T,
 	startedFactors *[]TestingFactor,
-	config configuration.AppConfig,
+	cfg config.AppConfig,
 ) func() {
 	return func() {
 		if startedFactors == nil {
@@ -98,21 +98,21 @@ func stopFactors(
 		for _, factor := range *startedFactors {
 			logger := log.NewTestLogger(t)
 
-			logger.Notice(message.NewMessage(error2.MTest, "Stopping backing services for %s=%s...", factor.Aspect().String(), factor.String()))
-			err := factor.StopBackingServices(config, logger)
+			logger.Notice(message.NewMessage(message.MTest, "Stopping backing services for %s=%s...", factor.Aspect().String(), factor.String()))
+			err := factor.StopBackingServices(cfg, logger)
 			if err != nil {
 				t.Errorf("failed to stop backing services for %s=%s (%v)", factor.Aspect().String(), factor.String(), err)
 				t.Fail()
 				return
 			}
-			logger.Notice(message.NewMessage(error2.MTest, "Backing services for %s=%s stopped.", factor.Aspect().String(), factor.String()))
+			logger.Notice(message.NewMessage(message.MTest, "Backing services for %s=%s stopped.", factor.Aspect().String(), factor.String()))
 		}
 	}
 }
 
-func modifyConfiguration(t *testing.T, factors []TestingFactor, config *configuration.AppConfig) bool {
+func modifyConfiguration(t *testing.T, factors []TestingFactor, cfg *config.AppConfig) bool {
 	for _, factor := range factors {
-		err := factor.ModifyConfiguration(config)
+		err := factor.ModifyConfiguration(cfg)
 		if err != nil {
 			t.Errorf("failed to apply factor %s (%v)", factor.String(), err)
 			t.Fail()
@@ -125,12 +125,12 @@ func modifyConfiguration(t *testing.T, factors []TestingFactor, config *configur
 func runTestSuite(
 	t *testing.T,
 	factors []TestingFactor,
-	config configuration.AppConfig,
+	cfg config.AppConfig,
 ) {
 	hardError := false
 	testSuite := godog.TestSuite{
 		Name:                t.Name(),
-		ScenarioInitializer: scenarioInitializer(t, factors, config, &hardError),
+		ScenarioInitializer: scenarioInitializer(t, factors, cfg, &hardError),
 		Options:             &opts,
 	}
 	if testSuite.Run() != 0 {
@@ -142,7 +142,7 @@ func runTestSuite(
 func scenarioInitializer(
 	t *testing.T,
 	factors []TestingFactor,
-	config configuration.AppConfig,
+	cfg config.AppConfig,
 	hardError *bool,
 ) func(ctx *godog.ScenarioContext) {
 	return func(ctx *godog.ScenarioContext) {
@@ -156,7 +156,7 @@ func scenarioInitializer(
 
 		for _, factor := range factors {
 			logger := log.NewTestLogger(t)
-			for _, step := range factor.GetSteps(config, logger) {
+			for _, step := range factor.GetSteps(cfg, logger) {
 				ctx.Step(step.Match, step.Method)
 			}
 		}

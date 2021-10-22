@@ -1,16 +1,17 @@
 package metricsintegration
 
 import (
-	"github.com/containerssh/metrics"
-	sshserver "github.com/containerssh/sshserver/v2"
+	"github.com/containerssh/containerssh/config"
+	"github.com/containerssh/containerssh/internal/metrics"
+	"github.com/containerssh/containerssh/internal/sshserver"
 )
 
 func NewHandler(
-	config metrics.Config,
+	cfg config.MetricsConfig,
 	metricsCollector metrics.Collector,
 	backend sshserver.Handler,
 ) (sshserver.Handler, error) {
-	if !config.Enable {
+	if !cfg.Enable {
 		return backend, nil
 	}
 

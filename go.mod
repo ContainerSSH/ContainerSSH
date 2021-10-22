@@ -11,7 +11,7 @@ require (
 	github.com/docker/distribution v2.7.1+incompatible
 	github.com/docker/docker v20.10.6+incompatible
 	github.com/docker/go-connections v0.4.0
-	github.com/fxamacker/cbor v1.5.1 // indirect
+	github.com/fxamacker/cbor v1.5.1
 	github.com/go-enry/go-license-detector/v4 v4.1.0
 	github.com/google/go-cmp v0.5.6
 	github.com/google/uuid v1.3.0
@@ -20,6 +20,7 @@ require (
 	github.com/jcmturner/gokrb5/v8 v8.4.2
 	github.com/mattn/go-shellwords v1.0.12 // indirect
 	github.com/mitchellh/golicense v0.2.0
+	github.com/mitchellh/mapstructure v1.1.2
 	github.com/opencontainers/image-spec v1.0.1
 	github.com/oschwald/geoip2-golang v1.5.0
 	github.com/qdm12/reprint v0.0.0-20200326205758-722754a53494
@@ -61,25 +62,3 @@ replace (
 	gopkg.in/yaml.v2 v2.2.6 => gopkg.in/yaml.v2 v2.2.8
 	gopkg.in/yaml.v2 v2.2.7 => gopkg.in/yaml.v2 v2.2.8
 )
-
-replace github.com/containerssh/backend/v3 v3.0.0 => ../backend
-
-replace github.com/containerssh/metricsintegration v1.0.0 => ../metricsintegration
-
-replace github.com/containerssh/configuration/v3 v3.0.0 => ../configuration
-
-replace github.com/containerssh/docker/v3 v3.0.0 => ../docker
-
-replace github.com/containerssh/kubernetes/v3 v3.0.0 => ../kubernetes
-
-replace github.com/containerssh/sshproxy/v2 v2.0.0 => ../sshproxy
-
-replace github.com/containerssh/sshserver/v2 v2.0.0 => ../sshserver
-
-replace github.com/containerssh/auditlogintegration/v2 v2.0.0 => ../auditlogintegration
-
-replace github.com/containerssh/authintegration/v2 v2.0.0 => ../authintegration
-
-replace github.com/containerssh/auth/v2 v2.0.0 => ../auth
-
-replace github.com/containerssh/security/v2 v2.0.0 => ../security

@@ -7,13 +7,13 @@ import (
 	"testing"
 	"time"
 
-	"github.com/containerssh/auth"
+	"github.com/containerssh/containerssh/config"
+	"github.com/containerssh/containerssh/internal/auth"
+	"github.com/containerssh/containerssh/internal/geoip/dummy"
+	"github.com/containerssh/containerssh/internal/metrics"
 	"github.com/containerssh/containerssh/log"
 	"github.com/containerssh/containerssh/message"
-	"github.com/containerssh/geoip"
-	"github.com/containerssh/http"
-	"github.com/containerssh/metrics"
-	"github.com/containerssh/service"
+	"github.com/containerssh/containerssh/service"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -25,38 +25,43 @@ func (h *handler) OnPassword(
 	password []byte,
 	remoteAddress string,
 	connectionID string,
-) (bool, error) {
+) (bool, map[string]string, error) {
 	if remoteAddress != "127.0.0.1" {
-		return false, fmt.Errorf("invalid IP: %s", remoteAddress)
+		return false, nil, fmt.Errorf("invalid IP: %s", remoteAddress)
 	}
 	if connectionID != "0123456789ABCDEF" {
-		return false, fmt.Errorf("invalid connection ID: %s", connectionID)
+		return false, nil, fmt.Errorf("invalid connection ID: %s", connectionID)
 	}
 	if username == "foo" && string(password) == "bar" {
-		return true, nil
+		return true, nil, nil
 	}
 	if username == "crash" {
 		// Simulate a database failure
-		return false, fmt.Errorf("database error")
+		return false, nil, fmt.Errorf("database error")
 	}
-	return false, nil
+	return false, nil, nil
 }
 
-func (h *handler) OnPubKey(username string, publicKey string, remoteAddress string, connectionID string) (bool, error) {
+func (h *handler) OnPubKey(
+	username string,
+	publicKey string,
+	remoteAddress string,
+	connectionID string,
+) (bool, map[string]string, error) {
 	if remoteAddress != "127.0.0.1" {
-		return false, fmt.Errorf("invalid IP: %s", remoteAddress)
+		return false, nil, fmt.Errorf("invalid IP: %s", remoteAddress)
 	}
 	if connectionID != "0123456789ABCDEF" {
-		return false, fmt.Errorf("invalid connection ID: %s", connectionID)
+		return false, nil, fmt.Errorf("invalid connection ID: %s", connectionID)
 	}
 	if username == "foo" && publicKey == "ssh-rsa asdf" {
-		return true, nil
+		return true, nil, nil
 	}
 	if username == "crash" {
 		// Simulate a database failure
-		return false, fmt.Errorf("database error")
+		return false, nil, fmt.Errorf("database error")
 	}
-	return false, nil
+	return false, nil, nil
 }
 
 func TestAuth(t *testing.T) {
@@ -77,33 +82,33 @@ func TestAuth(t *testing.T) {
 			}
 			defer lifecycle.Stop(context.Background())
 
-			success, err := client.Password("foo", []byte("bar"), "0123456789ABCDEF", net.ParseIP("127.0.0.1"))
-			assert.Equal(t, nil, err)
-			assert.Equal(t, true, success)
+			authenticationContext := client.Password("foo", []byte("bar"), "0123456789ABCDEF", net.ParseIP("127.0.0.1"))
+			assert.Equal(t, nil, authenticationContext.Error())
+			assert.Equal(t, true, authenticationContext.Success())
 			assert.Equal(t, float64(1), metricsCollector.GetMetric(auth.MetricNameAuthBackendRequests)[0].Value)
 			assert.Equal(t, float64(1), metricsCollector.GetMetric(auth.MetricNameAuthSuccess)[0].Value)
 
-			success, err = client.Password("foo", []byte("baz"), "0123456789ABCDEF", net.ParseIP("127.0.0.1"))
-			assert.Equal(t, nil, err)
-			assert.Equal(t, false, success)
+			authenticationContext = client.Password("foo", []byte("baz"), "0123456789ABCDEF", net.ParseIP("127.0.0.1"))
+			assert.Equal(t, nil, authenticationContext.Error())
+			assert.Equal(t, false, authenticationContext.Success())
 			assert.Equal(t, float64(1), metricsCollector.GetMetric(auth.MetricNameAuthFailure)[0].Value)
 
-			success, err = client.Password("crash", []byte("baz"), "0123456789ABCDEF", net.ParseIP("127.0.0.1"))
-			assert.NotEqual(t, nil, err)
-			assert.Equal(t, false, success)
+			authenticationContext = client.Password("crash", []byte("baz"), "0123456789ABCDEF", net.ParseIP("127.0.0.1"))
+			assert.NotEqual(t, nil, authenticationContext.Error())
+			assert.Equal(t, false, authenticationContext.Success())
 			assert.Equal(t, float64(1), metricsCollector.GetMetric(auth.MetricNameAuthBackendFailure)[0].Value)
 
-			success, err = client.PubKey("foo", "ssh-rsa asdf", "0123456789ABCDEF", net.ParseIP("127.0.0.1"))
-			assert.Equal(t, nil, err)
-			assert.Equal(t, true, success)
+			authenticationContext = client.PubKey("foo", "ssh-rsa asdf", "0123456789ABCDEF", net.ParseIP("127.0.0.1"))
+			assert.Equal(t, nil, authenticationContext.Error())
+			assert.Equal(t, true, authenticationContext.Success())
 
-			success, err = client.PubKey("foo", "ssh-rsa asdx", "0123456789ABCDEF", net.ParseIP("127.0.0.1"))
-			assert.Equal(t, nil, err)
-			assert.Equal(t, false, success)
+			authenticationContext = client.PubKey("foo", "ssh-rsa asdx", "0123456789ABCDEF", net.ParseIP("127.0.0.1"))
+			assert.Equal(t, nil, authenticationContext.Error())
+			assert.Equal(t, false, authenticationContext.Success())
 
-			success, err = client.PubKey("crash", "ssh-rsa asdx", "0123456789ABCDEF", net.ParseIP("127.0.0.1"))
-			assert.NotEqual(t, nil, err)
-			assert.Equal(t, false, success)
+			authenticationContext = client.PubKey("crash", "ssh-rsa asdx", "0123456789ABCDEF", net.ParseIP("127.0.0.1"))
+			assert.NotEqual(t, nil, authenticationContext.Error())
+			assert.Equal(t, false, authenticationContext.Success())
 		})
 	}
 }
@@ -113,7 +118,7 @@ func initializeAuth(logger log.Logger, subpath string) (auth.Client, service.Lif
 	errors := make(chan error)
 
 	server, err := auth.NewServer(
-		http.ServerConfiguration{
+		config.HTTPServerConfiguration{
 			Listen: "127.0.0.1:8080",
 		},
 		&handler{},
@@ -123,23 +128,19 @@ func initializeAuth(logger log.Logger, subpath string) (auth.Client, service.Lif
 		return nil, nil, nil, err
 	}
 
-	geoipProvider, err := geoip.New(geoip.Config{
-		Provider: geoip.DummyProvider,
-	})
-	if err != nil {
-		return nil, nil, nil, err
-	}
-
-	metricsCollector := metrics.New(geoipProvider)
+	metricsCollector := metrics.New(dummy.New())
 
 	client, err := auth.NewHttpAuthClient(
-		auth.ClientConfig{
-			ClientConfiguration: http.ClientConfiguration{
-				URL:     fmt.Sprintf("http://127.0.0.1:8080%s", subpath),
-				Timeout: 2 * time.Second,
+		config.AuthConfig{
+			Method: config.AuthMethodWebhook,
+			Webhook: config.AuthWebhookClientConfig{
+				HTTPClientConfiguration: config.HTTPClientConfiguration{
+					URL:     fmt.Sprintf("http://127.0.0.1:8080%s", subpath),
+					Timeout: 2 * time.Second,
+				},
+				Password: true,
+				PubKey:   true,
 			},
-			Password:    true,
-			PubKey:      true,
 			AuthTimeout: 2 * time.Second,
 		},
 		logger,

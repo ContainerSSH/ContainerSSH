@@ -45,7 +45,7 @@ func New(config config.AuditLogConfig, geoIPLookupProvider geoipprovider.LookupP
 
 // NewLogger creates a new audit logging pipeline with the provided elements.
 func NewLogger(
-	intercept config.InterceptConfig,
+	intercept config.AuditLogInterceptConfig,
 	encoder codec.Encoder,
 	storage storage.WritableStorage,
 	logger log.Logger,

@@ -136,32 +136,12 @@ func (n *networkHandler) getConfiguredBackend(
 			backendRequestsCounter,
 			backendErrorCounter,
 		)
-	case "dockerrun":
-		//goland:noinspection GoDeprecation
-		backend, failureReason = docker.NewDockerRun(
-			n.remoteAddr,
-			n.connectionID,
-			appConfig.DockerRun,
-			backendLogger.WithLabel("backend", "dockerrun"),
-			backendRequestsCounter,
-			backendErrorCounter,
-		)
 	case "kubernetes":
 		backend, failureReason = kubernetes.New(
 			n.remoteAddr,
 			n.connectionID,
 			appConfig.Kubernetes,
 			backendLogger.WithLabel("backend", "kubernetes"),
-			backendRequestsCounter,
-			backendErrorCounter,
-		)
-	case "kuberun":
-		//goland:noinspection GoDeprecation
-		backend, failureReason = kubernetes.NewKubeRun(
-			n.remoteAddr,
-			n.connectionID,
-			appConfig.KubeRun,
-			backendLogger.WithLabel("backend", "kuberun"),
 			backendRequestsCounter,
 			backendErrorCounter,
 		)

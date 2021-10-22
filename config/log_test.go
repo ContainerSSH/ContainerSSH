@@ -4,55 +4,54 @@ import (
 	"encoding/json"
 	"testing"
 
-	"github.com/containerssh/structutils"
+	"github.com/containerssh/containerssh/config"
+	"github.com/containerssh/containerssh/internal/structutils"
 	"github.com/stretchr/testify/assert"
 	"gopkg.in/yaml.v3"
-
-	"github.com/containerssh/containerssh/log"
 )
 
 func TestJSONDecode(t *testing.T) {
-	cfg := "{\"level\":\"debug\",\"format\":\"text\"}"
-	config := log.Config{}
-	err := json.Unmarshal([]byte(cfg), &config)
+	cfgText := "{\"level\":\"debug\",\"format\":\"text\"}"
+	cfg := config.LogConfig{}
+	err := json.Unmarshal([]byte(cfgText), &cfg)
 	assert.NoError(t, err)
-	assert.Equal(t, log.LevelDebug, config.Level)
-	assert.Equal(t, log.FormatText, config.Format)
+	assert.Equal(t, config.LogLevelDebug, cfg.Level)
+	assert.Equal(t, config.LogFormatText, cfg.Format)
 }
 
 func TestJSONDecodeNumeric(t *testing.T) {
-	cfg := "{\"level\":7,\"format\":\"text\"}"
-	config := log.Config{}
-	err := json.Unmarshal([]byte(cfg), &config)
+	cfgText := "{\"level\":7,\"format\":\"text\"}"
+	cfg := config.LogConfig{}
+	err := json.Unmarshal([]byte(cfgText), &cfg)
 	assert.NoError(t, err)
-	assert.Equal(t, log.LevelDebug, config.Level)
-	assert.Equal(t, log.FormatText, config.Format)
+	assert.Equal(t, config.LogLevelDebug, cfg.Level)
+	assert.Equal(t, config.LogFormatText, cfg.Format)
 }
 
 func TestYAMLDecode(t *testing.T) {
-	cfg := "---\nlevel: debug\nformat: text\n"
-	config := log.Config{}
-	err := yaml.Unmarshal([]byte(cfg), &config)
+	cfgText := "---\nlevel: debug\nformat: text\n"
+	cfg := config.LogConfig{}
+	err := yaml.Unmarshal([]byte(cfgText), &cfg)
 	assert.NoError(t, err)
-	assert.Equal(t, log.LevelDebug, config.Level)
-	assert.Equal(t, log.FormatText, config.Format)
+	assert.Equal(t, config.LogLevelDebug, cfg.Level)
+	assert.Equal(t, config.LogFormatText, cfg.Format)
 }
 
 func TestYAMLDecodeNumeric(t *testing.T) {
-	cfg := "---\nlevel: 7\nformat: text\n"
-	config := log.Config{}
-	err := yaml.Unmarshal([]byte(cfg), &config)
+	cfgText := "---\nlevel: 7\nformat: text\n"
+	cfg := config.LogConfig{}
+	err := yaml.Unmarshal([]byte(cfgText), &cfg)
 	assert.NoError(t, err)
-	assert.Equal(t, log.LevelDebug, config.Level)
-	assert.Equal(t, log.FormatText, config.Format)
+	assert.Equal(t, config.LogLevelDebug, cfg.Level)
+	assert.Equal(t, config.LogFormatText, cfg.Format)
 }
 
 func TestJSONEncode(t *testing.T) {
-	config := log.Config{
-		Level:  log.LevelDebug,
-		Format: log.FormatText,
+	cfg := config.LogConfig{
+		Level:  config.LogLevelDebug,
+		Format: config.LogFormatText,
 	}
-	jsonData, err := json.Marshal(config)
+	jsonData, err := json.Marshal(cfg)
 	assert.NoError(t, err)
 	rawData := map[string]interface{}{}
 	err = json.Unmarshal(jsonData, &rawData)
@@ -63,11 +62,11 @@ func TestJSONEncode(t *testing.T) {
 }
 
 func TestYAMLEncode(t *testing.T) {
-	config := log.Config{
-		Level:  log.LevelDebug,
-		Format: log.FormatText,
+	cfg := config.LogConfig{
+		Level:  config.LogLevelDebug,
+		Format: config.LogFormatText,
 	}
-	jsonData, err := yaml.Marshal(config)
+	jsonData, err := yaml.Marshal(cfg)
 	assert.NoError(t, err)
 	rawData := map[string]interface{}{}
 	err = yaml.Unmarshal(jsonData, &rawData)
@@ -78,8 +77,8 @@ func TestYAMLEncode(t *testing.T) {
 }
 
 func TestDefault(t *testing.T) {
-	config := log.Config{}
-	structutils.Defaults(&config)
-	assert.Equal(t, log.LevelNotice, config.Level)
-	assert.Equal(t, log.FormatLJSON, config.Format)
+	cfg := config.LogConfig{}
+	structutils.Defaults(&cfg)
+	assert.Equal(t, config.LogLevelNotice, cfg.Level)
+	assert.Equal(t, config.LogFormatLJSON, cfg.Format)
 }

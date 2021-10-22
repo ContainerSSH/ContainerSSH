@@ -6,7 +6,7 @@ import (
 	"net/http"
 	"strings"
 
-	error2 "github.com/containerssh/containerssh/error"
+	"github.com/containerssh/containerssh/config"
 	"github.com/containerssh/containerssh/log"
 	"github.com/containerssh/containerssh/message"
 )
@@ -37,7 +37,7 @@ func (m *metricsTestingAspect) Factors() []TestingFactor {
 
 type metricsFactor struct {
 	enabled bool
-	config  configuration.AppConfig
+	config  config.AppConfig
 	aspect  *metricsTestingAspect
 }
 
@@ -53,27 +53,27 @@ func (m *metricsFactor) String() string {
 	}
 }
 
-func (m *metricsFactor) ModifyConfiguration(config *configuration.AppConfig) error {
-	config.Metrics.Enable = m.enabled
+func (m *metricsFactor) ModifyConfiguration(cfg *config.AppConfig) error {
+	cfg.Metrics.Enable = m.enabled
 	// Change the metrics port because 9100 is often the printer port on desktop OS, which can lead to weird conflicts.
-	config.Metrics.Listen = "0.0.0.0:9101"
+	cfg.Metrics.Listen = "0.0.0.0:9101"
 	return nil
 }
 
 func (m *metricsFactor) StartBackingServices(
-	config configuration.AppConfig,
+	cfg config.AppConfig,
 	_ log.Logger,
 ) error {
-	m.config = config
+	m.config = cfg
 	return nil
 }
 
 func (m *metricsFactor) GetSteps(
-	config configuration.AppConfig,
+	cfg config.AppConfig,
 	logger log.Logger,
 ) []Step {
 	step := &metricsStep{
-		config: config,
+		config: cfg,
 		logger: logger,
 	}
 	return []Step{
@@ -84,18 +84,18 @@ func (m *metricsFactor) GetSteps(
 	}
 }
 
-func (m *metricsFactor) StopBackingServices(_ configuration.AppConfig, _ log.Logger) error {
+func (m *metricsFactor) StopBackingServices(_ config.AppConfig, _ log.Logger) error {
 	return nil
 }
 
 type metricsStep struct {
-	config configuration.AppConfig
+	config config.AppConfig
 	logger log.Logger
 }
 
 func (m *metricsStep) TheMetricShouldBeVisible(metricName string) error {
 	if !m.config.Metrics.Enable {
-		m.logger.Notice(message.NewMessage(error2.MTest, "test skipped, metrics not enabled"))
+		m.logger.Notice(message.NewMessage(message.MTest, "test skipped, metrics not enabled"))
 		return nil
 	}
 	metricsResponse, err := http.Get(

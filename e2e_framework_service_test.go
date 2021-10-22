@@ -4,7 +4,7 @@ import (
 	"context"
 	"time"
 
-	"github.com/containerssh/service"
+	"github.com/containerssh/containerssh/service"
 )
 
 type SimpleLifecycle struct {

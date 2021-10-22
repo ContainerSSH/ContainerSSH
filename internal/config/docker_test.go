@@ -3,9 +3,7 @@ package config_test
 import (
 	"bytes"
 	"encoding/json"
-	"os"
 	"testing"
-	"time"
 
 	"github.com/containerssh/containerssh/config"
 	"github.com/containerssh/containerssh/internal/structutils"
@@ -84,39 +82,3 @@ func TestJSONSerialization(t *testing.T) {
 	assert.Empty(t, diff)
 	// endregion
 }
-
-// TestUnmarshalYAML03 tests the ContainerSSH 0.3 compatibility. It checks if a YAML fragment from 0.3 can still be
-// unmarshalled.
-func TestUnmarshalYAML03(t *testing.T) {
-	t.Parallel()
-
-	testFile, err := os.Open("testdata/config-0.3.yaml")
-	assert.NoError(t, err)
-	unmarshaller := yaml.NewDecoder(testFile)
-	unmarshaller.KnownFields(true)
-	//goland:noinspection GoDeprecation
-	cfg := config.DockerRunConfig{}
-	assert.NoError(t, unmarshaller.Decode(&cfg))
-	assert.Equal(t, false, cfg.Config.DisableCommand)
-	assert.Equal(t, "/usr/lib/openssh/sftp-server", cfg.Config.Subsystems["sftp"])
-	assert.Equal(t, 60*time.Second, cfg.Config.Timeout)
-}
-
-// TestUnmarshalYAML03 tests the ContainerSSH 0.3 compatibility. It checks if a JSON fragment from 0.3 can still be
-// unmarshalled.
-func TestUnmarshalJSON03(t *testing.T) {
-	t.Parallel()
-
-	testFile, err := os.Open("testdata/config-0.3.json")
-	assert.NoError(t, err)
-	unmarshaller := json.NewDecoder(testFile)
-	unmarshaller.DisallowUnknownFields()
-	//goland:noinspection GoDeprecation
-	cfg := config.DockerRunConfig{}
-	assert.NoError(t, unmarshaller.Decode(&cfg))
-	assert.Equal(t, false, cfg.Config.DisableCommand)
-	assert.Equal(t, "/usr/lib/openssh/sftp-server", cfg.Config.Subsystems["sftp"])
-	assert.Equal(t, 60*time.Second, cfg.Config.Timeout)
-}
-
-

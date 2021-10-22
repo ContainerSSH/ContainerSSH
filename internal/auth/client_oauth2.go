@@ -16,10 +16,10 @@ type oauth2Client struct {
 }
 
 type oauth2Context struct {
-	success bool
+	success  bool
 	metadata map[string]string
-	err error
-	flow OAuth2Flow
+	err      error
+	flow     OAuth2Flow
 }
 
 func (o *oauth2Context) Success() bool {
@@ -42,7 +42,7 @@ func (o *oauth2Context) OnDisconnect() {
 
 func (o *oauth2Client) Password(_ string, _ []byte, _ string, _ net.IP) AuthenticationContext {
 	return &oauth2Context{false, nil, message.UserMessage(
-		EUnsupported,
+		message.EAuthUnsupported,
 		"Password authentication is not available.",
 		"OAuth2 doesn't support password authentication.",
 	), nil}
@@ -50,7 +50,7 @@ func (o *oauth2Client) Password(_ string, _ []byte, _ string, _ net.IP) Authenti
 
 func (o *oauth2Client) PubKey(_ string, _ string, _ string, _ net.IP) AuthenticationContext {
 	return &oauth2Context{false, nil, message.UserMessage(
-		EUnsupported,
+		message.EAuthUnsupported,
 		"Public key authentication is not available.",
 		"OAuth2 doesn't support public key authentication.",
 	), nil}
@@ -122,7 +122,7 @@ func (o *oauth2Client) KeyboardInteractive(
 						parts := strings.SplitN(code, "|", 2)
 						if len(parts) != 2 {
 							return &oauth2Context{false, metadata, message.UserMessage(
-								EAuthFailed,
+								message.EAuthFailed,
 								"Authentication failed.",
 								"Authentication failed because the return code did not contain the requisite state and code.",
 							), authCodeFlow}
@@ -140,7 +140,6 @@ func (o *oauth2Client) KeyboardInteractive(
 			}
 		}
 	}
-	return &oauth2Context{false, metadata, message.WrapUser(err, EAuthFailed, "Authentication failed.", "Authentication failed."), nil}
+	return &oauth2Context{false, metadata, message.WrapUser(err,
+		message.EAuthFailed, "Authentication failed.", "Authentication failed."), nil}
 }
-
-

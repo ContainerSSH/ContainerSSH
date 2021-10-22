@@ -3,9 +3,8 @@ package unixutils_test
 import (
 	"testing"
 
+	"github.com/containerssh/containerssh/internal/unixutils"
 	"github.com/stretchr/testify/assert"
-
-	"github.com/containerssh/unixutils"
 )
 
 func TestParseCMD(t *testing.T) {

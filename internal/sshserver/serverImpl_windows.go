@@ -1,3 +1,4 @@
+//go:build windows
 // +build windows
 
 package sshserver
@@ -5,7 +6,7 @@ package sshserver
 import (
 	"syscall"
 
-	message2 "github.com/containerssh/containerssh/message"
+	messageCodes "github.com/containerssh/containerssh/message"
 )
 
 func (s *serverImpl) socketControl(_, _ string, conn syscall.RawConn) error {
@@ -17,7 +18,7 @@ func (s *serverImpl) socketControl(_, _ string, conn syscall.RawConn) error {
 			1,
 		)
 		if err != nil {
-			s.logger.Warning(message2.NewMessage(ESOReuseFailed, "failed to set SO_REUSEADDR. Server may fail on restart"))
+			s.logger.Warning(messageCodes.NewMessage(messageCodes.ESSHSOReuseFailed, "failed to set SO_REUSEADDR. Server may fail on restart"))
 		}
 	})
 }

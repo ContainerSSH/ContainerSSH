@@ -1,14 +1,7 @@
-[![ContainerSSH - Launch Containers on Demand](https://containerssh.io/images/logo-for-embedding.svg)](https://containerssh.io/)
-
 <!--suppress HtmlDeprecatedAttribute -->
 <h1 align="center">ContainerSSH Authentication Library</h1>
 
-[![Go Report Card](https://goreportcard.com/badge/github.com/containerssh/auth?style=for-the-badge)](https://goreportcard.com/report/github.com/containerssh/auth)
-[![LGTM Alerts](https://img.shields.io/lgtm/alerts/github/ContainerSSH/auth?style=for-the-badge)](https://lgtm.com/projects/g/ContainerSSH/auth/)
-
 This library provides the server and client components for the [authentication webhook](https://containerssh.io/getting-started/authserver/)
-
-<p align="center"><strong>⚠⚠⚠ Warning: This is a developer documentation. ⚠⚠⚠</strong><br />The user documentation for ContainerSSH is located at <a href="https://containerssh.io">containerssh.io</a>.</p>
 
 ## Creating a server
 

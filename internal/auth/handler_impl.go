@@ -50,20 +50,20 @@ func (p *passwordHandler) OnRequest(request http.ServerRequest, response http.Se
 		requestObject.ConnectionID,
 	)
 	if err != nil {
-		p.logger.Debug(message.Wrap(err, ERequestDecodeFailed, "failed to execute password request"))
+		p.logger.Debug(message.Wrap(err, message.EAuthRequestDecodeFailed, "failed to execute password request"))
 		response.SetStatus(500)
 		response.SetBody(
 			auth.ResponseBody{
-			Success: false,
-			Metadata: metadata,
-		})
+				Success:  false,
+				Metadata: metadata,
+			})
 		return nil
 	} else {
 		response.SetBody(
 			auth.ResponseBody{
-			Success: success,
-			Metadata: metadata,
-		})
+				Success:  success,
+				Metadata: metadata,
+			})
 	}
 	return nil
 }
@@ -85,20 +85,20 @@ func (p *pubKeyHandler) OnRequest(request http.ServerRequest, response http.Serv
 		requestObject.ConnectionID,
 	)
 	if err != nil {
-		p.logger.Debug(message.Wrap(err, ERequestDecodeFailed, "failed to execute public key request"))
+		p.logger.Debug(message.Wrap(err, message.EAuthRequestDecodeFailed, "failed to execute public key request"))
 		response.SetStatus(500)
 		response.SetBody(
 			auth.ResponseBody{
-			Success: false,
-			Metadata: metadata,
-		})
+				Success:  false,
+				Metadata: metadata,
+			})
 		return nil
 	} else {
 		response.SetBody(
 			auth.ResponseBody{
-			Success: success,
-			Metadata: metadata,
-		})
+				Success:  success,
+				Metadata: metadata,
+			})
 	}
 	return nil
 }

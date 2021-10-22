@@ -14,7 +14,6 @@ import (
 
 // AuthOIDCConfig is the configuration for OpenID Connect authentication.
 
-
 //endregion
 
 //region GeoIPProvider
@@ -71,7 +70,7 @@ func (o *oidcProvider) createFlow(connectionID string, username string) (oidcFlo
 	if err != nil {
 		return oidcFlow{}, message.WrapUser(
 			err,
-			EGitHubHTTPClientCreateFailed,
+			message.EAuthGitHubHTTPClientCreateFailed,
 			"Authentication currently unavailable.",
 			"Cannot create GitHub device flow authenticator because the HTTP client configuration failed.",
 		)
@@ -95,8 +94,8 @@ type oidcFlow struct {
 	provider     *oidcProvider
 	connectionID string
 	username     string
-	logger log.Logger
-	client http2.Client
+	logger       log.Logger
+	client       http2.Client
 }
 
 func (o *oidcFlow) Deauthorize(ctx context.Context) {

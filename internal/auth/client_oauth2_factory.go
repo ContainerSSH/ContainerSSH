@@ -40,7 +40,7 @@ func NewOAuth2Client(cfg config.AuthConfig, logger log.Logger, collector metrics
 		logger,
 		func(url string) {
 			logger.Info(message.NewMessage(
-				EOAuth2Available,
+				message.EAuthOAuth2Available,
 				"OAuth2 redirect server is now available at %s",
 				url,
 			))
@@ -57,7 +57,7 @@ func NewOAuth2Client(cfg config.AuthConfig, logger log.Logger, collector metrics
 	}
 
 	return &oauth2Client{
-		logger: logger,
+		logger:   logger,
 		provider: provider,
 	}, redirectServer, nil
 }

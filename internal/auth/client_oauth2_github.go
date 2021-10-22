@@ -9,7 +9,6 @@ import (
 	"time"
 
 	"github.com/containerssh/containerssh/config"
-	http2 "github.com/containerssh/containerssh/http"
 	"github.com/containerssh/containerssh/http"
 	"github.com/containerssh/containerssh/internal/structutils"
 	"github.com/containerssh/containerssh/log"
@@ -17,8 +16,6 @@ import (
 )
 
 //region AuthGitHubConfig
-
-
 
 //endregion
 
@@ -30,41 +27,60 @@ func newGitHubProvider(cfg config.AuthConfig, logger log.Logger) (OAuth2Provider
 		return nil, fmt.Errorf("invalid GitHub configuration (%w)", err)
 	}
 
-	parsedURL, err := url.Parse(c.URL)
-	structutils.Defaults(&c.wwwClientConfig)
-	wwwClientConfig.URL = c.URL
-	wwwClientConfig.CACert = c.CACert
-	wwwClientConfig.Timeout = c.RequestTimeout
-	wwwClientConfig.RequestEncoding = http2.RequestEncodingWWWURLEncoded
-	if err := c.wwwClientConfig.Validate(); err != nil {
-		return err
+	parsedURL, err := url.Parse(cfg.OAuth2.GitHub.URL)
+	if err != nil {
+		return nil, message.Wrap(
+			err,
+			message.EAuthConfigError,
+			"Failed to parse GitHub URL (%s)",
+			cfg.OAuth2.GitHub.URL,
+		)
 	}
 
-	structutils.Defaults(&c.jsonWWWClientConfig)
-	c.jsonWWWClientConfig.URL = c.URL
-	c.jsonWWWClientConfig.CACert = c.CACert
-	c.jsonWWWClientConfig.Timeout = c.RequestTimeout
-	c.jsonWWWClientConfig.RequestEncoding = http2.RequestEncodingJSON
-	if err := c.jsonWWWClientConfig.Validate(); err != nil {
-		return err
+	parsedAPIURL, err := url.Parse(cfg.OAuth2.GitHub.APIURL)
+	if err != nil {
+		return nil, message.Wrap(
+			err,
+			message.EAuthConfigError,
+			"Failed to parse GitHub API URL (%s)",
+			cfg.OAuth2.GitHub.APIURL,
+		)
 	}
 
-	if c.parsedAPIURL, err = url.Parse(c.APIURL); err != nil {
-		return fmt.Errorf("invalid GitHub API URL: %s (%w)", c.APIURL, err)
+	wwwClientConfig := config.HTTPClientConfiguration{}
+	structutils.Defaults(&wwwClientConfig)
+	wwwClientConfig.URL = cfg.OAuth2.GitHub.URL
+	wwwClientConfig.CACert = cfg.OAuth2.GitHub.CACert
+	wwwClientConfig.Timeout = cfg.OAuth2.GitHub.RequestTimeout
+	wwwClientConfig.RequestEncoding = http.RequestEncodingWWWURLEncoded
+	if err := wwwClientConfig.Validate(); err != nil {
+		return nil, err
 	}
-	structutils.Defaults(&c.apiClientConfig)
-	c.apiClientConfig.URL = c.APIURL
-	c.apiClientConfig.CACert = c.CACert
-	c.apiClientConfig.Timeout = c.RequestTimeout
-	c.apiClientConfig.RequestEncoding = http2.RequestEncodingJSON
-	if err := c.apiClientConfig.Validate(); err != nil {
-		return err
+
+	jsonWWWClientConfig := config.HTTPClientConfiguration{}
+	structutils.Defaults(&jsonWWWClientConfig)
+	jsonWWWClientConfig.URL = cfg.OAuth2.GitHub.URL
+	jsonWWWClientConfig.CACert = cfg.OAuth2.GitHub.CACert
+	jsonWWWClientConfig.Timeout = cfg.OAuth2.GitHub.RequestTimeout
+	jsonWWWClientConfig.RequestEncoding = http.RequestEncodingWWWURLEncoded
+	if err := jsonWWWClientConfig.Validate(); err != nil {
+		return nil, err
+	}
+
+	apiClientConfig := config.HTTPClientConfiguration{}
+	structutils.Defaults(&apiClientConfig)
+	apiClientConfig.URL = cfg.OAuth2.GitHub.APIURL
+	apiClientConfig.CACert = cfg.OAuth2.GitHub.CACert
+	apiClientConfig.Timeout = cfg.OAuth2.GitHub.RequestTimeout
+	apiClientConfig.RequestEncoding = http.RequestEncodingWWWURLEncoded
+	if err := apiClientConfig.Validate(); err != nil {
+		return nil, err
 	}
 
 	return &gitHubProvider{
 		logger:                logger,
-		url:                   cfg.OAuth2.GitHub.ParsedURL,
-		apiURL:                cfg.OAuth2.GitHub.ParsedAPIURL,
+		url:                   parsedURL,
+		apiURL:                parsedAPIURL,
 		clientID:              cfg.OAuth2.ClientID,
 		clientSecret:          cfg.OAuth2.ClientSecret,
 		requiredOrgMembership: cfg.OAuth2.GitHub.RequireOrgMembership,
@@ -72,9 +88,9 @@ func newGitHubProvider(cfg config.AuthConfig, logger log.Logger) (OAuth2Provider
 		enforceUsername:       cfg.OAuth2.GitHub.EnforceUsername,
 		enforceScopes:         cfg.OAuth2.GitHub.EnforceScopes,
 		require2FA:            cfg.OAuth2.GitHub.Require2FA,
-		wwwClientConfig:       cfg.OAuth2.GitHub.wwwClientConfig,
-		jsonWWWClientConfig:   cfg.OAuth2.GitHub.jsonWWWClientConfig,
-		apiClientConfig:       cfg.OAuth2.GitHub.apiClientConfig,
+		wwwClientConfig:       wwwClientConfig,
+		jsonWWWClientConfig:   jsonWWWClientConfig,
+		apiClientConfig:       apiClientConfig,
 	}, nil
 }
 
@@ -134,35 +150,35 @@ func (p *gitHubProvider) createFlow(connectionID string, username string) (
 ) {
 	logger := p.logger.WithLabel("connectionID", connectionID).WithLabel("username", username)
 
-	client, err := http2.NewClient(p.wwwClientConfig, logger)
+	client, err := http.NewClient(p.wwwClientConfig, logger)
 	if err != nil {
 		return gitHubFlow{}, message.WrapUser(
 			err,
-			EGitHubHTTPClientCreateFailed,
+			message.EAuthGitHubHTTPClientCreateFailed,
 			"Authentication currently unavailable.",
 			"Cannot create GitHub device flow authenticator because the HTTP client configuration failed.",
 		)
 	}
 
-	jsonClient, err := http2.NewClient(p.jsonWWWClientConfig, logger)
+	jsonClient, err := http.NewClient(p.jsonWWWClientConfig, logger)
 	if err != nil {
 		return gitHubFlow{}, message.WrapUser(
 			err,
-			EGitHubHTTPClientCreateFailed,
+			message.EAuthGitHubHTTPClientCreateFailed,
 			"Authentication currently unavailable.",
 			"Cannot create GitHub device flow authenticator because the HTTP client configuration failed.",
 		)
 	}
 
 	flow := gitHubFlow{
-		provider:     p,
-		clientID:     p.clientID,
-		clientSecret: p.clientSecret,
-		connectionID: connectionID,
-		username:     username,
-		logger:       logger,
-		client:       client,
-		jsonClient:   jsonClient,
+		provider:        p,
+		clientID:        p.clientID,
+		clientSecret:    p.clientSecret,
+		connectionID:    connectionID,
+		username:        username,
+		logger:          logger,
+		client:          client,
+		jsonClient:      jsonClient,
 		apiClientConfig: p.apiClientConfig,
 	}
 	return flow, nil
@@ -250,9 +266,9 @@ type gitHubFlow struct {
 	clientID        string
 	clientSecret    string
 	logger          log.Logger
-	client          http2.Client
-	jsonClient      http2.Client
-	apiClientConfig http.ClientConfiguration
+	client          http.Client
+	jsonClient      http.Client
+	apiClientConfig config.HTTPClientConfiguration
 }
 
 func (g *gitHubFlow) checkGrantedScopes(scope string) error {
@@ -269,7 +285,7 @@ func (g *gitHubFlow) checkGrantedScopes(scope string) error {
 			}
 			if !scopeGranted {
 				err := message.UserMessage(
-					EGitHubRequiredScopeNotGranted,
+					message.EAuthGitHubRequiredScopeNotGranted,
 					fmt.Sprintf("You have not granted us the required %s permission.", requiredScope),
 					"The user has not granted the %s permission.",
 					requiredScope,
@@ -286,7 +302,7 @@ func (g *gitHubFlow) checkGrantedScopes(scope string) error {
 			}
 		}
 		err := message.UserMessage(
-			EGitHubRequiredScopeNotGranted,
+			message.EAuthGitHubRequiredScopeNotGranted,
 			"You have not granted us permissions to read your organization memberships required for login.",
 			"The user has not granted the org or read:org memberships required to validate the organization member ship.",
 		)
@@ -315,7 +331,7 @@ loop:
 			if statusCode == 200 {
 				if g.provider.enforceUsername && response.Login != username {
 					err := message.UserMessage(
-						EUsernameDoesNotMatch,
+						message.EAuthUsernameDoesNotMatch,
 						"The username entered in your SSH client does not match your GitHub login.",
 						"The user's username entered in the SSH username and on GitHub login do not match, but enforceUsername is enabled.",
 					)
@@ -330,7 +346,7 @@ loop:
 					} else {
 						if g.provider.require2FA {
 							err := message.UserMessage(
-								EGitHubNo2FA,
+								message.EAuthGitHubNo2FA,
 								"Please enable two-factor authentication on GitHub to access this server.",
 								"The user does not have two-factor authentication enabled on their GitHub account.",
 							)
@@ -341,7 +357,7 @@ loop:
 					}
 				} else if g.provider.require2FA {
 					err := message.UserMessage(
-						EGitHubNo2FA,
+						message.EAuthGitHubNo2FA,
 						"Please grant the read:user permission so we can check your 2FA status.",
 						"The user did not provide the read:user permission to read the 2FA status.",
 					)
@@ -364,13 +380,13 @@ loop:
 				result["GITHUB_PROFILE_URL"] = response.ProfileURL
 				result["GITHUB_AVATAR_URL"] = response.AvatarURL
 				if g.provider.enforceUsername && response.Login != username {
-					return nil, message.UserMessage(EGitHubUsernameDoesNotMatch, "Your GitHub username does not match your SSH login. Please try again and specify your GitHub username when connecting.", "User did not use their GitHub username in the SSH login.")
+					return nil, message.UserMessage(message.EAuthGitHubUsernameDoesNotMatch, "Your GitHub username does not match your SSH login. Please try again and specify your GitHub username when connecting.", "User did not use their GitHub username in the SSH login.")
 				}
 				return result, nil
 			} else {
 				g.logger.Debug(
 					message.NewMessage(
-						EGitHubUserRequestFailed,
+						message.EAuthGitHubUserRequestFailed,
 						"Request to GitHub user endpoint failed, non-200 response code (%d), retrying in 10 seconds...",
 						statusCode,
 					),
@@ -380,7 +396,7 @@ loop:
 			g.logger.Debug(
 				message.Wrap(
 					lastError,
-					EGitHubUserRequestFailed,
+					message.EAuthGitHubUserRequestFailed,
 					"Request to GitHub user endpoint failed, retrying in 10 seconds...",
 				),
 			)
@@ -393,7 +409,7 @@ loop:
 	}
 	err = message.WrapUser(
 		lastError,
-		EGitHubUserRequestFailed,
+		message.EAuthGitHubUserRequestFailed,
 		"Timeout while trying to fetch your identity from GitHub.",
 		"Timeout while trying fetch user identity from GitHub.",
 	)
@@ -401,7 +417,7 @@ loop:
 	return map[string]string{}, err
 }
 
-func (g *gitHubFlow) getAPIClient(token string, basicAuth bool) (http2.Client, error) {
+func (g *gitHubFlow) getAPIClient(token string, basicAuth bool) (http.Client, error) {
 	headers := map[string][]string{}
 	if basicAuth {
 		headers["authorization"] = []string{
@@ -418,11 +434,11 @@ func (g *gitHubFlow) getAPIClient(token string, basicAuth bool) (http2.Client, e
 			fmt.Sprintf("bearer %s", token),
 		}
 	}
-	apiClient, err := http2.NewClientWithHeaders(g.apiClientConfig, g.logger, headers, true)
+	apiClient, err := http.NewClientWithHeaders(g.apiClientConfig, g.logger, headers, true)
 	if err != nil {
 		return nil, message.WrapUser(
 			err,
-			EGitHubHTTPClientCreateFailed,
+			message.EAuthGitHubHTTPClientCreateFailed,
 			"Authentication currently unavailable.",
 			"Cannot create GitHub device flow authenticator because the HTTP client configuration failed.",
 		)
@@ -441,7 +457,8 @@ loop:
 		}
 		apiClient, err := g.getAPIClient(g.accessToken, true)
 		if err != nil {
-			g.logger.Warning(message.Wrap(err, EGitHubDeleteAccessTokenFailed, "Failed to delete access token"))
+			g.logger.Warning(message.Wrap(err,
+				message.EAuthGitHubDeleteAccessTokenFailed, "Failed to delete access token"))
 			return
 		}
 		statusCode, err := apiClient.Delete(
@@ -457,14 +474,14 @@ loop:
 			g.logger.Debug(
 				message.Wrap(
 					err,
-					EGitHubDeleteAccessTokenFailed,
+					message.EAuthGitHubDeleteAccessTokenFailed,
 					"Failed to delete access token.",
 				),
 			)
 		} else {
 			g.logger.Debug(
 				message.NewMessage(
-					EGitHubDeleteAccessTokenFailed,
+					message.EAuthGitHubDeleteAccessTokenFailed,
 					"Failed to delete access token, invalid status code: %d",
 					statusCode,
 				),
@@ -506,7 +523,7 @@ func (g *gitHubAuthorizationCodeFlow) Verify(ctx context.Context, state string, 
 ) {
 	if state != g.connectionID {
 		return nil, message.UserMessage(
-			EGitHubStateDoesNotMatch,
+			message.EAuthGitHubStateDoesNotMatch,
 			"The returned code is invalid.",
 			"The user provided a code that contained an invalid state component.",
 		)
@@ -537,7 +554,7 @@ loop:
 		statusCode, lastError = g.client.Post("/login/oauth/access_token", req, resp)
 		if statusCode != 200 {
 			lastError = message.UserMessage(
-				EGitHubAccessTokenFetchFailed,
+				message.EAuthGitHubAccessTokenFetchFailed,
 				"Cannot authenticate at this time.",
 				"Non-200 status code from GitHub access token API (%d; %s; %s).",
 				statusCode,
@@ -556,7 +573,7 @@ loop:
 	}
 	err := message.WrapUser(
 		lastError,
-		EGitHubTimeout,
+		message.EAuthGitHubTimeout,
 		"Timeout while trying to obtain GitHub authentication data.",
 		"Timeout while trying to obtain GitHub authentication data.",
 	)
@@ -601,7 +618,7 @@ loop:
 				case "slow_down":
 					// Let's assume this means that we reached the 50/hr limit. This is currently undocumented.
 					lastError = message.UserMessage(
-						EGitHubDeviceAuthorizationLimit,
+						message.EAuthGitHubDeviceAuthorizationLimit,
 						"Cannot authenticate at this time.",
 						"GitHub device authorization limit reached (%s).",
 						resp.ErrorDescription,
@@ -611,7 +628,7 @@ loop:
 				}
 			}
 			lastError = message.UserMessage(
-				EGitHubDeviceCodeRequestFailed,
+				message.EAuthGitHubDeviceCodeRequestFailed,
 				"Cannot authenticate at this time.",
 				"Non-200 status code from GitHub device code API (%d; %s; %s).",
 				statusCode,
@@ -630,7 +647,7 @@ loop:
 	}
 	err = message.WrapUser(
 		lastError,
-		EGitHubTimeout,
+		message.EAuthGitHubTimeout,
 		"Cannot authenticate at this time.",
 		"Timeout while trying to obtain a GitHub device code.",
 	)
@@ -665,13 +682,13 @@ loop:
 		if statusCode != 200 {
 			if resp.Error == "authorization_pending" {
 				lastError = message.NewMessage(
-					EGitHubAuthorizationPending,
+					message.EAuthGitHubAuthorizationPending,
 					"User authorization still pending, retrying in %d seconds.",
 					d.interval,
 				)
 			} else {
 				lastError = message.UserMessage(
-					EGitHubAccessTokenFetchFailed,
+					message.EAuthGitHubAccessTokenFetchFailed,
 					"Cannot authenticate at this time.",
 					"Non-200 status code from GitHub access token API (%d; %s; %s).",
 					statusCode,
@@ -682,11 +699,11 @@ loop:
 		} else if lastError == nil {
 			switch resp.Error {
 			case "authorization_pending":
-				lastError = message.UserMessage(EGitHubAuthorizationPending, "Authentication is still pending.", "The user hasn't completed the authentication process.")
+				lastError = message.UserMessage(message.EAuthGitHubAuthorizationPending, "Authentication is still pending.", "The user hasn't completed the authentication process.")
 			case "slow_down":
 				if resp.Interval > 15 {
 					// Assume we have exceeded the hourly rate limit, let's fall back.
-					return "", message.UserMessage(EDeviceFlowRateLimitExceeded, "Cannot authenticate at this time. Please try again later.", "Rate limit for device flow exceeded, attempting authorization code flow.")
+					return "", message.UserMessage(message.EAuthDeviceFlowRateLimitExceeded, "Cannot authenticate at this time. Please try again later.", "Rate limit for device flow exceeded, attempting authorization code flow.")
 				}
 			case "expired_token":
 				return "", fmt.Errorf("BUG: expired token during device flow authentication")
@@ -694,13 +711,13 @@ loop:
 				return "", fmt.Errorf("BUG: unsupported grant type error while trying device authorization")
 			case "incorrect_client_credentials":
 				// User entered the incorrect device code
-				return "", message.UserMessage(EIncorrectClientCredentials, "GitHub authentication failed", "User entered incorrect device code")
+				return "", message.UserMessage(message.EAuthIncorrectClientCredentials, "GitHub authentication failed", "User entered incorrect device code")
 			case "incorrect_device_code":
 				// User entered the incorrect device code
-				return "", message.UserMessage(EAuthFailed, "GitHub authentication failed", "User entered incorrect device code")
+				return "", message.UserMessage(message.EAuthFailed, "GitHub authentication failed", "User entered incorrect device code")
 			case "access_denied":
 				// User hit don't authorize
-				return "", message.UserMessage(EAuthFailed, "GitHub authentication failed", "User canceled GitHub authentication")
+				return "", message.UserMessage(message.EAuthFailed, "GitHub authentication failed", "User canceled GitHub authentication")
 			case "":
 				return resp.AccessToken, d.checkGrantedScopes(resp.Scope)
 			}
@@ -714,7 +731,7 @@ loop:
 	}
 	err := message.WrapUser(
 		lastError,
-		EGitHubTimeout,
+		message.EAuthGitHubTimeout,
 		"Timeout while trying to obtain GitHub authentication data.",
 		"Timeout while trying to obtain GitHub authentication data.",
 	)

@@ -32,7 +32,7 @@ func (m *myConfigReqHandler) OnConfig(
 ) (config configuration.AppConfig, err error) {
     // We recommend using an IDE to discover the possible options here.
     if request.Username == "foo" {
-        config.DockerRun.Config.ContainerConfig.Image = "yourcompany/yourimage"
+        config.Docker.Config.ContainerConfig.Image = "yourcompany/yourimage"
     }
     return config, err
 }

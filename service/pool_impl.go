@@ -46,7 +46,7 @@ func (p *pool) RunWithLifecycle(lifecycle Lifecycle) error {
 		p.mutex.Unlock()
 		panic("bug: pool already running, cannot run again")
 	}
-	p.logger.Info(message.NewMessage(MServicesStarting, "Services are starting..."))
+	p.logger.Info(message.NewMessage(message.MServicesStarting, "Services are starting..."))
 	p.stopComplete = make(chan struct{}, len(p.services))
 	p.running = true
 	p.stopping = false
@@ -82,28 +82,28 @@ func (p *pool) RunWithLifecycle(lifecycle Lifecycle) error {
 	for i := 0; i < startedServices; i++ {
 		<-p.stopComplete
 	}
-	p.logger.Info(message.NewMessage(MServicesStopped, "All services have stopped."))
+	p.logger.Info(message.NewMessage(message.MServicesStopped, "All services have stopped."))
 	return p.lastError
 }
 
 func (p *pool) processRunning(lifecycle Lifecycle, stopped bool, startedServices int) int {
 	if !stopped {
-		p.logger.Info(message.NewMessage(MServicesRunning, "All services are now running."))
+		p.logger.Info(message.NewMessage(message.MServicesRunning, "All services are now running."))
 
 		lifecycle.Running()
 
 		select {
 		case <-p.stopComplete:
 			// One service stopped, initiate shutdown
-			p.logger.Info(message.NewMessage(MServicesStopping, "Services are now stopping..."))
+			p.logger.Info(message.NewMessage(message.MServicesStopping, "Services are now stopping..."))
 			startedServices--
 		case <-lifecycle.Context().Done():
-			p.logger.Info(message.NewMessage(MServicesStopping, "Services are now stopping..."))
+			p.logger.Info(message.NewMessage(message.MServicesStopping, "Services are now stopping..."))
 			lifecycle.Stopping()
 			p.triggerStop(lifecycle.ShutdownContext())
 		}
 	} else {
-		p.logger.Info(message.NewMessage(MServicesStopping, "Services are now stopping..."))
+		p.logger.Info(message.NewMessage(message.MServicesStopping, "Services are now stopping..."))
 		lifecycle.Stopping()
 		p.triggerStop(context.Background())
 	}
@@ -132,23 +132,23 @@ func (p *pool) onServiceStateChange(s Service, l Lifecycle, newState State) {
 
 	switch newState {
 	case StateStarting:
-		p.logger.Info(message.NewMessage(MServiceStarting, "%s is starting...", s.String()).Label("service", s.String()))
+		p.logger.Info(message.NewMessage(message.MServiceStarting, "%s is starting...", s.String()).Label("service", s.String()))
 		return
 	case StateRunning:
-		p.logger.Info(message.NewMessage(MServiceRunning, "%s is running.", s.String()).Label("service", s.String()))
+		p.logger.Info(message.NewMessage(message.MServiceRunning, "%s is running.", s.String()).Label("service", s.String()))
 		select {
 		case p.startupComplete <- struct{}{}:
 		default:
 		}
 	case StateStopping:
-		p.logger.Info(message.NewMessage(MServiceStopping, "%s is stopping...", s.String()).Label("service", s.String()))
+		p.logger.Info(message.NewMessage(message.MServiceStopping, "%s is stopping...", s.String()).Label("service", s.String()))
 		p.triggerStop(context.Background())
 	case StateStopped:
-		p.logger.Info(message.NewMessage(MServiceStopped, "%s has stopped.", s.String()).Label("service", s.String()))
+		p.logger.Info(message.NewMessage(message.MServiceStopped, "%s has stopped.", s.String()).Label("service", s.String()))
 		p.triggerStop(context.Background())
 		p.stopComplete <- struct{}{}
 	case StateCrashed:
-		p.logger.Error(message.NewMessage(EServiceCrashed, "%s has crashed.", s.String()).Label("service", s.String()))
+		p.logger.Error(message.NewMessage(message.EServiceCrashed, "%s has crashed.", s.String()).Label("service", s.String()))
 		p.lastError = l.Error()
 		p.triggerStop(context.Background())
 		p.stopComplete <- struct{}{}

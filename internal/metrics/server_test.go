@@ -8,12 +8,12 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/containerssh/http"
+	"github.com/containerssh/containerssh/config"
 	"github.com/containerssh/containerssh/log"
-	"github.com/containerssh/service"
+	"github.com/containerssh/containerssh/service"
 	"github.com/stretchr/testify/assert"
 
-	"github.com/containerssh/metrics"
+	"github.com/containerssh/containerssh/internal/metrics"
 )
 
 func TestFetchMetrics(t *testing.T) {
@@ -24,8 +24,8 @@ func TestFetchMetrics(t *testing.T) {
 	assert.Nil(t, err)
 
 	s, err := metrics.NewServer(
-		metrics.Config{
-			ServerConfiguration: http.ServerConfiguration{
+		config.MetricsConfig{
+			HTTPServerConfiguration: config.HTTPServerConfiguration{
 				Listen: "127.0.0.1:8080",
 			},
 			Enable: true,

@@ -3,24 +3,25 @@ package auditlog_test
 import (
 	"testing"
 
-	"github.com/containerssh/auditlog/codec/binary"
-	"github.com/containerssh/auditlog/message"
-	"github.com/containerssh/auditlog/storage"
-	"github.com/containerssh/auditlog/storage/file"
+	"github.com/containerssh/containerssh/auditlog/message"
+	"github.com/containerssh/containerssh/config"
+	"github.com/containerssh/containerssh/internal/auditlog/codec/binary"
+	"github.com/containerssh/containerssh/internal/auditlog/storage"
+	"github.com/containerssh/containerssh/internal/auditlog/storage/file"
 	"github.com/containerssh/containerssh/log"
 	"github.com/stretchr/testify/assert"
 )
 
 func TestDecodingOldAuditLogs(t *testing.T) {
 	logger := log.NewTestLogger(t)
-	fileStorage, err := file.NewStorage(file.Config{
+	fileStorage, err := file.NewStorage(config.AuditLogFileConfig{
 		Directory: "./testdata/",
 	}, logger)
 	if err != nil {
 		t.Fatal(err)
 	}
 	logChan, errChan := fileStorage.List()
-	loop:
+loop:
 	for {
 		var entry storage.Entry
 		var ok bool
@@ -55,7 +56,7 @@ func testDecodeOldLog(t *testing.T, fileStorage storage.ReadWriteStorage, name s
 	decoder := binary.NewDecoder()
 	messageChannel, errors := decoder.Decode(reader)
 	var types []message.Type
-	loop:
+loop:
 	for {
 		select {
 		case msg, ok := <-messageChannel:

@@ -7,18 +7,18 @@ import (
 	"testing"
 	"time"
 
-	error2 "github.com/containerssh/containerssh/error"
+	"github.com/containerssh/containerssh/config"
+	"github.com/containerssh/containerssh/internal/auth"
+	"github.com/containerssh/containerssh/internal/authintegration"
+	"github.com/containerssh/containerssh/internal/geoip/dummy"
+	"github.com/containerssh/containerssh/internal/metrics"
+	"github.com/containerssh/containerssh/internal/sshserver"
+	"github.com/containerssh/containerssh/internal/structutils"
 	"github.com/containerssh/containerssh/log"
-	"github.com/containerssh/geoip"
-	"github.com/containerssh/http"
-	"github.com/containerssh/metrics"
-	"github.com/containerssh/service"
-	sshserver "github.com/containerssh/sshserver/v2"
-	"github.com/containerssh/structutils"
+	"github.com/containerssh/containerssh/message"
+	"github.com/containerssh/containerssh/service"
 	"github.com/stretchr/testify/assert"
 	"golang.org/x/crypto/ssh"
-
-	"github.com/containerssh/authintegration"
 )
 
 func TestAuthentication(t *testing.T) {
@@ -36,7 +36,7 @@ func TestAuthentication(t *testing.T) {
 
 func startAuthServer(t *testing.T, logger log.Logger) service.Lifecycle {
 	server, err := auth.NewServer(
-		http.ServerConfiguration{
+		config.HTTPServerConfiguration{
 			Listen: "127.0.0.1:8080",
 		},
 		&authHandler{},
@@ -60,19 +60,16 @@ func startAuthServer(t *testing.T, logger log.Logger) service.Lifecycle {
 }
 
 func startSSHServer(t *testing.T, logger log.Logger) (
-	sshserver.Config,
+	config.SSHConfig,
 	service.Lifecycle,
 ) {
 	backend := &testBackend{}
-	geoipLookup, _ := geoip.New(geoip.Config{
-		Provider: "dummy",
-	})
-	collector := metrics.New(geoipLookup)
+	collector := metrics.New(dummy.New())
 	handler, _, err := authintegration.New(
-		auth.ClientConfig{
-			Method: auth.MethodWebhook,
-			Webhook: auth.WebhookClientConfig{
-				ClientConfiguration: http.ClientConfiguration{
+		config.AuthConfig{
+			Method: config.AuthMethodWebhook,
+			Webhook: config.AuthWebhookClientConfig{
+				HTTPClientConfiguration: config.HTTPClientConfiguration{
 					URL:     "http://127.0.0.1:8080",
 					Timeout: 10 * time.Second,
 				},
@@ -87,7 +84,7 @@ func startSSHServer(t *testing.T, logger log.Logger) (
 	)
 	assert.NoError(t, err)
 
-	sshServerConfig := sshserver.Config{}
+	sshServerConfig := config.SSHConfig{}
 	structutils.Defaults(&sshServerConfig)
 	assert.NoError(t, sshServerConfig.GenerateHostKey())
 	srv, err := sshserver.New(
@@ -113,7 +110,7 @@ func startSSHServer(t *testing.T, logger log.Logger) (
 	return sshServerConfig, lifecycle
 }
 
-func testConnection(t *testing.T, authMethod ssh.AuthMethod, sshServerConfig sshserver.Config, success bool) {
+func testConnection(t *testing.T, authMethod ssh.AuthMethod, sshServerConfig config.SSHConfig, success bool) {
 	clientConfig := ssh.ClientConfig{
 		Config:          ssh.Config{},
 		User:            "foo",
@@ -144,12 +141,12 @@ func (t *testBackend) OnSessionChannel(_ uint64, _ []byte, _ sshserver.SessionCh
 	_ sshserver.SessionChannelHandler,
 	_ sshserver.ChannelRejection,
 ) {
-	return nil, sshserver.NewChannelRejection(ssh.UnknownChannelType, error2.MTest, "not supported", "not supported")
+	return nil, sshserver.NewChannelRejection(ssh.UnknownChannelType, message.MTest, "not supported", "not supported")
 }
 
 func (t *testBackend) OnHandshakeFailed(_ error) {}
 
-func (t *testBackend) OnHandshakeSuccess(_ string) (
+func (t *testBackend) OnHandshakeSuccess(_ string, _ string, _ map[string]string) (
 	connection sshserver.SSHConnectionHandler,
 	failureReason error,
 ) {
@@ -186,15 +183,15 @@ func (h *authHandler) OnPassword(
 	Password []byte,
 	_ string,
 	_ string,
-) (bool, error) {
+) (bool, map[string]string, error) {
 	if Username == "foo" && string(Password) == "bar" {
-		return true, nil
+		return true, nil, nil
 	}
 	if Username == "crash" {
 		// Simulate a database failure
-		return false, fmt.Errorf("database error")
+		return false, nil, fmt.Errorf("database error")
 	}
-	return false, nil
+	return false, nil, nil
 }
 
 func (h *authHandler) OnPubKey(
@@ -202,8 +199,8 @@ func (h *authHandler) OnPubKey(
 	_ string,
 	_ string,
 	_ string,
-) (bool, error) {
-	return false, nil
+) (bool, map[string]string, error) {
+	return false, nil, nil
 }
 
 // endregion

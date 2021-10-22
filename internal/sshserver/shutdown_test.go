@@ -5,8 +5,7 @@ import (
 	"testing"
 	"time"
 
-	sshserver "github.com/containerssh/sshserver/v2"
-
+	"github.com/containerssh/containerssh/internal/sshserver"
 	"github.com/containerssh/containerssh/log"
 )
 

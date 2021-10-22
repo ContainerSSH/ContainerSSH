@@ -14,8 +14,9 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/containerssh/configuration/v2"
 	"github.com/containerssh/containerssh/config"
+	internalConfig "github.com/containerssh/containerssh/internal/config"
+	"github.com/containerssh/containerssh/internal/health"
 	"github.com/containerssh/containerssh/internal/structutils"
 	"github.com/containerssh/containerssh/log"
 	"github.com/containerssh/containerssh/message"
@@ -88,7 +89,7 @@ func main() {
 }
 
 func runHealthCheck(cfg config.AppConfig, logger log.Logger) {
-	if err := healthCheck(config, logger); err != nil {
+	if err := healthCheck(cfg, logger); err != nil {
 		logger.Critical(err)
 		os.Exit(1)
 	}
@@ -125,7 +126,7 @@ func runContainerSSH(
 				"No host keys found in configuration, generating temporary host keys and updating configuration...",
 			),
 		)
-		if err := generateHostKeys(configFile, &config, logger); err != nil {
+		if err := generateHostKeys(configFile, &cfg, logger); err != nil {
 			logger.Critical(
 				message.Wrap(
 					err,
@@ -136,7 +137,7 @@ func runContainerSSH(
 		}
 	}
 
-	if err := startServices(config, loggerFactory); err != nil {
+	if err := startServices(cfg, loggerFactory); err != nil {
 		logger.Critical(err)
 		os.Exit(1)
 	}
@@ -177,7 +178,7 @@ func getArguments() (string, bool, bool, bool) {
 }
 
 func startServices(cfg config.AppConfig, loggerFactory log.LoggerFactory) error {
-	pool, lifecycle, err := containerssh.New(config, loggerFactory)
+	pool, lifecycle, err := containerssh.New(cfg, loggerFactory)
 	if err != nil {
 		return err
 	}
@@ -254,7 +255,7 @@ func generateHostKeys(configFile string, cfg *config.AppConfig, logger log.Logge
 		return nil
 	}
 	format := getConfigFileFormat(configFile)
-	saver, err := config.NewWriterSaver(fh, logger, format)
+	saver, err := internalConfig.NewWriterSaver(fh, logger, format)
 	if err != nil {
 		_ = fh.Close()
 		logger.Warning(
@@ -292,8 +293,8 @@ func generateHostKeys(configFile string, cfg *config.AppConfig, logger log.Logge
 	return nil
 }
 
-func healthCheck(config configuration.AppConfig, logger log.Logger) error {
-	healthClient, err := health.NewClient(config.Health, logger)
+func healthCheck(cfg config.AppConfig, logger log.Logger) error {
+	healthClient, err := health.NewClient(cfg.Health, logger)
 	if err != nil {
 		return err
 	}
@@ -328,12 +329,12 @@ func printLicenses(writer io.Writer) error {
 	return nil
 }
 
-func dumpConfig(writer io.Writer, logger log.Logger, config *configuration.AppConfig) error {
-	saver, err := configuration.NewWriterSaver(writer, logger, configuration.FormatYAML)
+func dumpConfig(writer io.Writer, logger log.Logger, cfg *config.AppConfig) error {
+	saver, err := internalConfig.NewWriterSaver(writer, logger, internalConfig.FormatYAML)
 	if err != nil {
 		return err
 	}
-	if err := saver.Save(config); err != nil {
+	if err := saver.Save(cfg); err != nil {
 		return err
 	}
 	return nil
@@ -355,7 +356,7 @@ func readConfigFile(
 		return err
 	}
 	format := getConfigFileFormat(configFile)
-	configLoader, err := config.NewReaderLoader(configFH, configLogger, format)
+	configLoader, err := internalConfig.NewReaderLoader(configFH, configLogger, format)
 	if err != nil {
 		return err
 	}
@@ -365,12 +366,12 @@ func readConfigFile(
 	return nil
 }
 
-func getConfigFileFormat(configFile string) configuration.Format {
-	var format config.Format
+func getConfigFileFormat(configFile string) internalConfig.Format {
+	var format internalConfig.Format
 	if strings.HasSuffix(configFile, ".json") {
-		format = configuration.FormatJSON
+		format = internalConfig.FormatJSON
 	} else {
-		format = configuration.FormatYAML
+		format = internalConfig.FormatYAML
 	}
 	return format
 }

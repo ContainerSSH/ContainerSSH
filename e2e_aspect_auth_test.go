@@ -42,12 +42,12 @@ func (a *authTestingFactor) OnPassword(
 	Password []byte,
 	_ string,
 	_ string,
-) (bool, error) {
+) (bool, map[string]string, error) {
 	if password, ok := a.passwords[Username]; ok &&
 		password == string(Password) {
-		return true, nil
+		return true, nil, nil
 	}
-	return false, nil
+	return false, nil, nil
 }
 
 func (a *authTestingFactor) OnPubKey(
@@ -55,8 +55,8 @@ func (a *authTestingFactor) OnPubKey(
 	_ string,
 	_ string,
 	_ string,
-) (bool, error) {
-	return false, nil
+) (bool, map[string]string, error) {
+	return false, nil, nil
 }
 
 func (a *authTestingFactor) String() string {

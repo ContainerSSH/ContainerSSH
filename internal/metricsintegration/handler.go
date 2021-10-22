@@ -5,8 +5,8 @@ import (
 	"net"
 	"sync"
 
-	"github.com/containerssh/metrics"
-	sshserver "github.com/containerssh/sshserver/v2"
+	"github.com/containerssh/containerssh/internal/metrics"
+	"github.com/containerssh/containerssh/internal/sshserver"
 )
 
 type metricsHandler struct {

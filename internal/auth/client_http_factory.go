@@ -28,9 +28,9 @@ func NewHttpAuthClient(
 	if cfg.URL != "" {
 		logger.Warning(
 			message.NewMessage(
-			EDeprecated,
-			"The auth.url setting is deprecated, please switch to using auth.webhook.url. See https://containerssh.io/deprecations/authurl for details.",
-		))
+				message.EAuthDeprecated,
+				"The auth.url setting is deprecated, please switch to using auth.webhook.url. See https://containerssh.io/deprecations/authurl for details.",
+			))
 		//goland:noinspection GoDeprecation
 		cfg.Webhook.HTTPClientConfiguration = cfg.HTTPClientConfiguration
 		//goland:noinspection GoDeprecation
@@ -51,16 +51,16 @@ func NewHttpAuthClient(
 
 	backendRequestsMetric, backendFailureMetric, authSuccessMetric, authFailureMetric := createMetrics(metrics)
 	return &httpAuthClient{
-		enablePassword: cfg.Webhook.Password,
-		enablePubKey: cfg.Webhook.PubKey,
-		timeout: cfg.AuthTimeout,
-		httpClient: realClient,
-		logger: logger,
-		metrics: metrics,
+		enablePassword:        cfg.Webhook.Password,
+		enablePubKey:          cfg.Webhook.PubKey,
+		timeout:               cfg.AuthTimeout,
+		httpClient:            realClient,
+		logger:                logger,
+		metrics:               metrics,
 		backendRequestsMetric: backendRequestsMetric,
-		backendFailureMetric: backendFailureMetric,
-		authSuccessMetric: authSuccessMetric,
-		authFailureMetric: authFailureMetric,
+		backendFailureMetric:  backendFailureMetric,
+		authSuccessMetric:     authSuccessMetric,
+		authFailureMetric:     authFailureMetric,
 	}, nil
 }
 

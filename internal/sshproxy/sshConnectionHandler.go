@@ -5,11 +5,10 @@ import (
 	"errors"
 	"sync"
 
+	"github.com/containerssh/containerssh/internal/sshserver"
 	"github.com/containerssh/containerssh/log"
 	"github.com/containerssh/containerssh/message"
 	"golang.org/x/crypto/ssh"
-
-	sshserver "github.com/containerssh/sshserver/v2"
 )
 
 type sshConnectionHandler struct {

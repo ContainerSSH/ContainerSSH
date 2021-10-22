@@ -42,17 +42,9 @@ type AppConfig struct {
 	Backend string `json:"backend" yaml:"backend" default:"docker"`
 	// Docker contains the configuration for the docker backend. This option can be changed from the config server.
 	Docker DockerConfig `json:"docker,omitempty" yaml:"docker"`
-	// DockerRun contains the configuration for the deprecated dockerrun backend. This option can be changed from the
-	// config server.
-	// deprecated: use Docker instead
-	DockerRun DockerRunConfig `json:"dockerrun,omitempty" yaml:"dockerrun"`
 	// Kubernetes contains the configuration for the kubernetes backend. This option can be changed from the config
 	// server.
 	Kubernetes KubernetesConfig `json:"kubernetes,omitempty" yaml:"kubernetes"`
-	// KubeRun contains the configuration for the deprecated kuberun backend. This option can be changed from the config
-	// server.
-	// deprecated: use Kubernetes instead
-	KubeRun KubeRunConfig `json:"kuberun,omitempty" yaml:"kuberun"`
 	// SSHProxy is the configuration for the SSH proxy backend, which forwards requests to a backing SSH server.
 	SSHProxy SSHProxyConfig `json:"sshproxy,omitempty" yaml:"sshproxy"`
 }
@@ -78,12 +70,8 @@ func (cfg *AppConfig) Validate(dynamic bool) error {
 	switch cfg.Backend {
 	case "docker":
 		queue.add("Docker", &cfg.Docker)
-	case "dockerrun":
-		queue.add("DockerRun", &cfg.DockerRun)
 	case "kubernetes":
 		queue.add("Kubernetes", &cfg.Kubernetes)
-	case "kuberun":
-		queue.add("KubeRun", &cfg.KubeRun)
 	case "sshproxy":
 		queue.add("SSH proxy", &cfg.SSHProxy)
 	case "":

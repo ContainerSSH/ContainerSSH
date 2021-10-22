@@ -6,25 +6,22 @@ import (
 	"net"
 	"testing"
 
-	"github.com/containerssh/geoip"
-	"github.com/containerssh/metrics"
-	sshserver "github.com/containerssh/sshserver/v2"
+	"github.com/containerssh/containerssh/config"
+	"github.com/containerssh/containerssh/internal/geoip/dummy"
+	"github.com/containerssh/containerssh/internal/metrics"
+	"github.com/containerssh/containerssh/internal/sshserver"
 	"github.com/stretchr/testify/assert"
 
-	"github.com/containerssh/metricsintegration"
+	"github.com/containerssh/containerssh/internal/metricsintegration"
 )
 
 func TestMetricsReporting(t *testing.T) {
-	geoIPProvider, err := geoip.New(geoip.Config{Provider: geoip.DummyProvider})
-	if !assert.NoError(t, err) {
-		return
-	}
-	metricsCollector := metrics.New(geoIPProvider)
+	metricsCollector := metrics.New(dummy.New())
 	backend := &dummyBackendHandler{
 		authResponse: sshserver.AuthResponseSuccess,
 	}
 	handler, err := metricsintegration.NewHandler(
-		metrics.Config{
+		config.MetricsConfig{
 			Enable: true,
 		},
 		metricsCollector,
@@ -59,11 +56,14 @@ func testAuthSuccessful(
 	}
 	defer networkHandler.OnDisconnect()
 
-	_, err = networkHandler.OnAuthPassword("foo", []byte("bar"))
+	authResponse, metadata, err := networkHandler.OnAuthPassword("foo", []byte("bar"), "")
 	if !assert.NoError(t, err) {
 		return
 	}
-	_, err = networkHandler.OnHandshakeSuccess("foo")
+	if !assert.Equal(t, authResponse, sshserver.AuthResponseSuccess) {
+		return
+	}
+	_, err = networkHandler.OnHandshakeSuccess("foo", "", metadata)
 	if !assert.NoError(t, err) {
 		return
 	}
@@ -96,7 +96,7 @@ func testAuthFailed(
 		sshserver.GenerateConnectionID(),
 	)
 	assert.NoError(t, err)
-	response, err := networkHandler.OnAuthPassword("foo", []byte("bar"))
+	response, _, err := networkHandler.OnAuthPassword("foo", []byte("bar"), "")
 	assert.NoError(t, err)
 	assert.Equal(t, sshserver.AuthResponseFailure, response)
 	networkHandler.OnHandshakeFailed(fmt.Errorf("failed authentication"))
@@ -135,18 +135,20 @@ func (d *dummyBackendHandler) OnNetworkConnection(
 func (d *dummyBackendHandler) OnDisconnect() {
 }
 
-func (d *dummyBackendHandler) OnAuthPassword(_ string, _ []byte) (
+func (d *dummyBackendHandler) OnAuthPassword(_ string, _ []byte, _ string) (
 	response sshserver.AuthResponse,
+	metadata map[string]string,
 	reason error,
 ) {
-	return d.authResponse, nil
+	return d.authResponse, nil, nil
 }
 
-func (d *dummyBackendHandler) OnAuthPubKey(_ string, _ string) (
+func (d *dummyBackendHandler) OnAuthPubKey(_ string, _ string, _ string) (
 	response sshserver.AuthResponse,
+	metadata map[string]string,
 	reason error,
 ) {
-	return d.authResponse, nil
+	return d.authResponse, nil, nil
 }
 
 func (d *dummyBackendHandler) OnAuthKeyboardInteractive(
@@ -155,15 +157,16 @@ func (d *dummyBackendHandler) OnAuthKeyboardInteractive(
 		instruction string,
 		questions sshserver.KeyboardInteractiveQuestions,
 	) (answers sshserver.KeyboardInteractiveAnswers, err error),
-) (response sshserver.AuthResponse, reason error) {
-	return d.authResponse, nil
+	_ string,
+) (response sshserver.AuthResponse, metadata map[string]string, reason error) {
+	return d.authResponse, nil, nil
 }
 
 func (d *dummyBackendHandler) OnHandshakeFailed(_ error) {
 
 }
 
-func (d *dummyBackendHandler) OnHandshakeSuccess(_ string) (
+func (d *dummyBackendHandler) OnHandshakeSuccess(_ string, _ string, _ map[string]string) (
 	connection sshserver.SSHConnectionHandler,
 	failureReason error,
 ) {

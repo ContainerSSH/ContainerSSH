@@ -16,9 +16,9 @@ import (
 )
 
 type httpAuthClient struct {
-	timeout    time.Duration
-	httpClient http.Client
-	endpoint   string
+	timeout               time.Duration
+	httpClient            http.Client
+	endpoint              string
 	logger                log.Logger
 	metrics               metrics.Collector
 	backendRequestsMetric metrics.SimpleCounter
@@ -30,9 +30,9 @@ type httpAuthClient struct {
 }
 
 type httpAuthContext struct {
-	success bool
+	success  bool
 	metadata map[string]string
-	err error
+	err      error
 }
 
 func (h httpAuthContext) Success() bool {
@@ -60,7 +60,7 @@ func (client *httpAuthClient) KeyboardInteractive(
 	_ net.IP,
 ) AuthenticationContext {
 	return &httpAuthContext{false, nil, message.UserMessage(
-		EUnsupported,
+		message.EAuthUnsupported,
 		"Keyboard-interactive authentication is not available.",
 		"Webhook authentication doesn't support keyboard-interactive.",
 	)}
@@ -74,7 +74,7 @@ func (client *httpAuthClient) Password(
 ) AuthenticationContext {
 	if !client.enablePassword {
 		err := message.UserMessage(
-			EDisabled,
+			message.EAuthDisabled,
 			"Password authentication failed.",
 			"Password authentication is disabled.",
 		)
@@ -103,7 +103,7 @@ func (client *httpAuthClient) PubKey(
 ) AuthenticationContext {
 	if !client.enablePubKey {
 		err := message.UserMessage(
-			EDisabled,
+			message.EAuthDisabled,
 			"Public key authentication failed.",
 			"Public key authentication is disabled.",
 		)
@@ -181,7 +181,7 @@ loop:
 func (client *httpAuthClient) logAttempt(logger log.Logger, method string, lastLabels []metrics.MetricLabel) {
 	logger.Debug(
 		message.NewMessage(
-			MAuth,
+			message.MAuth,
 			"%s authentication request",
 			method,
 		),
@@ -197,7 +197,7 @@ func (client *httpAuthClient) logAndReturnPermanentFailure(
 ) AuthenticationContext {
 	err := message.Wrap(
 		lastError,
-		EAuthBackendError,
+		message.EAuthBackendError,
 		"Backend request for %s authentication failed, giving up",
 		strings.ToLower(method),
 	)
@@ -222,7 +222,7 @@ func (client *httpAuthClient) logTemporaryFailure(
 	logger.Debug(
 		message.Wrap(
 			lastError,
-			EAuthBackendError,
+			message.EAuthBackendError,
 			"%s authentication request to backend failed, retrying in 10 seconds",
 			method,
 		).
@@ -256,7 +256,7 @@ func (client *httpAuthClient) logAuthResponse(
 	if authResponse.Success {
 		logger.Debug(
 			message.NewMessage(
-				MAuthSuccessful,
+				message.MAuthSuccessful,
 				"%s authentication successful",
 				method,
 			),
@@ -265,7 +265,7 @@ func (client *httpAuthClient) logAuthResponse(
 	} else {
 		logger.Debug(
 			message.NewMessage(
-				EAuthFailed,
+				message.EAuthFailed,
 				"%s authentication failed",
 				method,
 			),
@@ -281,7 +281,7 @@ func (client *httpAuthClient) authServerRequest(endpoint string, requestObject i
 	}
 	if statusCode != 200 {
 		return message.UserMessage(
-			EInvalidStatus,
+			message.EAuthInvalidStatus,
 			"Cannot authenticate at this time.",
 			"auth server responded with an invalid status code: %d",
 			statusCode,

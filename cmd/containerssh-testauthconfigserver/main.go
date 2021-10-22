@@ -27,6 +27,7 @@ import (
 	"github.com/containerssh/containerssh/config"
 	configWebhook "github.com/containerssh/containerssh/config/webhook"
 	"github.com/containerssh/containerssh/http"
+	"github.com/containerssh/containerssh/internal/auth"
 	"github.com/containerssh/containerssh/log"
 	"github.com/containerssh/containerssh/service"
 	"github.com/docker/docker/api/types/container"

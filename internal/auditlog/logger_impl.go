@@ -16,8 +16,8 @@ import (
 )
 
 type loggerImplementation struct {
-	intercept config.InterceptConfig
-	encoder   codec.Encoder
+	intercept   config.AuditLogInterceptConfig
+	encoder     codec.Encoder
 	storage     storage.WritableStorage
 	logger      log.Logger
 	wg          *sync.WaitGroup

@@ -1,7 +1,7 @@
 package containerssh_test
 
 import (
-	"github.com/containerssh/configuration/v3"
+	"github.com/containerssh/containerssh/config"
 	"github.com/containerssh/containerssh/log"
 )
 
@@ -18,8 +18,8 @@ type TestingAspect interface {
 type TestingFactor interface {
 	Aspect() TestingAspect
 	String() string
-	ModifyConfiguration(config *configuration.AppConfig) error
-	StartBackingServices(config configuration.AppConfig, logger log.Logger) error
-	GetSteps(config configuration.AppConfig, logger log.Logger) []Step
-	StopBackingServices(config configuration.AppConfig, logger log.Logger) error
+	ModifyConfiguration(cfg *config.AppConfig) error
+	StartBackingServices(cfg config.AppConfig, logger log.Logger) error
+	GetSteps(cfg config.AppConfig, logger log.Logger) []Step
+	StopBackingServices(cfg config.AppConfig, logger log.Logger) error
 }
