@@ -1,5 +1,8 @@
 package message
 
+// ContainerSSH failed to listen on the specified port.
+const EHTTPListenFailed = "HTTP_LISTEN_FAILED"
+
 // This message indicates that JSON encoding the request failed. This is usually a bug.
 const EHTTPFailureEncodeFailed = "HTTP_CLIENT_ENCODE_FAILED"
 

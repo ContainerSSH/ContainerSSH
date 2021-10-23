@@ -11,6 +11,7 @@ import (
 	"sync"
 
 	"github.com/containerssh/containerssh/config"
+	"github.com/containerssh/containerssh/message"
 	"github.com/containerssh/containerssh/service"
 )
 
@@ -50,7 +51,7 @@ func (s *server) RunWithLifecycle(lifecycle service.Lifecycle) error {
 	ln, err := net.Listen("tcp", s.srv.Addr)
 	if err != nil {
 		s.lock.Unlock()
-		return err
+		return message.Wrap(err, message.EHTTPListenFailed, "Failed to listen on %s", s.srv.Addr)
 	}
 	defer func() { _ = ln.Close() }()
 	var url string
