@@ -30,7 +30,6 @@ func (m *metricsHandler) OnNetworkConnection(
 	client net.TCPAddr,
 	connectionID string,
 ) (sshserver.NetworkConnectionHandler, error) {
-
 	networkBackend, err := m.backend.OnNetworkConnection(client, connectionID)
 	if err != nil {
 		return networkBackend, err

@@ -75,5 +75,4 @@ func (w *writer) Close() error {
 }
 
 func (w *writer) SetMetadata(_ int64, _ string, _ string, _ *string) {
-
 }

@@ -35,9 +35,9 @@ func TestCounterGeo(t *testing.T) {
 
 	counter.Increment(net.ParseIP("127.0.0.2"))
 	metric = collector.GetMetric("test")
-	var collectedMetrics []string
-	for _, m := range metric {
-		collectedMetrics = append(collectedMetrics, m.CombinedName())
+	collectedMetrics := make([]string, len(metric))
+	for i, m := range metric {
+		collectedMetrics[i] = m.CombinedName()
 	}
 	assert.Contains(t, collectedMetrics, "test{country=\"LO\"}")
 	assert.Contains(t, collectedMetrics, "test{country=\"XX\"}")

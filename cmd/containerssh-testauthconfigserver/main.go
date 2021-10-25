@@ -103,11 +103,11 @@ type configHandler struct {
 //   in: body
 //   description: The configuration request
 //   schema:
-//     "$ref": "#/definitions/ConfigRequest"
+//     "$ref": "#/definitions/Request"
 // responses:
 //   "200":
-//     "$ref": "#/responses/ConfigResponse"
-func (c *configHandler) OnConfig(request config.ConfigRequest) (config.AppConfig, error) {
+//     "$ref": "#/responses/Response"
+func (c *configHandler) OnConfig(request config.Request) (config.AppConfig, error) {
 	cfg := config.AppConfig{}
 
 	if request.Username == "busybox" {

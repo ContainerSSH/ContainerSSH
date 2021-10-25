@@ -68,7 +68,7 @@ func (f *loggerFactory) Make(cfg config.LogConfig) (Logger, error) {
 		if cfg.Stdout != nil {
 			stdout = cfg.Stdout
 		}
-		writer, err = newStdoutWriter(stdout, cfg.Format)
+		writer = newStdoutWriter(stdout, cfg.Format)
 	case config.LogDestinationSyslog:
 		writer, err = newSyslogWriter(cfg.Syslog, cfg.Format)
 	case config.LogDestinationTest:

@@ -32,7 +32,10 @@ func (j *jsonMarshaller) Unmarshal(body []byte, target interface{}) error {
 // endregion
 
 // region Text
+
+// TextMarshallable is an interface that lets an object be converted to user-facing text.
 type TextMarshallable interface {
+	// MarshalText converts the object to a text representation safe to output on the web interface.
 	MarshalText() string
 }
 

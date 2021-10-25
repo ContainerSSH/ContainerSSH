@@ -86,7 +86,6 @@ func TestUnencryptedFailure(t *testing.T) {
 
 	response, responseStatus, err := runRequest(clientConfig, serverConfig, t, message)
 	if err != nil {
-
 		assert.Fail(t, "failed to run request", err)
 		return
 	}

@@ -29,10 +29,7 @@ func NewStorage(cfg config.AuditLogS3Config, logger log.Logger) (storage.ReadWri
 		return nil, err
 	}
 
-	awsConfig, err := getAWSConfig(cfg, logger, httpClient)
-	if err != nil {
-		return nil, err
-	}
+	awsConfig := getAWSConfig(cfg, logger, httpClient)
 
 	sess, err := session.NewSession(awsConfig)
 	if err != nil {
@@ -71,9 +68,7 @@ func NewStorage(cfg config.AuditLogS3Config, logger log.Logger) (storage.ReadWri
 
 func getAWSConfig(
 	cfg config.AuditLogS3Config, logger log.Logger, httpClient *http.Client,
-) (
-	*aws.Config, error,
-) {
+) *aws.Config {
 	var endpoint *string
 	if cfg.Endpoint != "" {
 		endpoint = &cfg.Endpoint
@@ -96,7 +91,7 @@ func getAWSConfig(
 		S3ForcePathStyle: aws.Bool(cfg.PathStyleAccess),
 	}
 
-	return awsConfig, nil
+	return awsConfig
 }
 
 func getHTTPClient(cfg config.AuditLogS3Config) (*http.Client, error) {

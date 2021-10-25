@@ -14,8 +14,8 @@ import (
 )
 
 type client struct {
-	httpClient http.Client
-	logger     log.Logger
+	httpClient            http.Client
+	logger                log.Logger
 	backendRequestsMetric metrics.SimpleCounter
 	backendFailureMetric  metrics.SimpleCounter
 }
@@ -74,15 +74,15 @@ func (c *client) createRequestResponse(
 	remoteAddr net.TCPAddr,
 	connectionID string,
 	metadata map[string]string,
-) (config.ConfigRequest, config.ConfigResponseBody,) {
-	request := config.ConfigRequest{
+) (config.Request, config.ResponseBody) {
+	request := config.Request{
 		Username:     username,
 		RemoteAddr:   remoteAddr.IP.String(),
 		ConnectionID: connectionID,
 		SessionID:    connectionID,
 		Metadata:     metadata,
 	}
-	response := config.ConfigResponseBody{}
+	response := config.ResponseBody{}
 	return request, response
 }
 

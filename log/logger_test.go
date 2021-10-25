@@ -38,24 +38,24 @@ func testLevel(t *testing.T, logLevel config.LogLevel, writeLogLevel config.LogL
 		Destination: config.LogDestinationStdout,
 		Stdout:      &buf,
 	})
-	message := message.UserMessage("E_TEST", "test", "test")
+	msg := message.UserMessage("E_TEST", "test", "test")
 	switch writeLogLevel {
 	case config.LogLevelDebug:
-		p.Debug(message)
+		p.Debug(msg)
 	case config.LogLevelInfo:
-		p.Info(message)
+		p.Info(msg)
 	case config.LogLevelNotice:
-		p.Notice(message)
+		p.Notice(msg)
 	case config.LogLevelWarning:
-		p.Warning(message)
+		p.Warning(msg)
 	case config.LogLevelError:
-		p.Error(message)
+		p.Error(msg)
 	case config.LogLevelCritical:
-		p.Critical(message)
+		p.Critical(msg)
 	case config.LogLevelAlert:
-		p.Alert(message)
+		p.Alert(msg)
 	case config.LogLevelEmergency:
-		p.Emergency(message)
+		p.Emergency(msg)
 	}
 	if logLevel < writeLogLevel {
 		assert.Equal(t, 0, buf.Len())
@@ -69,7 +69,7 @@ func testLevel(t *testing.T, logLevel config.LogLevel, writeLogLevel config.LogL
 		}
 
 		expectedLevel := writeLogLevel.String()
-		assert.Equal(t, string(expectedLevel), data["level"])
+		assert.Equal(t, expectedLevel, data["level"])
 		assert.Equal(t, "test", data["message"])
 	}
 }

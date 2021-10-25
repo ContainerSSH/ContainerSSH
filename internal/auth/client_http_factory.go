@@ -17,7 +17,6 @@ func NewHttpAuthClient(
 	logger log.Logger,
 	metrics metrics.Collector,
 ) (Client, error) {
-
 	if cfg.Method != config.AuthMethodWebhook {
 		return nil, fmt.Errorf("authentication is not set to webhook")
 	}

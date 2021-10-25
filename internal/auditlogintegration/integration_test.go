@@ -218,7 +218,7 @@ func (b *backendHandler) OnAuthKeyboardInteractive(
 		}},
 	)
 	if err != nil {
-		return
+		return sshserver.AuthResponseFailure, nil, err
 	}
 	answerText, err := answers.GetByQuestionText("Challenge")
 	if err == nil {

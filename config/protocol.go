@@ -1,9 +1,9 @@
 package config
 
-// ConfigRequest is the request object passed from the client to the config server.
+// Request is the request object passed from the client to the config server.
 //
-// swagger:model ConfigRequest
-type ConfigRequest struct {
+// swagger:model Request
+type Request struct {
 	// Username is the username passed during authentication.
 	//
 	// required: true
@@ -26,23 +26,23 @@ type ConfigRequest struct {
 	Metadata map[string]string `json:"metadata"`
 }
 
-// ConfigResponseBody is the structure representing the JSON HTTP response.
+// ResponseBody is the structure representing the JSON HTTP response.
 //
-// swagger:model ConfigResponseBody
-type ConfigResponseBody struct {
+// swagger:model ResponseBody
+type ResponseBody struct {
 	// Config is the configuration structure to be passed back from the config server.
 	//
 	// required: true
 	Config AppConfig `json:"config"`
 }
 
-// ConfigResponse is the entire response from the config server
+// Response is the entire response from the config server
 //
-// swagger:response ConfigResponse
-type ConfigResponse struct {
+// swagger:response Response
+type Response struct {
 	// Body is the configuration response body.
 	//
 	// in: body
 	// required: true
-	Body ConfigResponseBody
+	Body ResponseBody
 }

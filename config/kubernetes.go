@@ -139,13 +139,13 @@ type KubernetesPodConfig struct {
 	// exposed in the pod labels. They are provided as a map, where the key is the authentication metadata entry name
 	// and the value is the label name. The label name must conform to Kubernetes label name requirements or the pod
 	// will not start. The default is to expose no labels.
-	ExposeAuthMetadataAsLabels map[string]string `json:"exposeAuthMetadataAsLabels" yaml:"exposeAuthMetadataAsLabels""`
+	ExposeAuthMetadataAsLabels map[string]string `json:"exposeAuthMetadataAsLabels" yaml:"exposeAuthMetadataAsLabels"`
 
 	// ExposeAuthMetadataAsAnnotations causes the specified metadata entries received from the authentication process to
 	// be exposed in the pod annotations. They are provided as a map, where the key is the authentication metadata entry
 	// name and the value is the annotation name. The annotation name must conform to Kubernetes annotation name
 	// requirements or the pod will not start. The default is to expose no annotations.
-	ExposeAuthMetadataAsAnnotations map[string]string `json:"exposeAuthMetadataAsAnnotations" yaml:"exposeAuthMetadataAsAnnotations""`
+	ExposeAuthMetadataAsAnnotations map[string]string `json:"exposeAuthMetadataAsAnnotations" yaml:"exposeAuthMetadataAsAnnotations"`
 }
 
 // Validate validates the pod configuration.
@@ -189,7 +189,6 @@ func (c KubernetesPodConfig) Validate() error {
 		if !c.DisableAgent && len(c.ShellCommand) == 0 {
 			return fmt.Errorf("shell command is required when using the agent")
 		}
-
 	}
 	return nil
 }

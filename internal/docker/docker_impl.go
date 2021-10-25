@@ -96,7 +96,7 @@ loop:
 			d.backendFailuresMetric.Increment()
 			d.logger.Notice(
 				message.Wrap(lastError,
-				message.EDockerFailedImageList, "failed to list images, retrying in 10 seconds"))
+					message.EDockerFailedImageList, "failed to list images, retrying in 10 seconds"))
 		} else {
 			return true, nil
 		}
@@ -137,11 +137,11 @@ loop:
 		}
 		d.logger.Notice(
 			message.Wrap(
-			lastError,
-			message.EDockerFailedImagePull,
-			"failed to pull image %s, retrying in 10 seconds",
-			image,
-		))
+				lastError,
+				message.EDockerFailedImagePull,
+				"failed to pull image %s, retrying in 10 seconds",
+				image,
+			))
 		select {
 		case <-ctx.Done():
 			break loop
@@ -207,15 +207,12 @@ loop:
 		d.backendFailuresMetric.Increment()
 		logger.Debug(
 			message.Wrap(lastError,
-			message.EDockerFailedContainerCreate, "failed to create container, retrying in 10 seconds"))
+				message.EDockerFailedContainerCreate, "failed to create container, retrying in 10 seconds"))
 		select {
 		case <-ctx.Done():
 			break loop
 		case <-time.After(10 * time.Second):
 		}
-	}
-	if lastError == nil {
-		lastError = fmt.Errorf("timeout")
 	}
 	err = message.WrapUser(
 		lastError,
@@ -262,8 +259,8 @@ func (d *dockerV20Client) createConfig(
 }
 
 type dockerV20Container struct {
-	config      config.DockerConfig
-	containerID string
+	config                config.DockerConfig
+	containerID           string
 	logger                log.Logger
 	dockerClient          *client.Client
 	tty                   bool
@@ -310,15 +307,12 @@ loop:
 		d.backendFailuresMetric.Increment()
 		d.logger.Warning(
 			message.Wrap(lastError,
-			message.EDockerFailedContainerAttach, "failed to attach to exec, retrying in 10 seconds"))
+				message.EDockerFailedContainerAttach, "failed to attach to exec, retrying in 10 seconds"))
 		select {
 		case <-ctx.Done():
 			break loop
 		case <-time.After(10 * time.Second):
 		}
-	}
-	if lastError == nil {
-		lastError = fmt.Errorf("timeout")
 	}
 	err := message.WrapUser(
 		lastError,
@@ -347,15 +341,12 @@ loop:
 		d.backendFailuresMetric.Increment()
 		d.logger.Debug(
 			message.Wrap(lastError,
-			message.EDockerFailedContainerStart, "failed to start container, retrying in 10 seconds"))
+				message.EDockerFailedContainerStart, "failed to start container, retrying in 10 seconds"))
 		select {
 		case <-ctx.Done():
 			break loop
 		case <-time.After(10 * time.Second):
 		}
-	}
-	if lastError == nil {
-		lastError = fmt.Errorf("timeout")
 	}
 	err := message.WrapUser(
 		lastError,
@@ -407,10 +398,10 @@ loop:
 		d.backendFailuresMetric.Increment()
 		d.logger.Debug(
 			message.Wrap(
-			lastError,
-			message.EDockerFailedContainerRemove,
-			"failed to remove container on disconnect, retrying in 10 seconds",
-		))
+				lastError,
+				message.EDockerFailedContainerRemove,
+				"failed to remove container on disconnect, retrying in 10 seconds",
+			))
 		select {
 		case <-ctx.Done():
 			break loop
@@ -506,15 +497,12 @@ loop:
 		}
 		d.logger.Debug(
 			message.Wrap(lastError,
-			message.EDockerFailedExecCreate, "failed to create exec, retrying in 10 seconds"))
+				message.EDockerFailedExecCreate, "failed to create exec, retrying in 10 seconds"))
 		select {
 		case <-ctx.Done():
 			break loop
 		case <-time.After(10 * time.Second):
 		}
-	}
-	if lastError == nil {
-		lastError = fmt.Errorf("timeout")
 	}
 	err := message.Wrap(lastError, message.EDockerFailedExecCreate, "failed to create exec, giving up")
 	d.logger.Error(err)
@@ -544,9 +532,11 @@ func (d *dockerV20Container) createExecConfig(env map[string]string, tty bool, p
 }
 
 func createEnv(env map[string]string) []string {
-	var dockerEnv []string
+	dockerEnv := make([]string, len(env))
+	i := 0
 	for k, v := range env {
-		dockerEnv = append(dockerEnv, fmt.Sprintf("%s=%s", k, v))
+		dockerEnv[i] = fmt.Sprintf("%s=%s", k, v)
+		i++
 	}
 	return dockerEnv
 }
@@ -577,7 +567,7 @@ loop:
 		}
 		d.logger.Debug(
 			message.Wrap(lastError,
-			message.EDockerFailedExecAttach, "failed to attach to exec, retrying in 10 seconds"))
+				message.EDockerFailedExecAttach, "failed to attach to exec, retrying in 10 seconds"))
 		select {
 		case <-ctx.Done():
 			break loop
@@ -673,11 +663,11 @@ func (d *dockerV20Exec) sendSignalToProcess(ctx context.Context, sig string) err
 	}
 	d.logger.Debug(
 		message.NewMessage(
-		message.MDockerExecSignal,
-		"Using the exec facility to send signal %s to pid %d...",
-		sig,
-		pid,
-	).Label("signal", sig))
+			message.MDockerExecSignal,
+			"Using the exec facility to send signal %s to pid %d...",
+			sig,
+			pid,
+		).Label("signal", sig))
 	err := d.realSendSignal(ctx, sig, pid)
 	if err != nil {
 		d.logger.Debug(
@@ -736,10 +726,10 @@ func (d *dockerV20Exec) realSendSignal(ctx context.Context, sig string, pid int)
 func (d *dockerV20Exec) sendSignalToContainer(ctx context.Context, sig string) error {
 	d.logger.Debug(
 		message.NewMessage(
-		message.MDockerContainerSignal,
-		"Sending the %s signal to container...",
-		sig,
-	).Label("signal", sig))
+			message.MDockerContainerSignal,
+			"Sending the %s signal to container...",
+			sig,
+		).Label("signal", sig))
 	var lastError error
 loop:
 	for {
@@ -774,9 +764,6 @@ loop:
 		case <-time.After(10 * time.Second):
 		}
 	}
-	if lastError == nil {
-		lastError = fmt.Errorf("timeout")
-	}
 	err := message.Wrap(
 		lastError,
 		message.EDockerFailedContainerSignal,
@@ -791,8 +778,8 @@ loop:
 func (d *dockerV20Exec) resize(ctx context.Context, height uint, width uint) error {
 	d.logger.Debug(
 		message.NewMessage(message.MDockerResizing, "Resizing window to %dx%d", width, height).
-		Label("width", width).
-		Label("height", height))
+			Label("width", width).
+			Label("height", height))
 	var lastError error
 loop:
 	for {
@@ -824,10 +811,10 @@ loop:
 		}
 		d.logger.Debug(
 			message.Wrap(
-			lastError,
-			message.EDockerFailedResize,
-			"cannot resize window, permanent error",
-		).Label("height", height).Label("width", width))
+				lastError,
+				message.EDockerFailedResize,
+				"cannot resize window, permanent error",
+			).Label("height", height).Label("width", width))
 		select {
 		case <-ctx.Done():
 			break loop
@@ -877,10 +864,10 @@ func (d *dockerV20Exec) run(
 		if err := d.readPIDFromStdout(stdout); err != nil {
 			d.logger.Error(
 				message.Wrap(
-				err,
-				message.EDockerFailedPIDRead,
-				"cannot read PID from container",
-			))
+					err,
+					message.EDockerFailedPIDRead,
+					"cannot read PID from container",
+				))
 			onExit(137)
 			d.container.wg.Done()
 			return
@@ -1126,7 +1113,7 @@ loop:
 			if lastError == nil {
 				return nil
 			}
-		} else if lastError != nil {
+		} else {
 			d.container.backendFailuresMetric.Increment()
 		}
 		d.logger.Debug(

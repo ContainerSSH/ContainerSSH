@@ -29,13 +29,15 @@ func (t *testAuthenticationNetworkHandler) OnAuthKeyboardInteractive(
 		return AuthResponseFailure, nil, fmt.Errorf("user not found")
 	}
 
-	var questions []KeyboardInteractiveQuestion
+	questions := make([]KeyboardInteractiveQuestion, len(foundUser.keyboardInteractive))
+	i := 0
 	for question := range foundUser.keyboardInteractive {
-		questions = append(questions, KeyboardInteractiveQuestion{
+		questions[i] = KeyboardInteractiveQuestion{
 			ID:           question,
 			Question:     question,
 			EchoResponse: false,
-		})
+		}
+		i++
 	}
 
 	answers, err := challenge("", questions)
@@ -76,7 +78,7 @@ func (t *testAuthenticationNetworkHandler) OnAuthPubKey(username string, pubKey 
 		if user.username == username {
 			for _, authorizedKey := range user.authorizedKeys {
 				if pubKey == authorizedKey {
-					return AuthResponseSuccess, nil,nil
+					return AuthResponseSuccess, nil, nil
 				}
 			}
 		}

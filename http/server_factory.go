@@ -31,11 +31,7 @@ func NewServer(
 
 	var tlsConfig *tls.Config
 	if certs.Cert != nil {
-		var err error
-		tlsConfig, err = createServerTLSConfig(config, certs)
-		if err != nil {
-			return nil, err
-		}
+		tlsConfig = createServerTLSConfig(config, certs)
 	}
 
 	return &server{
@@ -50,7 +46,7 @@ func NewServer(
 	}, nil
 }
 
-func createServerTLSConfig(config config.HTTPServerConfiguration, certs *config.HTTPServerCerts) (*tls.Config, error) {
+func createServerTLSConfig(config config.HTTPServerConfiguration, certs *config.HTTPServerCerts) *tls.Config {
 	tlsConfig := &tls.Config{
 		MinVersion:               config.TLSVersion.GetTLSVersion(),
 		CurvePreferences:         config.ECDHCurves.GetList(),
@@ -64,5 +60,5 @@ func createServerTLSConfig(config config.HTTPServerConfiguration, certs *config.
 		tlsConfig.ClientCAs = certs.ClientCAPool
 		tlsConfig.ClientAuth = tls.RequireAndVerifyClientCert
 	}
-	return tlsConfig, nil
+	return tlsConfig
 }

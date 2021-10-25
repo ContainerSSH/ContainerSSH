@@ -38,13 +38,13 @@ func (a *authTestingFactor) Aspect() TestingAspect {
 }
 
 func (a *authTestingFactor) OnPassword(
-	Username string,
-	Password []byte,
+	username string,
+	password []byte,
 	_ string,
 	_ string,
 ) (bool, map[string]string, error) {
-	if password, ok := a.passwords[Username]; ok &&
-		password == string(Password) {
+	if savedPassword, ok := a.passwords[username]; ok &&
+		savedPassword == string(password) {
 		return true, nil, nil
 	}
 	return false, nil, nil

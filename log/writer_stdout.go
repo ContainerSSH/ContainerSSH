@@ -8,10 +8,10 @@ import (
 )
 
 // newStdoutWriter creates a log writer that writes to the stdout (io.Writer) in the specified format.
-func newStdoutWriter(stdout io.Writer, format config.LogFormat) (Writer, error) {
+func newStdoutWriter(stdout io.Writer, format config.LogFormat) Writer {
 	return &stdoutWriter{
 		fileHandleWriter: newFileHandleWriter(stdout, format, &sync.Mutex{}),
-	}, nil
+	}
 }
 
 // stdoutWriter inherits the write method from fileHandleWriter and writes to the stdout.

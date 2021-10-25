@@ -31,24 +31,21 @@ func NewClientWithHeaders(
 		panic("BUG: no logger provided for http.NewClient")
 	}
 
-	tlsConfig, err := createTLSConfig(config, certs)
-	if err != nil {
-		return nil, err
-	}
+	tlsConfig := createTLSConfig(config, certs)
 
 	return &client{
-		config:    config,
-		logger:    logger.WithLabel("endpoint", config.URL),
-		tlsConfig: tlsConfig,
-		extraHeaders: extraHeaders,
+		config:           config,
+		logger:           logger.WithLabel("endpoint", config.URL),
+		tlsConfig:        tlsConfig,
+		extraHeaders:     extraHeaders,
 		allowLaxDecoding: allowLaxDecoding,
 	}, nil
 }
 
 // createTLSConfig creates a TLS config. Should only be called after config.Validate().
-func createTLSConfig(config config.HTTPClientConfiguration, certs *config.HTTPClientCerts) (*tls.Config, error) {
+func createTLSConfig(config config.HTTPClientConfiguration, certs *config.HTTPClientCerts) *tls.Config {
 	if !strings.HasPrefix(config.URL, "https://") {
-		return nil, nil
+		return nil
 	}
 
 	tlsConfig := &tls.Config{
@@ -62,5 +59,5 @@ func createTLSConfig(config config.HTTPClientConfiguration, certs *config.HTTPCl
 	if certs.Cert != nil {
 		tlsConfig.Certificates = []tls.Certificate{*certs.Cert}
 	}
-	return tlsConfig, nil
+	return tlsConfig
 }

@@ -1,4 +1,4 @@
-package security
+package security //nolint:testpackage
 
 import (
 	"context"

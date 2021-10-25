@@ -80,7 +80,7 @@ type myConfigReqHandler struct {
 }
 
 func (m *myConfigReqHandler) OnConfig(
-	request configuration.ConfigRequest,
+	request configuration.Request,
 ) (config configuration.AppConfig, err error) {
 	config.Backend = "docker"
 	config.Docker.Execution.Launch.ContainerConfig = &container.Config{}

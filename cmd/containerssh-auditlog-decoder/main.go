@@ -51,8 +51,6 @@ loop:
 			} else if data != nil {
 				_, _ = os.Stdout.Write(data)
 				_, _ = os.Stdout.Write([]byte("\n"))
-			} else {
-				break
 			}
 		case channelError, ok := <-errors:
 			if !ok {
@@ -65,8 +63,6 @@ loop:
 				data, _ := json.Marshal(structuredError)
 				_, _ = os.Stdout.Write(data)
 				_, _ = os.Stdout.Write([]byte("\n"))
-			} else {
-				break
 			}
 		}
 	}

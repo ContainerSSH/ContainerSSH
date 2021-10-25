@@ -113,17 +113,16 @@ func (m MetricLabel) Value() string {
 
 // CombinedName returns the name and labels combined.
 func (metricValue MetricValue) CombinedName() string {
-	var labelList []string
-
 	keys := make([]string, 0, len(metricValue.Labels))
 	for k := range metricValue.Labels {
 		keys = append(keys, k)
 	}
 	sort.Strings(keys)
 
+	labelList := make([]string, len(keys))
 	replacer := strings.NewReplacer(`"`, `\"`, `\`, `\\`)
-	for _, k := range keys {
-		labelList = append(labelList, k+"=\""+replacer.Replace(metricValue.Labels[k])+"\"")
+	for i, k := range keys {
+		labelList[i] = k + "=\"" + replacer.Replace(metricValue.Labels[k]) + "\""
 	}
 
 	var labels string

@@ -144,7 +144,7 @@ func (d *dockerContainer) port(containerPort string) int {
 	hostPortString := d.ports[containerPort]
 	hostPort, err := strconv.ParseInt(hostPortString, 10, 64)
 	if err != nil {
-		panic(fmt.Errorf("BUG: failed to parse container %s host port %s (%v)", d.image, hostPortString, err))
+		panic(fmt.Errorf("BUG: failed to parse container %s host port %s (%w)", d.image, hostPortString, err))
 	}
 	return int(hostPort)
 }
@@ -308,7 +308,7 @@ func (d *dockerContainer) inspect() {
 		}
 		if inspectResult.State.Health.Status == types.Healthy ||
 			inspectResult.State.Health.Status == types.NoHealthcheck {
-			if inspectResult.State.Running == true {
+			if inspectResult.State.Running {
 				if d.updatePortMappings(inspectResult) {
 					return
 				} else {
@@ -326,14 +326,13 @@ func (d *dockerContainer) inspect() {
 		case <-time.After(time.Second):
 		}
 	}
-
 }
 
 func (d *dockerContainer) updatePortMappings(inspectResult types.ContainerJSON) bool {
-	for port, _ := range d.ports {
+	for port := range d.ports {
 		if hostPorts, ok := inspectResult.NetworkSettings.Ports[nat.Port(port)]; ok {
 			if len(hostPorts) > 0 {
-				d.ports[port] = fmt.Sprintf("%s", hostPorts[0].HostPort)
+				d.ports[port] = hostPorts[0].HostPort
 			} else {
 				return false
 			}

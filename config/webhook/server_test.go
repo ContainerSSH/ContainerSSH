@@ -12,10 +12,9 @@ import (
 )
 
 type myConfigReqHandler struct {
-
 }
 
-func (m *myConfigReqHandler) OnConfig(_ config.ConfigRequest) (config.AppConfig, error) {
+func (m *myConfigReqHandler) OnConfig(_ config.Request) (config.AppConfig, error) {
 	return config.AppConfig{}, nil
 }
 
@@ -54,7 +53,7 @@ func ExampleNewServer() {
 	time.Sleep(30 * time.Second)
 
 	// Set up a shutdown context to give a deadline for graceful shutdown.
-	shutdownContext, cancel := context.WithTimeout(context.Background(), 30 * time.Second)
+	shutdownContext, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 	defer cancel()
 	// Stop the server.
 	lifecycle.Stop(shutdownContext)

@@ -34,7 +34,6 @@ type fileWriter struct {
 }
 
 func (f *fileWriter) Rotate() error {
-
 	f.lock.Lock()
 	defer f.lock.Unlock()
 	fh, err := openLogFile(f.filename)

@@ -27,7 +27,7 @@ func (r *sshTestingAspect) String() string {
 
 func (r *sshTestingAspect) Factors() []TestingFactor {
 	var factor TestingFactor = &sshInProcess{
-		lock: &sync.Mutex{},
+		lock:   &sync.Mutex{},
 		aspect: r,
 	}
 	return []TestingFactor{
@@ -143,7 +143,7 @@ func (r *sshInProcess) GetSteps(_ config.AppConfig, _ log.Logger) []Step {
 func (r *sshInProcess) AuthenticationShouldFail(user string, password string) error {
 	sshConnection, err := ssh.Dial("tcp", r.config.SSH.Listen, r.getConfig(user, password))
 	if err != nil {
-		return nil
+		return nil //nolint:nilerr
 	}
 	_ = sshConnection.Close()
 	return fmt.Errorf("the authentication did not result in an error")

@@ -274,7 +274,7 @@ func (o LogDestination) Validate() error {
 
 // region Syslog
 
-// Priority
+// LogFacility describes the syslog facility log messages are sent to.
 type LogFacility int
 
 const (
@@ -350,7 +350,6 @@ func (f LogFacility) MustName() LogFacilityString {
 	name, err := f.Name()
 	if err != nil {
 		panic(err)
-
 	}
 	return name
 }

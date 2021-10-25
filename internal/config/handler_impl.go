@@ -12,7 +12,7 @@ type handler struct {
 }
 
 func (h *handler) OnRequest(request http.ServerRequest, response http.ServerResponse) error {
-	requestObject := config.ConfigRequest{}
+	requestObject := config.Request{}
 	if err := request.Decode(&requestObject); err != nil {
 		return err
 	}
@@ -20,7 +20,7 @@ func (h *handler) OnRequest(request http.ServerRequest, response http.ServerResp
 	if err != nil {
 		return err
 	}
-	responseObject := config.ConfigResponseBody{
+	responseObject := config.ResponseBody{
 		Config: appConfig,
 	}
 	response.SetBody(responseObject)
