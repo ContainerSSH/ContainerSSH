@@ -4,7 +4,12 @@ import (
 	"archive/tar"
 	"compress/gzip"
 	"context"
+	"embed"
+	"fmt"
 	"io"
+	"io/ioutil"
+	"strconv"
+	"strings"
 	"testing"
 	"time"
 
@@ -23,6 +28,14 @@ func dockerClient(t *testing.T) *client.Client {
 	return cli
 }
 
+// containerFromBuild starts a container from a local image build.
+//
+// - imageTag specifies the name the built image should be tagged as.
+// - files specifies the list of local files to send as part of the build context.
+// - cmd specifies the command line in execv format if any.
+// - env specifies the environment variables in the VAR=VALUE format.
+// - ports specifies the port mappings. The key is the container port, the value is the host port.
+//   If the host port is left empty it is automatically mapped and can be retrieved later.
 func containerFromBuild(
 	t *testing.T,
 	imageTag string,
@@ -32,6 +45,7 @@ func containerFromBuild(
 	ports map[string]string,
 ) container {
 	t.Logf("Creating and starting a container from local build...")
+
 	cnt := &dockerContainer{
 		client: dockerClient(t),
 		files:  files,
@@ -46,10 +60,18 @@ func containerFromBuild(
 	cnt.create()
 	t.Cleanup(cnt.remove)
 	cnt.start()
+	cnt.inspect()
 
 	return cnt
 }
 
+// containerFromBuild starts a container from an image pulled from a registry
+//
+// - image specifies the image tag to pull.
+// - cmd specifies the command line in execv format if any.
+// - env specifies the environment variables in the VAR=VALUE format.
+// - ports specifies the port mappings. The key is the container port, the value is the host port.
+//   If the host port is left empty it is automatically mapped and can be retrieved later.
 func containerFromPull(
 	t *testing.T,
 	image string,
@@ -71,12 +93,18 @@ func containerFromPull(
 	cnt.create()
 	t.Cleanup(cnt.remove)
 	cnt.start()
+	cnt.inspect()
 
 	return cnt
 }
 
 type container interface {
+	// id returns the container ID of the container.
 	id() string
+	// port returns the host port the containerPort has been mapped to.
+	port(containerPort string) int
+	// extractFile extracts a single file from the container and returns the contents.
+	extractFile(fileName string) []byte
 }
 
 type dockerContainer struct {
@@ -89,6 +117,36 @@ type dockerContainer struct {
 	env         []string
 	ports       map[string]string
 	files       map[string][]byte
+}
+
+func (d *dockerContainer) extractFile(fileName string) []byte {
+	keyReader, _, err := d.client.CopyFromContainer(context.Background(), d.containerID, fileName)
+	if err != nil {
+		d.t.Fatalf("failed to retrieve file %s key from the container (%v)", fileName, err)
+	}
+	defer func() {
+		_ = keyReader.Close()
+	}()
+
+	tarReader := tar.NewReader(keyReader)
+	if _, err := tarReader.Next(); err != nil {
+		d.t.Fatalf("failed to get next file in TAR archive from container (%v)", err)
+	}
+
+	data, err := ioutil.ReadAll(tarReader)
+	if err != nil {
+		d.t.Fatalf("failed to parse TAR archive from container (%v)", err)
+	}
+	return data
+}
+
+func (d *dockerContainer) port(containerPort string) int {
+	hostPortString := d.ports[containerPort]
+	hostPort, err := strconv.ParseInt(hostPortString, 10, 64)
+	if err != nil {
+		panic(fmt.Errorf("BUG: failed to parse container %s host port %s (%v)", d.image, hostPortString, err))
+	}
+	return int(hostPort)
 }
 
 type testLogWriter struct {
@@ -124,11 +182,19 @@ func (d *dockerContainer) create() {
 	}
 	for containerPort, hostPort := range d.ports {
 		portString := nat.Port(containerPort)
-		hostConfig.PortBindings[portString] = []nat.PortBinding{
-			{
-				HostIP:   "127.0.0.1",
-				HostPort: hostPort,
-			},
+		if hostPort == "" {
+			hostConfig.PortBindings[portString] = []nat.PortBinding{
+				{
+					HostIP: "127.0.0.1",
+				},
+			}
+		} else {
+			hostConfig.PortBindings[portString] = []nat.PortBinding{
+				{
+					HostIP:   "127.0.0.1",
+					HostPort: hostPort,
+				},
+			}
 		}
 	}
 	resp, err := d.client.ContainerCreate(
@@ -193,7 +259,7 @@ func (d *dockerContainer) build() {
 		for filePath, fileContent := range d.files {
 			header := &tar.Header{
 				Name:    filePath,
-				Size: int64(len(fileContent)),
+				Size:    int64(len(fileContent)),
 				Mode:    0755,
 				ModTime: time.Now(),
 			}
@@ -213,7 +279,7 @@ func (d *dockerContainer) build() {
 		context.Background(),
 		buildContext,
 		types.ImageBuildOptions{
-			Tags:           []string{d.image},
+			Tags:       []string{d.image},
 			Dockerfile: "Dockerfile",
 		},
 	)
@@ -228,4 +294,83 @@ func (d *dockerContainer) build() {
 	if err := imageBuildResponse.Body.Close(); err != nil {
 		d.t.Fatalf("Failed to close image build log (%v)", err)
 	}
+}
+
+func (d *dockerContainer) inspect() {
+	d.t.Logf("Waiting for the port mappings to come up...")
+	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
+	defer cancel()
+	for {
+		d.t.Logf("Inspecting container %s...", d.containerID)
+		inspectResult, err := d.client.ContainerInspect(ctx, d.containerID)
+		if err != nil {
+			d.t.Fatalf("Failed to inspect container (%v)", err)
+		}
+		if inspectResult.State.Health.Status == types.Healthy ||
+			inspectResult.State.Health.Status == types.NoHealthcheck {
+			if inspectResult.State.Running == true {
+				if d.updatePortMappings(inspectResult) {
+					return
+				} else {
+					d.t.Logf("Ports are not mapped yet...")
+				}
+			} else {
+				d.t.Logf("Container is not running yet, it is %s...", inspectResult.State.Status)
+			}
+		} else {
+			d.t.Logf("Container is not healthy yet, health is %s...", inspectResult.State.Health.Status)
+		}
+		select {
+		case <-ctx.Done():
+			d.t.Fatalf("Failed to inspect Minio container (timeout)")
+		case <-time.After(time.Second):
+		}
+	}
+
+}
+
+func (d *dockerContainer) updatePortMappings(inspectResult types.ContainerJSON) bool {
+	for port, _ := range d.ports {
+		if hostPorts, ok := inspectResult.NetworkSettings.Ports[nat.Port(port)]; ok {
+			if len(hostPorts) > 0 {
+				d.ports[port] = fmt.Sprintf("%s", hostPorts[0].HostPort)
+			} else {
+				return false
+			}
+		}
+	}
+	return true
+}
+
+func dockerBuildRootFiles(buildRoot embed.FS, startingDir string) map[string][]byte {
+	files := dockerBuildRootDirFiles(buildRoot, startingDir)
+	result := map[string][]byte{}
+	for file, data := range files {
+		result[strings.TrimPrefix(file, fmt.Sprintf("%s/", startingDir))] = data
+	}
+	return result
+}
+
+func dockerBuildRootDirFiles(buildRoot embed.FS, dir string) map[string][]byte {
+	result := map[string][]byte{}
+	fsEntries, err := buildRoot.ReadDir(dir)
+	if err != nil {
+		panic(err)
+	}
+	for _, fsEntry := range fsEntries {
+		fullPath := dir + "/" + fsEntry.Name()
+		if fsEntry.IsDir() {
+			subDirFiles := dockerBuildRootDirFiles(buildRoot, fullPath)
+			for fileName, fileContent := range subDirFiles {
+				result[fileName] = fileContent
+			}
+		} else {
+			data, err := buildRoot.ReadFile(fullPath)
+			if err != nil {
+				panic(err)
+			}
+			result[fullPath] = data
+		}
+	}
+	return result
 }

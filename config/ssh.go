@@ -216,6 +216,16 @@ func (h SSHKeyAlgo) Validate() error {
 // SSHKeyAlgoList is a list of key algorithms.
 type SSHKeyAlgoList []SSHKeyAlgo
 
+// SSHKeyAlgoListFromStringList converts a string list into a list of SSH key algorithms.
+func SSHKeyAlgoListFromStringList(hostKeyAlgorithms []string) (SSHKeyAlgoList, error) {
+	result := make([]SSHKeyAlgo, len(hostKeyAlgorithms))
+	for i, algo := range hostKeyAlgorithms {
+		result[i] = SSHKeyAlgo(algo)
+	}
+	r := SSHKeyAlgoList(result)
+	return result, r.Validate()
+}
+
 // Validate validates the list of ciphers to contain only supported items.
 func (h SSHKeyAlgoList) Validate() error {
 	if len(h) == 0 {

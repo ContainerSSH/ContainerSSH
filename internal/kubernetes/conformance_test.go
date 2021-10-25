@@ -14,8 +14,8 @@ import (
 )
 
 func TestConformance(t *testing.T) {
-	var factories = map[string]func(logger log.Logger) (sshserver.NetworkConnectionHandler, error){
-		"session": func(logger log.Logger) (sshserver.NetworkConnectionHandler, error) {
+	var factories = map[string]func(t *testing.T, logger log.Logger) (sshserver.NetworkConnectionHandler, error){
+		"session": func(t *testing.T, logger log.Logger) (sshserver.NetworkConnectionHandler, error) {
 			cfg, err := getKubernetesConfig()
 			if err != nil {
 				return nil, err
@@ -23,7 +23,7 @@ func TestConformance(t *testing.T) {
 			cfg.Pod.Mode = config.KubernetesExecutionModeSession
 			return getKubernetes(cfg, logger)
 		},
-		"connection": func(logger log.Logger) (sshserver.NetworkConnectionHandler, error) {
+		"connection": func(t *testing.T, logger log.Logger) (sshserver.NetworkConnectionHandler, error) {
 			cfg, err := getKubernetesConfig()
 			if err != nil {
 				return nil, err

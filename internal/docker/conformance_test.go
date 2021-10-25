@@ -14,15 +14,15 @@ import (
 )
 
 func TestConformance(t *testing.T) {
-	var factories = map[string]func(logger log.Logger) (sshserver.NetworkConnectionHandler, error){
-		"session": func(logger log.Logger) (sshserver.NetworkConnectionHandler, error) {
+	var factories = map[string]func(t *testing.T, logger log.Logger) (sshserver.NetworkConnectionHandler, error){
+		"session": func(t *testing.T, logger log.Logger) (sshserver.NetworkConnectionHandler, error) {
 			cfg := config.DockerConfig{}
 			structutils.Defaults(&cfg)
 
 			cfg.Execution.Mode = config.DockerExecutionModeSession
 			return getDocker(cfg, logger)
 		},
-		"connection": func(logger log.Logger) (sshserver.NetworkConnectionHandler, error) {
+		"connection": func(t *testing.T, logger log.Logger) (sshserver.NetworkConnectionHandler, error) {
 			cfg := config.DockerConfig{}
 			structutils.Defaults(&cfg)
 

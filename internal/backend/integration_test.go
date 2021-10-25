@@ -22,7 +22,7 @@ func TestSimpleContainerLaunch(t *testing.T) {
 	t.Parallel()
 
 	lock := &sync.Mutex{}
-	for _, backendName := range []string{"docker", "dockerrun"} {
+	for _, backendName := range []string{"docker"} {
 		t.Run("backend="+backendName, func(t *testing.T) {
 			lock.Lock()
 			defer lock.Unlock()

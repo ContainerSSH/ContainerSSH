@@ -16,7 +16,7 @@ var krbConf = `
 
 [realms]
  %s = {
-  kdc = 127.0.0.1:88
+  kdc = %s:%d
  }
 
 [domain_realm]
@@ -24,7 +24,7 @@ var krbConf = `
 
 func TestKerberos(t *testing.T) {
 	krb := test.Kerberos(t)
-	cfg := fmt.Sprintf(krbConf, krb.Realm())
+	cfg := fmt.Sprintf(krbConf, krb.Realm(), krb.KDCHost(), krb.KDCPort())
 	krbConfig, err := config.NewFromString(cfg)
 	if err != nil {
 		t.Fatalf("failed to parse Kerberos config (%v)", err)
