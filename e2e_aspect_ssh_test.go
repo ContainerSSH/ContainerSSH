@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net"
 	"strings"
+	"sync"
 
 	"github.com/containerssh/containerssh/config"
 	"github.com/containerssh/containerssh/log"
@@ -26,6 +27,7 @@ func (r *sshTestingAspect) String() string {
 
 func (r *sshTestingAspect) Factors() []TestingFactor {
 	var factor TestingFactor = &sshInProcess{
+		lock: &sync.Mutex{},
 		aspect: r,
 	}
 	return []TestingFactor{
@@ -34,6 +36,7 @@ func (r *sshTestingAspect) Factors() []TestingFactor {
 }
 
 type sshInProcess struct {
+	lock          *sync.Mutex
 	lifecycle     *SimpleLifecycle
 	config        config.AppConfig
 	sshConnection *ssh.Client
@@ -59,6 +62,8 @@ func (r *sshInProcess) StartBackingServices(
 	config config.AppConfig,
 	_ log.Logger,
 ) error {
+	r.lock.Lock()
+	defer r.lock.Unlock()
 	if err := config.SSH.GenerateHostKey(); err != nil {
 		return err
 	}
@@ -87,10 +92,15 @@ func (r *sshInProcess) getConfig(user string, password string) *ssh.ClientConfig
 }
 
 func (r *sshInProcess) StopBackingServices(_ config.AppConfig, _ log.Logger) error {
+	r.lock.Lock()
+	defer r.lock.Unlock()
 	if r.sshConnection != nil {
 		_ = r.sshConnection.Close()
 	}
-	return r.lifecycle.Stop()
+	if r.lifecycle != nil {
+		return r.lifecycle.Stop()
+	}
+	return nil
 }
 
 func (r *sshInProcess) GetSteps(_ config.AppConfig, _ log.Logger) []Step {

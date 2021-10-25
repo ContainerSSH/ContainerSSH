@@ -20,7 +20,7 @@ require (
 	github.com/jcmturner/gokrb5/v8 v8.4.2
 	github.com/mattn/go-shellwords v1.0.12 // indirect
 	github.com/mitchellh/golicense v0.2.0
-	github.com/mitchellh/mapstructure v1.1.2
+	github.com/mitchellh/mapstructure v1.4.2
 	github.com/opencontainers/image-spec v1.0.1
 	github.com/oschwald/geoip2-golang v1.5.0
 	github.com/qdm12/reprint v0.0.0-20200326205758-722754a53494
