@@ -6,7 +6,7 @@ require (
 	github.com/aws/aws-sdk-go v1.38.47
 	github.com/containerssh/auditlog v1.0.0
 	github.com/containerssh/auditlogintegration v1.0.0
-	github.com/containerssh/auth v1.0.1
+	github.com/containerssh/auth v1.0.2
 	github.com/containerssh/authintegration v1.0.0
 	github.com/containerssh/backend v1.0.0 // indirect
 	github.com/containerssh/backend/v2 v2.0.2

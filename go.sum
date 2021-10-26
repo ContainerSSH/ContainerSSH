@@ -220,8 +220,9 @@ github.com/containerssh/auditlog v1.0.0/go.mod h1:UoI22Q46jFIa/WsYis+4uAt+TSBAOG
 github.com/containerssh/auditlogintegration v1.0.0 h1:hswQtzssQ9u45HJdP6QpBZeXOuJWEzigKmmB43RLIS0=
 github.com/containerssh/auditlogintegration v1.0.0/go.mod h1:Nzt1jYBsMa99A504ClqAHcdz0ZZIWMFTtfEMYF3QtJA=
 github.com/containerssh/auth v1.0.0/go.mod h1:EHYcedk9tDAK+5YvB6thc8WDmAaqNmki+E9VQYfI7MU=
-github.com/containerssh/auth v1.0.1 h1:GH77x9qLxuXpURsNDsZYIIadwMCqm8wUnXfZ1Fs3hVM=
 github.com/containerssh/auth v1.0.1/go.mod h1:EHYcedk9tDAK+5YvB6thc8WDmAaqNmki+E9VQYfI7MU=
+github.com/containerssh/auth v1.0.2 h1:e+5+089Z2RDnrKqA8MxegmOlUPzI+ztp6pFqv9njHEk=
+github.com/containerssh/auth v1.0.2/go.mod h1:EHYcedk9tDAK+5YvB6thc8WDmAaqNmki+E9VQYfI7MU=
 github.com/containerssh/authintegration v1.0.0 h1:tGaKYGtTIS1GbYFn3YJsQyMe+Xn8dD6x8oseYZqz+iY=
 github.com/containerssh/authintegration v1.0.0/go.mod h1:0XMHZkfho72NuMg+LE+Xy/FdjoNgF5b9Z1o/L3QA0ro=
 github.com/containerssh/backend v1.0.0 h1:LTRqzSeDC7XqvmK3QIM0xLDwZffdDSd1O52D2/W9QB8=
