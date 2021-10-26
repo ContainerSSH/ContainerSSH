@@ -1,63 +1,49 @@
-[![ContainerSSH - Launch Containers on Demand](https://containerssh.github.io/images/logo-for-embedding.svg)](https://containerssh.io/)
+[![ContainerSSH - Launch Containers on Demand](https://containerssh.github.io/images/logo-for-embedding.svg)](https://containerssh.github.io/)
 
 <!--suppress HtmlDeprecatedAttribute -->
-<h1 align="center">An SSH Server that Launches Containers in Kubernetes and Docker</h1>
+<h1 align="center">libcontainerssh</h1>
 
-[![Documentation: available](https://img.shields.io/badge/documentation-available-green?style=for-the-badge)](https://containerssh.io/)
-[![GitHub Workflow Status](https://img.shields.io/github/workflow/status/containerssh/containerssh/goreleaser?style=for-the-badge)](https://github.com/containerssh/containerssh/actions)
-[![GitHub release (latest SemVer)](https://img.shields.io/github/v/release/containerssh/containerssh?sort=semver&style=for-the-badge)](https://github.com/containerssh/containerssh/releases)
-[![Docker Image Size (latest by date)](https://img.shields.io/docker/image-size/containerssh/containerssh?style=for-the-badge)](http://hub.docker.com/r/containerssh/containerssh)
-[![Go Report Card](https://goreportcard.com/badge/github.com/containerssh/containerssh?style=for-the-badge)](https://goreportcard.com/report/github.com/containerssh/containerssh)
-[![LGTM Alerts](https://img.shields.io/lgtm/alerts/github/ContainerSSH/ContainerSSH?style=for-the-badge)](https://lgtm.com/projects/g/ContainerSSH/ContainerSSH/)
-[![License: MIT-0](https://img.shields.io/badge/license-MIT--0-green?style=for-the-badge)](LICENSE.md)
+This library is the core library of ContainerSSH and simultaneously serves as a library to integrate with ContainerSSH. This readme outlines the basics of using this library, for more detailed documentation please head to [containerssh.io](https://containerssh.io).
 
-## ContainerSSH in One Minute
+## Embedding ContainerSSH
 
-In a hurry? This one minute video explains everything you need to know about ContainerSSH.
+You can fully embed ContainerSSH into your own application. First, you will need to create the configuration structure:
 
-[![An image with a YouTube play button on it.](https://containerssh.io/images/containerssh-intro-preview.png)](https://youtu.be/Cs9OrnPi2IM)
+```go
+cfg := config.AppConfig{}
+```
 
-## Use cases
+You can then populate this config with your options and create a ContainerSSH instance like this:
 
-### Offering SSH in a web hosting service?
+```go
+ pool, lifecycle, err := containerssh.New(cfg, loggerFactory)
+ if err != nil {
+     return err
+ }
+```
 
-ContainerSSH lets you dynamically create and destroy containers when your users connect. Authenticate against your existing user database and mount directories based on your existing permission matrix.
+You will receive a service pool and a lifecycle as a response. You can use these to start the service pool of ContainerSSH. This will block execution until ContainerSSH stops.
 
-[Read more »](https://containerssh.io/usecases/webhosting/)
+```go
+err := lifecycle.Run()
+```
 
-### Looking for a Linux learning environment?
+This will run ContainerSSH in the current Goroutine. You can also use the lifecycle to add hooks to lifecycle states of ContainerSSH. You must do this *before* you call `Run()`. For example:
 
-With ContainerSSH you can launch Linux-based containers on demand when your students connect. You can supply your own container image and mount folders with learning and testing material as needed.</p>
+```go
+lifecycle.OnStarting(
+    func(s service.Service, l service.Lifecycle) {
+        print("ContainerSSH is starting...")
+    },
+)
+```
 
-[Read more »](https://containerssh.io/usecases/learning/)
+You can also have ContainerSSH stop gracefully by using the `Stop()` function on the lifecycle. This takes a context as an argument, which is taken as a timeout for the graceful shutdown.
 
-### Building a honeypot?
+## Building an authentication webhook server
 
-With the dynamic authentication server of ContainerSSH you can capture usernames and passwords, and you container environment can log commands that are executed.
+## Building a configuration webhook server
 
-[Read more »](https://containerssh.io/usecases/honeypots/)
+## Building a combined configuration-authentication webhook server
 
-### Building a high security environment?
-
-ContainerSSH is being used to provide dynamic console access to an environment with sensitive credentials. Use the authentication and configuration server to dynamically provision credentials in conjunction with secret management systems such as Hashicorp Vault.
-
-[Read more »](https://containerssh.io/usecases/security/)
-
-## How does it work?
-
-![](https://containerssh.io/images/architecture.svg)
-
-1. The user opens an SSH connection to ContainerSSH.
-2. ContainerSSH calls the authentication server with the users username and password/pubkey to check if its valid.
-3. ContainerSSH calls the config server to obtain backend location and configuration (if configured)
-4. ContainerSSH calls the container backend to launch the container with the
-   specified configuration. All input from the user is sent directly to the backend, output from the container is sent
-   to the user.
-
-[▶️ Watch as video »](https://youtu.be/Cs9OrnPi2IM) | [🚀 Get started »](https://containerssh.io/quickstart/)
-
-## Demo
-
-![](https://containerssh.io/images/ssh-in-action.gif)
-
-[🚀 Get started »](https://containerssh.io/quickstart/)
+## Reading audit logs
