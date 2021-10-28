@@ -7,7 +7,7 @@ import (
 	"log"
 	"os"
 
-	"github.com/containerssh/containerssh/auditlog/codec"
+	"github.com/containerssh/libcontainerssh/auditlog/codec"
 )
 
 func main() {

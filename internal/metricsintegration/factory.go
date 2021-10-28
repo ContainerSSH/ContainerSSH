@@ -1,9 +1,9 @@
 package metricsintegration
 
 import (
-	"github.com/containerssh/containerssh/config"
-	"github.com/containerssh/containerssh/internal/metrics"
-	"github.com/containerssh/containerssh/internal/sshserver"
+	"github.com/containerssh/libcontainerssh/config"
+	"github.com/containerssh/libcontainerssh/internal/metrics"
+	"github.com/containerssh/libcontainerssh/internal/sshserver"
 )
 
 func NewHandler(

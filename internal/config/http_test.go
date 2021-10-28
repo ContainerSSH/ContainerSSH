@@ -6,12 +6,12 @@ import (
 	"testing"
 	"time"
 
-	configuration "github.com/containerssh/containerssh/config"
-	"github.com/containerssh/containerssh/internal/config"
-	"github.com/containerssh/containerssh/internal/geoip"
-	"github.com/containerssh/containerssh/internal/metrics"
-	"github.com/containerssh/containerssh/log"
-	service2 "github.com/containerssh/containerssh/service"
+	configuration "github.com/containerssh/libcontainerssh/config"
+	"github.com/containerssh/libcontainerssh/internal/config"
+	"github.com/containerssh/libcontainerssh/internal/geoip"
+	"github.com/containerssh/libcontainerssh/internal/metrics"
+	"github.com/containerssh/libcontainerssh/log"
+	service2 "github.com/containerssh/libcontainerssh/service"
 	"github.com/docker/docker/api/types/container"
 	"github.com/stretchr/testify/assert"
 )

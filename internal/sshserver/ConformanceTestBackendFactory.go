@@ -3,7 +3,7 @@ package sshserver
 import (
 	"testing"
 
-	"github.com/containerssh/containerssh/log"
+	"github.com/containerssh/libcontainerssh/log"
 )
 
 // ConformanceTestBackendFactory is a method to creating a network connection conformanceTestHandler for testing purposes.

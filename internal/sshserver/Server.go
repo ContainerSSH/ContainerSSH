@@ -1,7 +1,7 @@
 package sshserver
 
 import (
-	"github.com/containerssh/containerssh/service"
+	"github.com/containerssh/libcontainerssh/service"
 )
 
 // Server is the main SSH server interface, compatible with the Service library. It should always be used in conjunction

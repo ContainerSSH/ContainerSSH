@@ -6,11 +6,11 @@ import (
 	"sync"
 	"time"
 
-	containerSSHConfig "github.com/containerssh/containerssh/config"
-	"github.com/containerssh/containerssh/internal/metrics"
-	"github.com/containerssh/containerssh/internal/structutils"
-	"github.com/containerssh/containerssh/log"
-	"github.com/containerssh/containerssh/message"
+	containerSSHConfig "github.com/containerssh/libcontainerssh/config"
+	"github.com/containerssh/libcontainerssh/internal/metrics"
+	"github.com/containerssh/libcontainerssh/internal/structutils"
+	"github.com/containerssh/libcontainerssh/log"
+	"github.com/containerssh/libcontainerssh/message"
 	core "k8s.io/api/core/v1"
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
@@ -18,8 +18,8 @@ import (
 )
 
 type kubernetesClientImpl struct {
-	config containerSSHConfig.KubernetesConfig
-	logger log.Logger
+	config                containerSSHConfig.KubernetesConfig
+	logger                log.Logger
 	client                *kubernetes.Clientset
 	restClient            *restclient.RESTClient
 	connectionConfig      *restclient.Config

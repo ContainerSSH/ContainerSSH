@@ -4,7 +4,7 @@ import (
 	"context"
 	"net"
 
-	"github.com/containerssh/containerssh/config"
+	"github.com/containerssh/libcontainerssh/config"
 )
 
 // Loader is a utility to load and update an existing configuration structure.

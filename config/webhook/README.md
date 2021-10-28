@@ -56,7 +56,7 @@ srv, err := configuration.NewServer(
 )
 ```
 
-The `logger` parameter is a logger from the [ContainerSSH log library](https://github.com/containerssh/containerssh/log).
+The `logger` parameter is a logger from the [ContainerSSH log library](https://github.com/containerssh/libcontainerssh/log).
 
 Once you have the server you can start it using the [service library](https://github.com/containerssh/service):
 
@@ -146,7 +146,7 @@ client, err := configuration.NewClient(
 )
 ```
 
-The `logger` is a logger from the [log library](https://github.com/containerssh/containerssh/log), the `metricsCollector` is supplied by the [metrics library](https://github.com/containerssh/metrics). 
+The `logger` is a logger from the [log library](https://github.com/containerssh/libcontainerssh/log), the `metricsCollector` is supplied by the [metrics library](https://github.com/containerssh/metrics). 
 
 You can now use the `client` variable to fetch the configuration specific to a connecting client:
 

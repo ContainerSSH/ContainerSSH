@@ -6,10 +6,10 @@ import (
 	"io"
 	"strings"
 
-	"github.com/containerssh/containerssh/config"
-	"github.com/containerssh/containerssh/internal/sshserver"
-	"github.com/containerssh/containerssh/internal/unixutils"
-	"github.com/containerssh/containerssh/message"
+	"github.com/containerssh/libcontainerssh/config"
+	"github.com/containerssh/libcontainerssh/internal/sshserver"
+	"github.com/containerssh/libcontainerssh/internal/unixutils"
+	"github.com/containerssh/libcontainerssh/message"
 )
 
 type channelHandler struct {
@@ -112,10 +112,10 @@ func (c *channelHandler) run(
 			if err := c.session.Close(); err != nil && !errors.Is(err, io.EOF) {
 				c.networkHandler.logger.Debug(
 					message.Wrap(
-					err,
-					message.EDockerFailedOutputCloseWriting,
-					"failed to close session",
-				))
+						err,
+						message.EDockerFailedOutputCloseWriting,
+						"failed to close session",
+					))
 			}
 		},
 	)

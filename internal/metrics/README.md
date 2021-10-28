@@ -57,7 +57,7 @@ The metrics also have a `WithLabels()` method that allow for creating a copy of 
 
 ## Using the metrics server
 
-The metrics server exposes the collected metrics on an HTTP webserver in the Prometheus / OpenMetrics format. It requires the [service library](https://github.com/containerssh/service) and a logger from the [log library](https://github.com/containerssh/containerssh/log) to work properly:
+The metrics server exposes the collected metrics on an HTTP webserver in the Prometheus / OpenMetrics format. It requires the [service library](https://github.com/containerssh/service) and a logger from the [log library](https://github.com/containerssh/libcontainerssh/log) to work properly:
 
 ```go
 server := metrics.NewServer(

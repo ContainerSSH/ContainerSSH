@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"sync"
 
-	"github.com/containerssh/containerssh/internal/geoip/geoipprovider"
+	"github.com/containerssh/libcontainerssh/internal/geoip/geoipprovider"
 )
 
 type collector struct {

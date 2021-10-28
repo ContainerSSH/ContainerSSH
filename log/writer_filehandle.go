@@ -8,8 +8,8 @@ import (
 	"sync"
 	"time"
 
-	"github.com/containerssh/containerssh/config"
-	"github.com/containerssh/containerssh/message"
+	"github.com/containerssh/libcontainerssh/config"
+	"github.com/containerssh/libcontainerssh/message"
 )
 
 func newFileHandleWriter(fh io.Writer, format config.LogFormat, lock *sync.Mutex) *fileHandleWriter {

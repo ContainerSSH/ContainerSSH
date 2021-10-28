@@ -1,8 +1,8 @@
 package log
 
 import (
-	"github.com/containerssh/containerssh/config"
-	"github.com/containerssh/containerssh/message"
+	"github.com/containerssh/libcontainerssh/config"
+	"github.com/containerssh/libcontainerssh/message"
 )
 
 // Logger The logger interface provides logging facilities on various levels.

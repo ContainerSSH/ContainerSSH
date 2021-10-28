@@ -4,13 +4,13 @@ import (
 	"net"
 	"testing"
 
-	"github.com/containerssh/containerssh/config"
-	"github.com/containerssh/containerssh/internal/geoip/dummy"
-	"github.com/containerssh/containerssh/internal/kubernetes"
-	"github.com/containerssh/containerssh/internal/metrics"
-	"github.com/containerssh/containerssh/internal/sshserver"
-	"github.com/containerssh/containerssh/internal/structutils"
-	"github.com/containerssh/containerssh/log"
+	"github.com/containerssh/libcontainerssh/config"
+	"github.com/containerssh/libcontainerssh/internal/geoip/dummy"
+	"github.com/containerssh/libcontainerssh/internal/kubernetes"
+	"github.com/containerssh/libcontainerssh/internal/metrics"
+	"github.com/containerssh/libcontainerssh/internal/sshserver"
+	"github.com/containerssh/libcontainerssh/internal/structutils"
+	"github.com/containerssh/libcontainerssh/log"
 )
 
 func TestConformance(t *testing.T) {

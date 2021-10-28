@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"time"
 
-	config2 "github.com/containerssh/containerssh/config"
-	"github.com/containerssh/containerssh/service"
+	config2 "github.com/containerssh/libcontainerssh/config"
+	"github.com/containerssh/libcontainerssh/service"
 )
 
 type testServerImpl struct {

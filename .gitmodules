@@ -1,6 +1,3 @@
-[submodule "examples"]
-	path = examples
-	url = https://github.com/ContainerSSH/examples.git
 [submodule "internal/geoip/data"]
 	path = internal/geoip/data
 	url = https://github.com/maxmind/MaxMind-DB.git

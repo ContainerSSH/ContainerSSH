@@ -4,8 +4,8 @@ import (
 	"context"
 	"io"
 
-	"github.com/containerssh/containerssh/config"
-	"github.com/containerssh/containerssh/log"
+	"github.com/containerssh/libcontainerssh/config"
+	"github.com/containerssh/libcontainerssh/log"
 )
 
 // dockerClientFactory creates a dockerClient based on a configuration
@@ -64,7 +64,7 @@ type dockerExecution interface {
 	// the signal is not known or permitted, or the process ID is not known.
 	signal(ctx context.Context, sig string) error
 	// run runs the process in question.
-	run(stdin io.Reader, stdout io.Writer, stderr io.Writer, writeClose func() error, onExit func(exitStatus int),)
+	run(stdin io.Reader, stdout io.Writer, stderr io.Writer, writeClose func() error, onExit func(exitStatus int))
 	// done returns a channel that is closed when the program exits.
 	done() <-chan struct{}
 	// term sends a TERM signal to the running process.

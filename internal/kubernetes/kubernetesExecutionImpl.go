@@ -10,10 +10,10 @@ import (
 	"strconv"
 	"sync"
 
-	"github.com/containerssh/containerssh/config"
-	"github.com/containerssh/containerssh/internal/metrics"
-	"github.com/containerssh/containerssh/log"
-	"github.com/containerssh/containerssh/message"
+	"github.com/containerssh/libcontainerssh/config"
+	"github.com/containerssh/libcontainerssh/internal/metrics"
+	"github.com/containerssh/libcontainerssh/log"
+	"github.com/containerssh/libcontainerssh/message"
 	"k8s.io/client-go/tools/remotecommand"
 	"k8s.io/client-go/util/exec"
 )
@@ -178,8 +178,8 @@ func (k *kubernetesExecutionImpl) processSignalExec(ctx context.Context, sig str
 func (k *kubernetesExecutionImpl) resize(ctx context.Context, height uint, width uint) error {
 	k.logger.Debug(
 		message.NewMessage(message.MKubernetesResizing, "Resizing window to %dx%d", width, height).
-		Label("width", width).
-		Label("height", height))
+			Label("width", width).
+			Label("height", height))
 	return k.terminalSizeQueue.Push(
 		ctx,
 		remotecommand.TerminalSize{
@@ -281,9 +281,9 @@ func (k *kubernetesExecutionImpl) run(
 		k.logger.Debug(
 			message.NewMessage(
 				message.MKubernetesPidReceived,
-			"Received PID %d from agent",
-			pid,
-		))
+				"Received PID %d from agent",
+				pid,
+			))
 		k.pid = int(pid)
 	}
 }

@@ -1,1 +1,5 @@
 package webhook
+
+func NewTestClient() {
+
+}

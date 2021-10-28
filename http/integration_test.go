@@ -14,11 +14,11 @@ import (
 	"testing"
 	"time"
 
-	"github.com/containerssh/containerssh/config"
-	http2 "github.com/containerssh/containerssh/http"
-	"github.com/containerssh/containerssh/internal/structutils"
-	"github.com/containerssh/containerssh/log"
-	"github.com/containerssh/containerssh/service"
+	"github.com/containerssh/libcontainerssh/config"
+	http2 "github.com/containerssh/libcontainerssh/http"
+	"github.com/containerssh/libcontainerssh/internal/structutils"
+	"github.com/containerssh/libcontainerssh/log"
+	"github.com/containerssh/libcontainerssh/service"
 	"github.com/stretchr/testify/assert"
 )
 

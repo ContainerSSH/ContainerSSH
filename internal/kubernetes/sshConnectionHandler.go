@@ -3,7 +3,7 @@ package kubernetes
 import (
 	"context"
 
-	"github.com/containerssh/containerssh/internal/sshserver"
+	"github.com/containerssh/libcontainerssh/internal/sshserver"
 )
 
 type sshConnectionHandler struct {

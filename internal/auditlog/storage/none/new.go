@@ -1,6 +1,6 @@
 package none
 
-import "github.com/containerssh/containerssh/internal/auditlog/storage"
+import "github.com/containerssh/libcontainerssh/internal/auditlog/storage"
 
 // NewStorage Creates a storage that swallows everything. This can be used for performance.
 func NewStorage() storage.WritableStorage {

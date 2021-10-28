@@ -4,16 +4,16 @@ import (
 	"context"
 	"sync"
 
-	config2 "github.com/containerssh/containerssh/config"
-	"github.com/containerssh/containerssh/internal/sshserver"
-	"github.com/containerssh/containerssh/log"
-	"github.com/containerssh/containerssh/message"
+	config2 "github.com/containerssh/libcontainerssh/config"
+	"github.com/containerssh/libcontainerssh/internal/sshserver"
+	"github.com/containerssh/libcontainerssh/log"
+	"github.com/containerssh/libcontainerssh/message"
 	"golang.org/x/crypto/ssh"
 )
 
 type sshConnectionHandler struct {
-	config  config2.SecurityConfig
-	backend sshserver.SSHConnectionHandler
+	config       config2.SecurityConfig
+	backend      sshserver.SSHConnectionHandler
 	sessionCount uint
 	lock         *sync.Mutex
 	logger       log.Logger

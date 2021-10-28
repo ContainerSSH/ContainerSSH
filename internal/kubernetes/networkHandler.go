@@ -7,9 +7,9 @@ import (
 	"strings"
 	"sync"
 
-	config2 "github.com/containerssh/containerssh/config"
-	"github.com/containerssh/containerssh/internal/sshserver"
-	"github.com/containerssh/containerssh/log"
+	config2 "github.com/containerssh/libcontainerssh/config"
+	"github.com/containerssh/libcontainerssh/internal/sshserver"
+	"github.com/containerssh/libcontainerssh/log"
 )
 
 type networkHandler struct {

@@ -4,13 +4,13 @@ import (
 	"fmt"
 	goHttp "net/http"
 
-	"github.com/containerssh/containerssh/config"
-	"github.com/containerssh/containerssh/http"
-	"github.com/containerssh/containerssh/internal/auth/oauth2"
-	"github.com/containerssh/containerssh/internal/metrics"
-	"github.com/containerssh/containerssh/log"
-	"github.com/containerssh/containerssh/message"
-	"github.com/containerssh/containerssh/service"
+	"github.com/containerssh/libcontainerssh/config"
+	"github.com/containerssh/libcontainerssh/http"
+	"github.com/containerssh/libcontainerssh/internal/auth/oauth2"
+	"github.com/containerssh/libcontainerssh/internal/metrics"
+	"github.com/containerssh/libcontainerssh/log"
+	"github.com/containerssh/libcontainerssh/message"
+	"github.com/containerssh/libcontainerssh/service"
 )
 
 func NewOAuth2Client(cfg config.AuthConfig, logger log.Logger, collector metrics.Collector) (

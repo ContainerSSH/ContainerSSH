@@ -24,7 +24,7 @@ This method accepts the following parameters:
 : The `AppConfig` struct from the [configuration library](https://github.com/containerssh/configuration). This is needed because this library performs a call to the config server if configured to fetch a connection-specific information.
 
 `logger`
-: This variable is a logger from the [log library](https://github.com/containerssh/containerssh/log).
+: This variable is a logger from the [log library](https://github.com/containerssh/libcontainerssh/log).
 
 `loggerFactory`
 : This is a logger factory used by the backend to create a logger for the instantiated backends after fetching the connection-specific configuration.

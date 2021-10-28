@@ -1,10 +1,10 @@
 package containerssh_test
 
 import (
-	configuration "github.com/containerssh/containerssh/config"
-	"github.com/containerssh/containerssh/internal/auth"
-	"github.com/containerssh/containerssh/log"
-	"github.com/containerssh/containerssh/service"
+	configuration "github.com/containerssh/libcontainerssh/config"
+	"github.com/containerssh/libcontainerssh/internal/auth"
+	"github.com/containerssh/libcontainerssh/log"
+	"github.com/containerssh/libcontainerssh/service"
 )
 
 func NewAuthTestingAspect() TestingAspect {

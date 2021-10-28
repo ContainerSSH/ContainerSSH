@@ -6,10 +6,10 @@ import (
 	"sync"
 	"time"
 
-	config2 "github.com/containerssh/containerssh/config"
-	"github.com/containerssh/containerssh/internal/metrics"
-	"github.com/containerssh/containerssh/log"
-	"github.com/containerssh/containerssh/message"
+	config2 "github.com/containerssh/libcontainerssh/config"
+	"github.com/containerssh/libcontainerssh/internal/metrics"
+	"github.com/containerssh/libcontainerssh/log"
+	"github.com/containerssh/libcontainerssh/message"
 	core "k8s.io/api/core/v1"
 	kubeErrors "k8s.io/apimachinery/pkg/api/errors"
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -26,8 +26,8 @@ import (
 )
 
 type kubernetesPodImpl struct {
-	config config2.KubernetesConfig
-	pod    *core.Pod
+	config                config2.KubernetesConfig
+	pod                   *core.Pod
 	client                *kubernetes.Clientset
 	restClient            *restclient.RESTClient
 	logger                log.Logger
@@ -57,10 +57,10 @@ loop:
 			lastError = fmt.Errorf("pod has not terminated yet")
 			k.logger.Debug(
 				message.Wrap(
-				lastError,
+					lastError,
 					message.EKubernetesFetchingExitCodeFailed,
-				"failed to fetch pod exit status, retrying in 10 seconds",
-			))
+					"failed to fetch pod exit status, retrying in 10 seconds",
+				))
 			retryTimer = time.Second
 		} else {
 			if kubeErrors.IsNotFound(lastError) {
@@ -254,10 +254,10 @@ loop:
 		}
 		k.logger.Debug(
 			message.Wrap(
-			lastError,
+				lastError,
 				message.EKubernetesFailedPodRemove,
-			"Failed to remove pod, retrying in 10 seconds...",
-		))
+				"Failed to remove pod, retrying in 10 seconds...",
+			))
 		select {
 		case <-ctx.Done():
 			break loop

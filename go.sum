@@ -237,10 +237,10 @@ github.com/containerssh/authintegration v1.0.0 h1:tGaKYGtTIS1GbYFn3YJsQyMe+Xn8dD
 github.com/containerssh/authintegration v1.0.0/go.mod h1:0XMHZkfho72NuMg+LE+Xy/FdjoNgF5b9Z1o/L3QA0ro=
 github.com/containerssh/configuration/v2 v2.1.0 h1:q71LdvJdCz5WBYqfPH6DZmMYemb4UccOTuw8L665rJk=
 github.com/containerssh/configuration/v2 v2.1.0/go.mod h1:/IWiWOBjw6Oqi5RsCnMmODFMOPLoQcWqTh9FX1yESYs=
-github.com/containerssh/containerssh/log v1.0.0/go.mod h1:7Gy+sx0H1UDtjYBySvK0CnXRRHPHZPXMsa9MYmLBI0I=
-github.com/containerssh/containerssh/log v1.1.3/go.mod h1:JER/AjoAHhb8arGN6bsAPF1r1S8p6sUAnvBOL4s32ZU=
-github.com/containerssh/containerssh/log v1.1.6 h1:5fBBZA2MZss5NMUP2FgJ/iERNwN4y+68uwRE8XjbEKA=
-github.com/containerssh/containerssh/log v1.1.6/go.mod h1:JER/AjoAHhb8arGN6bsAPF1r1S8p6sUAnvBOL4s32ZU=
+github.com/containerssh/libcontainerssh/log v1.0.0/go.mod h1:7Gy+sx0H1UDtjYBySvK0CnXRRHPHZPXMsa9MYmLBI0I=
+github.com/containerssh/libcontainerssh/log v1.1.3/go.mod h1:JER/AjoAHhb8arGN6bsAPF1r1S8p6sUAnvBOL4s32ZU=
+github.com/containerssh/libcontainerssh/log v1.1.6 h1:5fBBZA2MZss5NMUP2FgJ/iERNwN4y+68uwRE8XjbEKA=
+github.com/containerssh/libcontainerssh/log v1.1.6/go.mod h1:JER/AjoAHhb8arGN6bsAPF1r1S8p6sUAnvBOL4s32ZU=
 github.com/containerssh/docker v1.0.0 h1:fyXzSntVXXuBSboRqARy9t1maoNLK1HOhqrQHRUreaU=
 github.com/containerssh/docker v1.0.0/go.mod h1:470SZ+aNLVWzlftHuQi/VY3rK4rExykX5f41X/vSGaI=
 github.com/containerssh/docker/v2 v2.0.1 h1:ofDQYlsPAgbh/CaeHj+CARt4ln0fC1GpWZROqd+z5VU=

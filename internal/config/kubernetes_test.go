@@ -6,8 +6,8 @@ import (
 	"os"
 	"testing"
 
-	"github.com/containerssh/containerssh/config"
-	"github.com/containerssh/containerssh/internal/structutils"
+	"github.com/containerssh/libcontainerssh/config"
+	"github.com/containerssh/libcontainerssh/internal/structutils"
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
 	"github.com/stretchr/testify/assert"

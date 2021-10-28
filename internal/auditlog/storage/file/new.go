@@ -7,10 +7,10 @@ import (
 	"path"
 	"sync"
 
-	"github.com/containerssh/containerssh/config"
-	"github.com/containerssh/containerssh/internal/auditlog/storage"
+	"github.com/containerssh/libcontainerssh/config"
+	"github.com/containerssh/libcontainerssh/internal/auditlog/storage"
 
-	"github.com/containerssh/containerssh/log"
+	"github.com/containerssh/libcontainerssh/log"
 )
 
 // NewStorage Create a file storage that stores testdata in a local directory. The file storage cannot store metadata.

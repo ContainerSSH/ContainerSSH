@@ -5,7 +5,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/containerssh/containerssh/log"
+	"github.com/containerssh/libcontainerssh/log"
 )
 
 type conformanceTestSuite struct {

@@ -4,10 +4,10 @@ import (
 	"fmt"
 	"sync"
 
-	config2 "github.com/containerssh/containerssh/config"
-	"github.com/containerssh/containerssh/internal/structutils"
-	"github.com/containerssh/containerssh/log"
-	"github.com/containerssh/containerssh/service"
+	config2 "github.com/containerssh/libcontainerssh/config"
+	"github.com/containerssh/libcontainerssh/internal/structutils"
+	"github.com/containerssh/libcontainerssh/log"
+	"github.com/containerssh/libcontainerssh/service"
 )
 
 var testServerLock = &sync.Mutex{}

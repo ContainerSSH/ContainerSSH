@@ -6,7 +6,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
-	"github.com/containerssh/containerssh/internal/metrics"
+	"github.com/containerssh/libcontainerssh/internal/metrics"
 )
 
 func TestGaugeGeo(t *testing.T) {

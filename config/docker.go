@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/containerssh/containerssh/message"
+	"github.com/containerssh/libcontainerssh/message"
 	"github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/api/types/network"
 	specs "github.com/opencontainers/image-spec/specs-go/v1"

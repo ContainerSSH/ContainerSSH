@@ -4,8 +4,8 @@ import (
 	"runtime"
 	"testing"
 
-	"github.com/containerssh/containerssh/config"
-	"github.com/containerssh/containerssh/message"
+	"github.com/containerssh/libcontainerssh/config"
+	"github.com/containerssh/libcontainerssh/message"
 )
 
 func newGoTest(t *testing.T) Writer {
@@ -15,7 +15,7 @@ func newGoTest(t *testing.T) Writer {
 }
 
 type goTestWriter struct {
-	t             *testing.T
+	t *testing.T
 }
 
 func (g *goTestWriter) Write(level config.LogLevel, message message.Message) error {

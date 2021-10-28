@@ -1,4 +1,4 @@
-package log
+package main
 
 import (
 	"bytes"
@@ -12,18 +12,23 @@ import (
 	"text/template"
 )
 
-var messageFileTemplate = `# Message / error codes
+type tplData struct {
+	Title string
+	Codes map[string]string
+}
+
+var messageFileTemplate = `# {{ .Title }} 
 
 | Code | Explanation |
 |------|-------------|
-{{range $key,$val := . -}}
+{{range $key,$val := .Codes -}}
 | ` + "`{{ $key }}`" + ` | {{ $val }} |
 {{end}}
 `
 
-// GetMessageCodes parses the specified go source file and returns a key-value mapping of message codes and their
+// getMessageCodes parses the specified go source file and returns a key-value mapping of message codes and their
 // associated description or an error.
-func GetMessageCodes(filename string) (map[string]string, error) {
+func getMessageCodes(filename string) (map[string]string, error) {
 	result := map[string]string{}
 	fset := token.NewFileSet()
 
@@ -62,7 +67,13 @@ func GetMessageCodes(filename string) (map[string]string, error) {
 										resultingDocParts = append(resultingDocParts, strings.TrimSpace(part))
 									}
 								}
-								result[strings.Trim(basicVal.Value, `"`)] = strings.Join(resultingDocParts, " ")
+								resultingDoc := strings.Join(resultingDocParts, " ")
+								resultingDoc = strings.TrimPrefix(
+									resultingDoc,
+									fmt.Sprintf("%s indicates that ", name.Name),
+								)
+								resultingDoc = strings.ToUpper(resultingDoc[:1]) + resultingDoc[1:]
+								result[strings.Trim(basicVal.Value, `"`)] = resultingDoc
 							}
 						}
 					}
@@ -94,9 +105,9 @@ func extractConstDocs(
 	return constDocs, nil
 }
 
-// GenerateMessageCodeFiles generates the contents of the CODES.md file and returns them.
-func GenerateMessageCodesFile(filename string) (string, error) {
-	codes, err := GetMessageCodes(filename)
+// generateMessageCodesFile generates the contents of the CODES.md file and returns them.
+func generateMessageCodesFile(filename string, title string) (string, error) {
+	codes, err := getMessageCodes(filename)
 	if err != nil {
 		return "", err
 	}
@@ -105,15 +116,18 @@ func GenerateMessageCodesFile(filename string) (string, error) {
 		return "", fmt.Errorf("bug: failed to parse template (%w)", err)
 	}
 	wr := &bytes.Buffer{}
-	if err := tpl.Execute(wr, codes); err != nil {
+	if err := tpl.Execute(wr, &tplData{
+		Title: title,
+		Codes: codes,
+	}); err != nil {
 		return "", fmt.Errorf("failed to render codes template (%w)", err)
 	}
 	return wr.String(), nil
 }
 
-// WriteMessageCodesFile generates and writes the CODES.md file
-func WriteMessageCodesFile(sourceFile string, destinationFile string) error {
-	data, err := GenerateMessageCodesFile(sourceFile)
+// writeMessageCodesFile generates and writes the CODES.md file
+func writeMessageCodesFile(sourceFile string, destinationFile string, title string) error {
+	data, err := generateMessageCodesFile(sourceFile, title)
 	if err != nil {
 		return err
 	}
@@ -131,9 +145,18 @@ func WriteMessageCodesFile(sourceFile string, destinationFile string) error {
 	return nil
 }
 
-// MustWriteMessageCodesFile is identical to WriteMessageCodesFile but panics on error.
-func MustWriteMessageCodesFile(sourceFile string, destinationFile string) {
-	if err := WriteMessageCodesFile(sourceFile, destinationFile); err != nil {
+// mustWriteMessageCodesFile is identical to writeMessageCodesFile but panics on error.
+func mustWriteMessageCodesFile(sourceFile string, destinationFile string, title string) {
+	if err := writeMessageCodesFile(sourceFile, destinationFile, title); err != nil {
 		panic(err)
 	}
+}
+
+func main() {
+	sourceFile := os.Args[1]
+	destinationFile := os.Args[2]
+	title := os.Args[3]
+
+	mustWriteMessageCodesFile(sourceFile, destinationFile, title)
+	fmt.Printf("Generated %s.", destinationFile)
 }

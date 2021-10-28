@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/containerssh/containerssh/internal/test"
+	"github.com/containerssh/libcontainerssh/internal/test"
 	"github.com/jcmturner/gokrb5/v8/client"
 	"github.com/jcmturner/gokrb5/v8/config"
 )

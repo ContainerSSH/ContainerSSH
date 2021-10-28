@@ -7,8 +7,8 @@ import (
 	"io"
 	"net"
 
-	"github.com/containerssh/containerssh/config"
-	"github.com/containerssh/containerssh/log"
+	"github.com/containerssh/libcontainerssh/config"
+	"github.com/containerssh/libcontainerssh/log"
 	"gopkg.in/yaml.v3"
 )
 

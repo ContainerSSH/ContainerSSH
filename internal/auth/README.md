@@ -62,7 +62,7 @@ go func() {
 lifecycle.Stop(context.Background())
 ```
 
-The `logger` is a logger from the [github.com/containerssh/containerssh/log](http://github.com/containerssh/containerssh/log) package. The server configuration optionally allows you to configure mutual TLS authentication. [See the documentation for details.](https://github.com/containerssh/http)
+The `logger` is a logger from the [github.com/containerssh/libcontainerssh/log](http://github.com/containerssh/libcontainerssh/log) package. The server configuration optionally allows you to configure mutual TLS authentication. [See the documentation for details.](https://github.com/containerssh/http)
 
 You can also use the authentication handler with the native Go HTTP library:
 

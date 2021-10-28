@@ -7,10 +7,10 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/containerssh/containerssh/config"
-	"github.com/containerssh/containerssh/internal/sshserver"
-	"github.com/containerssh/containerssh/log"
-	"github.com/containerssh/containerssh/message"
+	"github.com/containerssh/libcontainerssh/config"
+	"github.com/containerssh/libcontainerssh/internal/sshserver"
+	"github.com/containerssh/libcontainerssh/log"
+	"github.com/containerssh/libcontainerssh/message"
 )
 
 type networkHandler struct {
@@ -19,9 +19,9 @@ type networkHandler struct {
 	mutex               *sync.Mutex
 	client              net.TCPAddr
 	username            string
-	connectionID string
-	config       config.DockerConfig
-	container    dockerContainer
+	connectionID        string
+	config              config.DockerConfig
+	container           dockerContainer
 	dockerClient        dockerClient
 	dockerClientFactory dockerClientFactory
 	logger              log.Logger
@@ -56,7 +56,6 @@ func (n *networkHandler) OnHandshakeSuccess(username string, _ string, metadata 
 		env = metadata
 	}
 
-
 	if err := n.setupDockerClient(ctx, n.config); err != nil {
 		return nil, err
 	}
@@ -83,7 +82,7 @@ func (n *networkHandler) OnHandshakeSuccess(username string, _ string, metadata 
 	return &sshConnectionHandler{
 		networkHandler: n,
 		username:       username,
-		env: env,
+		env:            env,
 	}, nil
 }
 

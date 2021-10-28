@@ -4,9 +4,9 @@ import (
 	"os"
 	"sync"
 
-	"github.com/containerssh/containerssh/config"
-	"github.com/containerssh/containerssh/message"
-	messageCodes "github.com/containerssh/containerssh/message"
+	"github.com/containerssh/libcontainerssh/config"
+	"github.com/containerssh/libcontainerssh/message"
+	messageCodes "github.com/containerssh/libcontainerssh/message"
 )
 
 func newFileWriter(filename string, format config.LogFormat) (Writer, error) {

@@ -45,7 +45,7 @@ The `cfg` variable will be a `Config` structure as described in [config.go](conf
 
 The `handler` variable must be an implementation of the [`Handler` interface described in handler.go](handler.go).
 
-The `logger` variable needs to be an instance of the `Logger` interface from [github.com/containerssh/containerssh/log](https://github.com/containerssh/containerssh/log).
+The `logger` variable needs to be an instance of the `Logger` interface from [github.com/containerssh/libcontainerssh/log](https://github.com/containerssh/libcontainerssh/log).
 
 ## Implementing a handler
 

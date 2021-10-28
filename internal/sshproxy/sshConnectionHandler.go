@@ -5,9 +5,9 @@ import (
 	"errors"
 	"sync"
 
-	"github.com/containerssh/containerssh/internal/sshserver"
-	"github.com/containerssh/containerssh/log"
-	"github.com/containerssh/containerssh/message"
+	"github.com/containerssh/libcontainerssh/internal/sshserver"
+	"github.com/containerssh/libcontainerssh/log"
+	"github.com/containerssh/libcontainerssh/message"
 	"golang.org/x/crypto/ssh"
 )
 

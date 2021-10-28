@@ -5,11 +5,11 @@ import (
 	"net"
 	"sync"
 
-	"github.com/containerssh/containerssh/config"
-	"github.com/containerssh/containerssh/internal/metrics"
-	"github.com/containerssh/containerssh/internal/sshserver"
-	"github.com/containerssh/containerssh/log"
-	"github.com/containerssh/containerssh/message"
+	"github.com/containerssh/libcontainerssh/config"
+	"github.com/containerssh/libcontainerssh/internal/metrics"
+	"github.com/containerssh/libcontainerssh/internal/sshserver"
+	"github.com/containerssh/libcontainerssh/log"
+	"github.com/containerssh/libcontainerssh/message"
 )
 
 func New(
@@ -28,8 +28,8 @@ func New(
 		logger.Warning(
 			message.NewMessage(
 				message.EKubernetesGuestAgentDisabled,
-			"You are using the Kubernetes backend without the ContainerSSH Guest Agent. Several features will not work as expected. Please see https://containerssh.io/reference/image/ for details.",
-		))
+				"You are using the Kubernetes backend without the ContainerSSH Guest Agent. Several features will not work as expected. Please see https://containerssh.io/reference/image/ for details.",
+			))
 	}
 
 	var clientFactory kubernetesClientFactory = &kubernetesClientFactoryImpl{

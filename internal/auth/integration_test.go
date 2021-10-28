@@ -7,13 +7,13 @@ import (
 	"testing"
 	"time"
 
-	"github.com/containerssh/containerssh/config"
-	"github.com/containerssh/containerssh/internal/auth"
-	"github.com/containerssh/containerssh/internal/geoip/dummy"
-	"github.com/containerssh/containerssh/internal/metrics"
-	"github.com/containerssh/containerssh/log"
-	"github.com/containerssh/containerssh/message"
-	"github.com/containerssh/containerssh/service"
+	"github.com/containerssh/libcontainerssh/config"
+	"github.com/containerssh/libcontainerssh/internal/auth"
+	"github.com/containerssh/libcontainerssh/internal/geoip/dummy"
+	"github.com/containerssh/libcontainerssh/internal/metrics"
+	"github.com/containerssh/libcontainerssh/log"
+	"github.com/containerssh/libcontainerssh/message"
+	"github.com/containerssh/libcontainerssh/service"
 	"github.com/stretchr/testify/assert"
 )
 

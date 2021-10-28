@@ -3,7 +3,7 @@ package sshserver
 import (
 	"fmt"
 
-	message2 "github.com/containerssh/containerssh/message"
+	message2 "github.com/containerssh/libcontainerssh/message"
 	"golang.org/x/crypto/ssh"
 )
 

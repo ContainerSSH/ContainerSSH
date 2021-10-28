@@ -6,7 +6,7 @@ import (
 	"io"
 	"net"
 
-	message2 "github.com/containerssh/containerssh/message"
+	message2 "github.com/containerssh/libcontainerssh/message"
 	"golang.org/x/crypto/ssh"
 )
 
@@ -112,7 +112,7 @@ type NetworkConnectionHandler interface {
 			instruction string,
 			questions KeyboardInteractiveQuestions,
 		) (answers KeyboardInteractiveAnswers, err error),
-	    clientVersion string,
+		clientVersion string,
 	) (response AuthResponse, metadata map[string]string, reason error)
 
 	// OnHandshakeFailed is called when the SSH handshake failed. This method is also called after an authentication

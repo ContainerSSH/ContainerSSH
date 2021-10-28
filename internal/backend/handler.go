@@ -7,17 +7,17 @@ import (
 	"sync"
 	"time"
 
-	"github.com/containerssh/containerssh/config"
-	internalConfig "github.com/containerssh/containerssh/internal/config"
-	"github.com/containerssh/containerssh/internal/docker"
-	"github.com/containerssh/containerssh/internal/kubernetes"
-	"github.com/containerssh/containerssh/internal/metrics"
-	"github.com/containerssh/containerssh/internal/security"
-	"github.com/containerssh/containerssh/internal/sshproxy"
-	"github.com/containerssh/containerssh/internal/sshserver"
-	"github.com/containerssh/containerssh/internal/structutils"
-	"github.com/containerssh/containerssh/log"
-	"github.com/containerssh/containerssh/message"
+	"github.com/containerssh/libcontainerssh/config"
+	internalConfig "github.com/containerssh/libcontainerssh/internal/config"
+	"github.com/containerssh/libcontainerssh/internal/docker"
+	"github.com/containerssh/libcontainerssh/internal/kubernetes"
+	"github.com/containerssh/libcontainerssh/internal/metrics"
+	"github.com/containerssh/libcontainerssh/internal/security"
+	"github.com/containerssh/libcontainerssh/internal/sshproxy"
+	"github.com/containerssh/libcontainerssh/internal/sshserver"
+	"github.com/containerssh/libcontainerssh/internal/structutils"
+	"github.com/containerssh/libcontainerssh/log"
+	"github.com/containerssh/libcontainerssh/message"
 )
 
 type handler struct {

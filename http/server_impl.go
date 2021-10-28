@@ -10,9 +10,9 @@ import (
 	goHttp "net/http"
 	"sync"
 
-	"github.com/containerssh/containerssh/config"
-	"github.com/containerssh/containerssh/message"
-	"github.com/containerssh/containerssh/service"
+	"github.com/containerssh/libcontainerssh/config"
+	"github.com/containerssh/libcontainerssh/message"
+	"github.com/containerssh/libcontainerssh/service"
 )
 
 type server struct {

@@ -1,9 +1,9 @@
 package config
 
 import (
-	"github.com/containerssh/containerssh/config"
-	"github.com/containerssh/containerssh/http"
-	"github.com/containerssh/containerssh/log"
+	"github.com/containerssh/libcontainerssh/config"
+	"github.com/containerssh/libcontainerssh/http"
+	"github.com/containerssh/libcontainerssh/log"
 )
 
 type handler struct {

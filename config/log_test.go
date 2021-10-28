@@ -4,8 +4,8 @@ import (
 	"encoding/json"
 	"testing"
 
-	"github.com/containerssh/containerssh/config"
-	"github.com/containerssh/containerssh/internal/structutils"
+	"github.com/containerssh/libcontainerssh/config"
+	"github.com/containerssh/libcontainerssh/internal/structutils"
 	"github.com/stretchr/testify/assert"
 	"gopkg.in/yaml.v3"
 )

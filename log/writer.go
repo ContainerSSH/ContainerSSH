@@ -3,8 +3,8 @@ package log
 import (
 	"io"
 
-	"github.com/containerssh/containerssh/config"
-	"github.com/containerssh/containerssh/message"
+	"github.com/containerssh/libcontainerssh/config"
+	"github.com/containerssh/libcontainerssh/message"
 )
 
 // Writer is a specialized writer to write a line of log messages.

@@ -7,7 +7,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/s3"
-	"github.com/containerssh/containerssh/message"
+	"github.com/containerssh/libcontainerssh/message"
 )
 
 func (q *uploadQueue) initializeMultiPartUpload(s3Connection *s3.S3, name string, metadata queueEntryMetadata) (*string, error) {
@@ -70,11 +70,11 @@ func (q *uploadQueue) processMultiPartUploadPart(
 	etag = *response.ETag
 	q.logger.Debug(
 		message.NewMessage(
-		message.MAuditLogMultipartPartUploadComplete,
-		"completed upload of part %d of audit log %s",
-		partNumber,
-		name,
-	))
+			message.MAuditLogMultipartPartUploadComplete,
+			"completed upload of part %d of audit log %s",
+			partNumber,
+			name,
+		))
 	return contentLength, etag, nil
 }
 
@@ -124,10 +124,10 @@ func (q *uploadQueue) finalizeUpload(s3Connection *s3.S3, name string, uploadID 
 	}
 	q.logger.Debug(
 		message.NewMessage(
-		message.EAuditLogMultipartUploadFinalized,
-		"finalizing multipart upload complete for audit log %s",
-		name,
-	))
+			message.EAuditLogMultipartUploadFinalized,
+			"finalizing multipart upload complete for audit log %s",
+			name,
+		))
 	return nil
 }
 
@@ -151,8 +151,8 @@ func (q *uploadQueue) processShouldAbort(s3Connection *s3.S3, name string, failu
 		case <-q.shutdownContext.Done():
 			q.logger.Warning(
 				message.NewMessage(
-				message.EAuditLogMultipartAborting,
-				"shutdown context expired, aborting upload of audit log %s", name).Label("log", name))
+					message.EAuditLogMultipartAborting,
+					"shutdown context expired, aborting upload of audit log %s", name).Label("log", name))
 			abort()
 			return true
 		default:
@@ -161,8 +161,8 @@ func (q *uploadQueue) processShouldAbort(s3Connection *s3.S3, name string, failu
 	if failures > 20 {
 		q.logger.Warning(
 			message.NewMessage(
-			message.EAuditLogMultipartAborting,
-			"failed to upload audit log %s for 20 times in a row, giving up", name).Label("log", name))
+				message.EAuditLogMultipartAborting,
+				"failed to upload audit log %s for 20 times in a row, giving up", name).Label("log", name))
 		abort()
 		return true
 	}
@@ -171,8 +171,8 @@ func (q *uploadQueue) processShouldAbort(s3Connection *s3.S3, name string, failu
 		case <-q.ctx.Done():
 			q.logger.Warning(
 				message.NewMessage(
-				message.EAuditLogMultipartAborting,
-				"failed to upload audit log %s 3 times and shutdown is requested, giving up", name).Label("log", name))
+					message.EAuditLogMultipartAborting,
+					"failed to upload audit log %s 3 times and shutdown is requested, giving up", name).Label("log", name))
 			abort()
 			return true
 		default:
@@ -201,11 +201,11 @@ func (q *uploadQueue) uploadLoop(s3Connection *s3.S3, name string, entry *queueE
 		if err != nil {
 			q.logger.Error(
 				message.Wrap(
-				err,
-				message.EAuditLogFailedQueueStat,
-				"failed to stat audit queue file %s before upload",
-				name,
-			).Label("log", name))
+					err,
+					message.EAuditLogFailedQueueStat,
+					"failed to stat audit queue file %s before upload",
+					name,
+				).Label("log", name))
 			errorHappened = true
 		}
 
@@ -353,11 +353,11 @@ func (q *uploadQueue) abortMultiPartUpload(name string) error {
 		if *upload.Key == name {
 			q.logger.Debug(
 				message.NewMessage(
-				message.EAuditLogMultipartAborting,
-				"aborting previous multipart upload ID %s for audit log %s...",
-				*(upload.UploadId),
-				name,
-			).Label("log", name))
+					message.EAuditLogMultipartAborting,
+					"aborting previous multipart upload ID %s for audit log %s...",
+					*(upload.UploadId),
+					name,
+				).Label("log", name))
 			if err := q.abortSpecificMultipartUpload(name, s3Connection, upload.Key, upload.UploadId); err != nil {
 				return err
 			}

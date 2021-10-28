@@ -3,7 +3,7 @@ package log
 import (
 	"testing"
 
-	"github.com/containerssh/containerssh/config"
+	"github.com/containerssh/libcontainerssh/config"
 )
 
 // NewTestLogger creates a logger for testing purposes.

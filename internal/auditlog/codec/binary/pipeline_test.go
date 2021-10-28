@@ -5,11 +5,11 @@ import (
 	"sync"
 	"testing"
 
-	"github.com/containerssh/containerssh/internal/geoip/dummy"
+	"github.com/containerssh/libcontainerssh/internal/geoip/dummy"
 
-	"github.com/containerssh/containerssh/auditlog/message"
-	"github.com/containerssh/containerssh/internal/auditlog/codec"
-	"github.com/containerssh/containerssh/internal/auditlog/codec/binary"
+	"github.com/containerssh/libcontainerssh/auditlog/message"
+	"github.com/containerssh/libcontainerssh/internal/auditlog/codec"
+	"github.com/containerssh/libcontainerssh/internal/auditlog/codec/binary"
 
 	"github.com/stretchr/testify/assert"
 )

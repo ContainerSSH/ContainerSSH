@@ -5,10 +5,10 @@ import (
 	"os"
 	"time"
 
-	"github.com/containerssh/containerssh/config"
-	"github.com/containerssh/containerssh/config/webhook"
-	"github.com/containerssh/containerssh/log"
-	"github.com/containerssh/containerssh/service"
+	"github.com/containerssh/libcontainerssh/config"
+	"github.com/containerssh/libcontainerssh/config/webhook"
+	"github.com/containerssh/libcontainerssh/log"
+	"github.com/containerssh/libcontainerssh/service"
 )
 
 type myConfigReqHandler struct {

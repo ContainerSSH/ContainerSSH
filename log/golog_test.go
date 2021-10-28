@@ -5,10 +5,10 @@ import (
 	goLog "log"
 	"testing"
 
-	"github.com/containerssh/containerssh/config"
+	"github.com/containerssh/libcontainerssh/config"
 	"github.com/stretchr/testify/assert"
 
-	"github.com/containerssh/containerssh/log"
+	"github.com/containerssh/libcontainerssh/log"
 )
 
 func TestGoLog(t *testing.T) {

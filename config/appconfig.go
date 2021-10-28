@@ -2,6 +2,8 @@ package config
 
 import (
 	"fmt"
+
+	"github.com/containerssh/libcontainerssh/internal/structutils"
 )
 
 // AppConfig is the root configuration object of ContainerSSH.
@@ -47,6 +49,11 @@ type AppConfig struct {
 	Kubernetes KubernetesConfig `json:"kubernetes,omitempty" yaml:"kubernetes"`
 	// SSHProxy is the configuration for the SSH proxy backend, which forwards requests to a backing SSH server.
 	SSHProxy SSHProxyConfig `json:"sshproxy,omitempty" yaml:"sshproxy"`
+}
+
+// Default sets the default values for the configuration.
+func (cfg *AppConfig) Default() {
+	structutils.Defaults(cfg)
 }
 
 // Validate validates the configuration structure and returns an error if it is invalid.

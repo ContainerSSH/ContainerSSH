@@ -7,11 +7,11 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/containerssh/containerssh/config"
-	"github.com/containerssh/containerssh/log"
+	"github.com/containerssh/libcontainerssh/config"
+	"github.com/containerssh/libcontainerssh/log"
 	"golang.org/x/crypto/ssh"
 
-	"github.com/containerssh/containerssh"
+	"github.com/containerssh/libcontainerssh"
 )
 
 func NewSSHTestingAspect() TestingAspect {

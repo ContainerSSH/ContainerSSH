@@ -12,7 +12,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/containerssh/containerssh/config"
+	"github.com/containerssh/libcontainerssh/config"
 )
 
 var testLoggerActive = false
@@ -271,8 +271,8 @@ type testCase struct {
 
 type testCaseLine struct {
 	file    string
-	line  uint
-	level config.LogLevelString
-	code  string
+	line    uint
+	level   config.LogLevelString
+	code    string
 	message string
 }

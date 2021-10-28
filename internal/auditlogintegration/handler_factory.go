@@ -1,8 +1,8 @@
 package auditlogintegration
 
 import (
-	"github.com/containerssh/containerssh/internal/auditlog"
-	"github.com/containerssh/containerssh/internal/sshserver"
+	"github.com/containerssh/libcontainerssh/internal/auditlog"
+	"github.com/containerssh/libcontainerssh/internal/sshserver"
 )
 
 // NewHandler creates a new audit logging handler that logs all events as configured, and passes request to a provided backend.

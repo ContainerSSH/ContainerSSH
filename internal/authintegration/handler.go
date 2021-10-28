@@ -4,9 +4,9 @@ import (
 	"context"
 	"net"
 
-	"github.com/containerssh/containerssh/internal/sshserver"
+	"github.com/containerssh/libcontainerssh/internal/sshserver"
 
-	"github.com/containerssh/containerssh/internal/auth"
+	"github.com/containerssh/libcontainerssh/internal/auth"
 )
 
 // Behavior dictates how when the authentication requests are passed to the backends.

@@ -7,10 +7,10 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/containerssh/containerssh/config"
-	"github.com/containerssh/containerssh/log"
-	messageCodes "github.com/containerssh/containerssh/message"
-	"github.com/containerssh/containerssh/service"
+	"github.com/containerssh/libcontainerssh/config"
+	"github.com/containerssh/libcontainerssh/log"
+	messageCodes "github.com/containerssh/libcontainerssh/message"
+	"github.com/containerssh/libcontainerssh/service"
 	"golang.org/x/crypto/ssh"
 )
 

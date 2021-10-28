@@ -1,9 +1,9 @@
 package containerssh_test
 
 import (
-	configuration "github.com/containerssh/containerssh/config"
-	"github.com/containerssh/containerssh/internal/structutils"
-	"github.com/containerssh/containerssh/log"
+	configuration "github.com/containerssh/libcontainerssh/config"
+	"github.com/containerssh/libcontainerssh/internal/structutils"
+	"github.com/containerssh/libcontainerssh/log"
 )
 
 func NewBackendTestingAspect() TestingAspect {

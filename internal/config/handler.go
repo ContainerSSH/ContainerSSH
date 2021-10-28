@@ -1,7 +1,7 @@
 package config
 
 import (
-	"github.com/containerssh/containerssh/config"
+	"github.com/containerssh/libcontainerssh/config"
 )
 
 // RequestHandler is a generic interface for simplified configuration request handling.

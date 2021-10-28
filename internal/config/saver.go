@@ -1,7 +1,7 @@
 package config
 
 import (
-	"github.com/containerssh/containerssh/config"
+	"github.com/containerssh/libcontainerssh/config"
 )
 
 // ConfigSaver is a utility to store configuration

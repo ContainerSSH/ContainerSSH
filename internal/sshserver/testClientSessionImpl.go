@@ -9,8 +9,8 @@ import (
 	"sync"
 	"time"
 
-	"github.com/containerssh/containerssh/log"
-	messageCodes "github.com/containerssh/containerssh/message"
+	"github.com/containerssh/libcontainerssh/log"
+	messageCodes "github.com/containerssh/libcontainerssh/message"
 	"golang.org/x/crypto/ssh"
 )
 

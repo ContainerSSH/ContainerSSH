@@ -6,9 +6,9 @@ import (
 	"sync"
 	"testing"
 
-	"github.com/containerssh/containerssh/config"
-	"github.com/containerssh/containerssh/internal/sshserver"
-	"github.com/containerssh/containerssh/log"
+	"github.com/containerssh/libcontainerssh/config"
+	"github.com/containerssh/libcontainerssh/internal/sshserver"
+	"github.com/containerssh/libcontainerssh/log"
 	"github.com/stretchr/testify/assert"
 )
 

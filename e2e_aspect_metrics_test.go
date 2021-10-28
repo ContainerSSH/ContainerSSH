@@ -6,9 +6,9 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/containerssh/containerssh/config"
-	"github.com/containerssh/containerssh/log"
-	"github.com/containerssh/containerssh/message"
+	"github.com/containerssh/libcontainerssh/config"
+	"github.com/containerssh/libcontainerssh/log"
+	"github.com/containerssh/libcontainerssh/message"
 )
 
 func NewMetricsTestingAspect() TestingAspect {

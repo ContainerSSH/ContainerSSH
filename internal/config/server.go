@@ -1,10 +1,10 @@
 package config
 
 import (
-	"github.com/containerssh/containerssh/config"
-	http2 "github.com/containerssh/containerssh/http"
-	"github.com/containerssh/containerssh/log"
-	"github.com/containerssh/containerssh/message"
+	"github.com/containerssh/libcontainerssh/config"
+	http2 "github.com/containerssh/libcontainerssh/http"
+	"github.com/containerssh/libcontainerssh/log"
+	"github.com/containerssh/libcontainerssh/message"
 )
 
 // NewServer returns a complete HTTP server that responds to the configuration requests.
@@ -25,10 +25,10 @@ func NewServer(
 		func(url string) {
 			logger.Info(
 				message.NewMessage(
-				message.MConfigServerAvailable,
-				"The configuration server is now available at %s",
-				url,
-			))
+					message.MConfigServerAvailable,
+					"The configuration server is now available at %s",
+					url,
+				))
 		},
 	)
 }

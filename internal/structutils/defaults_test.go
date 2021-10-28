@@ -5,7 +5,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
-	"github.com/containerssh/containerssh/internal/structutils"
+	"github.com/containerssh/libcontainerssh/internal/structutils"
 )
 
 type defaultTest struct {

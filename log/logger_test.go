@@ -6,11 +6,11 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/containerssh/containerssh/config"
-	"github.com/containerssh/containerssh/message"
+	"github.com/containerssh/libcontainerssh/config"
+	"github.com/containerssh/libcontainerssh/message"
 	"github.com/stretchr/testify/assert"
 
-	"github.com/containerssh/containerssh/log"
+	"github.com/containerssh/libcontainerssh/log"
 )
 
 func TestLogLevelFiltering(t *testing.T) {

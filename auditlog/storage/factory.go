@@ -1,10 +1,10 @@
 package storage
 
 import (
-	"github.com/containerssh/containerssh/config"
-	"github.com/containerssh/containerssh/internal/auditlog"
-	"github.com/containerssh/containerssh/log"
-	"github.com/containerssh/containerssh/message"
+	"github.com/containerssh/libcontainerssh/config"
+	"github.com/containerssh/libcontainerssh/internal/auditlog"
+	"github.com/containerssh/libcontainerssh/log"
+	"github.com/containerssh/libcontainerssh/message"
 )
 
 func New(cfg config.AuditLogConfig, logger log.Logger) (Storage, error) {

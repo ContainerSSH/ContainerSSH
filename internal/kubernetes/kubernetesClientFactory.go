@@ -3,8 +3,8 @@ package kubernetes
 import (
 	"context"
 
-	"github.com/containerssh/containerssh/config"
-	"github.com/containerssh/containerssh/log"
+	"github.com/containerssh/libcontainerssh/config"
+	"github.com/containerssh/libcontainerssh/log"
 )
 
 // kubernetesClientFactory creates a kubernetesClient based on a configuration

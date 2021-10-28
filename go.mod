@@ -1,4 +1,4 @@
-module github.com/containerssh/containerssh
+module github.com/containerssh/libcontainerssh
 
 go 1.16
 

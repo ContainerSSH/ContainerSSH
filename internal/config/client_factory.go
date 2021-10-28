@@ -1,10 +1,10 @@
 package config
 
 import (
-	"github.com/containerssh/containerssh/config"
-	http2 "github.com/containerssh/containerssh/http"
-	"github.com/containerssh/containerssh/internal/metrics"
-	"github.com/containerssh/containerssh/log"
+	"github.com/containerssh/libcontainerssh/config"
+	http2 "github.com/containerssh/libcontainerssh/http"
+	"github.com/containerssh/libcontainerssh/internal/metrics"
+	"github.com/containerssh/libcontainerssh/log"
 )
 
 // MetricNameConfigBackendRequests is the number of requests to the config server

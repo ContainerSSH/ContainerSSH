@@ -15,16 +15,16 @@ import (
 	"github.com/aws/aws-sdk-go/aws/credentials"
 	"github.com/aws/aws-sdk-go/aws/session"
 	awsS3 "github.com/aws/aws-sdk-go/service/s3"
-	"github.com/containerssh/containerssh/config"
-	"github.com/containerssh/containerssh/log"
+	"github.com/containerssh/libcontainerssh/config"
+	"github.com/containerssh/libcontainerssh/log"
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/client"
 	"github.com/docker/go-connections/nat"
 	"github.com/stretchr/testify/assert"
 
-	auditLogStorage "github.com/containerssh/containerssh/internal/auditlog/storage"
-	"github.com/containerssh/containerssh/internal/auditlog/storage/s3"
+	auditLogStorage "github.com/containerssh/libcontainerssh/internal/auditlog/storage"
+	"github.com/containerssh/libcontainerssh/internal/auditlog/storage/s3"
 )
 
 type minio struct {

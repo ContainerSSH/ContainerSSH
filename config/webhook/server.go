@@ -1,10 +1,10 @@
 package webhook
 
 import (
-	configuration "github.com/containerssh/containerssh/config"
-	"github.com/containerssh/containerssh/internal/config"
-	"github.com/containerssh/containerssh/log"
-	"github.com/containerssh/containerssh/service"
+	configuration "github.com/containerssh/libcontainerssh/config"
+	"github.com/containerssh/libcontainerssh/internal/config"
+	"github.com/containerssh/libcontainerssh/log"
+	"github.com/containerssh/libcontainerssh/service"
 )
 
 // NewServer returns a complete HTTP server that responds to the configuration requests.

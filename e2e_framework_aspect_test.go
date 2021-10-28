@@ -1,8 +1,8 @@
 package containerssh_test
 
 import (
-	"github.com/containerssh/containerssh/config"
-	"github.com/containerssh/containerssh/log"
+	"github.com/containerssh/libcontainerssh/config"
+	"github.com/containerssh/libcontainerssh/log"
 )
 
 // TestingAspect describes one aspect that is being tested. For example, an aspect may be the status of audit logs being

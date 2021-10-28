@@ -3,10 +3,10 @@ package geoip
 import (
 	"fmt"
 
-	"github.com/containerssh/containerssh/config"
-	"github.com/containerssh/containerssh/internal/geoip/dummy"
-	"github.com/containerssh/containerssh/internal/geoip/geoipprovider"
-	"github.com/containerssh/containerssh/internal/geoip/oschwald"
+	"github.com/containerssh/libcontainerssh/config"
+	"github.com/containerssh/libcontainerssh/internal/geoip/dummy"
+	"github.com/containerssh/libcontainerssh/internal/geoip/geoipprovider"
+	"github.com/containerssh/libcontainerssh/internal/geoip/oschwald"
 )
 
 // New creates a new lookup provider based on the configuration.

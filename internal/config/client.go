@@ -4,7 +4,7 @@ import (
 	"context"
 	"net"
 
-	"github.com/containerssh/containerssh/config"
+	"github.com/containerssh/libcontainerssh/config"
 )
 
 // Client is the interface to fetch a user-specific configuration.

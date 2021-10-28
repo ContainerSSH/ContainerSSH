@@ -5,7 +5,7 @@ import (
 	"net"
 	"testing"
 
-	"github.com/containerssh/containerssh/internal/test"
+	"github.com/containerssh/libcontainerssh/internal/test"
 	"golang.org/x/crypto/ssh"
 )
 

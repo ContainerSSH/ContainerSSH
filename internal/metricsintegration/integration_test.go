@@ -6,13 +6,13 @@ import (
 	"net"
 	"testing"
 
-	"github.com/containerssh/containerssh/config"
-	"github.com/containerssh/containerssh/internal/geoip/dummy"
-	"github.com/containerssh/containerssh/internal/metrics"
-	"github.com/containerssh/containerssh/internal/sshserver"
+	"github.com/containerssh/libcontainerssh/config"
+	"github.com/containerssh/libcontainerssh/internal/geoip/dummy"
+	"github.com/containerssh/libcontainerssh/internal/metrics"
+	"github.com/containerssh/libcontainerssh/internal/sshserver"
 	"github.com/stretchr/testify/assert"
 
-	"github.com/containerssh/containerssh/internal/metricsintegration"
+	"github.com/containerssh/libcontainerssh/internal/metricsintegration"
 )
 
 func TestMetricsReporting(t *testing.T) {

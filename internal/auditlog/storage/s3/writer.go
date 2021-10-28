@@ -3,7 +3,7 @@ package s3
 import (
 	"io"
 
-	"github.com/containerssh/containerssh/internal/auditlog/storage"
+	"github.com/containerssh/libcontainerssh/internal/auditlog/storage"
 )
 
 func newMonitoringWriter(

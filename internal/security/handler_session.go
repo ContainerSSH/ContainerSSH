@@ -3,15 +3,15 @@ package security
 import (
 	"context"
 
-	config2 "github.com/containerssh/containerssh/config"
-	"github.com/containerssh/containerssh/internal/sshserver"
-	"github.com/containerssh/containerssh/log"
-	"github.com/containerssh/containerssh/message"
+	config2 "github.com/containerssh/libcontainerssh/config"
+	"github.com/containerssh/libcontainerssh/internal/sshserver"
+	"github.com/containerssh/libcontainerssh/log"
+	"github.com/containerssh/libcontainerssh/message"
 )
 
 type sessionHandler struct {
-	config  config2.SecurityConfig
-	backend sshserver.SessionChannelHandler
+	config        config2.SecurityConfig
+	backend       sshserver.SessionChannelHandler
 	sshConnection *sshConnectionHandler
 	logger        log.Logger
 }
@@ -166,9 +166,9 @@ func (s *sessionHandler) OnExecRequest(
 	s.logger.Debug(
 		message.NewMessage(
 			message.MSecurityForcingCommand,
-		"Forcing command execution to %s",
-		s.config.ForceCommand,
-	))
+			"Forcing command execution to %s",
+			s.config.ForceCommand,
+		))
 	return s.backend.OnExecRequest(requestID, s.config.ForceCommand)
 }
 
@@ -197,9 +197,9 @@ func (s *sessionHandler) OnShell(
 	s.logger.Debug(
 		message.NewMessage(
 			message.MSecurityForcingCommand,
-		"Forcing command execution to %s",
-		s.config.ForceCommand,
-	))
+			"Forcing command execution to %s",
+			s.config.ForceCommand,
+		))
 	return s.backend.OnExecRequest(requestID, s.config.ForceCommand)
 }
 
@@ -255,9 +255,9 @@ func (s *sessionHandler) OnSubsystem(
 	s.logger.Debug(
 		message.NewMessage(
 			message.MSecurityForcingCommand,
-		"Forcing command execution to %s",
-		s.config.ForceCommand,
-	))
+			"Forcing command execution to %s",
+			s.config.ForceCommand,
+		))
 	return s.backend.OnExecRequest(requestID, s.config.ForceCommand)
 }
 

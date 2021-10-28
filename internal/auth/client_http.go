@@ -8,11 +8,11 @@ import (
 	"strings"
 	"time"
 
-	"github.com/containerssh/containerssh/auth"
-	"github.com/containerssh/containerssh/http"
-	"github.com/containerssh/containerssh/internal/metrics"
-	"github.com/containerssh/containerssh/log"
-	"github.com/containerssh/containerssh/message"
+	"github.com/containerssh/libcontainerssh/auth"
+	"github.com/containerssh/libcontainerssh/http"
+	"github.com/containerssh/libcontainerssh/internal/metrics"
+	"github.com/containerssh/libcontainerssh/log"
+	"github.com/containerssh/libcontainerssh/message"
 )
 
 type httpAuthClient struct {

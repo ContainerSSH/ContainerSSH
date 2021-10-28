@@ -3,12 +3,12 @@ package authintegration
 import (
 	"fmt"
 
-	"github.com/containerssh/containerssh/config"
-	"github.com/containerssh/containerssh/internal/auth"
-	"github.com/containerssh/containerssh/internal/metrics"
-	"github.com/containerssh/containerssh/internal/sshserver"
-	"github.com/containerssh/containerssh/log"
-	"github.com/containerssh/containerssh/service"
+	"github.com/containerssh/libcontainerssh/config"
+	"github.com/containerssh/libcontainerssh/internal/auth"
+	"github.com/containerssh/libcontainerssh/internal/metrics"
+	"github.com/containerssh/libcontainerssh/internal/sshserver"
+	"github.com/containerssh/libcontainerssh/log"
+	"github.com/containerssh/libcontainerssh/service"
 )
 
 // New creates a new handler that authenticates the users with passwords and public keys.

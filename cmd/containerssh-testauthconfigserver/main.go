@@ -1,7 +1,7 @@
 // ContainerSSH Authentication and Configuration Server
 //
 // This OpenAPI document describes the API endpoints that are required for implementing an authentication
-// and configuration server for ContainerSSH. (See https://github.com/containerssh/containerssh for details.)
+// and configuration server for ContainerSSH. (See https://github.com/containerssh/libcontainerssh for details.)
 //
 //     Schemes: http, https
 //     Host: localhost
@@ -24,12 +24,12 @@ import (
 	"os/signal"
 	"syscall"
 
-	"github.com/containerssh/containerssh/config"
-	configWebhook "github.com/containerssh/containerssh/config/webhook"
-	"github.com/containerssh/containerssh/http"
-	"github.com/containerssh/containerssh/internal/auth"
-	"github.com/containerssh/containerssh/log"
-	"github.com/containerssh/containerssh/service"
+	"github.com/containerssh/libcontainerssh/config"
+	configWebhook "github.com/containerssh/libcontainerssh/config/webhook"
+	"github.com/containerssh/libcontainerssh/http"
+	"github.com/containerssh/libcontainerssh/internal/auth"
+	"github.com/containerssh/libcontainerssh/log"
+	"github.com/containerssh/libcontainerssh/service"
 	"github.com/docker/docker/api/types/container"
 )
 

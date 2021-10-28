@@ -5,11 +5,11 @@ import (
 	"os"
 	"testing"
 
-	configuration "github.com/containerssh/containerssh/config"
-	"github.com/containerssh/containerssh/internal/config"
-	"github.com/containerssh/containerssh/internal/structutils"
-	"github.com/containerssh/containerssh/log"
-	"github.com/containerssh/containerssh/message"
+	configuration "github.com/containerssh/libcontainerssh/config"
+	"github.com/containerssh/libcontainerssh/internal/config"
+	"github.com/containerssh/libcontainerssh/internal/structutils"
+	"github.com/containerssh/libcontainerssh/log"
+	"github.com/containerssh/libcontainerssh/message"
 	"github.com/stretchr/testify/assert"
 )
 

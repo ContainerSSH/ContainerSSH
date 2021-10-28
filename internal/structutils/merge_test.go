@@ -5,7 +5,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
-	"github.com/containerssh/containerssh/internal/structutils"
+	"github.com/containerssh/libcontainerssh/internal/structutils"
 )
 
 type mergeTest struct {
@@ -13,8 +13,8 @@ type mergeTest struct {
 }
 
 type mergeTestSub struct {
-	Text string
-	Bool bool
+	Text     string
+	Bool     bool
 	StrSlice []string
 }
 

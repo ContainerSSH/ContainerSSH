@@ -11,14 +11,14 @@ import (
 	"testing"
 	"time"
 
-	"github.com/containerssh/containerssh/auditlog/message"
-	"github.com/containerssh/containerssh/config"
-	"github.com/containerssh/containerssh/internal/auditlog"
-	"github.com/containerssh/containerssh/internal/auditlog/codec/binary"
-	"github.com/containerssh/containerssh/internal/auditlog/storage"
-	"github.com/containerssh/containerssh/internal/auditlog/storage/file"
-	"github.com/containerssh/containerssh/internal/geoip/dummy"
-	"github.com/containerssh/containerssh/log"
+	"github.com/containerssh/libcontainerssh/auditlog/message"
+	"github.com/containerssh/libcontainerssh/config"
+	"github.com/containerssh/libcontainerssh/internal/auditlog"
+	"github.com/containerssh/libcontainerssh/internal/auditlog/codec/binary"
+	"github.com/containerssh/libcontainerssh/internal/auditlog/storage"
+	"github.com/containerssh/libcontainerssh/internal/auditlog/storage/file"
+	"github.com/containerssh/libcontainerssh/internal/geoip/dummy"
+	"github.com/containerssh/libcontainerssh/log"
 	"github.com/stretchr/testify/assert"
 )
 

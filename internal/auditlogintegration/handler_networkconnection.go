@@ -3,9 +3,9 @@ package auditlogintegration
 import (
 	"context"
 
-	"github.com/containerssh/containerssh/auditlog/message"
-	"github.com/containerssh/containerssh/internal/auditlog"
-	"github.com/containerssh/containerssh/internal/sshserver"
+	"github.com/containerssh/libcontainerssh/auditlog/message"
+	"github.com/containerssh/libcontainerssh/internal/auditlog"
+	"github.com/containerssh/libcontainerssh/internal/sshserver"
 )
 
 type networkConnectionHandler struct {

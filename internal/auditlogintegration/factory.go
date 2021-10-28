@@ -3,11 +3,11 @@ package auditlogintegration
 import (
 	"fmt"
 
-	"github.com/containerssh/containerssh/config"
-	"github.com/containerssh/containerssh/internal/auditlog"
-	"github.com/containerssh/containerssh/internal/geoip/geoipprovider"
-	"github.com/containerssh/containerssh/internal/sshserver"
-	"github.com/containerssh/containerssh/log"
+	"github.com/containerssh/libcontainerssh/config"
+	"github.com/containerssh/libcontainerssh/internal/auditlog"
+	"github.com/containerssh/libcontainerssh/internal/geoip/geoipprovider"
+	"github.com/containerssh/libcontainerssh/internal/sshserver"
+	"github.com/containerssh/libcontainerssh/log"
 )
 
 // New creates a new handler based on the application config and the required dependencies. If audit logging is not

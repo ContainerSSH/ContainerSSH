@@ -8,12 +8,12 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/containerssh/containerssh/config"
-	"github.com/containerssh/containerssh/log"
-	"github.com/containerssh/containerssh/service"
+	"github.com/containerssh/libcontainerssh/config"
+	"github.com/containerssh/libcontainerssh/log"
+	"github.com/containerssh/libcontainerssh/service"
 	"github.com/stretchr/testify/assert"
 
-	"github.com/containerssh/containerssh/internal/metrics"
+	"github.com/containerssh/libcontainerssh/internal/metrics"
 )
 
 func TestFetchMetrics(t *testing.T) {

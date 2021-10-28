@@ -3,7 +3,7 @@ package auditlog
 import (
 	"io"
 
-	"github.com/containerssh/containerssh/auditlog/message"
+	"github.com/containerssh/libcontainerssh/auditlog/message"
 )
 
 type interceptingReader struct {

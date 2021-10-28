@@ -13,14 +13,14 @@ import (
 	"testing"
 	"time"
 
-	"github.com/containerssh/containerssh/config"
-	"github.com/containerssh/containerssh/internal/structutils"
-	"github.com/containerssh/containerssh/log"
-	"github.com/containerssh/containerssh/service"
+	"github.com/containerssh/libcontainerssh/config"
+	"github.com/containerssh/libcontainerssh/internal/structutils"
+	"github.com/containerssh/libcontainerssh/log"
+	"github.com/containerssh/libcontainerssh/service"
 	"github.com/stretchr/testify/assert"
 	"golang.org/x/crypto/ssh"
 
-	"github.com/containerssh/containerssh/internal/sshserver"
+	"github.com/containerssh/libcontainerssh/internal/sshserver"
 )
 
 //region Tests
@@ -509,7 +509,7 @@ func (f *fullNetworkConnectionHandler) OnAuthPassword(
 	return sshserver.AuthResponseFailure, nil, fmt.Errorf("authentication failed")
 }
 
-func (f *fullNetworkConnectionHandler) OnAuthPubKey(username string, pubKey string, _ string,) (response sshserver.AuthResponse, metadata map[string]string, reason error) {
+func (f *fullNetworkConnectionHandler) OnAuthPubKey(username string, pubKey string, _ string) (response sshserver.AuthResponse, metadata map[string]string, reason error) {
 	if storedPubKey, ok := f.handler.pubKeys[username]; ok && storedPubKey == pubKey {
 		return sshserver.AuthResponseSuccess, nil, nil
 	}

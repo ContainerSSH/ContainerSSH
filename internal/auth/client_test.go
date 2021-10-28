@@ -6,12 +6,12 @@ import (
 	"testing"
 	"time"
 
-	configuration "github.com/containerssh/containerssh/config"
-	"github.com/containerssh/containerssh/internal/auth"
-	"github.com/containerssh/containerssh/internal/geoip/dummy"
-	"github.com/containerssh/containerssh/internal/metrics"
-	"github.com/containerssh/containerssh/log"
-	"github.com/containerssh/containerssh/message"
+	configuration "github.com/containerssh/libcontainerssh/config"
+	"github.com/containerssh/libcontainerssh/internal/auth"
+	"github.com/containerssh/libcontainerssh/internal/geoip/dummy"
+	"github.com/containerssh/libcontainerssh/internal/metrics"
+	"github.com/containerssh/libcontainerssh/log"
+	"github.com/containerssh/libcontainerssh/message"
 )
 
 // TestPasswordDisabled tests if the call fails with the correct error if the password authentication method is

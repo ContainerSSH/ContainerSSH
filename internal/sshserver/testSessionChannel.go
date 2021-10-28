@@ -8,7 +8,7 @@ import (
 	"io"
 	"strings"
 
-	"github.com/containerssh/containerssh/internal/unixutils"
+	"github.com/containerssh/libcontainerssh/internal/unixutils"
 )
 
 type testSessionChannel struct {

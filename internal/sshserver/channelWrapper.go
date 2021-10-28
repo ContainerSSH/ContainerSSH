@@ -6,8 +6,8 @@ import (
 	"io"
 	"sync"
 
-	"github.com/containerssh/containerssh/log"
-	messageCodes "github.com/containerssh/containerssh/message"
+	"github.com/containerssh/libcontainerssh/log"
+	messageCodes "github.com/containerssh/libcontainerssh/message"
 	"golang.org/x/crypto/ssh"
 )
 
@@ -50,10 +50,10 @@ func (c *channelWrapper) ExitStatus(exitCode uint32) {
 	}
 	c.logger.Debug(
 		messageCodes.NewMessage(
-		messageCodes.MSSHExit,
-		"Program exited with status %d",
-		exitCode,
-	).Label("exitCode", exitCode))
+			messageCodes.MSSHExit,
+			"Program exited with status %d",
+			exitCode,
+		).Label("exitCode", exitCode))
 	if c.exitSent || c.closed {
 		return
 	}
@@ -67,10 +67,10 @@ func (c *channelWrapper) ExitStatus(exitCode uint32) {
 		if !errors.Is(err, io.EOF) {
 			c.logger.Debug(
 				messageCodes.Wrap(
-				err,
+					err,
 					messageCodes.ESSHExitCodeFailed,
-				"Failed to send exit status to client",
-			))
+					"Failed to send exit status to client",
+				))
 		}
 	}
 }
@@ -83,10 +83,10 @@ func (c *channelWrapper) ExitSignal(signal string, coreDumped bool, errorMessage
 	}
 	c.logger.Debug(
 		messageCodes.NewMessage(
-		messageCodes.MSSHExitSignal,
-		"Program exited with signal %s",
-		signal,
-	).Label("signal", signal).Label("coreDumped", coreDumped))
+			messageCodes.MSSHExitSignal,
+			"Program exited with signal %s",
+			signal,
+		).Label("signal", signal).Label("coreDumped", coreDumped))
 	if c.exitSignalSent || c.closed {
 		return
 	}
@@ -103,10 +103,10 @@ func (c *channelWrapper) ExitSignal(signal string, coreDumped bool, errorMessage
 		if !errors.Is(err, io.EOF) {
 			c.logger.Debug(
 				messageCodes.Wrap(
-				err,
-				messageCodes.ESSHExitCodeFailed,
-				"Failed to send exit status to client",
-			))
+					err,
+					messageCodes.ESSHExitCodeFailed,
+					"Failed to send exit status to client",
+				))
 		}
 	}
 }

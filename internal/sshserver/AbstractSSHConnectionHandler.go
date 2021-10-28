@@ -3,7 +3,7 @@ package sshserver
 import (
 	"context"
 
-	messageCodes "github.com/containerssh/containerssh/message"
+	messageCodes "github.com/containerssh/libcontainerssh/message"
 	"golang.org/x/crypto/ssh"
 )
 

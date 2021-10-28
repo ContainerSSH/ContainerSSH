@@ -34,7 +34,7 @@ The parameters are as follows:
 - `config` is a struct of the [`kuberun.Config` type](config.go).
 - `connectionID` is an opaque ID for the connection.
 - `client` is the `net.TCPAddr` of the client that connected.
-- `logger` is the logger from the [log library](https://github.com/containerssh/containerssh/log)
+- `logger` is the logger from the [log library](https://github.com/containerssh/libcontainerssh/log)
 - `backendRequestsCounter` and `backendFailuresCounter` are counters from the [metrics library](https://github.com/containerssh/metrics)
 
 Once the handler is created it will wait for a successful handshake:

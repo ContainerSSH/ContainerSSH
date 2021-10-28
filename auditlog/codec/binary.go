@@ -1,7 +1,7 @@
 package codec
 
 import (
-	"github.com/containerssh/containerssh/internal/auditlog/codec/binary"
+	"github.com/containerssh/libcontainerssh/internal/auditlog/codec/binary"
 )
 
 // NewBinaryDecoder returns a decoder for the ContainerSSH binary audit log protocol.

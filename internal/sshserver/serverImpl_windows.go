@@ -6,7 +6,7 @@ package sshserver
 import (
 	"syscall"
 
-	messageCodes "github.com/containerssh/containerssh/message"
+	messageCodes "github.com/containerssh/libcontainerssh/message"
 )
 
 func (s *serverImpl) socketControl(_, _ string, conn syscall.RawConn) error {

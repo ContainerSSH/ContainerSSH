@@ -10,8 +10,8 @@ import (
 	"strconv"
 	"strings"
 
-	log2 "github.com/containerssh/containerssh/log"
-	"github.com/containerssh/containerssh/message"
+	log2 "github.com/containerssh/libcontainerssh/log"
+	"github.com/containerssh/libcontainerssh/message"
 )
 
 type serverResponse struct {

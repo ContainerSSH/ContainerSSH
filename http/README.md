@@ -12,7 +12,7 @@ This library provides a much simplified API for both the HTTP client and server.
 The client library takes a request object that [can be marshalled into JSON format](https://gobyexample.com/json) and sends it to the server. It then fills a response object with the response received from the server. In code:
 
 ```go
-// Logger is from the github.com/containerssh/containerssh/log package
+// Logger is from the github.com/containerssh/libcontainerssh/log package
 logger := standard.New()
 clientConfig := http.ClientConfiguration{
     URL:        "http://127.0.0.1:8080/",
@@ -55,7 +55,7 @@ if responseStatus > 399 {
 }
 ```
 
-The `logger` parameter is a logger from the [github.com/containerssh/containerssh/log](https://github.com/containerssh/containerssh/log) package.
+The `logger` parameter is a logger from the [github.com/containerssh/libcontainerssh/log](https://github.com/containerssh/libcontainerssh/log) package.
 
 ### Using the server
 
@@ -94,7 +94,7 @@ go func() {
 lifecycle.Shutdown(context.Background())
 ```
 
-Like before, the `logger` parameter is a logger from the [github.com/containerssh/containerssh/log](https://github.com/containerssh/containerssh/log) package. The `handler` is a regular [go HTTP handler](https://golang.org/pkg/net/http/#Handler) that satisfies this interface:
+Like before, the `logger` parameter is a logger from the [github.com/containerssh/libcontainerssh/log](https://github.com/containerssh/libcontainerssh/log) package. The `handler` is a regular [go HTTP handler](https://golang.org/pkg/net/http/#Handler) that satisfies this interface:
 
 ```go
 type Handler interface {

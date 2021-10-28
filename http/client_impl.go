@@ -10,15 +10,15 @@ import (
 	"net/http"
 	"net/url"
 
-	"github.com/containerssh/containerssh/config"
-	"github.com/containerssh/containerssh/log"
-	"github.com/containerssh/containerssh/message"
+	"github.com/containerssh/libcontainerssh/config"
+	"github.com/containerssh/libcontainerssh/log"
+	"github.com/containerssh/libcontainerssh/message"
 	"github.com/gorilla/schema"
 )
 
 type client struct {
-	config config.HTTPClientConfiguration
-	logger log.Logger
+	config           config.HTTPClientConfiguration
+	logger           log.Logger
 	tlsConfig        *tls.Config
 	extraHeaders     map[string][]string
 	allowLaxDecoding bool
@@ -130,9 +130,9 @@ func (c *client) request(
 	logger.Debug(
 		message.NewMessage(
 			message.MHTTPClientResponse,
-		"HTTP response with status %d",
-		resp.StatusCode,
-	).Label("statusCode", resp.StatusCode))
+			"HTTP response with status %d",
+			resp.StatusCode,
+		).Label("statusCode", resp.StatusCode))
 
 	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {

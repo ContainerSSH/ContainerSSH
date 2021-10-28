@@ -36,4 +36,4 @@ if err != nil {
 }
 ```
 
-The `logger` parameter is a logger from the [ContainerSSH logger library](https://github.com/containerssh/containerssh/log).
+The `logger` parameter is a logger from the [ContainerSSH logger library](https://github.com/containerssh/libcontainerssh/log).

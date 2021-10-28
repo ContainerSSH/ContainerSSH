@@ -5,7 +5,7 @@ import (
 	"io"
 	"net"
 
-	"github.com/containerssh/containerssh/auditlog/message"
+	"github.com/containerssh/libcontainerssh/auditlog/message"
 )
 
 type empty struct{}

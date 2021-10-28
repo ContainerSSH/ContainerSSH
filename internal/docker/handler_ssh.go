@@ -1,7 +1,7 @@
 package docker
 
 import (
-	"github.com/containerssh/containerssh/internal/sshserver"
+	"github.com/containerssh/libcontainerssh/internal/sshserver"
 )
 
 type sshConnectionHandler struct {
