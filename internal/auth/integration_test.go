@@ -11,6 +11,7 @@ import (
 	"github.com/containerssh/libcontainerssh/internal/auth"
 	"github.com/containerssh/libcontainerssh/internal/geoip/dummy"
 	"github.com/containerssh/libcontainerssh/internal/metrics"
+	"github.com/containerssh/libcontainerssh/internal/test"
 	"github.com/containerssh/libcontainerssh/log"
 	"github.com/containerssh/libcontainerssh/message"
 	"github.com/containerssh/libcontainerssh/service"
@@ -75,7 +76,7 @@ func TestAuth(t *testing.T) {
 
 	for name, subpath := range map[string]string{"empty": "", "auth": "/auth"} {
 		t.Run(fmt.Sprintf("subpath_%s", name), func(t *testing.T) {
-			client, lifecycle, metricsCollector, err := initializeAuth(logger, subpath)
+			client, lifecycle, metricsCollector, err := initializeAuth(t, logger, subpath)
 			if err != nil {
 				assert.Fail(t, "failed to initialize auth", err)
 				return
@@ -113,13 +114,19 @@ func TestAuth(t *testing.T) {
 	}
 }
 
-func initializeAuth(logger log.Logger, subpath string) (auth.Client, service.Lifecycle, metrics.Collector, error) {
+func initializeAuth(t *testing.T, logger log.Logger, subpath string) (
+	auth.Client,
+	service.Lifecycle,
+	metrics.Collector,
+	error,
+) {
 	ready := make(chan bool, 1)
 	errors := make(chan error)
+	port := test.GetNextPort(t)
 
 	server, err := auth.NewServer(
 		config.HTTPServerConfiguration{
-			Listen: "127.0.0.1:8080",
+			Listen: fmt.Sprintf("127.0.0.1:%d", port),
 		},
 		&handler{},
 		logger,
@@ -135,7 +142,7 @@ func initializeAuth(logger log.Logger, subpath string) (auth.Client, service.Lif
 			Method: config.AuthMethodWebhook,
 			Webhook: config.AuthWebhookClientConfig{
 				HTTPClientConfiguration: config.HTTPClientConfiguration{
-					URL:     fmt.Sprintf("http://127.0.0.1:8080%s", subpath),
+					URL:     fmt.Sprintf("http://127.0.0.1:%d%s", port, subpath),
 					Timeout: 2 * time.Second,
 				},
 				Password: true,

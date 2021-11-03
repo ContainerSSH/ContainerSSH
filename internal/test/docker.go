@@ -306,7 +306,7 @@ func (d *dockerContainer) inspect() {
 		if err != nil {
 			d.t.Fatalf("Failed to inspect container (%v)", err)
 		}
-		if inspectResult.State.Health.Status == types.Healthy ||
+		if inspectResult.State.Health == nil || inspectResult.State.Health.Status == types.Healthy ||
 			inspectResult.State.Health.Status == types.NoHealthcheck {
 			if inspectResult.State.Running {
 				if d.updatePortMappings(inspectResult) {

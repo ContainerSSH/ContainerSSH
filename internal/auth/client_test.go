@@ -2,6 +2,7 @@ package auth_test
 
 import (
 	"errors"
+	"fmt"
 	"net"
 	"testing"
 	"time"
@@ -10,6 +11,7 @@ import (
 	"github.com/containerssh/libcontainerssh/internal/auth"
 	"github.com/containerssh/libcontainerssh/internal/geoip/dummy"
 	"github.com/containerssh/libcontainerssh/internal/metrics"
+	"github.com/containerssh/libcontainerssh/internal/test"
 	"github.com/containerssh/libcontainerssh/log"
 	"github.com/containerssh/libcontainerssh/message"
 )
@@ -17,11 +19,12 @@ import (
 // TestPasswordDisabled tests if the call fails with the correct error if the password authentication method is
 // disabled. The inverse is not tested because it is already tested by the integration test.
 func TestPasswordDisabled(t *testing.T) {
+	port := test.GetNextPort(t)
 	config := configuration.AuthConfig{
 		Method: configuration.AuthMethodWebhook,
 		Webhook: configuration.AuthWebhookClientConfig{
 			HTTPClientConfiguration: configuration.HTTPClientConfiguration{
-				URL:            "http://localhost:8080",
+				URL:            fmt.Sprintf("http://localhost:%d", port),
 				AllowRedirects: false,
 				Timeout:        100 * time.Millisecond,
 			},
@@ -42,6 +45,7 @@ func TestPasswordDisabled(t *testing.T) {
 	if authenticationContext.Success() {
 		t.Fatal("Password authentication method resulted in successful authentication.")
 	}
+	err = authenticationContext.Error()
 	if err == nil {
 		t.Fatal("Password authentication method did not result in an error.")
 	}
@@ -88,6 +92,7 @@ func TestPubKeyDisabled(t *testing.T) {
 	if authContext.Success() {
 		t.Fatal("Public key authentication method resulted in successful authentication.")
 	}
+	err = authContext.Error()
 	if err == nil {
 		t.Fatal("Public key authentication method did not result in an error.")
 	}

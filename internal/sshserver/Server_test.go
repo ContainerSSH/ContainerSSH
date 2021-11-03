@@ -15,6 +15,7 @@ import (
 
 	"github.com/containerssh/libcontainerssh/config"
 	"github.com/containerssh/libcontainerssh/internal/structutils"
+	"github.com/containerssh/libcontainerssh/internal/test"
 	"github.com/containerssh/libcontainerssh/log"
 	"github.com/containerssh/libcontainerssh/service"
 	"github.com/stretchr/testify/assert"
@@ -26,6 +27,7 @@ import (
 //region Tests
 
 func TestReadyRejection(t *testing.T) {
+	t.Parallel()
 	cfg := config.SSHConfig{}
 	structutils.Defaults(&cfg)
 	if err := cfg.GenerateHostKey(); err != nil {
@@ -51,9 +53,11 @@ func TestReadyRejection(t *testing.T) {
 }
 
 func TestAuthFailed(t *testing.T) {
+	t.Parallel()
+	port := test.GetNextPort(t)
 	server := newServerHelper(
 		t,
-		"127.0.0.1:2222",
+		fmt.Sprintf("127.0.0.1:%d", port),
 		map[string][]byte{
 			"foo": []byte("bar"),
 		},
@@ -81,7 +85,7 @@ func TestAuthFailed(t *testing.T) {
 		return fmt.Errorf("invalid host")
 	}
 
-	sshConnection, err := ssh.Dial("tcp", "127.0.0.1:2222", sshConfig)
+	sshConnection, err := ssh.Dial("tcp", fmt.Sprintf("127.0.0.1:%d", port), sshConfig)
 	if err != nil {
 		if !strings.Contains(err.Error(), "unable to authenticate") {
 			assert.Fail(t, "handshake failed for non-auth reasons", err)
@@ -93,6 +97,7 @@ func TestAuthFailed(t *testing.T) {
 }
 
 func TestAuthKeyboardInteractive(t *testing.T) {
+	t.Parallel()
 	user1 := sshserver.NewTestUser("test")
 	user1.AddKeyboardInteractiveChallengeResponse("foo", "bar")
 
@@ -101,6 +106,7 @@ func TestAuthKeyboardInteractive(t *testing.T) {
 
 	logger := log.NewTestLogger(t)
 	srv := sshserver.NewTestServer(
+		t,
 		sshserver.NewTestAuthenticationHandler(
 			sshserver.NewTestHandler(),
 			user2,
@@ -127,9 +133,11 @@ func TestAuthKeyboardInteractive(t *testing.T) {
 }
 
 func TestSessionSuccess(t *testing.T) {
+	t.Parallel()
+	port := test.GetNextPort(t)
 	server := newServerHelper(
 		t,
-		"127.0.0.1:2222",
+		fmt.Sprintf("127.0.0.1:%d", port),
 		map[string][]byte{
 			"foo": []byte("bar"),
 		},
@@ -146,7 +154,7 @@ func TestSessionSuccess(t *testing.T) {
 	}()
 
 	reply, exitStatus, err := shellRequestReply(
-		"127.0.0.1:2222",
+		fmt.Sprintf("127.0.0.1:%d", port),
 		"foo",
 		ssh.Password("bar"),
 		hostKey,
@@ -160,9 +168,11 @@ func TestSessionSuccess(t *testing.T) {
 }
 
 func TestSessionError(t *testing.T) {
+	t.Parallel()
+	port := test.GetNextPort(t)
 	server := newServerHelper(
 		t,
-		"127.0.0.1:2222",
+		fmt.Sprintf("127.0.0.1:%d", port),
 		map[string][]byte{
 			"foo": []byte("bar"),
 		},
@@ -179,7 +189,7 @@ func TestSessionError(t *testing.T) {
 	}()
 
 	reply, exitStatus, err := shellRequestReply(
-		"127.0.0.1:2222",
+		fmt.Sprintf("127.0.0.1:%d", port),
 		"foo",
 		ssh.Password("bar"),
 		hostKey,
@@ -193,6 +203,8 @@ func TestSessionError(t *testing.T) {
 }
 
 func TestPubKey(t *testing.T) {
+	t.Parallel()
+	port := test.GetNextPort(t)
 	rsaKey, err := rsa.GenerateKey(
 		rand.Reader,
 		4096,
@@ -204,7 +216,7 @@ func TestPubKey(t *testing.T) {
 	authorizedKey := strings.TrimSpace(string(ssh.MarshalAuthorizedKey(publicKey)))
 	server := newServerHelper(
 		t,
-		"127.0.0.1:2222",
+		fmt.Sprintf("127.0.0.1:%d", port),
 		map[string][]byte{},
 		map[string]string{
 			"foo": authorizedKey,
@@ -221,7 +233,7 @@ func TestPubKey(t *testing.T) {
 	}()
 
 	reply, exitStatus, err := shellRequestReply(
-		"127.0.0.1:2222",
+		fmt.Sprintf("127.0.0.1:%d", port),
 		"foo",
 		ssh.PublicKeys(signer),
 		hostKey,

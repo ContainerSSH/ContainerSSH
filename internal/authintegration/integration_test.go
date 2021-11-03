@@ -14,6 +14,7 @@ import (
 	"github.com/containerssh/libcontainerssh/internal/metrics"
 	"github.com/containerssh/libcontainerssh/internal/sshserver"
 	"github.com/containerssh/libcontainerssh/internal/structutils"
+	"github.com/containerssh/libcontainerssh/internal/test"
 	"github.com/containerssh/libcontainerssh/log"
 	"github.com/containerssh/libcontainerssh/message"
 	"github.com/containerssh/libcontainerssh/service"
@@ -24,20 +25,22 @@ import (
 func TestAuthentication(t *testing.T) {
 	logger := log.NewTestLogger(t)
 
-	authLifecycle := startAuthServer(t, logger)
+	authServerPort := test.GetNextPort(t)
+
+	authLifecycle := startAuthServer(t, logger, authServerPort)
 	defer authLifecycle.Stop(context.Background())
 
-	sshServerConfig, lifecycle := startSSHServer(t, logger)
+	sshServerConfig, lifecycle := startSSHServer(t, logger, authServerPort)
 	defer lifecycle.Stop(context.Background())
 
 	testConnection(t, ssh.Password("bar"), sshServerConfig, true)
 	testConnection(t, ssh.Password("baz"), sshServerConfig, false)
 }
 
-func startAuthServer(t *testing.T, logger log.Logger) service.Lifecycle {
+func startAuthServer(t *testing.T, logger log.Logger, authServerPort int) service.Lifecycle {
 	server, err := auth.NewServer(
 		config.HTTPServerConfiguration{
-			Listen: "127.0.0.1:8080",
+			Listen: fmt.Sprintf("127.0.0.1:%d", authServerPort),
 		},
 		&authHandler{},
 		logger,
@@ -59,10 +62,7 @@ func startAuthServer(t *testing.T, logger log.Logger) service.Lifecycle {
 	return lifecycle
 }
 
-func startSSHServer(t *testing.T, logger log.Logger) (
-	config.SSHConfig,
-	service.Lifecycle,
-) {
+func startSSHServer(t *testing.T, logger log.Logger, authServerPort int) (config.SSHConfig, service.Lifecycle) {
 	backend := &testBackend{}
 	collector := metrics.New(dummy.New())
 	handler, _, err := authintegration.New(
@@ -70,7 +70,7 @@ func startSSHServer(t *testing.T, logger log.Logger) (
 			Method: config.AuthMethodWebhook,
 			Webhook: config.AuthWebhookClientConfig{
 				HTTPClientConfiguration: config.HTTPClientConfiguration{
-					URL:     "http://127.0.0.1:8080",
+					URL:     fmt.Sprintf("http://127.0.0.1:%d", authServerPort),
 					Timeout: 10 * time.Second,
 				},
 				Password: true,

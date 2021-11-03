@@ -18,7 +18,7 @@ func TestMaxMind(t *testing.T) {
 		t.Skipf("failed to get current working directory, skipping test (%v)", err)
 		return
 	}
-	geoIpFile := path.Join(dir, "testdata", "test-testdata", "GeoIP2-Country-Test.mmdb")
+	geoIpFile := path.Join(dir, "data", "test-data", "GeoIP2-Country-Test.mmdb")
 	if _, err := os.Stat(geoIpFile); err != nil {
 		t.Skipf("mmdb test file doesn't exist, skipping test (%v)", err)
 		return

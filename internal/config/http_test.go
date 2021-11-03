@@ -2,6 +2,7 @@ package config_test
 
 import (
 	"context"
+	"fmt"
 	"net"
 	"testing"
 	"time"
@@ -10,6 +11,7 @@ import (
 	"github.com/containerssh/libcontainerssh/internal/config"
 	"github.com/containerssh/libcontainerssh/internal/geoip"
 	"github.com/containerssh/libcontainerssh/internal/metrics"
+	"github.com/containerssh/libcontainerssh/internal/test"
 	"github.com/containerssh/libcontainerssh/log"
 	service2 "github.com/containerssh/libcontainerssh/service"
 	"github.com/docker/docker/api/types/container"
@@ -17,10 +19,11 @@ import (
 )
 
 func TestHTTP(t *testing.T) {
+	port := test.GetNextPort(t)
 	logger := log.NewTestLogger(t)
 	srv, err := config.NewServer(
 		configuration.HTTPServerConfiguration{
-			Listen: "127.0.0.1:8080",
+			Listen: fmt.Sprintf("127.0.0.1:%d", port),
 		},
 		&myConfigReqHandler{},
 		logger,
@@ -41,7 +44,7 @@ func TestHTTP(t *testing.T) {
 	client, err := config.NewClient(
 		configuration.ClientConfig{
 			HTTPClientConfiguration: configuration.HTTPClientConfiguration{
-				URL:     "http://127.0.0.1:8080",
+				URL:     fmt.Sprintf("http://127.0.0.1:%d", port),
 				Timeout: 2 * time.Second,
 			},
 		}, logger, getMetricsCollector(t),
@@ -55,7 +58,7 @@ func TestHTTP(t *testing.T) {
 		"foo",
 		net.TCPAddr{
 			IP:   net.ParseIP("127.0.0.1"),
-			Port: 2222,
+			Port: port,
 		},
 		connectionID,
 		nil,

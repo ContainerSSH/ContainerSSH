@@ -10,6 +10,8 @@ import (
 	"os"
 	"strings"
 	"text/template"
+
+	"gopkg.in/yaml.v3"
 )
 
 type tplData struct {
@@ -17,7 +19,7 @@ type tplData struct {
 	Codes map[string]string
 }
 
-var messageFileTemplate = `# {{ .Title }} 
+var messageFileTemplate = `## {{ .Title }} 
 
 | Code | Explanation |
 |------|-------------|
@@ -67,10 +69,18 @@ func getMessageCodes(filename string) (map[string]string, error) {
 										resultingDocParts = append(resultingDocParts, strings.TrimSpace(part))
 									}
 								}
+								prefix := fmt.Sprintf("%s indicates that ", name.Name)
 								resultingDoc := strings.Join(resultingDocParts, " ")
+								if !strings.HasPrefix(resultingDoc, prefix) {
+									panic(fmt.Errorf(
+										"%s doc tag does not have the required prefix of '%s'",
+										name.Name,
+										prefix,
+									))
+								}
 								resultingDoc = strings.TrimPrefix(
 									resultingDoc,
-									fmt.Sprintf("%s indicates that ", name.Name),
+									prefix,
 								)
 								resultingDoc = strings.ToUpper(resultingDoc[:1]) + resultingDoc[1:]
 								result[strings.Trim(basicVal.Value, `"`)] = resultingDoc
@@ -126,16 +136,12 @@ func generateMessageCodesFile(filename string, title string) (string, error) {
 }
 
 // writeMessageCodesFile generates and writes the CODES.md file
-func writeMessageCodesFile(sourceFile string, destinationFile string, title string) error {
-	data, err := generateMessageCodesFile(sourceFile, title)
-	if err != nil {
-		return err
-	}
+func writeMessageCodesFile(data []byte, destinationFile string) error {
 	fh, err := os.Create(destinationFile)
 	if err != nil {
 		return fmt.Errorf("failed to open destination file %s (%w)", destinationFile, err)
 	}
-	if _, err = fh.Write([]byte(data)); err != nil {
+	if _, err = fh.Write(data); err != nil {
 		_ = fh.Close()
 		return fmt.Errorf("failed to write to destination file %s (%w)", destinationFile, err)
 	}
@@ -146,17 +152,47 @@ func writeMessageCodesFile(sourceFile string, destinationFile string, title stri
 }
 
 // mustWriteMessageCodesFile is identical to writeMessageCodesFile but panics on error.
-func mustWriteMessageCodesFile(sourceFile string, destinationFile string, title string) {
-	if err := writeMessageCodesFile(sourceFile, destinationFile, title); err != nil {
+func mustWriteMessageCodesFile(data []byte, destinationFile string) {
+	if err := writeMessageCodesFile(data, destinationFile); err != nil {
 		panic(err)
 	}
 }
 
-func main() {
-	sourceFile := os.Args[1]
-	destinationFile := os.Args[2]
-	title := os.Args[3]
+type config []configEntry
 
-	mustWriteMessageCodesFile(sourceFile, destinationFile, title)
-	fmt.Printf("Generated %s.", destinationFile)
+type configEntry struct {
+	Source string `yaml:"source"`
+	Title  string `yaml:"title"`
+}
+
+func readConfigFile() config {
+	fh, err := os.Open("docgen.yaml")
+	if err != nil {
+		panic(fmt.Errorf("failed to open docgen.yaml (%w)", err))
+	}
+	defer func() {
+		_ = fh.Close()
+	}()
+	decoder := yaml.NewDecoder(fh)
+	cfg := config{}
+	if err := decoder.Decode(&cfg); err != nil {
+		panic(fmt.Errorf("failed to decode docgen.yaml (%w)", err))
+	}
+	return cfg
+}
+
+func main() {
+	cfg := readConfigFile()
+
+	result := []byte("# ContainerSSH message codes\n\n")
+	for _, entry := range cfg {
+		data, err := generateMessageCodesFile(entry.Source, entry.Title)
+		if err != nil {
+			panic(fmt.Errorf("failed to generate docs from %s (%w)", entry.Source, err))
+		}
+		result = append(result, []byte(strings.TrimSpace(data))...)
+		result = append(result, []byte("\n\n")...)
+	}
+	mustWriteMessageCodesFile(result, "CODES.md")
+	fmt.Printf("Generated CODES.md.")
 }

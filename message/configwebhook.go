@@ -1,7 +1,5 @@
 package message
 
-//go:generate go run github.com/containerssh/libcontainerssh/cmd/generate-message-codes configwebhook.go CONFIGWEBHOOK.md "Configuration webhook"
-
 // MConfigRequest indicates that ContainerSSH is sending a quest to the configuration server to obtain a per-user
 // backend configuration.
 const MConfigRequest = "CONFIG_REQUEST"

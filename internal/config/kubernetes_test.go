@@ -15,7 +15,7 @@ import (
 )
 
 func TestLoadIssue209(t *testing.T) {
-	testFile, err := os.Open("testdata/issue-209.yaml")
+	testFile, err := os.Open("_testdata/issue-209.yaml")
 	assert.NoError(t, err)
 	cfg := config.KubernetesConfig{}
 	unmarshaller := yaml.NewDecoder(testFile)

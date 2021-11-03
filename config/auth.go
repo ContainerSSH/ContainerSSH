@@ -278,9 +278,8 @@ func (c *AuthGitHubConfig) Validate() (err error) {
 	return nil
 }
 
-
 type AuthOIDCConfig struct {
-	HTTPClientConfiguration
+	HTTPClientConfiguration `json:",inline" yaml:",inline"`
 
 	// DeviceFlow enables or disables using the OIDC device flow.
 	DeviceFlow bool `json:"deviceFlow" yaml:"deviceFlow" default:"true"`

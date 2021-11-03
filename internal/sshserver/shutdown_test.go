@@ -14,6 +14,7 @@ func TestProperShutdown(t *testing.T) {
 	user.RandomPassword()
 	logger := log.NewTestLogger(t)
 	testServer := sshserver.NewTestServer(
+		t,
 		sshserver.NewTestAuthenticationHandler(
 			sshserver.NewTestHandler(),
 			user,

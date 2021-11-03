@@ -22,7 +22,7 @@ func (m *myConfigReqHandler) OnConfig(_ config.Request) (config.AppConfig, error
 func ExampleNewServer() {
 	// Set up a logger
 	logger := log.MustNewLogger(config.LogConfig{
-		Level:       config.LogLevelDebug,
+		Level:       config.LogLevelWarning,
 		Format:      config.LogFormatText,
 		Destination: config.LogDestinationStdout,
 		Stdout:      os.Stdout,

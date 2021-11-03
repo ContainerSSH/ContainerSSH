@@ -1,27 +1,24 @@
 package sshserver
 
 import (
+	"context"
 	"fmt"
-	"sync"
+	"testing"
 
 	config2 "github.com/containerssh/libcontainerssh/config"
 	"github.com/containerssh/libcontainerssh/internal/structutils"
+	"github.com/containerssh/libcontainerssh/internal/test"
 	"github.com/containerssh/libcontainerssh/log"
 	"github.com/containerssh/libcontainerssh/service"
 )
 
-var testServerLock = &sync.Mutex{}
-var nextPort = 2222
-
-// NewTestServer is a simplified API to start and stop a test server. The test server always listens on 127.0.0.1:2222
-func NewTestServer(handler Handler, logger log.Logger) TestServer {
+// NewTestServer is a simplified API to start and stop a test server.
+func NewTestServer(t *testing.T, handler Handler, logger log.Logger) TestServer {
 	config := config2.SSHConfig{}
 	structutils.Defaults(&config)
 
-	testServerLock.Lock()
-	config.Listen = fmt.Sprintf("127.0.0.1:%d", nextPort)
-	nextPort++
-	testServerLock.Unlock()
+	port := test.GetNextPort(t)
+	config.Listen = fmt.Sprintf("127.0.0.1:%d", port)
 	if err := config.GenerateHostKey(); err != nil {
 		panic(err)
 	}
@@ -35,6 +32,11 @@ func NewTestServer(handler Handler, logger log.Logger) TestServer {
 		func(s service.Service, l service.Lifecycle) {
 			started <- struct{}{}
 		})
+
+	t.Cleanup(func() {
+		lifecycle.Stop(context.Background())
+		_ = lifecycle.Wait()
+	})
 
 	return &testServerImpl{
 		config:    config,

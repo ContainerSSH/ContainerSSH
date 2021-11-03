@@ -1,7 +1,5 @@
 package message
 
-//go:generate go run github.com/containerssh/libcontainerssh/cmd/generate-message-codes auth.go AUTH.md "Authentication"
-
 // EAuthInvalidStatus indicates that the authentication server returned an invalid HTTP status code.
 const EAuthInvalidStatus = "AUTH_INVALID_STATUS"
 

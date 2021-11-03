@@ -11,12 +11,14 @@ import (
 	"fmt"
 	"math/big"
 	"net"
+	"strings"
 	"testing"
 	"time"
 
 	"github.com/containerssh/libcontainerssh/config"
 	http2 "github.com/containerssh/libcontainerssh/http"
 	"github.com/containerssh/libcontainerssh/internal/structutils"
+	"github.com/containerssh/libcontainerssh/internal/test"
 	"github.com/containerssh/libcontainerssh/log"
 	"github.com/containerssh/libcontainerssh/service"
 	"github.com/stretchr/testify/assert"
@@ -55,7 +57,7 @@ func (s *handler) OnRequest(request http2.ServerRequest, response http2.ServerRe
 }
 
 func TestUnencrypted(t *testing.T) {
-	clientConfig, serverConfig := createClientServerConfig()
+	clientConfig, serverConfig := createClientServerConfig(t)
 
 	message := "Hi"
 
@@ -69,18 +71,19 @@ func TestUnencrypted(t *testing.T) {
 	assert.Equal(t, "Hello world!", response.Message)
 }
 
-func createClientServerConfig() (config.HTTPClientConfiguration, config.HTTPServerConfiguration) {
+func createClientServerConfig(t *testing.T) (config.HTTPClientConfiguration, config.HTTPServerConfiguration) {
 	clientConfig := config.HTTPClientConfiguration{}
 	serverConfig := config.HTTPServerConfiguration{}
 	structutils.Defaults(&clientConfig)
 	structutils.Defaults(&serverConfig)
-	clientConfig.URL = "http://127.0.0.1:8080/"
-	serverConfig.Listen = "127.0.0.1:8080"
+	port := test.GetNextPort(t)
+	clientConfig.URL = fmt.Sprintf("http://127.0.0.1:%d/", port)
+	serverConfig.Listen = fmt.Sprintf("127.0.0.1:%d", port)
 	return clientConfig, serverConfig
 }
 
 func TestUnencryptedFailure(t *testing.T) {
-	clientConfig, serverConfig := createClientServerConfig()
+	clientConfig, serverConfig := createClientServerConfig(t)
 
 	message := "Hm..."
 
@@ -110,8 +113,9 @@ func TestEncrypted(t *testing.T) {
 		return
 	}
 
-	clientConfig, serverConfig := createClientServerConfig()
-	clientConfig.URL = "https://127.0.0.1:8080"
+	clientConfig, serverConfig := createClientServerConfig(t)
+	//goland:noinspection HttpUrlsUsage
+	clientConfig.URL = strings.Replace(clientConfig.URL, "http://", "https://", 1)
 	clientConfig.CACert = string(caCertBytes)
 	serverConfig.Key = string(serverPrivKey)
 	serverConfig.Cert = string(serverCert)
@@ -159,8 +163,9 @@ func TestMutuallyAuthenticated(t *testing.T) {
 		return
 	}
 
-	clientConfig, serverConfig := createClientServerConfig()
-	clientConfig.URL = "https://127.0.0.1:8080"
+	clientConfig, serverConfig := createClientServerConfig(t)
+	//goland:noinspection HttpUrlsUsage
+	clientConfig.URL = strings.Replace(clientConfig.URL, "http://", "https://", 1)
 	clientConfig.CACert = string(caCertBytes)
 	clientConfig.ClientCert = string(clientCert)
 	clientConfig.ClientKey = string(clientPrivKey)
@@ -211,7 +216,7 @@ func TestMutuallyAuthenticatedFailure(t *testing.T) {
 		return
 	}
 
-	clientConfig, serverConfig := createClientServerConfig()
+	clientConfig, serverConfig := createClientServerConfig(t)
 	clientConfig.URL = "https://127.0.0.1:8080"
 	clientConfig.CACert = string(caCertBytes)
 	clientConfig.ClientCert = string(clientCert)

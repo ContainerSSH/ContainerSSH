@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/containerssh/libcontainerssh/message"
 	"github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/api/types/network"
 	specs "github.com/opencontainers/image-spec/specs-go/v1"
@@ -26,17 +25,17 @@ type DockerConfig struct {
 // Validate validates the provided configuration and returns an error if invalid.
 func (c DockerConfig) Validate() error {
 	if err := c.Connection.Validate(); err != nil {
-		return message.Wrap(err, message.EDockerConfigError, "invalid connection configuration")
+		return fmt.Errorf("invalid connection configuration")
 	}
 	if err := c.Execution.Validate(); err != nil {
-		return message.Wrap(err, message.EDockerConfigError, "invalid execution configuration")
+		return fmt.Errorf("invalid execution configuration")
 	}
 	return nil
 }
 
 func (c DockerConnectionConfig) Validate() error {
 	if c.Host == "" {
-		return message.NewMessage(message.EDockerConfigError, "missing host")
+		return fmt.Errorf("missing host")
 	}
 	return nil
 }
@@ -61,7 +60,7 @@ func parseRawDuration(rawValue interface{}, d *time.Duration) error {
 			return err
 		}
 	default:
-		return message.NewMessage(message.EDockerConfigError, "invalid duration: %v", rawValue)
+		return fmt.Errorf("invalid duration: %v", rawValue)
 	}
 	return nil
 }

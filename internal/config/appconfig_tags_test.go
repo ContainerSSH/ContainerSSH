@@ -25,7 +25,7 @@ func verify(v reflect.Type, t *testing.T, path []string) {
 			jsonValue, ok := tag.Lookup("json")
 			if !ok {
 				t.Errorf(
-					"DockerConfig field has no JSON tag set: %s",
+					"Config field has no JSON tag set: %s",
 					strings.Join(append(path, v.Field(i).Name), " -> "))
 			}
 			if jsonValue != "-" &&

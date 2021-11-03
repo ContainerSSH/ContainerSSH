@@ -1,7 +1,5 @@
 package message
 
-//go:generate go run github.com/containerssh/libcontainerssh/cmd/generate-message-codes auditlog.go AUDITLOG.md "Audit log"
-
 // MAuditLogMultipartUpload indicates that ContainerSSH is starting a new S3 multipart upload.
 const MAuditLogMultipartUpload = "AUDIT_S3_MULTIPART_UPLOAD"
 

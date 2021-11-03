@@ -23,7 +23,7 @@ func (c *conformanceTestSuite) singleProgramShouldRun(t *testing.T) {
 
 	user := NewTestUser("test")
 	user.RandomPassword()
-	srv := NewTestServer(NewTestAuthenticationHandler(
+	srv := NewTestServer(t, NewTestAuthenticationHandler(
 		newConformanceTestHandler(backend),
 		user,
 	), logger)
@@ -67,7 +67,7 @@ func (c *conformanceTestSuite) settingEnvVariablesShouldWork(t *testing.T) {
 
 	user := NewTestUser("test")
 	user.RandomPassword()
-	srv := NewTestServer(NewTestAuthenticationHandler(
+	srv := NewTestServer(t, NewTestAuthenticationHandler(
 		newConformanceTestHandler(backend),
 		user,
 	), logger)
@@ -114,7 +114,7 @@ func (c *conformanceTestSuite) runningInteractiveShellShouldWork(t *testing.T) {
 
 	user := NewTestUser("test")
 	user.RandomPassword()
-	srv := NewTestServer(NewTestAuthenticationHandler(
+	srv := NewTestServer(t, NewTestAuthenticationHandler(
 		newConformanceTestHandler(backend),
 		user,
 	), logger)
@@ -198,7 +198,7 @@ func (c *conformanceTestSuite) reportingExitCodeShouldWork(t *testing.T) {
 
 	user := NewTestUser("test")
 	user.RandomPassword()
-	srv := NewTestServer(NewTestAuthenticationHandler(
+	srv := NewTestServer(t, NewTestAuthenticationHandler(
 		newConformanceTestHandler(backend),
 		user,
 	), logger)
@@ -237,7 +237,7 @@ func (c *conformanceTestSuite) sendingSignalsShouldWork(t *testing.T) {
 
 	user := NewTestUser("test")
 	user.RandomPassword()
-	srv := NewTestServer(NewTestAuthenticationHandler(
+	srv := NewTestServer(t, NewTestAuthenticationHandler(
 		newConformanceTestHandler(backend),
 		user,
 	), logger)

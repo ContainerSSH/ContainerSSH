@@ -11,12 +11,16 @@ import (
 
 // NewChannelRejection constructs a Message that rejects a channel.
 //
-// - Reason is the SSH rejection reason.
-// - Code is an error code allowing an administrator to identify the error that happened.
-// - UserMessage is the message that can be printed to the user if needed.
-// - Explanation is the explanation string to the system administrator. This is an fmt.Sprintf-compatible string
-// - Args are the arguments to Explanation to create a formatted message. It is recommended that these arguments also
-//   be added as labels to allow system administrators to index the error properly.
+// Reason is the SSH rejection reason.
+//
+// Code is an error code allowing an administrator to identify the error that happened.
+//
+// UserMessage is the message that can be printed to the user if needed.
+//
+// Explanation is the explanation string to the system administrator. This is an fmt.Sprintf-compatible string
+//
+// Args are the arguments to Explanation to create a formatted message. It is recommended that these arguments also
+// be added as labels to allow system administrators to index the error properly.
 func NewChannelRejection(
 	Reason ssh.RejectionReason,
 	Code string,

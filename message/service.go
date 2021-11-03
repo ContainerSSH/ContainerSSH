@@ -1,9 +1,9 @@
 package message
 
-// ContainerSSH is starting a component service
+// MServiceStarting indicates that ContainerSSH is starting a component service.
 const MServiceStarting = "SERVICE_STARTING"
 
-// A ContainerSSH service is now running
+// MServiceRunning indicates that a ContainerSSH service is now running.
 const MServiceRunning = "SERVICE_RUNNING"
 
 // A ContainerSSH service is now stopping.
