@@ -8,20 +8,23 @@ import (
 
 // fixCompatibility moves deprecated options to their new places and issues warnings.
 func fixCompatibility(cfg *config.AppConfig, logger log.Logger) error {
-	if cfg.Listen != "" {
-		if cfg.SSH.Listen == "" || cfg.SSH.Listen == "0.0.0.0:2222" {
+	//goland:noinspection GoDeprecation
+	if cfg.Auth.HTTPClientConfiguration.URL != "" {
+		if cfg.Auth.Webhook.HTTPClientConfiguration.URL == "" {
 			logger.Warning(
 				message.NewMessage(
-					message.WConfigListenDeprecated,
-					"You are using the 'listen' option deprecated in ContainerSSH 0.4. Please use the new 'ssh -> listen' option. See https://containerssh.io/deprecations/listen for details.",
+					message.WConfigAuthURLDeprecated,
+					"You are using the 'auth.url' option deprecated in ContainerSSH 0.5. Please use the new 'auth -> webhook ->' option. See https://containerssh.io/deprecations/authurl for details.",
 				))
-			cfg.SSH.Listen = cfg.Listen
-			cfg.Listen = ""
+			//goland:noinspection GoDeprecation
+			cfg.Auth.Webhook.HTTPClientConfiguration = cfg.Auth.HTTPClientConfiguration
+			//goland:noinspection GoDeprecation
+			cfg.Auth.HTTPClientConfiguration = config.HTTPClientConfiguration{}
 		} else {
 			logger.Warning(
 				message.NewMessage(
-					message.WConfigListenDeprecated,
-					"You are using the 'listen' option deprecated in ContainerSSH 0.4 as well as the new 'ssh -> listen' option. The new option takes precedence. Please see https://containerssh.io/deprecations/listen for details.",
+					message.WConfigAuthURLDeprecated,
+					"You are using the 'auth.url' option deprecated in ContainerSSH 0.5. The new option under 'auth -> webhook ->' takes precedence. See https://containerssh.io/deprecations/authurl for details.",
 				))
 		}
 	}

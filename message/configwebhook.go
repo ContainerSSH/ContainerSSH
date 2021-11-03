@@ -22,6 +22,6 @@ const EConfigInvalidStatus = "CONFIG_INVALID_STATUS_CODE"
 // address.
 const MConfigServerAvailable = "CONFIG_SERVER_AVAILABLE"
 
-// WConfigListenDeprecated indicates that the Listen option in the root configuration is deprecated since
-// ContainerSSH 0.4. See https://containerssh.io/deprecations/listen for details.
-const WConfigListenDeprecated = "CONFIG_LISTEN_DEPRECATED"
+// WConfigAuthURLDeprecated indicates that the auth.url option in the authentication webhook configuration. This
+// option is deprecated since ContainerSSH 0.5. See https://containerssh.io/deprecations/authurl for details.
+const WConfigAuthURLDeprecated = "CONFIG_AUTH_URL_DEPRECATED"

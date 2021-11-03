@@ -9,10 +9,6 @@ import (
 // AppConfig is the root configuration object of ContainerSSH.
 //goland:noinspection GoDeprecation
 type AppConfig struct {
-	// Listen is an alias for ssh.listen. Its usage is deprecated.
-	// swagger:ignore
-	// deprecated: use SSH.Listen instead
-	Listen string `json:"listen,omitempty" yaml:"listen,omitempty" default:""`
 	// SSH contains the configuration for the SSH server.
 	// swagger:ignore
 	SSH SSHConfig `json:"ssh" yaml:"ssh"`

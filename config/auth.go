@@ -46,9 +46,9 @@ func (c *AuthConfig) Validate() error {
 			return fmt.Errorf("both auth.url and auth.webhook.url are set")
 		}
 		//goland:noinspection GoDeprecation
-		if err := c.HTTPClientConfiguration.Validate(); err != nil {
-			return fmt.Errorf("invalid client configuration (%w)", err)
-		}
+		c.Webhook.HTTPClientConfiguration = c.HTTPClientConfiguration
+		//goland:noinspection GoDeprecation
+		c.HTTPClientConfiguration = HTTPClientConfiguration{}
 	}
 	var err error
 	switch c.Method {
