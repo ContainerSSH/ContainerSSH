@@ -30,7 +30,7 @@ func testSaveLoad(t *testing.T, format config.Format) {
 	newCfg := &configuration.AppConfig{}
 	structutils.Defaults(cfg)
 
-	cfg.Auth.URL = "http://localhost:8080"
+	cfg.Auth.Webhook.URL = "http://localhost:8080"
 
 	buf := &bytes.Buffer{}
 	// endregion
@@ -54,8 +54,6 @@ func testSaveLoad(t *testing.T, format config.Format) {
 	// endregion
 
 	// region Assert
-	cfg.Listen = ""
-
 	diff := cmp.Diff(
 		cfg,
 		newCfg,
