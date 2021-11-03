@@ -399,7 +399,7 @@ type kubeConfig struct {
 type kubeConfigCluster struct {
 	Name    string `yaml:"name"`
 	Cluster struct {
-		CertificateAuthorityData string `yaml:"certificate-authority-testdata"`
+		CertificateAuthorityData string `yaml:"certificate-authority-data"`
 		Server                   string `yaml:"server"`
 	} `yaml:"cluster"`
 }
@@ -415,8 +415,8 @@ type kubeConfigContext struct {
 type kubeConfigUser struct {
 	Name string `yaml:"name"`
 	User struct {
-		ClientCertificateData string `yaml:"client-certificate-testdata"`
-		ClientKeyData         string `yaml:"client-key-testdata"`
+		ClientCertificateData string `yaml:"client-certificate-data"`
+		ClientKeyData         string `yaml:"client-key-data"`
 		Token                 string `yaml:"token"`
 	} `yaml:"user"`
 }
