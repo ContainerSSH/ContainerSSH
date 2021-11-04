@@ -74,6 +74,17 @@ require (
 	k8s.io/client-go v0.21.1
 	k8s.io/klog/v2 v2.8.0 // indirect
 	k8s.io/utils v0.0.0-20201110183641-67b214c5f920 // indirect
+	sigs.k8s.io/kind v0.11.1
 	sigs.k8s.io/structured-merge-diff/v4 v4.1.0 // indirect
 	sigs.k8s.io/yaml v1.2.0
+)
+
+require (
+	github.com/BurntSushi/toml v0.3.1 // indirect
+	github.com/alessio/shellescape v1.4.1 // indirect
+	github.com/evanphx/json-patch/v5 v5.2.0 // indirect
+	github.com/inconshreveable/mousetrap v1.0.0 // indirect
+	github.com/mattn/go-isatty v0.0.12 // indirect
+	github.com/pelletier/go-toml v1.8.1 // indirect
+	github.com/spf13/cobra v1.1.1 // indirect
 )
