@@ -1,6 +1,8 @@
 package containerssh_test
 
 import (
+	"fmt"
+
 	configuration "github.com/containerssh/libcontainerssh/config"
 	"github.com/containerssh/libcontainerssh/internal/structutils"
 	"github.com/containerssh/libcontainerssh/log"
@@ -41,12 +43,9 @@ func (k *kubernetesTestingFactor) String() string {
 }
 
 func (k *kubernetesTestingFactor) ModifyConfiguration(config *configuration.AppConfig) error {
-	err := config.Kubernetes.SetConfigFromKubeConfig()
-	if err != nil {
-		return err
-	}
-	config.Backend = "kubernetes"
-	return nil
+	return fmt.Errorf("Fix this test please")
+	/*config.Backend = "kubernetes"
+	return nil*/
 }
 
 func (k *kubernetesTestingFactor) StartBackingServices(_ configuration.AppConfig, _ log.Logger) error {
