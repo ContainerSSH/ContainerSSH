@@ -1,3 +1,4 @@
+# This file configures which files to read for message code generation through doc.go.
 ---
 - source: "auditlog.go"
   title: "Audit log"

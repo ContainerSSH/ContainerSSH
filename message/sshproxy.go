@@ -92,7 +92,7 @@ const MSSHProxyExitStatus = "SSHPROXY_EXIT_STATUS"
 // message, but failed to decode the message. This is most likely due to a bug in the backend SSH server.
 const MSSHProxyExitStatusDecodeFailed = "SSHPROXY_EXIT_STATUS_DECODE_FAILED"
 
-// MSSHProxyDisconnected inticates that the ContainerSSH SSH proxy received a disconnect from the client.
+// MSSHProxyDisconnected indicates that the ContainerSSH SSH proxy received a disconnect from the client.
 const MSSHProxyDisconnected = "SSHPROXY_DISCONNECTED"
 
 // ESSHProxyShuttingDown indicates that the action cannot be performed because the connection is shutting down.

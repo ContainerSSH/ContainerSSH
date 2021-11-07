@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"github.com/containerssh/libcontainerssh/internal/structutils"
+	"github.com/containerssh/libcontainerssh/message"
 )
 
 // AppConfig is the root configuration object of ContainerSSH.
@@ -40,9 +41,15 @@ type AppConfig struct {
 	Backend string `json:"backend" yaml:"backend" default:"docker"`
 	// Docker contains the configuration for the docker backend. This option can be changed from the config server.
 	Docker DockerConfig `json:"docker,omitempty" yaml:"docker"`
+	// DockerRun is a placeholder for the removed DockerRun backend. Filling this with anything but nil will yield a
+	// validation error.
+	DockerRun interface{} `json:"dockerrun,omitempty"`
 	// Kubernetes contains the configuration for the kubernetes backend. This option can be changed from the config
 	// server.
 	Kubernetes KubernetesConfig `json:"kubernetes,omitempty" yaml:"kubernetes"`
+	// KubeRun is a placeholder for the removed DockerRun backend. Filling this with anything but nil will yield a
+	// validation error.
+	KubeRun interface{} `json:"kuberun,omitempty"`
 	// SSHProxy is the configuration for the SSH proxy backend, which forwards requests to a backing SSH server.
 	SSHProxy SSHProxyConfig `json:"sshproxy,omitempty" yaml:"sshproxy"`
 }
@@ -56,6 +63,19 @@ func (cfg *AppConfig) Default() {
 //
 // - dynamic enables the validation for dynamically configurable options.
 func (cfg *AppConfig) Validate(dynamic bool) error {
+	if cfg.DockerRun != nil {
+		return message.NewMessage(
+			message.EDockerRunRemoved,
+			"You are using the `dockerrun` configuration which has been removed since ContainerSSH 0.5. Please switch to the Docker backend. For details and a migration guide see https://containerssh.io/deprecations/dockerrun/",
+		)
+	}
+	if cfg.KubeRun != nil {
+		return message.NewMessage(
+			message.EKubeRunRemoved,
+			"You are using the `kuberun` configuration which has been removed since ContainerSSH 0.5. Please switch to the Kubernetes backend. For details and a migration guide see https://containerssh.io/deprecations/kuberun/",
+		)
+	}
+
 	queue := newValidationQueue()
 	queue.add("SSH", &cfg.SSH)
 	queue.add("config server", &cfg.ConfigServer)

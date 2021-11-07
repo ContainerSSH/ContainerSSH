@@ -1,7 +1,7 @@
 package message
 
-// The health check service is now online and ready for service.
+// MHealthServiceAvailable indicates that the health check service is now online and ready for service.
 const MHealthServiceAvailable = "HEALTH_AVAILABLE"
 
-// A request to the health check endpoint failed.
+// EHealthRequestFailed indicates that a request to the health check endpoint failed.
 const EHealthRequestFailed = "HEALTH_REQUEST_FAILED"

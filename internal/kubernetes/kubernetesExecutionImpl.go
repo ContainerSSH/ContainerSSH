@@ -280,7 +280,7 @@ func (k *kubernetesExecutionImpl) run(
 		pid := <-pidChannel
 		k.logger.Debug(
 			message.NewMessage(
-				message.MKubernetesPidReceived,
+				message.MKubernetesPIDReceived,
 				"Received PID %d from agent",
 				pid,
 			))

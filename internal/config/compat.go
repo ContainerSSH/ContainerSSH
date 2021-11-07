@@ -14,7 +14,7 @@ func fixCompatibility(cfg *config.AppConfig, logger log.Logger) error {
 			logger.Warning(
 				message.NewMessage(
 					message.WConfigAuthURLDeprecated,
-					"You are using the 'auth.url' option deprecated in ContainerSSH 0.5. Please use the new 'auth -> webhook ->' option. See https://containerssh.io/deprecations/authurl for details.",
+					"You are using the 'auth.url' option deprecated in ContainerSSH 0.5. Please use the new 'auth -> webhook -> url' option. See https://containerssh.io/deprecations/authurl for details.",
 				))
 			//goland:noinspection GoDeprecation
 			cfg.Auth.Webhook.HTTPClientConfiguration = cfg.Auth.HTTPClientConfiguration
@@ -24,7 +24,7 @@ func fixCompatibility(cfg *config.AppConfig, logger log.Logger) error {
 			logger.Warning(
 				message.NewMessage(
 					message.WConfigAuthURLDeprecated,
-					"You are using the 'auth.url' option deprecated in ContainerSSH 0.5. The new option under 'auth -> webhook ->' takes precedence. See https://containerssh.io/deprecations/authurl for details.",
+					"You are using the 'auth.url' option deprecated in ContainerSSH 0.5. The new option under 'auth -> webhook' takes precedence. See https://containerssh.io/deprecations/authurl for details.",
 				))
 		}
 	}

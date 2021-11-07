@@ -23,7 +23,7 @@ const MAuthSuccessful = "AUTH_SUCCESSFUL"
 // MAuthServerAvailable indicates that the ContainerSSH authentication server is now available.
 const MAuthServerAvailable = "AUTH_AVAILABLE"
 
-// EAuthRequestDecodeFailed indincates that the ContainerSSH Auth library failed to decode a request from ContainerSSH.
+// EAuthRequestDecodeFailed indicates that the ContainerSSH Auth library failed to decode a request from ContainerSSH.
 const EAuthRequestDecodeFailed = "AUTH_SERVER_DECODE_FAILED"
 
 // EAuthDisabled indicates that the authentication method the client tried is disabled.
