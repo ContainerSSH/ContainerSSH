@@ -17,7 +17,7 @@ func NewTestServer(t *testing.T, handler Handler, logger log.Logger) TestServer 
 	config := config2.SSHConfig{}
 	structutils.Defaults(&config)
 
-	port := test.GetNextPort(t)
+	port := test.GetNextPort(t, "SSH")
 	config.Listen = fmt.Sprintf("127.0.0.1:%d", port)
 	if err := config.GenerateHostKey(); err != nil {
 		panic(err)

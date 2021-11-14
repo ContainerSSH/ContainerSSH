@@ -8,7 +8,6 @@ import (
 )
 
 // NewServer returns a complete HTTP server that responds to the authentication requests.
-//goland:noinspection GoUnusedExportedFunction
 func NewServer(
 	configuration config.HTTPServerConfiguration,
 	h Handler,

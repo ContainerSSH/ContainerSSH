@@ -25,7 +25,7 @@ import (
 func TestAuthentication(t *testing.T) {
 	logger := log.NewTestLogger(t)
 
-	authServerPort := test.GetNextPort(t)
+	authServerPort := test.GetNextPort(t, "auth server")
 
 	authLifecycle := startAuthServer(t, logger, authServerPort)
 	defer authLifecycle.Stop(context.Background())

@@ -6,6 +6,7 @@ import (
 	"io"
 	"sync"
 
+	ssh2 "github.com/containerssh/libcontainerssh/internal/ssh"
 	"github.com/containerssh/libcontainerssh/log"
 	messageCodes "github.com/containerssh/libcontainerssh/message"
 	"golang.org/x/crypto/ssh"
@@ -61,9 +62,10 @@ func (c *channelWrapper) ExitStatus(exitCode uint32) {
 	if _, err := c.channel.SendRequest(
 		"exit-status",
 		false,
-		ssh.Marshal(exitStatusPayload{
-			ExitStatus: exitCode,
-		})); err != nil {
+		ssh.Marshal(
+			ssh2.ExitStatusPayload{
+				ExitStatus: exitCode,
+			})); err != nil {
 		if !errors.Is(err, io.EOF) {
 			c.logger.Debug(
 				messageCodes.Wrap(
@@ -94,12 +96,13 @@ func (c *channelWrapper) ExitSignal(signal string, coreDumped bool, errorMessage
 	if _, err := c.channel.SendRequest(
 		"exit-signal",
 		false,
-		ssh.Marshal(exitSignalPayload{
-			Signal:       signal,
-			CoreDumped:   coreDumped,
-			ErrorMessage: errorMessage,
-			LanguageTag:  languageTag,
-		})); err != nil {
+		ssh.Marshal(
+			ssh2.ExitSignalPayload{
+				Signal:       signal,
+				CoreDumped:   coreDumped,
+				ErrorMessage: errorMessage,
+				LanguageTag:  languageTag,
+			})); err != nil {
 		if !errors.Is(err, io.EOF) {
 			c.logger.Debug(
 				messageCodes.Wrap(

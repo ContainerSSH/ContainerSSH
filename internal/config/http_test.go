@@ -19,7 +19,7 @@ import (
 )
 
 func TestHTTP(t *testing.T) {
-	port := test.GetNextPort(t)
+	port := test.GetNextPort(t, "HTTP")
 	logger := log.NewTestLogger(t)
 	srv, err := config.NewServer(
 		configuration.HTTPServerConfiguration{

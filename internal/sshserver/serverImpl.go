@@ -8,6 +8,7 @@ import (
 	"sync"
 
 	"github.com/containerssh/libcontainerssh/config"
+	ssh2 "github.com/containerssh/libcontainerssh/internal/ssh"
 	"github.com/containerssh/libcontainerssh/log"
 	messageCodes "github.com/containerssh/libcontainerssh/message"
 	"github.com/containerssh/libcontainerssh/service"
@@ -613,52 +614,52 @@ func (s *serverImpl) handleSessionChannel(
 	}
 }
 
-func (s *serverImpl) unmarshalEnv(request *ssh.Request) (payload envRequestPayload, err error) {
+func (s *serverImpl) unmarshalEnv(request *ssh.Request) (payload ssh2.EnvRequestPayload, err error) {
 	return payload, ssh.Unmarshal(request.Payload, &payload)
 }
 
-func (s *serverImpl) unmarshalPty(request *ssh.Request) (payload ptyRequestPayload, err error) {
+func (s *serverImpl) unmarshalPty(request *ssh.Request) (payload ssh2.PtyRequestPayload, err error) {
 	return payload, ssh.Unmarshal(request.Payload, &payload)
 }
 
-func (s *serverImpl) unmarshalShell(request *ssh.Request) (payload shellRequestPayload, err error) {
+func (s *serverImpl) unmarshalShell(request *ssh.Request) (payload ssh2.ShellRequestPayload, err error) {
 	if len(request.Payload) != 0 {
 		err = ssh.Unmarshal(request.Payload, &payload)
 	}
 	return payload, err
 }
 
-func (s *serverImpl) unmarshalExec(request *ssh.Request) (payload execRequestPayload, err error) {
+func (s *serverImpl) unmarshalExec(request *ssh.Request) (payload ssh2.ExecRequestPayload, err error) {
 	return payload, ssh.Unmarshal(request.Payload, &payload)
 }
 
-func (s *serverImpl) unmarshalSubsystem(request *ssh.Request) (payload subsystemRequestPayload, err error) {
+func (s *serverImpl) unmarshalSubsystem(request *ssh.Request) (payload ssh2.SubsystemRequestPayload, err error) {
 	return payload, ssh.Unmarshal(request.Payload, &payload)
 }
 
-func (s *serverImpl) unmarshalWindow(request *ssh.Request) (payload windowRequestPayload, err error) {
+func (s *serverImpl) unmarshalWindow(request *ssh.Request) (payload ssh2.WindowRequestPayload, err error) {
 	return payload, ssh.Unmarshal(request.Payload, &payload)
 }
 
-func (s *serverImpl) unmarshalSignal(request *ssh.Request) (payload signalRequestPayload, err error) {
+func (s *serverImpl) unmarshalSignal(request *ssh.Request) (payload ssh2.SignalRequestPayload, err error) {
 	return payload, ssh.Unmarshal(request.Payload, &payload)
 }
 
 func (s *serverImpl) unmarshalPayload(request *ssh.Request) (payload interface{}, err error) {
-	switch requestType(request.Type) {
-	case requestTypeEnv:
+	switch ssh2.RequestType(request.Type) {
+	case ssh2.RequestTypeEnv:
 		return s.unmarshalEnv(request)
-	case requestTypePty:
+	case ssh2.RequestTypePty:
 		return s.unmarshalPty(request)
-	case requestTypeShell:
+	case ssh2.RequestTypeShell:
 		return s.unmarshalShell(request)
-	case requestTypeExec:
+	case ssh2.RequestTypeExec:
 		return s.unmarshalExec(request)
-	case requestTypeSubsystem:
+	case ssh2.RequestTypeSubsystem:
 		return s.unmarshalSubsystem(request)
-	case requestTypeWindow:
+	case ssh2.RequestTypeWindow:
 		return s.unmarshalWindow(request)
-	case requestTypeSignal:
+	case ssh2.RequestTypeSignal:
 		return s.unmarshalSignal(request)
 	default:
 		return nil, nil
@@ -696,11 +697,11 @@ func (s *serverImpl) handleChannelRequest(
 			messageCodes.MSSHChannelRequest,
 			"%s channel request from client",
 			request.Type,
-		).Label("requestType", request.Type),
+		).Label("RequestType", request.Type),
 	)
 	if err := s.handleDecodedChannelRequest(
 		requestID,
-		requestType(request.Type),
+		ssh2.RequestType(request.Type),
 		payload,
 		sessionChannel,
 	); err != nil {
@@ -709,7 +710,7 @@ func (s *serverImpl) handleChannelRequest(
 				messageCodes.MSSHChannelRequestFailed,
 				"%s channel request from client failed",
 				request.Type,
-			).Label("requestType", request.Type),
+			).Label("RequestType", request.Type),
 		)
 		reply(false, err.Error(), err)
 		return
@@ -719,7 +720,7 @@ func (s *serverImpl) handleChannelRequest(
 			messageCodes.MSSHChannelRequestSuccessful,
 			"%s channel request from client successful",
 			request.Type,
-		).Label("requestType", request.Type),
+		).Label("RequestType", request.Type),
 	)
 	reply(true, "", nil)
 }
@@ -750,24 +751,24 @@ func (s *serverImpl) createReply(request *ssh.Request, logger log.Logger) func(
 
 func (s *serverImpl) handleDecodedChannelRequest(
 	requestID uint64,
-	requestType requestType,
+	requestType ssh2.RequestType,
 	payload interface{},
 	sessionChannel SessionChannelHandler,
 ) error {
 	switch requestType {
-	case requestTypeEnv:
+	case ssh2.RequestTypeEnv:
 		return s.onEnvRequest(requestID, sessionChannel, payload)
-	case requestTypePty:
+	case ssh2.RequestTypePty:
 		return s.onPtyRequest(requestID, sessionChannel, payload)
-	case requestTypeShell:
+	case ssh2.RequestTypeShell:
 		return s.onShell(requestID, sessionChannel)
-	case requestTypeExec:
+	case ssh2.RequestTypeExec:
 		return s.onExec(requestID, sessionChannel, payload)
-	case requestTypeSubsystem:
+	case ssh2.RequestTypeSubsystem:
 		return s.onSubsystem(requestID, sessionChannel, payload)
-	case requestTypeWindow:
+	case ssh2.RequestTypeWindow:
 		return s.onChannel(requestID, sessionChannel, payload)
-	case requestTypeSignal:
+	case ssh2.RequestTypeSignal:
 		return s.onSignal(requestID, sessionChannel, payload)
 	}
 	return nil
@@ -776,20 +777,20 @@ func (s *serverImpl) handleDecodedChannelRequest(
 func (s *serverImpl) onEnvRequest(requestID uint64, sessionChannel SessionChannelHandler, payload interface{}) error {
 	return sessionChannel.OnEnvRequest(
 		requestID,
-		payload.(envRequestPayload).Name,
-		payload.(envRequestPayload).Value,
+		payload.(ssh2.EnvRequestPayload).Name,
+		payload.(ssh2.EnvRequestPayload).Value,
 	)
 }
 
 func (s *serverImpl) onPtyRequest(requestID uint64, sessionChannel SessionChannelHandler, payload interface{}) error {
 	return sessionChannel.OnPtyRequest(
 		requestID,
-		payload.(ptyRequestPayload).Term,
-		payload.(ptyRequestPayload).Columns,
-		payload.(ptyRequestPayload).Rows,
-		payload.(ptyRequestPayload).Width,
-		payload.(ptyRequestPayload).Height,
-		payload.(ptyRequestPayload).ModeList,
+		payload.(ssh2.PtyRequestPayload).Term,
+		payload.(ssh2.PtyRequestPayload).Columns,
+		payload.(ssh2.PtyRequestPayload).Rows,
+		payload.(ssh2.PtyRequestPayload).Width,
+		payload.(ssh2.PtyRequestPayload).Height,
+		payload.(ssh2.PtyRequestPayload).ModeList,
 	)
 }
 
@@ -809,14 +810,14 @@ func (s *serverImpl) onExec(
 ) error {
 	return sessionChannel.OnExecRequest(
 		requestID,
-		payload.(execRequestPayload).Exec,
+		payload.(ssh2.ExecRequestPayload).Exec,
 	)
 }
 
 func (s *serverImpl) onSignal(requestID uint64, sessionChannel SessionChannelHandler, payload interface{}) error {
 	return sessionChannel.OnSignal(
 		requestID,
-		payload.(signalRequestPayload).Signal,
+		payload.(ssh2.SignalRequestPayload).Signal,
 	)
 }
 
@@ -827,17 +828,17 @@ func (s *serverImpl) onSubsystem(
 ) error {
 	return sessionChannel.OnSubsystem(
 		requestID,
-		payload.(subsystemRequestPayload).Subsystem,
+		payload.(ssh2.SubsystemRequestPayload).Subsystem,
 	)
 }
 
 func (s *serverImpl) onChannel(requestID uint64, sessionChannel SessionChannelHandler, payload interface{}) error {
 	return sessionChannel.OnWindow(
 		requestID,
-		payload.(windowRequestPayload).Columns,
-		payload.(windowRequestPayload).Rows,
-		payload.(windowRequestPayload).Width,
-		payload.(windowRequestPayload).Height,
+		payload.(ssh2.WindowRequestPayload).Columns,
+		payload.(ssh2.WindowRequestPayload).Rows,
+		payload.(ssh2.WindowRequestPayload).Width,
+		payload.(ssh2.WindowRequestPayload).Height,
 	)
 }
 

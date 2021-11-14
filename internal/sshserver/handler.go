@@ -207,7 +207,7 @@ type SessionChannelHandler interface {
 	// OnUnsupportedChannelRequest captures channel requests of unsupported types.
 	//
 	// requestID is an incrementing number uniquely identifying this request within the channel.
-	// requestType contains the SSH request type.
+	// RequestType contains the SSH request type.
 	// payload is the binary payload.
 	OnUnsupportedChannelRequest(
 		requestID uint64,
@@ -219,7 +219,7 @@ type SessionChannelHandler interface {
 	//                              be decoded.
 	//
 	// requestID is an incrementing number uniquely identifying this request within the channel.
-	// requestType contains the SSH request type.
+	// RequestType contains the SSH request type.
 	// payload is the binary payload.
 	// reason is the reason why the decoding failed.
 	OnFailedDecodeChannelRequest(

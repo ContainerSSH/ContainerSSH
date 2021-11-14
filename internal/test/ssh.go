@@ -31,6 +31,8 @@ type SSHHelper interface {
 
 // SSH creates a fully functional SSH service which you can SSH into for testing purposes.
 func SSH(t *testing.T) SSHHelper {
+	t.Helper()
+
 	username := "ubuntu"
 	password := "ubuntu"
 	files := dockerBuildRootFiles(sshBuildRoot, "ssh")

@@ -60,6 +60,7 @@ func (f *loggerFactory) Make(cfg config.LogConfig) (Logger, error) {
 
 	var writer Writer
 	var err error = nil
+	helper := func() {}
 	switch cfg.Destination {
 	case config.LogDestinationFile:
 		writer, err = newFileWriter(cfg.File, cfg.Format)
@@ -73,6 +74,7 @@ func (f *loggerFactory) Make(cfg config.LogConfig) (Logger, error) {
 		writer, err = newSyslogWriter(cfg.Syslog, cfg.Format)
 	case config.LogDestinationTest:
 		writer = newGoTest(cfg.T)
+		helper = cfg.T.Helper
 	}
 	if err != nil {
 		return nil, err
@@ -82,5 +84,6 @@ func (f *loggerFactory) Make(cfg config.LogConfig) (Logger, error) {
 		level:  cfg.Level,
 		labels: map[message.LabelName]message.LabelValue{},
 		writer: writer,
+		helper: helper,
 	}, nil
 }

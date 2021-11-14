@@ -9,6 +9,7 @@ type logger struct {
 	level  config.LogLevel
 	labels messageCodes.Labels
 	writer Writer
+	helper func()
 }
 
 func (pipeline *logger) Close() error {
@@ -24,6 +25,7 @@ func (pipeline *logger) WithLevel(level config.LogLevel) Logger {
 		level:  level,
 		labels: pipeline.labels,
 		writer: pipeline.writer,
+		helper: pipeline.helper,
 	}
 }
 
@@ -37,12 +39,14 @@ func (pipeline *logger) WithLabel(labelName messageCodes.LabelName, labelValue m
 		level:  pipeline.level,
 		labels: newLabels,
 		writer: pipeline.writer,
+		helper: pipeline.helper,
 	}
 }
 
 //region LogFormat
 
 func (pipeline *logger) write(level config.LogLevel, message ...interface{}) {
+	pipeline.helper()
 	if pipeline.level >= level {
 		if len(message) == 0 {
 			return
@@ -76,6 +80,7 @@ func (pipeline *logger) write(level config.LogLevel, message ...interface{}) {
 }
 
 func (pipeline *logger) writef(level config.LogLevel, format string, args ...interface{}) {
+	pipeline.helper()
 	if pipeline.level >= level {
 		var msg messageCodes.Message
 
@@ -104,34 +109,42 @@ func (pipeline *logger) wrapError(err error) messageCodes.Message {
 //region Messages
 
 func (pipeline *logger) Emergency(message ...interface{}) {
+	pipeline.helper()
 	pipeline.write(config.LogLevelEmergency, message...)
 }
 
 func (pipeline *logger) Alert(message ...interface{}) {
+	pipeline.helper()
 	pipeline.write(config.LogLevelAlert, message...)
 }
 
 func (pipeline *logger) Critical(message ...interface{}) {
+	pipeline.helper()
 	pipeline.write(config.LogLevelCritical, message...)
 }
 
 func (pipeline *logger) Error(message ...interface{}) {
+	pipeline.helper()
 	pipeline.write(config.LogLevelError, message...)
 }
 
 func (pipeline *logger) Warning(message ...interface{}) {
+	pipeline.helper()
 	pipeline.write(config.LogLevelWarning, message...)
 }
 
 func (pipeline *logger) Notice(message ...interface{}) {
+	pipeline.helper()
 	pipeline.write(config.LogLevelNotice, message...)
 }
 
 func (pipeline *logger) Info(message ...interface{}) {
+	pipeline.helper()
 	pipeline.write(config.LogLevelInfo, message...)
 }
 
 func (pipeline *logger) Debug(message ...interface{}) {
+	pipeline.helper()
 	pipeline.write(config.LogLevelDebug, message...)
 }
 
@@ -141,11 +154,13 @@ func (pipeline *logger) Debug(message ...interface{}) {
 
 // Log provides a generic log method that logs on the info level.
 func (pipeline *logger) Log(args ...interface{}) {
+	pipeline.helper()
 	pipeline.writef(config.LogLevelInfo, "%v", args...)
 }
 
 // Logf provides a generic log method that logs on the info level with formatting.
 func (pipeline *logger) Logf(format string, args ...interface{}) {
+	pipeline.helper()
 	pipeline.writef(config.LogLevelInfo, format, args...)
 }
 

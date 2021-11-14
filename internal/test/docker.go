@@ -20,6 +20,7 @@ import (
 )
 
 func dockerClient(t *testing.T) *client.Client {
+	t.Helper()
 	cli, err := client.NewClientWithOpts()
 	if err != nil {
 		t.Fatalf("failed to obtain Docker client (%v)", err)
@@ -44,6 +45,7 @@ func containerFromBuild(
 	env []string,
 	ports map[string]string,
 ) container {
+	t.Helper()
 	t.Logf("Creating and starting a container from local build...")
 
 	cnt := &dockerContainer{
@@ -79,6 +81,7 @@ func containerFromPull(
 	env []string,
 	ports map[string]string,
 ) container {
+	t.Helper()
 	t.Logf("Creating and starting a container from %s...", image)
 	cnt := &dockerContainer{
 		client: dockerClient(t),
@@ -120,6 +123,7 @@ type dockerContainer struct {
 }
 
 func (d *dockerContainer) extractFile(fileName string) []byte {
+	d.t.Helper()
 	keyReader, _, err := d.client.CopyFromContainer(context.Background(), d.containerID, fileName)
 	if err != nil {
 		d.t.Fatalf("failed to retrieve file %s key from the container (%v)", fileName, err)
@@ -154,6 +158,7 @@ type testLogWriter struct {
 }
 
 func (n2 testLogWriter) Write(p []byte) (n int, err error) {
+	n2.t.Helper()
 	n2.t.Logf("%s", p)
 
 	return len(p), nil
@@ -164,6 +169,7 @@ func (d *dockerContainer) id() string {
 }
 
 func (d *dockerContainer) pull() {
+	d.t.Helper()
 	d.t.Logf("Pulling image %s...", d.image)
 	reader, err := d.client.ImagePull(context.Background(), d.image, types.ImagePullOptions{})
 	if err != nil {
@@ -175,6 +181,7 @@ func (d *dockerContainer) pull() {
 }
 
 func (d *dockerContainer) create() {
+	d.t.Helper()
 	d.t.Logf("Creating container from %s...", d.image)
 	hostConfig := &containerType.HostConfig{
 		AutoRemove:   true,
@@ -217,6 +224,7 @@ func (d *dockerContainer) create() {
 }
 
 func (d *dockerContainer) start() {
+	d.t.Helper()
 	d.t.Logf("Starting container %s...", d.containerID)
 	if err := d.client.ContainerStart(context.Background(), d.containerID, types.ContainerStartOptions{}); err != nil {
 		d.t.Fatalf("failed to start container %s (%v)", d.containerID, err)
@@ -224,6 +232,7 @@ func (d *dockerContainer) start() {
 }
 
 func (d *dockerContainer) remove() {
+	d.t.Helper()
 	d.t.Logf("Removing container ID %s...", d.containerID)
 	if err := d.client.ContainerRemove(context.Background(), d.containerID, types.ContainerRemoveOptions{
 		RemoveVolumes: false,
@@ -235,6 +244,7 @@ func (d *dockerContainer) remove() {
 }
 
 func (d *dockerContainer) build() {
+	d.t.Helper()
 	d.t.Logf("Building local image...")
 
 	buildContext, buildContextWriter := io.Pipe()
@@ -297,6 +307,7 @@ func (d *dockerContainer) build() {
 }
 
 func (d *dockerContainer) inspect() {
+	d.t.Helper()
 	d.t.Logf("Waiting for the port mappings to come up...")
 	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
 	defer cancel()

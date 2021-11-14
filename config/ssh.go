@@ -226,6 +226,16 @@ func SSHKeyAlgoListFromStringList(hostKeyAlgorithms []string) (SSHKeyAlgoList, e
 	return result, r.Validate()
 }
 
+// MustSSHKeyAlgoListFromStringList is identical to SSHKeyAlgoListFromStringList but panics on
+// error.
+func MustSSHKeyAlgoListFromStringList(hostKeyAlgorithms []string) SSHKeyAlgoList {
+	l, err := SSHKeyAlgoListFromStringList(hostKeyAlgorithms)
+	if err != nil {
+		panic(err)
+	}
+	return l
+}
+
 // Validate validates the list of ciphers to contain only supported items.
 func (h SSHKeyAlgoList) Validate() error {
 	if len(h) == 0 {

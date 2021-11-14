@@ -37,7 +37,7 @@ func getKubernetes(t *testing.T, cfg config.KubernetesConfig, logger log.Logger)
 	return kubernetes.New(
 		net.TCPAddr{
 			IP:   net.ParseIP("127.0.0.1"),
-			Port: test.GetNextPort(t),
+			Port: test.GetNextPort(t, "client"),
 			Zone: "",
 		}, connectionID, cfg, logger,
 		collector.MustCreateCounter("backend_requests", "", ""),

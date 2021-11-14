@@ -54,7 +54,7 @@ func TestReadyRejection(t *testing.T) {
 
 func TestAuthFailed(t *testing.T) {
 	t.Parallel()
-	port := test.GetNextPort(t)
+	port := test.GetNextPort(t, "SSH")
 	server := newServerHelper(
 		t,
 		fmt.Sprintf("127.0.0.1:%d", port),
@@ -134,7 +134,7 @@ func TestAuthKeyboardInteractive(t *testing.T) {
 
 func TestSessionSuccess(t *testing.T) {
 	t.Parallel()
-	port := test.GetNextPort(t)
+	port := test.GetNextPort(t, "SSH")
 	server := newServerHelper(
 		t,
 		fmt.Sprintf("127.0.0.1:%d", port),
@@ -169,7 +169,7 @@ func TestSessionSuccess(t *testing.T) {
 
 func TestSessionError(t *testing.T) {
 	t.Parallel()
-	port := test.GetNextPort(t)
+	port := test.GetNextPort(t, "SSH")
 	server := newServerHelper(
 		t,
 		fmt.Sprintf("127.0.0.1:%d", port),
@@ -204,7 +204,7 @@ func TestSessionError(t *testing.T) {
 
 func TestPubKey(t *testing.T) {
 	t.Parallel()
-	port := test.GetNextPort(t)
+	port := test.GetNextPort(t, "SSH")
 	rsaKey, err := rsa.GenerateKey(
 		rand.Reader,
 		4096,

@@ -19,6 +19,7 @@ type goTestWriter struct {
 }
 
 func (g *goTestWriter) Write(level config.LogLevel, message message.Message) error {
+	g.t.Helper()
 	levelString, err := level.Name()
 	if err != nil {
 		return err

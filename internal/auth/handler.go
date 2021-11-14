@@ -10,7 +10,7 @@ type Handler interface {
 	//
 	// The method must return a boolean if the authentication was successful, and an error if the authentication failed
 	// for other reasons (e.g. backend database was not available). If an error is returned the server responds with
-	// a HTTP 500 response.
+	// an HTTP 500 response.
 	OnPassword(
 		Username string,
 		Password []byte,
@@ -27,7 +27,7 @@ type Handler interface {
 	//
 	// The method must return a boolean if the authentication was successful, and an error if the authentication failed
 	// for other reasons (e.g. backend database was not available). If an error is returned the server responds with
-	// a HTTP 500 response.
+	// an HTTP 500 response.
 	OnPubKey(
 		Username string,
 		PublicKey string,

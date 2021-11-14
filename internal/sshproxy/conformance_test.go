@@ -37,7 +37,7 @@ func TestConformance(t *testing.T) {
 			return sshproxy.New(
 				net.TCPAddr{
 					IP:   net.ParseIP("127.0.0.1"),
-					Port: test.GetNextPort(t),
+					Port: test.GetNextPort(t, "client"),
 					Zone: "",
 				},
 				connectionID,

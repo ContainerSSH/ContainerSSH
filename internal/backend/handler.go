@@ -103,8 +103,8 @@ func (n *networkHandler) initBackend(
 	backend, failureReason := n.getConfiguredBackend(
 		appConfig,
 		backendLogger,
-		n.rootHandler.backendRequestsCounter.WithLabels(metrics.Label(MetricLabelBackend, appConfig.Backend)),
-		n.rootHandler.backendErrorCounter.WithLabels(metrics.Label(MetricLabelBackend, appConfig.Backend)),
+		n.rootHandler.backendRequestsCounter.WithLabels(metrics.Label(MetricLabelBackend, string(appConfig.Backend))),
+		n.rootHandler.backendErrorCounter.WithLabels(metrics.Label(MetricLabelBackend, string(appConfig.Backend))),
 	)
 	if failureReason != nil {
 		return nil, failureReason

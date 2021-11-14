@@ -41,7 +41,7 @@ func getDocker(t *testing.T, cfg config.DockerConfig, logger log.Logger) (sshser
 	return docker.New(
 		net.TCPAddr{
 			IP:   net.ParseIP("127.0.0.1"),
-			Port: test.GetNextPort(t),
+			Port: test.GetNextPort(t, "client"),
 			Zone: "",
 		},
 		connectionID,

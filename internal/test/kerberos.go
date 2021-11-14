@@ -41,6 +41,7 @@ var krbBuildRoot embed.FS
 //         // Do more Kerberos stuff
 //     }
 func Kerberos(t *testing.T) KerberosHelper {
+	t.Helper()
 	krbLock.Lock()
 	t.Cleanup(
 		func() {

@@ -19,7 +19,7 @@ import (
 )
 
 func TestFetchMetrics(t *testing.T) {
-	port := test.GetNextPort(t)
+	port := test.GetNextPort(t, "metrics")
 	geoip := &geoIpLookupProvider{}
 	logger := log.NewTestLogger(t)
 	m := metrics.New(geoip)

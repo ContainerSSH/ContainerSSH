@@ -76,7 +76,7 @@ func createClientServerConfig(t *testing.T) (config.HTTPClientConfiguration, con
 	serverConfig := config.HTTPServerConfiguration{}
 	structutils.Defaults(&clientConfig)
 	structutils.Defaults(&serverConfig)
-	port := test.GetNextPort(t)
+	port := test.GetNextPort(t, "config server")
 	clientConfig.URL = fmt.Sprintf("http://127.0.0.1:%d/", port)
 	serverConfig.Listen = fmt.Sprintf("127.0.0.1:%d", port)
 	return clientConfig, serverConfig

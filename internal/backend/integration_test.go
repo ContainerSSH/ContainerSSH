@@ -22,8 +22,8 @@ import (
 func TestSimpleContainerLaunch(t *testing.T) {
 	t.Parallel()
 
-	authPort := test.GetNextPort(t)
-	sshPort := test.GetNextPort(t)
+	authPort := test.GetNextPort(t, "auth server")
+	sshPort := test.GetNextPort(t, "SSH")
 	cfg := config.AppConfig{}
 	structutils.Defaults(&cfg)
 	cfg.Backend = "docker"

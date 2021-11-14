@@ -122,7 +122,7 @@ func initializeAuth(t *testing.T, logger log.Logger, subpath string) (
 ) {
 	ready := make(chan bool, 1)
 	errors := make(chan error)
-	port := test.GetNextPort(t)
+	port := test.GetNextPort(t, "auth server")
 
 	server, err := auth.NewServer(
 		config.HTTPServerConfiguration{

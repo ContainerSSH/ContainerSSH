@@ -15,6 +15,8 @@ var s3Lock = make(chan struct{}, 5)
 //
 // The connection parameters can be fetched from the returned helper object.
 func S3(t *testing.T) S3Helper {
+	t.Helper()
+
 	s3Lock <- struct{}{}
 	t.Cleanup(func() {
 		<-s3Lock

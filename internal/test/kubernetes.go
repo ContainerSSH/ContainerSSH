@@ -23,6 +23,7 @@ var kubernetesClusterLock = &sync.Mutex{}
 // to the kubeconfig file. This function MAY block until enough resources become available to run the Kubernetes
 // cluster. This function MAY return a shared Kubernetes cluster.
 func Kubernetes(t *testing.T) KubernetesTestConfiguration {
+	t.Helper()
 	kubeConfigFile, err := getKubeConfigFromUserHome(t)
 	if err != nil {
 		t.Logf(
@@ -69,6 +70,8 @@ func Kubernetes(t *testing.T) KubernetesTestConfiguration {
 }
 
 func launchKubernetesCluster(t *testing.T) string {
+	t.Helper()
+
 	clusterName := strings.Replace(strings.ToLower(t.Name()), "/", ".", -1)
 	if len(clusterName) > 42 {
 		clusterName = clusterName[:42]
@@ -120,6 +123,8 @@ func launchKubernetesCluster(t *testing.T) string {
 }
 
 func getKubeConfigFromUserHome(t *testing.T) (string, error) {
+	t.Helper()
+
 	home, err := os.UserHomeDir()
 	if err != nil {
 		return "", fmt.Errorf("failed to fetch user home directory (%w)", err)
@@ -150,30 +155,37 @@ type kubeLogAdapter struct {
 }
 
 func (k kubeLogAdapter) Info(message string) {
+	k.t.Helper()
 	k.t.Log(message)
 }
 
 func (k kubeLogAdapter) Infof(format string, args ...interface{}) {
+	k.t.Helper()
 	k.t.Logf(format, args...)
 }
 
 func (k kubeLogAdapter) Enabled() bool {
+	k.t.Helper()
 	return true
 }
 
 func (k kubeLogAdapter) Warn(message string) {
+	k.t.Helper()
 	k.t.Log(message)
 }
 
 func (k kubeLogAdapter) Warnf(format string, args ...interface{}) {
+	k.t.Helper()
 	k.t.Logf(format, args...)
 }
 
 func (k kubeLogAdapter) Error(message string) {
+	k.t.Helper()
 	k.t.Log(message)
 }
 
 func (k kubeLogAdapter) Errorf(format string, args ...interface{}) {
+	k.t.Helper()
 	k.t.Logf(format, args...)
 }
 
@@ -192,6 +204,7 @@ type kubeConfig struct {
 }
 
 func (k kubeConfig) getContext(t *testing.T) kubeConfigContext {
+	t.Helper()
 	if k.CurrentContext == "" {
 		return k.Contexts[0]
 	}
@@ -205,6 +218,7 @@ func (k kubeConfig) getContext(t *testing.T) kubeConfigContext {
 }
 
 func (k kubeConfig) getCluster(t *testing.T) kubeConfigCluster {
+	t.Helper()
 	context := k.getContext(t)
 
 	for _, cluster := range k.Clusters {
@@ -217,6 +231,7 @@ func (k kubeConfig) getCluster(t *testing.T) kubeConfigCluster {
 }
 
 func (k kubeConfig) getUser(t *testing.T) kubeConfigUser {
+	t.Helper()
 	context := k.getContext(t)
 
 	for _, user := range k.Users {

@@ -5,22 +5,47 @@ import (
 	"os"
 	"time"
 
+	"github.com/containerssh/libcontainerssh/auth/webhook"
 	"github.com/containerssh/libcontainerssh/config"
-	"github.com/containerssh/libcontainerssh/config/webhook"
 	"github.com/containerssh/libcontainerssh/log"
 	"github.com/containerssh/libcontainerssh/service"
 )
 
-type myConfigReqHandler struct {
+// myAuthReqHandler is your handler for authentication requests.
+type myAuthReqHandler struct {
 }
 
-func (m *myConfigReqHandler) OnConfig(_ config.Request) (config.AppConfig, error) {
-	return config.AppConfig{}, nil
+// OnPassword will be called when the user requests password authentication.
+func (m *myAuthReqHandler) OnPassword(
+	username string,
+	password []byte,
+	remoteAddress string,
+	connectionID string,
+) (
+	success bool,
+	metadata map[string]string,
+	err error,
+) {
+	return true, nil, nil
 }
 
-// ExampleNewServer demonstrates how to set up a configuration webhook server.
+// OnPubKey will be called when the user requests public key authentication.
+func (m *myAuthReqHandler) OnPubKey(
+	username string,
+	publicKey string,
+	remoteAddress string,
+	connectionID string,
+) (
+	success bool,
+	metadata map[string]string,
+	err error,
+) {
+	return true, nil, nil
+}
+
+// ExampleNewServer demonstrates how to set up an authentication server.
 func ExampleNewServer() {
-	// Set up a logger
+	// Set up a logger.
 	logger := log.MustNewLogger(config.LogConfig{
 		Level:       config.LogLevelWarning,
 		Format:      config.LogFormatText,
@@ -28,12 +53,13 @@ func ExampleNewServer() {
 		Stdout:      os.Stdout,
 	})
 
-	// Create a new config webhook server.
+	// Create a new auth webhook server.
 	srv, err := webhook.NewServer(
 		config.HTTPServerConfiguration{
-			Listen: "0.0.0.0:8000",
+			Listen: "0.0.0.0:8001",
 		},
-		&myConfigReqHandler{},
+		// Pass your handler here.
+		&myAuthReqHandler{},
 		logger,
 	)
 	if err != nil {
@@ -49,7 +75,7 @@ func ExampleNewServer() {
 		_ = lifecycle.Run()
 	}()
 
-	// Sleep for 30 seconds as a test
+	// Sleep for 30 seconds as a test.
 	time.Sleep(30 * time.Second)
 
 	// Set up a shutdown context to give a deadline for graceful shutdown.

@@ -19,7 +19,7 @@ import (
 // TestPasswordDisabled tests if the call fails with the correct error if the password authentication method is
 // disabled. The inverse is not tested because it is already tested by the integration test.
 func TestPasswordDisabled(t *testing.T) {
-	port := test.GetNextPort(t)
+	port := test.GetNextPort(t, "auth server")
 	config := configuration.AuthConfig{
 		Method: configuration.AuthMethodWebhook,
 		Webhook: configuration.AuthWebhookClientConfig{

@@ -38,7 +38,7 @@ type AppConfig struct {
 	// server.
 	Security SecurityConfig `json:"security" yaml:"security"`
 	// Backend defines which backend to use. This option can be changed from the config server.
-	Backend string `json:"backend" yaml:"backend" default:"docker"`
+	Backend Backend `json:"backend" yaml:"backend" default:"docker"`
 	// Docker contains the configuration for the docker backend. This option can be changed from the config server.
 	Docker DockerConfig `json:"docker,omitempty" yaml:"docker"`
 	// DockerRun is a placeholder for the removed DockerRun backend. Filling this with anything but nil will yield a
@@ -53,6 +53,40 @@ type AppConfig struct {
 	// SSHProxy is the configuration for the SSH proxy backend, which forwards requests to a backing SSH server.
 	SSHProxy SSHProxyConfig `json:"sshproxy,omitempty" yaml:"sshproxy"`
 }
+
+// Backend holds the possible values for backend selector.
+type Backend string
+
+// BackendValues returns all possible values for the Backend field.
+func BackendValues() []Backend {
+	return []Backend{
+		BackendDocker,
+		BackendKubernetes,
+		BackendSSHProxy,
+	}
+}
+
+// Validate checks if the configured backend is a valid one.
+func (b Backend) Validate() error {
+	switch b {
+	case BackendDocker:
+		fallthrough
+	case BackendKubernetes:
+		fallthrough
+	case BackendSSHProxy:
+		return nil
+	case "":
+		return fmt.Errorf("no backend configured")
+	default:
+		return fmt.Errorf("invalid backend: %s", b)
+	}
+}
+
+const (
+	BackendDocker     Backend = "docker"
+	BackendKubernetes Backend = "kubernetes"
+	BackendSSHProxy   Backend = "sshproxy"
+)
 
 // Default sets the default values for the configuration.
 func (cfg *AppConfig) Default() {
@@ -90,18 +124,16 @@ func (cfg *AppConfig) Validate(dynamic bool) error {
 		return queue.Validate()
 	}
 	queue.add("security configuration", &cfg.Security)
+	queue.add("backend", &cfg.Backend)
 	switch cfg.Backend {
-	case "docker":
+	case BackendDocker:
 		queue.add("Docker", &cfg.Docker)
-	case "kubernetes":
+	case BackendKubernetes:
 		queue.add("Kubernetes", &cfg.Kubernetes)
-	case "sshproxy":
+	case BackendSSHProxy:
 		queue.add("SSH proxy", &cfg.SSHProxy)
-	case "":
-		return fmt.Errorf("no backend configured")
-	default:
-		return fmt.Errorf("invalid backend: %s", cfg.Backend)
 	}
+
 	return queue.Validate()
 }
 
