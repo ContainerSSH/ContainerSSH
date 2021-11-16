@@ -84,6 +84,9 @@ func (o *oauth2Client) KeyboardInteractive(
 					),
 					KeyboardInteractiveQuestions{},
 				)
+				if err != nil {
+					return &oauth2Context{false, metadata, err, deviceFlow}
+				}
 				verifyContext, cancelFunc := context.WithTimeout(ctx, expiration)
 				defer cancelFunc()
 				metadata, err = deviceFlow.Verify(verifyContext)

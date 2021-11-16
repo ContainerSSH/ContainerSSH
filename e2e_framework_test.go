@@ -464,7 +464,7 @@ func (c *testContext) authServer(t *testing.T, userdb AuthUserStorage, port int)
 	})
 }
 
-// AuthUser is an entry in the in-memory AuthUserStorage. It can be used to modify the user
+// AuthUser is an entry in the in-memory AuthUserStorage. It can be used to modify the user used for testing.
 type AuthUser interface {
 	SetPassword(password string)
 	// GetPassword

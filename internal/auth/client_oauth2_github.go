@@ -258,6 +258,7 @@ type gitHubUserResponse struct {
 // endregion
 
 //region gitHubFlow
+
 type gitHubFlow struct {
 	provider        *gitHubProvider
 	connectionID    string
@@ -493,7 +494,6 @@ loop:
 			break loop
 		}
 	}
-
 }
 
 //endregion

@@ -14,14 +14,13 @@ import (
 	"time"
 
 	"github.com/containerssh/libcontainerssh/config"
+	"github.com/containerssh/libcontainerssh/internal/sshserver"
 	"github.com/containerssh/libcontainerssh/internal/structutils"
 	"github.com/containerssh/libcontainerssh/internal/test"
 	"github.com/containerssh/libcontainerssh/log"
 	"github.com/containerssh/libcontainerssh/service"
 	"github.com/stretchr/testify/assert"
 	"golang.org/x/crypto/ssh"
-
-	"github.com/containerssh/libcontainerssh/internal/sshserver"
 )
 
 //region Tests
@@ -471,6 +470,7 @@ func newFullHandler(
 }
 
 //region Handler
+
 type fullHandler struct {
 	sshserver.AbstractHandler
 

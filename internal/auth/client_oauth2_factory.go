@@ -54,6 +54,9 @@ func NewOAuth2Client(cfg config.AuthConfig, logger log.Logger, collector metrics
 	switch cfg.OAuth2.Provider {
 	case config.AuthOAuth2GitHubProvider:
 		provider, err = newGitHubProvider(cfg, logger)
+		if err != nil {
+			return nil, nil, err
+		}
 	}
 
 	return &oauth2Client{

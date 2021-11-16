@@ -59,7 +59,6 @@ func (s *fileStorage) OpenWriter(name string) (storage.Writer, error) {
 	return &writer{
 		file: file,
 	}, nil
-
 }
 
 type writer struct {
