@@ -49,10 +49,6 @@ jobs:
         uses: haveyoudebuggedit/gotestfmt-action@v1
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
-      - name: Set up KinD
-        uses: engineerd/setup-kind@v0.5.0
-        with:
-          image: kindest/node:v1.20.0@sha256:b40ecf8bcb188f6a0d0f5d406089c48588b75edc112c6f635d26be5de1c89040
       - uses: actions/cache@v2
         with:
           path: |
