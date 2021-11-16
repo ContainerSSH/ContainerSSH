@@ -72,7 +72,17 @@ func Kubernetes(t *testing.T) KubernetesTestConfiguration {
 func launchKubernetesCluster(t *testing.T) string {
 	t.Helper()
 
-	clusterName := strings.Replace(strings.ToLower(t.Name()), "/", ".", -1)
+	clusterName := strings.Replace(
+		strings.Replace(
+			strings.ToLower(t.Name()),
+			"/",
+			".",
+			-1,
+		),
+		"=",
+		"-",
+		-1,
+	)
 	if len(clusterName) > 42 {
 		clusterName = clusterName[:42]
 	}
