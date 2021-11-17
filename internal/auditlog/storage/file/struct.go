@@ -23,7 +23,8 @@ func (s *fileStorage) Shutdown(_ context.Context) {
 
 // OpenReader opens a reader for a specific audit log
 func (s *fileStorage) OpenReader(name string) (io.ReadCloser, error) {
-	return os.Open(path.Join(s.directory, name))
+	// No gosec issue because inclusion is desired here.
+	return os.Open(path.Join(s.directory, name)) //nolint:gosec
 }
 
 // List lists the available audit logs

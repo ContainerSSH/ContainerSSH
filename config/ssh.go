@@ -62,8 +62,8 @@ func (cfg *SSHConfig) LoadHostKeys() ([]ssh.Signer, error) {
 	var hostKeys []ssh.Signer
 	for index, hostKey := range cfg.HostKeys {
 		if strings.TrimSpace(hostKey)[:5] != "-----" {
-			//Load file
-			fh, err := os.Open(hostKey)
+			// We are deliberalely loading a dynamic file here.
+			fh, err := os.Open(hostKey) //nolint:gosec
 			if err != nil {
 				return nil, fmt.Errorf("failed to load host key %s (%w)", hostKey, err)
 			}

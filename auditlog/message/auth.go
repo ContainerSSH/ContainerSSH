@@ -3,7 +3,7 @@ package message
 import "bytes"
 
 // PayloadAuthPassword is a payload for a message that indicates an authentication attempt, successful, or failed
-//                     authentication.
+// authentication.
 type PayloadAuthPassword struct {
 	Username string `json:"username" yaml:"username"`
 	Password []byte `json:"password" yaml:"password"`
@@ -34,13 +34,13 @@ func (p PayloadAuthPasswordBackendError) Equals(other Payload) bool {
 	return p.Username == p2.Username && bytes.Equal(p.Password, p2.Password) && p.Reason == p2.Reason
 }
 
-// PayloadAuthPubKey is a payload for a public key based authentication
+// PayloadAuthPubKey is a payload for a public key based authentication.
 type PayloadAuthPubKey struct {
 	Username string `json:"username" yaml:"username"`
 	Key      string `json:"key" yaml:"key"`
 }
 
-// Equals compares two PayloadAuthPubKey payloads
+// Equals compares two PayloadAuthPubKey payloads.
 func (p PayloadAuthPubKey) Equals(other Payload) bool {
 	p2, ok := other.(PayloadAuthPubKey)
 	if !ok {
@@ -50,14 +50,14 @@ func (p PayloadAuthPubKey) Equals(other Payload) bool {
 }
 
 // PayloadAuthPubKeyBackendError is a payload for a message indicating that there was a backend error while
-//                               authenticating with public key.
+// authenticating with public key.
 type PayloadAuthPubKeyBackendError struct {
 	Username string `json:"username" yaml:"username"`
 	Key      string `json:"key" yaml:"key"`
 	Reason   string `json:"reason" yaml:"reason"`
 }
 
-// Equals compares two PayloadAuthPubKeyBackendError payloads
+// Equals compares two PayloadAuthPubKeyBackendError payloads.
 func (p PayloadAuthPubKeyBackendError) Equals(other Payload) bool {
 	p2, ok := other.(PayloadAuthPubKeyBackendError)
 	if !ok {
@@ -167,12 +167,12 @@ func (p PayloadHandshakeFailed) Equals(other Payload) bool {
 	return p.Reason == p2.Reason
 }
 
-// PayloadAuthPubKey is a payload for a successful handshake.
+// PayloadHandshakeSuccessful is a payload for a successful handshake.
 type PayloadHandshakeSuccessful struct {
 	Username string `json:"username" yaml:"username"`
 }
 
-// Equals compares two PayloadHandshakeSuccessful payloads
+// Equals compares two PayloadHandshakeSuccessful payloads.
 func (p PayloadHandshakeSuccessful) Equals(other Payload) bool {
 	p2, ok := other.(PayloadHandshakeSuccessful)
 	if !ok {

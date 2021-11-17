@@ -18,10 +18,12 @@ linters:
     - gci
     - nilerr
     - errorlint
-    - prealloc
     - durationcheck
     - testpackage
     - whitespace
+  disable:
+    # TODO remove these
+    - unused
 linters-settings:
   gomoddirectives:
     replace-allow-list:

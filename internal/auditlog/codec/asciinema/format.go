@@ -5,7 +5,7 @@ import (
 	"fmt"
 )
 
-// Header is an Asciicast v2 header line
+// Header is an Asciicast v2 header line.
 type Header struct {
 	Version   uint              `json:"version"`
 	Width     uint              `json:"width"`

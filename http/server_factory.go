@@ -47,7 +47,8 @@ func NewServer(
 }
 
 func createServerTLSConfig(config config.HTTPServerConfiguration, certs *config.HTTPServerCerts) *tls.Config {
-	tlsConfig := &tls.Config{
+	// We let users configure the minimum TLS version, so we don't need gosec here.
+	tlsConfig := &tls.Config{ //nolint:gosec
 		MinVersion:               config.TLSVersion.GetTLSVersion(),
 		CurvePreferences:         config.ECDHCurves.GetList(),
 		PreferServerCipherSuites: true,

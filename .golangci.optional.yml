@@ -9,6 +9,7 @@ linters:
     - goconst
     - unparam
     - funlen
+    - prealloc
 linters-settings:
   gomoddirectives:
     replace-allow-list:

@@ -24,7 +24,10 @@ import (
 
 func newConnectionID() message.ConnectionID {
 	token := make([]byte, 16)
-	rand.Read(token)
+	// We are using these connection IDs for testing only.
+	if _, err := rand.Read(token); err != nil { //nolint:gosec
+		panic(err)
+	}
 	return message.ConnectionID(hex.EncodeToString(
 		token,
 	))

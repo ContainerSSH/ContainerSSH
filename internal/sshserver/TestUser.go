@@ -57,7 +57,8 @@ func (u *TestUser) KeyboardInteractiveChallengeResponse() (questions KeyboardInt
 
 // RandomPassword generates a random password for this user.
 func (u *TestUser) RandomPassword() {
-	random := rand.New(rand.NewSource(time.Now().UnixNano()))
+	// We are only using this user for testing purposes, so no security is required.
+	random := rand.New(rand.NewSource(time.Now().UnixNano())) //nolint:gosec
 	length := 16
 	runes := []rune("ABCDEFGHIJKLMNOPQRSTUVWXYZ" +
 		"abcdefghijklmnopqrstuvwxyz" +

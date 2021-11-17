@@ -350,7 +350,8 @@ func readConfigFile(
 	if err != nil {
 		return err
 	}
-	configFH, err := os.Open(configFile)
+	// File inclusion is desired here, no gosec issue.
+	configFH, err := os.Open(configFile) //nolint:gosec
 	if err != nil {
 		return err
 	}

@@ -6,9 +6,8 @@ import (
 	"testing"
 
 	"github.com/containerssh/libcontainerssh/config"
-	"github.com/stretchr/testify/assert"
-
 	"github.com/containerssh/libcontainerssh/log"
+	"github.com/stretchr/testify/assert"
 )
 
 func TestGoLog(t *testing.T) {

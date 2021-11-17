@@ -84,8 +84,8 @@ func (c SSHProxyConfig) LoadPrivateKey() (ssh.Signer, error) {
 	}
 	privateKey := c.PrivateKey
 	if strings.TrimSpace(privateKey)[:5] != "-----" {
-		//Load file
-		fh, err := os.Open(privateKey)
+		// Loading file here, so no gosec problems.
+		fh, err := os.Open(privateKey) //nolint:gosec
 		if err != nil {
 			return nil, fmt.Errorf("failed load private key %s (%w)", privateKey, err)
 		}
@@ -147,4 +147,3 @@ func (a SSHProxyAllowedHostKeyFingerprints) Validate() error {
 	}
 	return nil
 }
-

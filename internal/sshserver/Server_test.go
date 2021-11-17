@@ -594,7 +594,6 @@ func (f *fullSessionChannelHandler) OnShell(
 		if _, err := stdout.Write([]byte("Hello world!")); err != nil {
 			f.session.ExitStatus(1)
 			_ = f.session.Close()
-
 		}
 		f.session.ExitStatus(0)
 		_ = f.session.Close()

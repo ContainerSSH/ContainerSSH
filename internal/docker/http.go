@@ -12,7 +12,9 @@ import (
 func getHTTPClient(config config.DockerConfig) (*http.Client, error) {
 	var httpClient *http.Client = nil
 	if config.Connection.CaCert != "" && config.Connection.Key != "" && config.Connection.Cert != "" {
-		tlsConfig := &tls.Config{}
+		tlsConfig := &tls.Config{
+			MinVersion: tls.VersionTLS13,
+		}
 		caCertPool := x509.NewCertPool()
 		caCertPool.AppendCertsFromPEM([]byte(config.Connection.CaCert))
 		tlsConfig.RootCAs = caCertPool

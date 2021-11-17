@@ -264,9 +264,6 @@ loop:
 		case <-time.After(10 * time.Second):
 		}
 	}
-	if lastError == nil {
-		lastError = fmt.Errorf("timeout")
-	}
 	err := message.Wrap(lastError, message.EKubernetesFailedPodRemove, "Failed to remove pod, giving up.")
 	k.logger.Error(
 		err,

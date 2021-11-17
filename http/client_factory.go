@@ -48,7 +48,8 @@ func createTLSConfig(config config.HTTPClientConfiguration, certs *config.HTTPCl
 		return nil
 	}
 
-	tlsConfig := &tls.Config{
+	// We let users configure the minimum TLS version, so we don't need gosec here.
+	tlsConfig := &tls.Config{ //nolint:gosec
 		MinVersion:       config.TLSVersion.GetTLSVersion(),
 		CurvePreferences: config.ECDHCurves.GetList(),
 		CipherSuites:     config.CipherSuites.GetList(),

@@ -105,7 +105,8 @@ func getHTTPClient(cfg config.AuditLogS3Config) (*http.Client, error) {
 			return nil, fmt.Errorf("failed to add certificate from config file")
 		}
 		tlsConfig := &tls.Config{
-			RootCAs: rootCAs,
+			MinVersion: tls.VersionTLS13,
+			RootCAs:    rootCAs,
 		}
 		httpTransport := &http.Transport{
 			TLSClientConfig: tlsConfig,

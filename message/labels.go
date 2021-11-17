@@ -6,5 +6,5 @@ type LabelName string
 // LabelValue is a string, int, bool, or float.
 type LabelValue interface{}
 
-// Labels is a map linking
+// Labels is a map linking together a label name with a label value.
 type Labels map[LabelName]LabelValue

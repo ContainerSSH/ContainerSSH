@@ -78,7 +78,6 @@ func (labels metricLabels) toMap() map[string]string {
 	result := map[string]string{}
 	for _, label := range labels {
 		result[label.name] = label.value
-
 	}
 	return result
 }

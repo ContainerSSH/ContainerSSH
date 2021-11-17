@@ -5,19 +5,19 @@ import (
 	"io"
 )
 
-// Entry is a storage entry returned from readers
+// Entry is a storage entry returned from readers.
 type Entry struct {
 	Name     string
 	Metadata map[string]string
 }
 
-// ReadWriteStorage is a storage that can store as well as retrieve audit logs
+// ReadWriteStorage is a storage that can store as well as retrieve audit logs.
 type ReadWriteStorage interface {
 	ReadableStorage
 	WritableStorage
 }
 
-// WritableStorage is an audit log storage type that can be written to
+// WritableStorage is an audit log storage type that can be written to.
 type WritableStorage interface {
 	// OpenWriter opens a writer for a specific audit log/
 	OpenWriter(name string) (Writer, error)

@@ -5,12 +5,10 @@ import (
 	"sync"
 	"testing"
 
-	"github.com/containerssh/libcontainerssh/internal/geoip/dummy"
-
 	"github.com/containerssh/libcontainerssh/auditlog/message"
 	"github.com/containerssh/libcontainerssh/internal/auditlog/codec"
 	"github.com/containerssh/libcontainerssh/internal/auditlog/codec/binary"
-
+	"github.com/containerssh/libcontainerssh/internal/geoip/dummy"
 	"github.com/stretchr/testify/assert"
 )
 

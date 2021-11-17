@@ -95,7 +95,9 @@ func (s *serverImpl) RunWithLifecycle(lifecycle service.Lifecycle) error {
 	s.wg.Wait()
 	close(allClientsExited)
 	<-shutdownHandlerExited
-	return nil
+	// nilerr will complain about this return becaus err may be not nil above, but that's not a problem since the
+	// err only indicates an Accept failure.
+	return nil //nolint:nilerr
 }
 
 func (s *serverImpl) handleListenSocketOnShutdown(lifecycle service.Lifecycle) {

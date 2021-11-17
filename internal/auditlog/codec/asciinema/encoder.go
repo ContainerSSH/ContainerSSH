@@ -10,7 +10,6 @@ import (
 	"github.com/containerssh/libcontainerssh/internal/auditlog/storage"
 	"github.com/containerssh/libcontainerssh/internal/geoip/geoipprovider"
 	"github.com/containerssh/libcontainerssh/log"
-	message2 "github.com/containerssh/libcontainerssh/message"
 	messageCodes "github.com/containerssh/libcontainerssh/message"
 )
 
@@ -83,7 +82,7 @@ func (e *encoder) Encode(messages <-chan message.Message, storage storage.Writer
 		)
 		if err != nil {
 			if err := storage.Close(); err != nil {
-				e.logger.Error(message2.Wrap(err, messageCodes.EAuditLogStorageCloseFailed, "failed to close audit log storage writer"))
+				e.logger.Error(messageCodes.Wrap(err, messageCodes.EAuditLogStorageCloseFailed, "failed to close audit log storage writer"))
 			}
 			return err
 		}
@@ -91,13 +90,13 @@ func (e *encoder) Encode(messages <-chan message.Message, storage storage.Writer
 	if !headerWritten {
 		if err := e.sendHeader(asciicastHeader, storage); err != nil {
 			if err := storage.Close(); err != nil {
-				e.logger.Error(message2.Wrap(err, messageCodes.EAuditLogStorageCloseFailed, "failed to close audit log storage writer"))
+				e.logger.Error(messageCodes.Wrap(err, messageCodes.EAuditLogStorageCloseFailed, "failed to close audit log storage writer"))
 			}
 			return err
 		}
 	}
 	if err := storage.Close(); err != nil {
-		e.logger.Error(message2.Wrap(err, messageCodes.EAuditLogStorageCloseFailed, "failed to close audit log storage writer"))
+		e.logger.Error(messageCodes.Wrap(err, messageCodes.EAuditLogStorageCloseFailed, "failed to close audit log storage writer"))
 	}
 	return nil
 }

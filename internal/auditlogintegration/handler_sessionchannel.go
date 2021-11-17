@@ -70,7 +70,6 @@ func (s *sessionChannelHandler) OnPtyRequest(
 		return err
 	}
 	return nil
-
 }
 
 func (s *sessionChannelHandler) OnShell(

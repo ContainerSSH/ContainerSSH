@@ -170,7 +170,8 @@ func (q *uploadQueue) OpenWriter(name string) (storage.Writer, error) {
 	if err != nil {
 		return nil, err
 	}
-	readHandle, err := os.Open(file)
+	// We are deliberately opening a file here.
+	readHandle, err := os.Open(file) //nolint:gosec
 	if err != nil {
 		return nil, err
 	}
@@ -305,7 +306,8 @@ func (q *uploadQueue) recover(name string) error {
 	)
 	file := path.Join(q.directory, name)
 
-	readHandle, err := os.Open(file)
+	// We are deliberately opening a file here.
+	readHandle, err := os.Open(file) //nolint:gosec
 	if err != nil {
 		return err
 	}

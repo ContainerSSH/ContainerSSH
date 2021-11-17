@@ -112,10 +112,11 @@ func startSSHServer(t *testing.T, logger log.Logger, authServerPort int) (config
 
 func testConnection(t *testing.T, authMethod ssh.AuthMethod, sshServerConfig config.SSHConfig, success bool) {
 	clientConfig := ssh.ClientConfig{
-		Config:          ssh.Config{},
-		User:            "foo",
-		Auth:            []ssh.AuthMethod{authMethod},
-		HostKeyCallback: ssh.InsecureIgnoreHostKey(),
+		Config: ssh.Config{},
+		User:   "foo",
+		Auth:   []ssh.AuthMethod{authMethod},
+		// We don't care about host key verification for this test.
+		HostKeyCallback: ssh.InsecureIgnoreHostKey(), //nolint:gosec
 	}
 	client, err := ssh.Dial("tcp", sshServerConfig.Listen, &clientConfig)
 	if success {

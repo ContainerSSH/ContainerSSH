@@ -3,9 +3,8 @@ package structutils_test
 import (
 	"testing"
 
-	"github.com/stretchr/testify/assert"
-
 	"github.com/containerssh/libcontainerssh/internal/structutils"
+	"github.com/stretchr/testify/assert"
 )
 
 type copyTest struct {

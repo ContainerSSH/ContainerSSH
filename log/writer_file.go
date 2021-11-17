@@ -6,7 +6,6 @@ import (
 
 	"github.com/containerssh/libcontainerssh/config"
 	"github.com/containerssh/libcontainerssh/message"
-	messageCodes "github.com/containerssh/libcontainerssh/message"
 )
 
 func newFileWriter(filename string, format config.LogFormat) (Writer, error) {
@@ -40,7 +39,7 @@ func (f *fileWriter) Rotate() error {
 	if err != nil {
 		return message.Wrap(
 			err,
-			messageCodes.ELogRotateFailed,
+			message.ELogRotateFailed,
 			"failed to rotate logs",
 		)
 	}
@@ -50,7 +49,7 @@ func (f *fileWriter) Rotate() error {
 	if err := oldFh.Close(); err != nil {
 		return message.Wrap(
 			err,
-			messageCodes.ELogRotateFailed,
+			message.ELogRotateFailed,
 			"failed to close old log file",
 		)
 	}
@@ -62,9 +61,10 @@ func (f *fileWriter) Close() error {
 }
 
 func openLogFile(filename string) (*os.File, error) {
-	fh, err := os.OpenFile(filename, os.O_RDWR|os.O_CREATE|os.O_APPEND, 0644)
+	// We actually want to open a file here.
+	fh, err := os.OpenFile(filename, os.O_RDWR|os.O_CREATE|os.O_APPEND, 0644) // nolint:gosec
 	if err != nil {
-		return nil, message.Wrap(err, messageCodes.ELogFileOpenFailed, "failed to open log file %s", filename)
+		return nil, message.Wrap(err, message.ELogFileOpenFailed, "failed to open log file %s", filename)
 	}
 	return fh, nil
 }

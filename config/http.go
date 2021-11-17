@@ -324,7 +324,7 @@ type HTTPClientCerts struct {
 	// CACertPool contains the certificate pool used for verifying the server identity.
 	CACertPool *x509.CertPool
 	// Cert is the client certificate to authenticate to the server with, if any.
-	Cert       *tls.Certificate
+	Cert *tls.Certificate
 }
 
 // Validate validates the HTTP client configuration.
@@ -448,7 +448,7 @@ func (config *HTTPServerConfiguration) Validate() error {
 // HTTPServerCerts is a structure returned from ValidateWithCerts, containing the loaded certificates after validation.
 type HTTPServerCerts struct {
 	// Cert is the server certificate.
-	Cert         *tls.Certificate
+	Cert *tls.Certificate
 	// ClientCAPool contains the CA certificate pool to verify client certificates against, if any.
 	ClientCAPool *x509.CertPool
 }
@@ -540,7 +540,8 @@ func (r RequestEncoding) Validate() error {
 
 func loadPEM(spec string) ([]byte, error) {
 	if !strings.HasPrefix(strings.TrimSpace(spec), "-----") {
-		return ioutil.ReadFile(spec)
+		// We are deliberately reading a file here.
+		return ioutil.ReadFile(spec) //nolint:gosec
 	}
 	return []byte(spec), nil
 }

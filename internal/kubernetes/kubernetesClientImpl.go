@@ -2,7 +2,6 @@ package kubernetes
 
 import (
 	"context"
-	"fmt"
 	"sync"
 	"time"
 
@@ -53,9 +52,6 @@ loop:
 			break loop
 		case <-time.After(10 * time.Second):
 		}
-	}
-	if lastError == nil {
-		lastError = fmt.Errorf("timeout")
 	}
 	err = message.WrapUser(
 		lastError,

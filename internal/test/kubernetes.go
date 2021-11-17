@@ -279,7 +279,8 @@ type kubeConfigUser struct {
 }
 
 func readKubeConfig(file string) (config kubeConfig, err error) {
-	yamlFile, err := ioutil.ReadFile(file)
+	// We intend to include this file, no gosec issue.
+	yamlFile, err := ioutil.ReadFile(file) //nolint:gosec
 	if err != nil {
 		return config, err
 	}

@@ -25,7 +25,7 @@ func NewStorage(cfg config.AuditLogFileConfig, _ log.Logger) (storage.ReadWriteS
 	if !stat.IsDir() {
 		return nil, fmt.Errorf("specified audit log directory is not a directory %s (%w)", cfg.Directory, err)
 	}
-	err = ioutil.WriteFile(path.Join(cfg.Directory, ".accesstest"), []byte{}, 0644)
+	err = ioutil.WriteFile(path.Join(cfg.Directory, ".accesstest"), []byte{}, 0600)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create file in audit log directory %s (%w)", cfg.Directory, err)
 	}

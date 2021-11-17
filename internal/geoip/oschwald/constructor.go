@@ -1,9 +1,8 @@
 package oschwald
 
 import (
-	backend "github.com/oschwald/geoip2-golang"
-
 	"github.com/containerssh/libcontainerssh/internal/geoip/geoipprovider"
+	backend "github.com/oschwald/geoip2-golang"
 )
 
 // New creates a new GeoIP lookup provider using Oschwald's backend.
