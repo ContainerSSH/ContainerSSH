@@ -1,6 +1,7 @@
 package test
 
 import (
+	"context"
 	"net"
 	"sync"
 	"testing"
@@ -15,7 +16,18 @@ func GetNextPort(t *testing.T, purpose string) int {
 	lock.Lock()
 	defer lock.Unlock()
 
-	l, err := net.ListenTCP("tcp", &net.TCPAddr{IP: net.ParseIP("127.0.0.1")})
+	listenConfig := net.ListenConfig{
+		Control: socketControl,
+	}
+	ctx := context.Background()
+
+	if deadline, ok := t.Deadline(); ok {
+		var cancel func()
+		ctx, cancel = context.WithDeadline(ctx, deadline)
+		defer cancel()
+	}
+
+	l, err := listenConfig.Listen(ctx, "tcp", "127.0.0.1:0")
 	if err != nil {
 		t.Fatalf("Failed to allocate port for test %s for %s (%v)", t.Name(), purpose, err)
 	}
@@ -33,3 +45,5 @@ func GetNextPort(t *testing.T, purpose string) int {
 	t.Logf("Allocating port %d for test %s for %s", port, t.Name(), purpose)
 	return port
 }
+
+

@@ -35,8 +35,8 @@ func testBackend(t T, backend config.Backend) {
 	t.Run("Shell", func(t T) {
 		t.StartSessionChannel()
 		t.RequestShell()
-		t.SendStdin("echo 'Hello world!'\n")
-		t.AssertStdoutHas("Hello world! && sleep 3")
+		t.SendStdin("echo 'Hello world!' && sleep 3\n")
+		t.AssertStdoutHas("Hello world!")
 		t.SendStdin("exit\n")
 		t.CloseChannel()
 	})
