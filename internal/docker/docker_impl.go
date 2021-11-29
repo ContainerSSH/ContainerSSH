@@ -616,16 +616,6 @@ func (d *dockerV20Exec) done() <-chan struct{} {
 }
 
 func (d *dockerV20Exec) signal(ctx context.Context, sig string) error {
-	if d.pid <= 0 {
-		return message.UserMessage(message.EDockerFailedSignalNoPID, "Cannot send signal to process", "could not send signal to exec, process ID not found")
-	}
-	if d.pid == 1 {
-		return d.sendSignalToContainer(ctx, sig)
-	}
-	return d.sendSignalToProcess(ctx, sig)
-}
-
-func (d *dockerV20Exec) sendSignalToProcess(ctx context.Context, sig string) error {
 	if d.container.config.Execution.DisableAgent {
 		err := message.UserMessage(
 			message.EDockerCannotSendSignalNoAgent,
@@ -637,6 +627,14 @@ func (d *dockerV20Exec) sendSignalToProcess(ctx context.Context, sig string) err
 		return err
 	}
 	d.lock.Lock()
+	if d.pid <= 0 {
+		d.lock.Unlock()
+		return message.UserMessage(message.EDockerFailedSignalNoPID, "Cannot send signal to process", "could not send signal to exec, process ID not found")
+	}
+	if d.pid == 1 {
+		d.lock.Unlock()
+		return d.sendSignalToContainer(ctx, sig)
+	}
 	if d.container.shutdown {
 		err := message.UserMessage(
 			message.EDockerFailedExecSignal,
