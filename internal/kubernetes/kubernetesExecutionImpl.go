@@ -34,8 +34,6 @@ type kubernetesExecutionImpl struct {
 }
 
 func (k *kubernetesExecutionImpl) term(ctx context.Context) {
-	k.lock.Lock()
-	defer k.lock.Unlock()
 	select {
 	case <-k.done():
 		return
@@ -45,8 +43,6 @@ func (k *kubernetesExecutionImpl) term(ctx context.Context) {
 }
 
 func (k *kubernetesExecutionImpl) kill() {
-	k.lock.Lock()
-	defer k.lock.Unlock()
 	select {
 	case <-k.done():
 		return
@@ -60,16 +56,6 @@ func (k *kubernetesExecutionImpl) done() <-chan struct{} {
 }
 
 func (k *kubernetesExecutionImpl) signal(ctx context.Context, sig string) error {
-	if k.pid <= 0 {
-		return message.UserMessage(message.EKubernetesFailedSignalNoPID, "Cannot send signal to process", "could not send signal to exec, process ID not found")
-	}
-	if k.exited {
-		return message.UserMessage(message.EKubernetesFailedSignalExited, "Cannot send signal to process", "could not send signal to exec, process already exited")
-	}
-	return k.sendSignalToProcess(ctx, sig)
-}
-
-func (k *kubernetesExecutionImpl) sendSignalToProcess(ctx context.Context, sig string) error {
 	if k.pod.config.Pod.DisableAgent {
 		err := message.UserMessage(
 			message.EKubernetesCannotSendSignalNoAgent,
@@ -81,6 +67,16 @@ func (k *kubernetesExecutionImpl) sendSignalToProcess(ctx context.Context, sig s
 		return err
 	}
 	k.lock.Lock()
+
+	if k.pid <= 0 {
+		k.lock.Unlock()
+		return message.UserMessage(message.EKubernetesFailedSignalNoPID, "Cannot send signal to process", "could not send signal to exec, process ID not found")
+	}
+	if k.exited {
+		k.lock.Unlock()
+		return message.UserMessage(message.EKubernetesFailedSignalExited, "Cannot send signal to process", "could not send signal to exec, process already exited")
+	}
+
 	if k.pod.shutdown {
 		err := message.UserMessage(
 			message.EKubernetesFailedExecSignal,
