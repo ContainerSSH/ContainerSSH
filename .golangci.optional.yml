@@ -10,6 +10,11 @@ linters:
     - unparam
     - funlen
     - prealloc
+    - gosec
+    - nakedret
+    - godot
+    - godox
+    - gci
 linters-settings:
   gomoddirectives:
     replace-allow-list:

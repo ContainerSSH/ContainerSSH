@@ -4,10 +4,6 @@ linters:
   enable:
     - gomoddirectives
     - nolintlint
-    - gosec
-    - nakedret
-    - godot
-    - godox
     - unconvert
     - asciicheck
     - bodyclose
@@ -15,7 +11,6 @@ linters:
     - exportloopref
     - dogsled
     - importas
-    - gci
     - nilerr
     - errorlint
     - durationcheck
@@ -24,6 +19,7 @@ linters:
   disable:
     # TODO remove these
     - unused
+    - deadcode
 linters-settings:
   gomoddirectives:
     replace-allow-list:
