@@ -56,6 +56,7 @@ type queueEntry struct {
 	partAvailable chan bool
 	file          string
 	metadata      queueEntryMetadata
+	lock          *sync.Mutex
 }
 
 // This method marks the the part as available if it has not been marked yet. This unfreezes the upload loop waiting in
@@ -113,11 +114,14 @@ type uploadQueue struct {
 	ctx              context.Context
 	cancelFunc       context.CancelFunc
 	shutdownContext  context.Context
+	lock             *sync.Mutex
 }
 
 func (q *uploadQueue) Shutdown(shutdownContext context.Context) {
+	q.lock.Lock()
 	q.shutdownContext = shutdownContext
 	q.cancelFunc()
+	q.lock.Unlock()
 	q.wg.Wait()
 }
 
@@ -147,6 +151,7 @@ func newUploadQueue(
 	}
 	ctx, cancelFunc := context.WithCancel(context.Background())
 	return &uploadQueue{
+		lock:             &sync.Mutex{},
 		directory:        directory,
 		parallelUploads:  parallelUploads,
 		partSize:         partSize,
@@ -176,6 +181,7 @@ func (q *uploadQueue) OpenWriter(name string) (storage.Writer, error) {
 		return nil, err
 	}
 	entry := &queueEntry{
+		lock:          &sync.Mutex{},
 		logger:        q.logger,
 		name:          name,
 		file:          file,
@@ -292,8 +298,10 @@ func (q *uploadQueue) finish(name string) error {
 		return message.NewMessage(message.EAuditLogNoSuchQueueEntry, "no such queue entry: %s", name)
 	}
 	entry := rawEntry.(*queueEntry)
+	entry.lock.Lock()
 	entry.finished = true
 	entry.markPartAvailable()
+	entry.lock.Unlock()
 	return nil
 }
 

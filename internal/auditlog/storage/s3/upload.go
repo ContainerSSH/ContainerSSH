@@ -146,9 +146,12 @@ func (q *uploadQueue) processShouldAbort(s3Connection *s3.S3, name string, failu
 		}
 		q.queue.Delete(name)
 	}
-	if q.shutdownContext != nil {
+	q.lock.Lock()
+	shutdownContext := q.shutdownContext
+	q.lock.Unlock()
+	if shutdownContext != nil {
 		select {
-		case <-q.shutdownContext.Done():
+		case <-shutdownContext.Done():
 			q.logger.Warning(
 				message.NewMessage(
 					message.EAuditLogMultipartAborting,
@@ -228,11 +231,13 @@ func (q *uploadQueue) uploadLoop(s3Connection *s3.S3, name string, entry *queueE
 		}
 
 		<-q.workerSem
+		entry.lock.Lock()
 		if errorHappened || entry.finished {
 			// If an error happened, retry immediately.
 			// Also go back if the entry is finished to finish uploading the parts.
 			entry.markPartAvailable()
 		}
+		entry.lock.Unlock()
 		if errorHappened {
 			failures++
 			time.Sleep(10 * time.Second)
