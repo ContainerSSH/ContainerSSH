@@ -224,7 +224,7 @@ func (g *gitHubActionsWriter) processDefault(line string) {
 				g.testCases[g.lastTestCase].lines,
 				testCaseLine{
 					file:    parts[1],
-					line:    uint(lineNumber),
+					line:    lineNumber,
 					level:   config.LogLevelString(parts[3]),
 					code:    parts[4],
 					message: strings.TrimSpace(parts[5]),
@@ -271,7 +271,7 @@ type testCase struct {
 
 type testCaseLine struct {
 	file    string
-	line    uint
+	line    uint64
 	level   config.LogLevelString
 	code    string
 	message string

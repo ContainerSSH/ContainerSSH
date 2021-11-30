@@ -150,6 +150,13 @@ func (d *dockerContainer) port(containerPort string) int {
 	if err != nil {
 		panic(fmt.Errorf("BUG: failed to parse container %s host port %s (%w)", d.image, hostPortString, err))
 	}
+	if hostPort < 1 || hostPort > 65536 {
+		panic(fmt.Errorf(
+			"BUG: Docker daemon returned invalid host port number for %s: %d",
+			containerPort,
+			hostPort,
+		))
+	}
 	return int(hostPort)
 }
 
