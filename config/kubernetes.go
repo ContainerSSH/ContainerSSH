@@ -220,7 +220,7 @@ func (c *KubernetesPodConfig) UnmarshalYAML(unmarshal func(interface{}) error) e
 // KubernetesTimeoutConfig configures the various timeouts for the Kubernetes backend.
 type KubernetesTimeoutConfig struct {
 	// PodStart is the timeout for creating and starting the pod.
-	PodStart time.Duration `json:"podStart,omitempty" yaml:"podStart" default:"120s"`
+	PodStart time.Duration `json:"podStart,omitempty" yaml:"podStart" default:"60s"`
 	// PodStop is the timeout for stopping and removing the pod.
 	PodStop time.Duration `json:"podStop,omitempty" yaml:"podStop" default:"60s"`
 	// CommandStart sets the maximum time starting a command may take.

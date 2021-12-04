@@ -1,6 +1,7 @@
 package test
 
 import (
+	"context"
 	"encoding/base64"
 	"fmt"
 	"io/ioutil"
@@ -10,7 +11,12 @@ import (
 	"strings"
 	"sync"
 	"testing"
+	"time"
 
+	v1 "k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/client-go/kubernetes"
+	restclient "k8s.io/client-go/rest"
 	"sigs.k8s.io/kind/pkg/cluster"
 	"sigs.k8s.io/kind/pkg/log"
 	"sigs.k8s.io/yaml"
@@ -60,12 +66,89 @@ func Kubernetes(t *testing.T) KubernetesTestConfiguration {
 	if hostname == "127.0.0.1" {
 		hostname = "localhost"
 	}
-	return KubernetesTestConfiguration{
+	testConfig := KubernetesTestConfiguration{
 		Host:       cfg.getCluster(t).Cluster.Server,
 		ServerName: hostname,
 		CACert:     string(caCert),
 		UserCert:   string(userCert),
 		UserKey:    string(userKey),
+	}
+	canaryTestKubernetes(t, testConfig)
+
+	return testConfig
+}
+
+func canaryTestKubernetes(t *testing.T, testConfig KubernetesTestConfiguration) {
+	restConfig := getKubernetesRestConfig(testConfig)
+
+	cli, err := kubernetes.NewForConfig(&restConfig)
+	if err != nil {
+		t.Fatalf("Failed to create working Kubernetes config (%v).", err)
+	}
+	ctx := context.Background()
+	if d, ok := t.Deadline(); ok {
+		var cancel func()
+		ctx, cancel = context.WithDeadline(ctx, d)
+		defer cancel()
+	}
+	t.Logf("Bringing up canary pod to test if Kubernetes is ready...")
+	pod, err := cli.CoreV1().Pods("default").Create(
+		ctx, &v1.Pod{
+			ObjectMeta: metav1.ObjectMeta{
+				GenerateName: "containerssh-test-canary-",
+			},
+			Spec: v1.PodSpec{
+				Containers: []v1.Container{
+					{
+						Name:  "test",
+						Image: "containerssh/containerssh-guest-image",
+						TTY:   true,
+					},
+				},
+			},
+		}, metav1.CreateOptions{},
+	)
+	defer func() {
+		if pod.Name != "" {
+			if err := cli.CoreV1().Pods("default").Delete(ctx, pod.Name, metav1.DeleteOptions{}); err != nil {
+				t.Fatalf("Failed to remove canary pod %s (%v)", pod, err)
+			}
+		}
+	}()
+
+	if err != nil {
+		t.Fatalf("Failed to bring up canary pod in test Kubernetes cluster (%v)", err)
+	}
+	for {
+		pod, err = cli.CoreV1().Pods("default").Get(ctx, pod.Name, metav1.GetOptions{})
+		if err != nil {
+			t.Fatalf("Failed to bring up canary pod in test Kubernetes cluster (%v)", err)
+		}
+		if pod.Status.Phase == v1.PodRunning {
+			break
+		}
+		if pod.Status.Phase == v1.PodFailed {
+			t.Fatalf("Failed  to bring up canary pod, pod failed (%v)", pod.Status)
+		}
+		select {
+		case <-ctx.Done():
+			t.Fatalf("Failed to bring up canary pod (last phase was %s)", pod.Status.Phase)
+		case <-time.After(1 * time.Second):
+			t.Logf("Canary pod is not yet ready, retrying in 1 second...")
+		}
+	}
+}
+
+func getKubernetesRestConfig(testConfig KubernetesTestConfiguration) restclient.Config {
+	return restclient.Config{
+		Host: testConfig.Host,
+		TLSClientConfig: restclient.TLSClientConfig{
+			ServerName: testConfig.ServerName,
+			CAData:     []byte(testConfig.CACert),
+			CertData:   []byte(testConfig.UserCert),
+			KeyData:    []byte(testConfig.UserKey),
+		},
+		UserAgent: "ContainerSSH",
 	}
 }
 
@@ -114,9 +197,15 @@ func launchKubernetesCluster(t *testing.T) string {
 		},
 	)
 
+	waitTime := 10 * time.Minute
+	if waitDeadline, ok := t.Deadline(); ok {
+		waitTime = time.Until(waitDeadline)
+	}
+
 	if err := provider.Create(
 		clusterName,
 		cluster.CreateWithKubeconfigPath(kubeConfigFile),
+		cluster.CreateWithWaitForReady(waitTime),
 	); err != nil {
 		t.Fatalf("failed to create Kubernetes cluster (%v)", err)
 	}
