@@ -15,7 +15,7 @@ import (
 
 // TestYAMLSerialization tests if the configuration structure can be serialized and then deserialized to/from YAML.
 func TestYAMLSerialization(t *testing.T) {
-	t.Parallel()
+	//t.Parallel()()
 
 	// region Setup
 	cfg := &config.DockerConfig{}
@@ -50,7 +50,7 @@ func TestYAMLSerialization(t *testing.T) {
 
 // TestJSONSerialization tests if the configuration structure can be serialized and then deserialized to/from JSON.
 func TestJSONSerialization(t *testing.T) {
-	t.Parallel()
+	//t.Parallel()()
 
 	// region Setup
 	cfg := &config.DockerConfig{}

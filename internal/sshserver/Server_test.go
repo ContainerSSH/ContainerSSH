@@ -26,7 +26,7 @@ import (
 //region Tests
 
 func TestReadyRejection(t *testing.T) {
-	t.Parallel()
+	//t.Parallel()()
 	cfg := config.SSHConfig{}
 	structutils.Defaults(&cfg)
 	if err := cfg.GenerateHostKey(); err != nil {
@@ -52,7 +52,7 @@ func TestReadyRejection(t *testing.T) {
 }
 
 func TestAuthFailed(t *testing.T) {
-	t.Parallel()
+	//t.Parallel()()
 	port := test.GetNextPort(t, "SSH")
 	server := newServerHelper(
 		t,
@@ -96,7 +96,7 @@ func TestAuthFailed(t *testing.T) {
 }
 
 func TestAuthKeyboardInteractive(t *testing.T) {
-	t.Parallel()
+	//t.Parallel()()
 	user1 := sshserver.NewTestUser("test")
 	user1.AddKeyboardInteractiveChallengeResponse("foo", "bar")
 
@@ -132,7 +132,7 @@ func TestAuthKeyboardInteractive(t *testing.T) {
 }
 
 func TestSessionSuccess(t *testing.T) {
-	t.Parallel()
+	//t.Parallel()()
 	port := test.GetNextPort(t, "SSH")
 	server := newServerHelper(
 		t,
@@ -167,7 +167,7 @@ func TestSessionSuccess(t *testing.T) {
 }
 
 func TestSessionError(t *testing.T) {
-	t.Parallel()
+	//t.Parallel()()
 	port := test.GetNextPort(t, "SSH")
 	server := newServerHelper(
 		t,
@@ -202,7 +202,7 @@ func TestSessionError(t *testing.T) {
 }
 
 func TestPubKey(t *testing.T) {
-	t.Parallel()
+	//t.Parallel()()
 	port := test.GetNextPort(t, "SSH")
 	rsaKey, err := rsa.GenerateKey(
 		rand.Reader,

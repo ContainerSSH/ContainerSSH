@@ -20,7 +20,7 @@ import (
 )
 
 func TestSimpleContainerLaunch(t *testing.T) {
-	t.Parallel()
+	//t.Parallel()()
 
 	authPort := test.GetNextPort(t, "auth server")
 	sshPort := test.GetNextPort(t, "SSH")

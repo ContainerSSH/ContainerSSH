@@ -13,7 +13,7 @@ type conformanceTestSuite struct {
 }
 
 func (c *conformanceTestSuite) singleProgramShouldRun(t *testing.T) {
-	t.Parallel()
+	//t.Parallel()()
 	logger := log.NewTestLogger(t)
 
 	backend, err := c.backendFactory(t, logger)
@@ -58,7 +58,7 @@ func (c *conformanceTestSuite) singleProgramShouldRun(t *testing.T) {
 }
 
 func (c *conformanceTestSuite) settingEnvVariablesShouldWork(t *testing.T) {
-	t.Parallel()
+	//t.Parallel()()
 	logger := log.NewTestLogger(t)
 	backend, err := c.backendFactory(t, logger)
 	if err != nil {
@@ -105,7 +105,7 @@ func (c *conformanceTestSuite) settingEnvVariablesShouldWork(t *testing.T) {
 }
 
 func (c *conformanceTestSuite) runningInteractiveShellShouldWork(t *testing.T) {
-	t.Parallel()
+	//t.Parallel()()
 	logger := log.NewTestLogger(t)
 	backend, err := c.backendFactory(t, logger)
 	if err != nil {
@@ -189,7 +189,7 @@ func (c *conformanceTestSuite) testShellInteraction(t *testing.T, session TestCl
 }
 
 func (c *conformanceTestSuite) reportingExitCodeShouldWork(t *testing.T) {
-	t.Parallel()
+	//t.Parallel()()
 	logger := log.NewTestLogger(t)
 	backend, err := c.backendFactory(t, logger)
 	if err != nil {
@@ -228,7 +228,7 @@ func (c *conformanceTestSuite) reportingExitCodeShouldWork(t *testing.T) {
 }
 
 func (c *conformanceTestSuite) sendingSignalsShouldWork(t *testing.T) {
-	t.Parallel()
+	//t.Parallel()()
 	logger := log.NewTestLogger(t)
 	backend, err := c.backendFactory(t, logger)
 	if err != nil {

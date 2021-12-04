@@ -8,13 +8,13 @@ import (
 // Linux shell.
 //goland:noinspection GoUnusedExportedFunction
 func RunConformanceTests(t *testing.T, backendFactories map[string]ConformanceTestBackendFactory) {
-	t.Parallel()
+	//t.Parallel()()
 
 	for name, factory := range backendFactories {
 		n := name
 		f := factory
 		t.Run(n, func(t *testing.T) {
-			t.Parallel()
+			//t.Parallel()()
 			testSuite := &conformanceTestSuite{
 				backendFactory: f,
 			}

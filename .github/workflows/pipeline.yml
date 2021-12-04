@@ -49,13 +49,21 @@ jobs:
         uses: haveyoudebuggedit/gotestfmt-action@v1
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
-      - uses: actions/cache@v2
+      - id: gopaths
+        name: Determine go cache paths
+        run: |
+          echo "::set-output name=build::$(go env GOCACHE)"
+          echo "::set-output name=mod::$(go env GOMODCACHE)"
+      - name: Set up go module cache
+        uses: actions/cache@v2
         with:
-          path: |
-            ~/go/pkg/mod
-            ~/.cache/go-build
-          key: go-test-${{ hashFiles('**/go.sum') }}
-          restore-keys: go-test-
+          path: ${{ steps.gopaths.outputs.mod }}
+          key: ${{ runner.os }}-go-mod-${{ hashFiles('**/go.sum') }}
+      - name: Set up go build cache
+        uses: actions/cache@v2
+        with:
+          path: ${{ steps.gopaths.outputs.build }}
+          key: ${{ runner.os }}-build-${{ hashFiles('**/go.sum') }}
       - name: Run go test
         run: |
           set -euo pipefail
