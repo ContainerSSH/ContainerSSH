@@ -57,7 +57,7 @@ jobs:
       - name: Run go test
         run: |
           set -euo pipefail
-          go test -race -v ./... 2>&1 | tee /tmp/gotest.log
+          go test -p 1 -v ./... 2>&1 | tee /tmp/gotest.log
       - name: Format log output
         run: |
           set -euo pipefail
