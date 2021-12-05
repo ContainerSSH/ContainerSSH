@@ -69,6 +69,7 @@ jobs:
           set -euo pipefail
           go test -json -p 1 -v ./... 2>&1 | tee /tmp/gotest.log
       - name: Format log output
+        if: always()
         run: |
           set -euo pipefail
           cat /tmp/gotest.log | gotestfmt
