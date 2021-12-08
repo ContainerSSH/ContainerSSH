@@ -50,7 +50,7 @@ jobs:
           set -ex
           UP=0
           for i in $(seq 1 30); do
-            NODECOUNT=$(kubectl get nodes | grep kind-control-plane | grep -v NotReady)
+            NODECOUNT=$(kubectl get nodes | grep kind-control-plane | grep -v NotReady | wc -l)
             if [ $NODECOUNT -eq "1" ]; then
               UP=1
               break
