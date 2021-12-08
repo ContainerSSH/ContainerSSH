@@ -50,7 +50,7 @@ jobs:
           sudo chmod +x /usr/local/bin/kind /usr/local/bin/kubectl
       - name: Bring up KinD cluster
         run: |
-          kind create cluster --wait 300
+          kind create cluster --wait 300s
       - name: Wait for KinD
         run: |
           set -ex
