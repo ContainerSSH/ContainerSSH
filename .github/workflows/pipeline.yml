@@ -45,6 +45,21 @@ jobs:
           go-version: 1.17
       - name: Set up KinD
         uses: engineerd/setup-kind@v0.5.0
+      - name: Wait for KinD
+        run: |
+          UP=0
+          for i in $(seq 1 30); do
+            NODECOUNT=$(kubectl get nodes | grep kind-control-plane | grep -v NotReady)
+            if [ $NODECOUNT -eq "1" ]; then
+              UP=1
+              break
+            fi
+          done
+          if [ $UP -eq "0" ]; then
+            echo "KinD cluster failed to come up"
+            exit 1
+          fi
+          echo "KinD is ready for use."
       - name: Set up gotestfmt
         uses: haveyoudebuggedit/gotestfmt-action@v2
         with:

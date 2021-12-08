@@ -31,7 +31,7 @@ func ExampleNewServer() {
 	// Create a new config webhook server.
 	srv, err := webhook.NewServer(
 		config.HTTPServerConfiguration{
-			Listen: "0.0.0.0:8000",
+			Listen: "0.0.0.0:0",
 		},
 		&myConfigReqHandler{},
 		logger,
