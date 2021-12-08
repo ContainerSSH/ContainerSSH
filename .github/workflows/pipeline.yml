@@ -47,6 +47,7 @@ jobs:
         uses: engineerd/setup-kind@v0.5.0
       - name: Wait for KinD
         run: |
+          set -ex
           UP=0
           for i in $(seq 1 30); do
             NODECOUNT=$(kubectl get nodes | grep kind-control-plane | grep -v NotReady)
@@ -54,6 +55,7 @@ jobs:
               UP=1
               break
             fi
+            sleep 5
           done
           if [ $UP -eq "0" ]; then
             echo "KinD cluster failed to come up"
