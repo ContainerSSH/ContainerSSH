@@ -43,8 +43,14 @@ jobs:
         uses: actions/setup-go@v2
         with:
           go-version: 1.17
-      - name: Set up KinD
-        uses: engineerd/setup-kind@v0.5.0
+      - name: Install KinD
+        run: |
+          sudo curl -Lo /usr/local/bin/kind https://kind.sigs.k8s.io/dl/v0.11.1/kind-linux-amd64
+          sudo curl -Lo /usr/local/bin/kubectl "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
+          sudo chmod +x /usr/local/bin/kind /usr/local/bin/kubectl
+      - name: Bring up KinD cluster
+        run: |
+          kind create cluster --wait 300
       - name: Wait for KinD
         run: |
           set -ex
