@@ -3,7 +3,7 @@ module github.com/containerssh/libcontainerssh
 go 1.17
 
 require (
-	github.com/aws/aws-sdk-go v1.42.15
+	github.com/aws/aws-sdk-go v1.42.21
 	github.com/creasty/defaults v1.5.2
 	github.com/docker/distribution v2.7.1+incompatible
 	github.com/docker/docker v20.10.6+incompatible
