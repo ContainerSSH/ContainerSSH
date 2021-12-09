@@ -15,7 +15,7 @@ require (
 	github.com/imdario/mergo v0.3.12
 	github.com/jcmturner/gokrb5/v8 v8.4.2
 	github.com/mattn/go-shellwords v1.0.12
-	github.com/mitchellh/mapstructure v1.4.2
+	github.com/mitchellh/mapstructure v1.4.3
 	github.com/opencontainers/image-spec v1.0.2
 	github.com/oschwald/geoip2-golang v1.5.0
 	github.com/qdm12/reprint v0.0.0-20200326205758-722754a53494
