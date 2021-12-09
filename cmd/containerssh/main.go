@@ -5,5 +5,5 @@ import (
 )
 
 func main() {
-	containerssh.Main()
+	libcontainerssh.Main()
 }

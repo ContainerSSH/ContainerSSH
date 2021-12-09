@@ -1,4 +1,4 @@
-package containerssh
+package libcontainerssh
 
 import (
 	"bytes"

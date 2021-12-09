@@ -1,4 +1,4 @@
-package containerssh_test
+package libcontainerssh_test
 
 import (
 	"fmt"

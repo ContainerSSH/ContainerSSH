@@ -1,4 +1,4 @@
-package containerssh
+package libcontainerssh
 
 import (
 	"github.com/containerssh/libcontainerssh/service"
