@@ -6,6 +6,7 @@ import (
 	"net"
 	"strings"
 	"sync"
+	"time"
 
 	"github.com/containerssh/libcontainerssh/config"
 	ssh2 "github.com/containerssh/libcontainerssh/internal/ssh"
@@ -482,6 +483,35 @@ func (s *serverImpl) handleConnection(conn net.Conn) {
 	sshShutdownHandlerID := fmt.Sprintf("ssh-%s", connectionID)
 	s.lock.Unlock()
 
+	if s.cfg.ClientAliveInterval > 0 {
+		go func() {
+			missedAlives := 0
+			for {
+				time.Sleep(s.cfg.ClientAliveInterval)
+
+				_, _, err := sshConn.SendRequest("keepalive@openssh.com", true, []byte{})
+
+				if err != nil {
+					missedAlives++
+
+					logger.Debug(
+						messageCodes.Wrap(
+							err,
+							messageCodes.ESSHKeepAliveFailed,
+							"Keepalive error",
+						),
+					)
+					if missedAlives >= s.cfg.ClientAliveCountMax {
+						_ = sshConn.Close()
+						break
+					}
+					continue
+				}
+				missedAlives = 0
+			}
+		}()
+	}
+
 	go func() {
 		_ = sshConn.Wait()
 		logger.Debug(messageCodes.NewMessage(messageCodes.MSSHDisconnected, "Client disconnected"))
@@ -498,6 +528,44 @@ func (s *serverImpl) handleConnection(conn net.Conn) {
 	go s.handleGlobalRequests(globalRequests, handlerSSHConnection, logger)
 }
 
+func (s *serverImpl) handleKeepAliveRequest(req *ssh.Request, logger log.Logger) {
+	if req.WantReply {
+		if err := req.Reply(false, []byte{}); err != nil {
+			logger.Debug(
+				messageCodes.Wrap(
+					err,
+					messageCodes.ESSHReplyFailed,
+					"failed to send reply to global request type %s",
+					req.Type,
+				),
+			)
+		}
+	}
+}
+
+func (s *serverImpl) handleUnknownGlobalRequest(req *ssh.Request, requestID uint64, connection SSHConnectionHandler, logger log.Logger) {
+	logger.Debug(
+		messageCodes.NewMessage(messageCodes.ESSHUnsupportedGlobalRequest, "Unsupported global request").Label(
+			"type",
+			req.Type,
+		),
+	)
+
+	connection.OnUnsupportedGlobalRequest(requestID, req.Type, req.Payload)
+	if req.WantReply {
+		if err := req.Reply(false, []byte("request type not supported")); err != nil {
+			logger.Debug(
+				messageCodes.Wrap(
+					err,
+					messageCodes.ESSHReplyFailed,
+					"failed to send reply to global request type %s",
+					req.Type,
+				),
+			)
+		}
+	}
+}
+
 func (s *serverImpl) handleGlobalRequests(
 	requests <-chan *ssh.Request,
 	connection SSHConnectionHandler,
@@ -510,24 +578,12 @@ func (s *serverImpl) handleGlobalRequests(
 		}
 		requestID := s.nextGlobalRequestID
 		s.nextGlobalRequestID++
-		logger.Debug(
-			messageCodes.NewMessage(messageCodes.ESSHUnsupportedGlobalRequest, "Unsupported global request").Label(
-				"type",
-				request.Type,
-			),
-		)
-		connection.OnUnsupportedGlobalRequest(requestID, request.Type, request.Payload)
-		if request.WantReply {
-			if err := request.Reply(false, []byte("request type not supported")); err != nil {
-				logger.Debug(
-					messageCodes.Wrap(
-						err,
-						messageCodes.ESSHReplyFailed,
-						"failed to send reply to global request type %s",
-						request.Type,
-					),
-				)
-			}
+
+		switch request.Type {
+		case "keepalive@openssh.com":
+			s.handleKeepAliveRequest(request, logger)
+		default:
+			s.handleUnknownGlobalRequest(request, requestID, connection, logger)
 		}
 	}
 }

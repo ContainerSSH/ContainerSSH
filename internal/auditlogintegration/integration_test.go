@@ -56,7 +56,7 @@ func TestKeyboardInteractiveAuthentication(t *testing.T) {
 	user := sshserver.NewTestUser("test")
 	user.AddKeyboardInteractiveChallengeResponse("Challenge", "Response")
 
-	srv := sshserver.NewTestServer(t, auditLogHandler, logger)
+	srv := sshserver.NewTestServer(t, auditLogHandler, logger, nil)
 	srv.Start()
 	client := sshserver.NewTestClient(srv.GetListen(), srv.GetHostKey(), user, logger)
 	connection := client.MustConnect()
@@ -129,7 +129,7 @@ func createTestServer(t *testing.T, dir string, logger log.Logger) (sshserver.Te
 	)
 	assert.NoError(t, err)
 
-	srv := sshserver.NewTestServer(t, auditLogHandler, logger)
+	srv := sshserver.NewTestServer(t, auditLogHandler, logger, nil)
 	user := sshserver.NewTestUser("test")
 	user.RandomPassword()
 

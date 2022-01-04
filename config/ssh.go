@@ -11,6 +11,7 @@ import (
 	"os"
 	"regexp"
 	"strings"
+	"time"
 
 	"golang.org/x/crypto/ssh"
 )
@@ -34,6 +35,14 @@ type SSHConfig struct {
 	Banner string `json:"banner" yaml:"banner" comment:"Host banner to show after the username" default:""`
 	// HostKeys are the host keys either in PEM format, or filenames to load.
 	HostKeys []string `json:"hostkeys" yaml:"hostkeys" comment:"Host keys in PEM format or files to load PEM host keys from."`
+	// ClientAliveInterval is the duration between keep alive messages that
+	// ContainerSSH will send to each client. If the duration is 0 or unset
+	// it disables the feature.
+	ClientAliveInterval time.Duration `json:"clientAliveInterval" yaml:"clientAliveInterval" comment:"Inverval to send keepalive packets to the client"`
+	// ClientAliveCountMax is the number of keepalive messages that is
+	// allowed to be sent without a response being received. If this number
+	// is exceeded the connection is considered dead
+	ClientAliveCountMax int `json:"clientAliveCountMax" yaml:"clientAliveCountMax" default:"3" comment:"Maximum number of failed keepalives"`
 }
 
 // GenerateHostKey generates a random host key and adds it to SSHConfig
@@ -104,6 +113,12 @@ func (cfg SSHConfig) Validate() error {
 	}
 	if err := cfg.MACs.Validate(); err != nil {
 		return fmt.Errorf("invalid MAc list (%w)", err)
+	}
+	if cfg.ClientAliveInterval != 0 && cfg.ClientAliveInterval < 1 * time.Second {
+		return fmt.Errorf("clientAliveInterval should be at least 1 second long")
+	}
+	if cfg.ClientAliveCountMax <= 0 {
+		return fmt.Errorf("clientAliveCountMax should be at least 1")
 	}
 	return nil
 }

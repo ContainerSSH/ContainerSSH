@@ -111,6 +111,7 @@ func TestAuthKeyboardInteractive(t *testing.T) {
 			user2,
 		),
 		logger,
+		nil,
 	)
 	srv.Start()
 
@@ -243,6 +244,87 @@ func TestPubKey(t *testing.T) {
 	assert.Nil(t, err, "failed to send shell request (%v)", err)
 	assert.Equal(t, 0, exitStatus)
 	assert.Equal(t, []byte("Hello world!"), reply)
+}
+
+func TestKeepAlive(t *testing.T) {
+	//t.Parallel()()
+
+	logger := log.NewTestLogger(t)
+
+	user := sshserver.NewTestUser("test")
+	user.RandomPassword()
+
+	config := config.SSHConfig{}
+	structutils.Defaults(&config)
+	config.ClientAliveInterval = 1 * time.Second
+	srv := sshserver.NewTestServer(
+		t,
+		sshserver.NewTestAuthenticationHandler(
+			sshserver.NewTestHandler(),
+			user,
+		),
+		logger,
+		&config,
+	)
+	srv.Start()
+	defer srv.Stop(1 * time.Minute)
+
+
+	hostkey, err := ssh.ParsePrivateKey([]byte(srv.GetHostKey()))
+	if err != nil {
+		t.Fatal("Failed to parse private key")
+	}
+	sshConfig := &ssh.ClientConfig{
+		User: user.Username(),
+		Auth: user.GetAuthMethods(),
+	}
+	sshConfig.HostKeyCallback = func(hostname string, remote net.Addr, key ssh.PublicKey) error {
+		if bytes.Equal(key.Marshal(), hostkey.PublicKey().Marshal()) {
+			return nil
+		}
+		return fmt.Errorf("invalid host")
+	}
+	tcpConnection, err := net.Dial("tcp", srv.GetListen())
+	if err != nil {
+		t.Fatal("tcp handshake failed (%w)", err)
+	}
+	connection, _, globalReq, err := ssh.NewClientConn(tcpConnection, srv.GetListen(), sshConfig)
+	if err != nil {
+		t.Fatal("ssh handshake failed (%w)", err)
+	}
+	defer func() {
+		_ = connection.Close()
+	}()
+
+	req := <-globalReq
+	err = req.Reply(false, nil)
+	if err != nil {
+		t.Fatal("Failed to respond to first request")
+	}
+	recv1 := time.Now()
+
+	req2 := <-globalReq
+	recv2 := time.Now()
+	err = req.Reply(false, nil)
+	if err != nil {
+		t.Fatal("Failed to respond to second request")
+	}
+
+	if req.Type != "keepalive@openssh.com" {
+		t.Fatal("Expected keepalive request", req.Type)
+	}
+	if req2.Type != "keepalive@openssh.com" {
+		t.Fatal("Expected keepalive request", req.Type)
+	}
+
+	elapsed := recv2.Sub(recv1)
+
+	if elapsed > 2 * time.Second {
+		t.Fatal("Received keepalive in too big of an interval", elapsed)
+	}
+	if elapsed < time.Second / 2 {
+		t.Fatal("Received keepalive in too short of an interval", elapsed)
+	}
 }
 
 //endregion

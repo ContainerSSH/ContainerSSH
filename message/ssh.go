@@ -18,6 +18,9 @@ const MSSHHandshakeSuccessful = "SSH_HANDSHAKE_SUCCESSFUL"
 // This is nothing to worry about.
 const ESSHUnsupportedGlobalRequest = "SSH_UNSUPPORTED_GLOBAL_REQUEST"
 
+// ESSHKeepAliveFailed indicates that ContainerSSH couldn't send or didn't receive a response to a keepalive packet
+const ESSHKeepAliveFailed = "SSH_KEEPALIVE_NORESP"
+
 // ESSHReplyFailed indicates that ContainerSSH couldn't send the reply to a request to the user. This is usually the
 // case if the user suddenly disconnects.
 const ESSHReplyFailed = "SSH_REPLY_SEND_FAILED"

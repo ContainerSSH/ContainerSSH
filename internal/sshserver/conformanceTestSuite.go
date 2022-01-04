@@ -26,7 +26,7 @@ func (c *conformanceTestSuite) singleProgramShouldRun(t *testing.T) {
 	srv := NewTestServer(t, NewTestAuthenticationHandler(
 		newConformanceTestHandler(backend),
 		user,
-	), logger)
+	), logger, nil)
 	srv.Start()
 	defer srv.Stop(1 * time.Minute)
 
@@ -70,7 +70,7 @@ func (c *conformanceTestSuite) settingEnvVariablesShouldWork(t *testing.T) {
 	srv := NewTestServer(t, NewTestAuthenticationHandler(
 		newConformanceTestHandler(backend),
 		user,
-	), logger)
+	), logger, nil)
 	srv.Start()
 	defer srv.Stop(1 * time.Minute)
 
@@ -117,7 +117,7 @@ func (c *conformanceTestSuite) runningInteractiveShellShouldWork(t *testing.T) {
 	srv := NewTestServer(t, NewTestAuthenticationHandler(
 		newConformanceTestHandler(backend),
 		user,
-	), logger)
+	), logger, nil)
 	srv.Start()
 	defer srv.Stop(1 * time.Minute)
 
@@ -201,7 +201,7 @@ func (c *conformanceTestSuite) reportingExitCodeShouldWork(t *testing.T) {
 	srv := NewTestServer(t, NewTestAuthenticationHandler(
 		newConformanceTestHandler(backend),
 		user,
-	), logger)
+	), logger, nil)
 	srv.Start()
 	defer srv.Stop(1 * time.Minute)
 
@@ -240,7 +240,8 @@ func (c *conformanceTestSuite) sendingSignalsShouldWork(t *testing.T) {
 	srv := NewTestServer(t, NewTestAuthenticationHandler(
 		newConformanceTestHandler(backend),
 		user,
-	), logger)
+		nil,
+	), logger, nil)
 	srv.Start()
 	defer srv.Stop(1 * time.Minute)
 

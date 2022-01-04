@@ -20,6 +20,7 @@ func TestProperShutdown(t *testing.T) {
 			user,
 		),
 		logger,
+		nil,
 	)
 	testServer.Start()
 

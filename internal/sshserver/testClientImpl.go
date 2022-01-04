@@ -21,7 +21,7 @@ func (t *testClientImpl) Connect() (TestClientConnection, error) {
 	t.logger.Debug(messageCodes.NewMessage(messageCodes.MTest, "Connecting SSH server..."))
 	sshConfig := &ssh.ClientConfig{
 		User: t.user.Username(),
-		Auth: t.user.getAuthMethods(),
+		Auth: t.user.GetAuthMethods(),
 	}
 	sshConfig.HostKeyCallback = func(hostname string, remote net.Addr, key ssh.PublicKey) error {
 		if bytes.Equal(key.Marshal(), t.hostKey) {

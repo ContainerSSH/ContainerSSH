@@ -104,7 +104,7 @@ func (u *TestUser) GetAuthorizedKeys() []string {
 	return u.authorizedKeys
 }
 
-func (u *TestUser) getAuthMethods() []ssh.AuthMethod {
+func (u *TestUser) GetAuthMethods() []ssh.AuthMethod {
 	var result []ssh.AuthMethod
 	if u.password != "" {
 		result = append(result, ssh.Password(u.password))
