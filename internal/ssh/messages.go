@@ -1,5 +1,9 @@
 package ssh
 
+import (
+	"golang.org/x/crypto/ssh"
+)
+
 type EnvRequestPayload struct {
 	Name  string
 	Value string
@@ -45,4 +49,8 @@ type WindowRequestPayload struct {
 	Rows    uint32
 	Width   uint32
 	Height  uint32
+}
+
+func Unmarshal(data []byte, out interface{}) error {
+	return ssh.Unmarshal(data, out)
 }

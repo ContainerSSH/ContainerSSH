@@ -1,5 +1,9 @@
 package config
 
+import (
+	"github.com/containerssh/libcontainerssh/auth"
+)
+
 // Request is the request object passed from the client to the config server.
 //
 // swagger:model Request
@@ -23,7 +27,7 @@ type Request struct {
 	// Metadata is the metadata received from the authentication server.
 	//
 	// required: false
-	Metadata map[string]string `json:"metadata"`
+	Metadata *auth.ConnectionMetadata `json:"metadata"`
 }
 
 // ResponseBody is the structure representing the JSON HTTP response.

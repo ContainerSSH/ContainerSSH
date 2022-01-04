@@ -6,6 +6,7 @@ import (
 	"net"
 	"strings"
 
+	"github.com/containerssh/libcontainerssh/auth"
 	"github.com/containerssh/libcontainerssh/log"
 	"github.com/containerssh/libcontainerssh/message"
 )
@@ -17,7 +18,7 @@ type oauth2Client struct {
 
 type oauth2Context struct {
 	success  bool
-	metadata map[string]string
+	metadata *auth.ConnectionMetadata
 	err      error
 	flow     OAuth2Flow
 }
@@ -30,7 +31,7 @@ func (o *oauth2Context) Error() error {
 	return o.err
 }
 
-func (o *oauth2Context) Metadata() map[string]string {
+func (o *oauth2Context) Metadata() *auth.ConnectionMetadata {
 	return o.metadata
 }
 
@@ -56,6 +57,10 @@ func (o *oauth2Client) PubKey(_ string, _ string, _ string, _ net.IP) Authentica
 	), nil}
 }
 
+func (client *oauth2Client) GSSAPIConfig(connectionId string, addr net.IP) GSSAPIServer {
+	return nil
+}
+
 func (o *oauth2Client) KeyboardInteractive(
 	username string,
 	challenge func(
@@ -69,7 +74,7 @@ func (o *oauth2Client) KeyboardInteractive(
 	_ net.IP,
 ) AuthenticationContext {
 	ctx := context.TODO()
-	var metadata map[string]string
+	metadata := &auth.ConnectionMetadata{}
 	var err error
 	if o.provider.SupportsDeviceFlow() {
 		deviceFlow, err := o.provider.GetDeviceFlow(connectionID, username)
@@ -89,7 +94,7 @@ func (o *oauth2Client) KeyboardInteractive(
 				}
 				verifyContext, cancelFunc := context.WithTimeout(ctx, expiration)
 				defer cancelFunc()
-				metadata, err = deviceFlow.Verify(verifyContext)
+				metadata.Metadata, err = deviceFlow.Verify(verifyContext)
 				// TODO fallback to authorization code flow if the device flow rate limit is exceeded.
 				if err != nil {
 					deviceFlow.Deauthorize(ctx)
@@ -130,7 +135,7 @@ func (o *oauth2Client) KeyboardInteractive(
 								"Authentication failed because the return code did not contain the requisite state and code.",
 							), authCodeFlow}
 						}
-						metadata, err = authCodeFlow.Verify(ctx, parts[0], parts[1])
+						metadata.Metadata, err = authCodeFlow.Verify(ctx, parts[0], parts[1])
 						if err != nil {
 							return &oauth2Context{false, metadata, err, authCodeFlow}
 						} else {

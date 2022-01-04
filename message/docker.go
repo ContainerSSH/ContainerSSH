@@ -183,3 +183,9 @@ const EDockerProgramNotRunning = "DOCKER_PROGRAM_NOT_RUNNING"
 // removed since ContainerSSH 0.5. To fix this error please remove the dockerrun segment from your configuration or
 // configuration server response. For details please see https://containerssh.io/deprecations/dockerrun/ .
 const EDockerRunRemoved = "DOCKER_RUN_REMOVED"
+
+// EDockerWriteFileFailed indicates that the ContainerSSH docker backend failed to write to a file in the container
+const EDockerWriteFileFailed = "DOCKER_FILE_WRITE_FAILED"
+
+// EDockerFileWrite indicates that the ContainerSSH docker backend wrote a file inside the container
+const MDockerFileWrite = "DOCKER_FILE_WRITE"

@@ -3,6 +3,9 @@ package sshserver
 import (
 	"context"
 	"fmt"
+
+	auth2 "github.com/containerssh/libcontainerssh/auth"
+	"github.com/containerssh/libcontainerssh/internal/auth"
 )
 
 // AbstractNetworkConnectionHandler is an empty implementation for the NetworkConnectionHandler interface.
@@ -11,14 +14,14 @@ type AbstractNetworkConnectionHandler struct {
 
 // OnAuthPassword is called when a user attempts a password authentication. The implementation must always supply
 //                AuthResponse and may supply error as a reason description.
-func (a *AbstractNetworkConnectionHandler) OnAuthPassword(_ string, _ []byte, _ string) (response AuthResponse, metadata map[string]string, reason error) {
+func (a *AbstractNetworkConnectionHandler) OnAuthPassword(_ string, _ []byte, _ string) (response AuthResponse, metadata *auth2.ConnectionMetadata, reason error) {
 	return AuthResponseUnavailable, nil, nil
 }
 
 // OnAuthPassword is called when a user attempts a pubkey authentication. The implementation must always supply
 //                AuthResponse and may supply error as a reason description. The pubKey parameter is an SSH key in
 //               the form of "ssh-rsa KEY HERE".
-func (a *AbstractNetworkConnectionHandler) OnAuthPubKey(_ string, _ string, _ string) (response AuthResponse, metadata map[string]string, reason error) {
+func (a *AbstractNetworkConnectionHandler) OnAuthPubKey(_ string, _ string, _ string) (response AuthResponse, metadata *auth2.ConnectionMetadata, reason error) {
 	return AuthResponseUnavailable, nil, nil
 }
 
@@ -32,8 +35,12 @@ func (a *AbstractNetworkConnectionHandler) OnAuthKeyboardInteractive(
 		questions KeyboardInteractiveQuestions,
 	) (answers KeyboardInteractiveAnswers, err error),
 	_ string,
-) (response AuthResponse, metadata map[string]string, reason error) {
+) (response AuthResponse, metadata *auth2.ConnectionMetadata, reason error) {
 	return AuthResponseUnavailable, nil, nil
+}
+
+func (a *AbstractNetworkConnectionHandler) OnAuthGSSAPI() auth.GSSAPIServer {
+	return nil
 }
 
 // OnHandshakeFailed is called when the SSH handshake failed. This method is also called after an authentication

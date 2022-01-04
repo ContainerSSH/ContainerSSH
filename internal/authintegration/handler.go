@@ -4,6 +4,8 @@ import (
 	"context"
 	"net"
 
+	auth2 "github.com/containerssh/libcontainerssh/auth"
+
 	"github.com/containerssh/libcontainerssh/internal/sshserver"
 
 	"github.com/containerssh/libcontainerssh/internal/auth"
@@ -88,7 +90,7 @@ func (h *networkConnectionHandler) OnShutdown(shutdownContext context.Context) {
 	h.backend.OnShutdown(shutdownContext)
 }
 
-func (h *networkConnectionHandler) OnAuthPassword(username string, password []byte, clientVersion string) (response sshserver.AuthResponse, metadata map[string]string, reason error) {
+func (h *networkConnectionHandler) OnAuthPassword(username string, password []byte, clientVersion string) (response sshserver.AuthResponse, metadata *auth2.ConnectionMetadata, reason error) {
 	if h.authContext != nil {
 		h.authContext.OnDisconnect()
 	}
@@ -113,7 +115,7 @@ func (h *networkConnectionHandler) OnAuthPassword(username string, password []by
 	}
 }
 
-func (h *networkConnectionHandler) OnAuthPubKey(username string, pubKey string, clientVersion string) (response sshserver.AuthResponse, metadata map[string]string, reason error) {
+func (h *networkConnectionHandler) OnAuthPubKey(username string, pubKey string, clientVersion string) (response sshserver.AuthResponse, metadata *auth2.ConnectionMetadata, reason error) {
 	if h.authContext != nil {
 		h.authContext.OnDisconnect()
 	}
@@ -144,7 +146,7 @@ func (h *networkConnectionHandler) OnAuthKeyboardInteractive(
 		questions sshserver.KeyboardInteractiveQuestions,
 	) (answers sshserver.KeyboardInteractiveAnswers, err error),
 	clientVersion string,
-) (response sshserver.AuthResponse, metadata map[string]string, reason error) {
+) (response sshserver.AuthResponse, metadata *auth2.ConnectionMetadata, reason error) {
 	if h.authContext != nil {
 		h.authContext.OnDisconnect()
 	}
@@ -192,11 +194,15 @@ func (h *networkConnectionHandler) OnAuthKeyboardInteractive(
 	return sshserver.AuthResponseSuccess, authContext.Metadata(), authContext.Error()
 }
 
+func (h *networkConnectionHandler) OnAuthGSSAPI() auth.GSSAPIServer {
+	return h.authClient.GSSAPIConfig(h.connectionID, h.ip)
+}
+
 func (h *networkConnectionHandler) OnHandshakeFailed(reason error) {
 	h.backend.OnHandshakeFailed(reason)
 }
 
-func (h *networkConnectionHandler) OnHandshakeSuccess(username string, clientVersion string, metadata map[string]string) (connection sshserver.SSHConnectionHandler, failureReason error) {
+func (h *networkConnectionHandler) OnHandshakeSuccess(username string, clientVersion string, metadata *auth2.ConnectionMetadata) (connection sshserver.SSHConnectionHandler, failureReason error) {
 	return h.backend.OnHandshakeSuccess(username, clientVersion, metadata)
 }
 

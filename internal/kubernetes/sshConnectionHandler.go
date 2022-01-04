@@ -10,6 +10,7 @@ type sshConnectionHandler struct {
 	networkHandler *networkHandler
 	username       string
 	env            map[string]string
+	files          map[string][]byte
 }
 
 func (s *sshConnectionHandler) OnUnsupportedGlobalRequest(_ uint64, _ string, _ []byte) {
@@ -35,5 +36,6 @@ func (s *sshConnectionHandler) OnSessionChannel(channelID uint64, _ []byte, sess
 		networkHandler: s.networkHandler,
 		username:       s.username,
 		env:            env,
+		files:          s.files,
 	}, nil
 }

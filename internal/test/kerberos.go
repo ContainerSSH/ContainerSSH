@@ -95,6 +95,8 @@ type KerberosHelper interface {
 	AdminUsername() string
 	// AdminPassword returns the password for the admin username from AdminUsername.
 	AdminPassword() string
+	// Get service keytab
+	Keytab() []byte
 }
 
 type kerberosHelper struct {
@@ -122,6 +124,10 @@ func (k *kerberosHelper) AdminPassword() string {
 
 func (k *kerberosHelper) KDCPort() int {
 	return 88
+}
+
+func (k *kerberosHelper) Keytab() []byte {
+	return k.cnt.extractFile("/test.keytab")
 }
 
 func (k *kerberosHelper) wait() {

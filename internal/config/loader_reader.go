@@ -7,6 +7,7 @@ import (
 	"io"
 	"net"
 
+	"github.com/containerssh/libcontainerssh/auth"
 	"github.com/containerssh/libcontainerssh/config"
 	"github.com/containerssh/libcontainerssh/log"
 	"gopkg.in/yaml.v3"
@@ -57,7 +58,7 @@ func (y *readerLoader) LoadConnection(
 	_ string,
 	_ net.TCPAddr,
 	_ string,
-	_ map[string]string,
+	_ *auth.ConnectionMetadata,
 	_ *config.AppConfig,
 ) error {
 	return nil

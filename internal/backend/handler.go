@@ -7,6 +7,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/containerssh/libcontainerssh/auth"
 	"github.com/containerssh/libcontainerssh/config"
 	internalConfig "github.com/containerssh/libcontainerssh/internal/config"
 	"github.com/containerssh/libcontainerssh/internal/docker"
@@ -59,11 +60,11 @@ type networkHandler struct {
 	logger       log.Logger
 }
 
-func (n *networkHandler) OnAuthPassword(_ string, _ []byte, _ string) (response sshserver.AuthResponse, metadata map[string]string, reason error) {
+func (n *networkHandler) OnAuthPassword(_ string, _ []byte, _ string) (response sshserver.AuthResponse, metadata *auth.ConnectionMetadata, reason error) {
 	return n.authResponse()
 }
 
-func (n *networkHandler) authResponse() (sshserver.AuthResponse, map[string]string, error) {
+func (n *networkHandler) authResponse() (sshserver.AuthResponse, *auth.ConnectionMetadata, error) {
 	switch n.rootHandler.authResponse {
 	case sshserver.AuthResponseUnavailable:
 		return sshserver.AuthResponseUnavailable, nil, fmt.Errorf("the backend handler does not support authentication")
@@ -72,14 +73,14 @@ func (n *networkHandler) authResponse() (sshserver.AuthResponse, map[string]stri
 	}
 }
 
-func (n *networkHandler) OnAuthPubKey(_ string, _ string, _ string) (response sshserver.AuthResponse, metadata map[string]string, reason error) {
+func (n *networkHandler) OnAuthPubKey(_ string, _ string, _ string) (response sshserver.AuthResponse, metadata *auth.ConnectionMetadata, reason error) {
 	return n.authResponse()
 }
 
 func (n *networkHandler) OnHandshakeFailed(_ error) {
 }
 
-func (n *networkHandler) OnHandshakeSuccess(username string, clientVersion string, metadata map[string]string) (
+func (n *networkHandler) OnHandshakeSuccess(username string, clientVersion string, metadata *auth.ConnectionMetadata) (
 	connection sshserver.SSHConnectionHandler,
 	failureReason error,
 ) {
@@ -98,7 +99,7 @@ func (n *networkHandler) initBackend(
 	appConfig config.AppConfig,
 	backendLogger log.Logger,
 	version string,
-	metadata map[string]string,
+	metadata *auth.ConnectionMetadata,
 ) (sshserver.SSHConnectionHandler, error) {
 	backend, failureReason := n.getConfiguredBackend(
 		appConfig,
@@ -162,7 +163,7 @@ func (n *networkHandler) getConfiguredBackend(
 
 func (n *networkHandler) loadConnectionSpecificConfig(
 	username string,
-	metadata map[string]string,
+	metadata *auth.ConnectionMetadata,
 ) (
 	config.AppConfig,
 	error,

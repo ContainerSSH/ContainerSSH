@@ -7,10 +7,13 @@ import (
 	"sync"
 	"time"
 
+	auth2 "github.com/containerssh/libcontainerssh/auth"
+	"github.com/containerssh/libcontainerssh/internal/auth"
 	"github.com/containerssh/libcontainerssh/config"
 	"github.com/containerssh/libcontainerssh/internal/metrics"
 	"github.com/containerssh/libcontainerssh/log"
 	"github.com/containerssh/libcontainerssh/message"
+
 	"golang.org/x/crypto/ssh"
 
 	"github.com/containerssh/libcontainerssh/internal/sshserver"
@@ -33,7 +36,7 @@ type networkConnectionHandler struct {
 
 func (s *networkConnectionHandler) OnAuthPassword(_ string, _ []byte, _ string) (
 	_ sshserver.AuthResponse,
-	_ map[string]string,
+	_ *auth2.ConnectionMetadata,
 	_ error,
 ) {
 	return sshserver.AuthResponseUnavailable, nil, fmt.Errorf(
@@ -43,7 +46,7 @@ func (s *networkConnectionHandler) OnAuthPassword(_ string, _ []byte, _ string) 
 
 func (s *networkConnectionHandler) OnAuthPubKey(_ string, _ string, _ string) (
 	sshserver.AuthResponse,
-	map[string]string,
+	*auth2.ConnectionMetadata,
 	error,
 ) {
 	return sshserver.AuthResponseUnavailable, nil, fmt.Errorf(
@@ -58,10 +61,14 @@ func (s *networkConnectionHandler) OnAuthKeyboardInteractive(
 		_ sshserver.KeyboardInteractiveQuestions,
 	) (answers sshserver.KeyboardInteractiveAnswers, err error),
 	_ string,
-) (response sshserver.AuthResponse, metadata map[string]string, reason error) {
+) (response sshserver.AuthResponse, metadata *auth2.ConnectionMetadata, reason error) {
 	return sshserver.AuthResponseUnavailable, nil, fmt.Errorf(
 		"ssh proxy does not support authentication",
 	)
+}
+
+func (s *networkConnectionHandler) OnAuthGSSAPI() auth.GSSAPIServer {
+	return nil
 }
 
 func (s *networkConnectionHandler) OnHandshakeFailed(_ error) {}
@@ -69,7 +76,7 @@ func (s *networkConnectionHandler) OnHandshakeFailed(_ error) {}
 func (s *networkConnectionHandler) OnHandshakeSuccess(
 	username string,
 	clientVersion string,
-	metadata map[string]string,
+	metadata *auth2.ConnectionMetadata,
 ) (
 	connection sshserver.SSHConnectionHandler,
 	failureReason error,

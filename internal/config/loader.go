@@ -4,6 +4,7 @@ import (
 	"context"
 	"net"
 
+	"github.com/containerssh/libcontainerssh/auth"
 	"github.com/containerssh/libcontainerssh/config"
 )
 
@@ -30,7 +31,7 @@ type Loader interface {
 		username string,
 		remoteAddr net.TCPAddr,
 		connectionID string,
-		metadata map[string]string,
+		metadata *auth.ConnectionMetadata,
 		config *config.AppConfig,
 	) error
 }

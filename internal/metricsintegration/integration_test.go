@@ -6,7 +6,9 @@ import (
 	"net"
 	"testing"
 
+	auth2 "github.com/containerssh/libcontainerssh/auth"
 	"github.com/containerssh/libcontainerssh/config"
+	"github.com/containerssh/libcontainerssh/internal/auth"
 	"github.com/containerssh/libcontainerssh/internal/geoip/dummy"
 	"github.com/containerssh/libcontainerssh/internal/metrics"
 	"github.com/containerssh/libcontainerssh/internal/sshserver"
@@ -137,7 +139,7 @@ func (d *dummyBackendHandler) OnDisconnect() {
 
 func (d *dummyBackendHandler) OnAuthPassword(_ string, _ []byte, _ string) (
 	response sshserver.AuthResponse,
-	metadata map[string]string,
+	metadata *auth2.ConnectionMetadata,
 	reason error,
 ) {
 	return d.authResponse, nil, nil
@@ -145,7 +147,7 @@ func (d *dummyBackendHandler) OnAuthPassword(_ string, _ []byte, _ string) (
 
 func (d *dummyBackendHandler) OnAuthPubKey(_ string, _ string, _ string) (
 	response sshserver.AuthResponse,
-	metadata map[string]string,
+	metadata *auth2.ConnectionMetadata,
 	reason error,
 ) {
 	return d.authResponse, nil, nil
@@ -158,15 +160,19 @@ func (d *dummyBackendHandler) OnAuthKeyboardInteractive(
 		questions sshserver.KeyboardInteractiveQuestions,
 	) (answers sshserver.KeyboardInteractiveAnswers, err error),
 	_ string,
-) (response sshserver.AuthResponse, metadata map[string]string, reason error) {
+) (response sshserver.AuthResponse, metadata *auth2.ConnectionMetadata, reason error) {
 	return d.authResponse, nil, nil
+}
+
+func (d *dummyBackendHandler) OnAuthGSSAPI() auth.GSSAPIServer {
+	return nil
 }
 
 func (d *dummyBackendHandler) OnHandshakeFailed(_ error) {
 
 }
 
-func (d *dummyBackendHandler) OnHandshakeSuccess(_ string, _ string, _ map[string]string) (
+func (d *dummyBackendHandler) OnHandshakeSuccess(_ string, _ string, _ *auth2.ConnectionMetadata) (
 	connection sshserver.SSHConnectionHandler,
 	failureReason error,
 ) {

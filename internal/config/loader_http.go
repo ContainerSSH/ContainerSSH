@@ -4,6 +4,7 @@ import (
 	"context"
 	"net"
 
+	"github.com/containerssh/libcontainerssh/auth"
 	"github.com/containerssh/libcontainerssh/config"
 	"github.com/containerssh/libcontainerssh/internal/metrics"
 	"github.com/containerssh/libcontainerssh/internal/structutils"
@@ -39,7 +40,7 @@ func (h *httpLoader) LoadConnection(
 	username string,
 	remoteAddr net.TCPAddr,
 	connectionID string,
-	metadata map[string]string,
+	metadata *auth.ConnectionMetadata,
 	config *config.AppConfig,
 ) error {
 	newAppConfig, err := h.client.Get(ctx, username, remoteAddr, connectionID, metadata)

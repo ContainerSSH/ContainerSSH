@@ -24,6 +24,7 @@ import (
 	"os/signal"
 	"syscall"
 
+	auth2 "github.com/containerssh/libcontainerssh/auth"
 	"github.com/containerssh/libcontainerssh/config"
 	configWebhook "github.com/containerssh/libcontainerssh/config/webhook"
 	"github.com/containerssh/libcontainerssh/http"
@@ -53,7 +54,7 @@ type authHandler struct {
 //     "$ref": "#/responses/AuthResponse"
 func (a *authHandler) OnPassword(Username string, _ []byte, _ string, _ string) (
 	bool,
-	map[string]string,
+	*auth2.ConnectionMetadata,
 	error,
 ) {
 	if os.Getenv("CONTAINERSSH_ALLOW_ALL") == "1" ||
@@ -81,10 +82,36 @@ func (a *authHandler) OnPassword(Username string, _ []byte, _ string, _ string) 
 //     "$ref": "#/responses/AuthResponse"
 func (a *authHandler) OnPubKey(Username string, _ string, _ string, _ string) (
 	bool,
-	map[string]string,
+	*auth2.ConnectionMetadata,
 	error,
 ) {
 	if Username == "foo" || Username == "busybox" {
+		return true, nil, nil
+	}
+	return false, nil, nil
+}
+
+// swagger:operation POST /authz Authentication authz
+//
+// Authorization
+//
+// ---
+// parameters:
+// - name: request
+//   in: body
+//   description: The authorization request
+//   required: true
+//   schema:
+//     "$ref": "#/definitions/AuthorizationRequest"
+// responses:
+//   "200":
+//     "$ref": "#/responses/AuthResponse"
+func (a *authHandler) OnAuthorization(PrincipalUsername string, _ string,_ string, _ string) (
+	bool,
+	*auth2.ConnectionMetadata,
+	error,
+) {
+	if PrincipalUsername == "foo" || PrincipalUsername == "busybox" {
 		return true, nil, nil
 	}
 	return false, nil, nil

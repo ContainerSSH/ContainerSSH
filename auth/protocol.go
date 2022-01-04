@@ -60,6 +60,36 @@ type PublicKeyAuthRequest struct {
 	PublicKey string `json:"publicKey"`
 }
 
+// AuthorizationRequest is the authorization request used after some
+// authentication methods (e.g. kerberos) to determine whether users are
+// allowed to access the service
+//
+// swagger:model AuthorizationRequest
+type AuthorizationRequest struct {
+	// PrincipalUsername is the authenticated username of the user, this
+	// username has been verified to be correct and to correspond to the
+	// user that is connecting.
+	//
+	// required: true
+	PrincipalUsername string `json:"principalUsername"`
+	// LoginUsername is the username the user wishes to log in as. In
+	// general, the authorization must check that this matches the
+	// PrincipalUsername, however in some cases it may be beneficial to let
+	// some users log in as others (e.g. administrators logging in as
+	// normal users to debug)
+	//
+	// required: true
+	LoginUsername string `json:"loginUsername"`
+	// RemoteAddress is the address the user is connecting from
+	//
+	// required: true
+	RemoteAddress string `json:"remoteAddress"`
+	// ConnectionID is an opaque ID to identify the SSH connection
+	//
+	// required: true
+	ConnectionID string `json:"connectionId"`
+}
+
 // ResponseBody is a response to authentication requests.
 //
 // swagger:model AuthResponseBody
@@ -69,11 +99,13 @@ type ResponseBody struct {
 	// required: true
 	Success bool `json:"success"`
 
-	// Metadata is a set of key-value pairs that can be returned and either consumed by the configuration server or
+	// Metadata is a set of key-value pairs that can be returned and either
+	// consumed by the configuration server or
 	// exposed in the backend as environment variables.
+	// They can also be used to deploy files in the container
 	//
 	// required: false
-	Metadata map[string]string `json:"metadata,omitempty"`
+	Metadata *ConnectionMetadata `json:"metadata,omitempty"`
 }
 
 // Response is the full HTTP authentication response.

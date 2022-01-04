@@ -3,6 +3,8 @@ package sshserver
 import (
 	"context"
 	"net"
+
+	"github.com/containerssh/libcontainerssh/auth"
 )
 
 type testNetworkHandlerImpl struct {
@@ -14,7 +16,7 @@ type testNetworkHandlerImpl struct {
 	shutdown     bool
 }
 
-func (t *testNetworkHandlerImpl) OnHandshakeSuccess(username string, clientVersion string, metadata map[string]string) (
+func (t *testNetworkHandlerImpl) OnHandshakeSuccess(username string, clientVersion string, metadata *auth.ConnectionMetadata) (
 	connection SSHConnectionHandler,
 	failureReason error,
 ) {

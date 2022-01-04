@@ -358,6 +358,70 @@ loop:
 	return err
 }
 
+func (d *dockerV20Container) writeFile(path string, content []byte) error {
+	if d.config.Execution.DisableAgent {
+		return message.NewMessage(
+			message.EDockerWriteFileFailed,
+			"The ContainerSSH guest agent is disabled. Failed to write file %s in the container",
+			path,
+		)
+	}
+
+	ctx, cancelFunc := context.WithTimeout(
+		context.Background(),
+		d.config.Timeouts.CommandStart,
+	)
+	d.logger.Debug(message.NewMessage(
+		message.MDockerFileWrite,
+		"Writing to file %s",
+		path,
+	))
+	defer cancelFunc()
+
+	exec, err := d.createExec(
+		ctx,
+		[]string{d.config.Execution.AgentPath, "write-file", path},
+		nil,
+		false,
+	)
+	if err != nil {
+		return message.Wrap(
+			err,
+			message.EDockerWriteFileFailed,
+			"Failed to write file inside container",
+		)
+	}
+
+	var stdout bytes.Buffer
+	var stderr bytes.Buffer
+	stdin := bytes.NewReader(content)
+	exitCode := -1
+	done := make(chan int)
+	exec.run(
+		stdin,
+		&stdout,
+		&stderr,
+		func() error {
+			return nil
+		},
+		func(exitStatus int) {
+			exitCode = exitStatus
+			close(done)
+		},
+	)
+	<-done
+	if exitCode != 0 {
+		return message.NewMessage(
+			message.EDockerWriteFileFailed,
+			"Agent exited with status %d error output: %s",
+			exitCode,
+			stderr.String(),
+		)
+	}
+
+	return nil
+}
+
 func (d *dockerV20Container) remove(ctx context.Context) error {
 	d.removeLock.Lock()
 	defer d.removeLock.Unlock()

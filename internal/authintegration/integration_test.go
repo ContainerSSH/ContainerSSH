@@ -7,6 +7,7 @@ import (
 	"testing"
 	"time"
 
+	auth2 "github.com/containerssh/libcontainerssh/auth"
 	"github.com/containerssh/libcontainerssh/config"
 	"github.com/containerssh/libcontainerssh/internal/auth"
 	"github.com/containerssh/libcontainerssh/internal/authintegration"
@@ -147,7 +148,7 @@ func (t *testBackend) OnSessionChannel(_ uint64, _ []byte, _ sshserver.SessionCh
 
 func (t *testBackend) OnHandshakeFailed(_ error) {}
 
-func (t *testBackend) OnHandshakeSuccess(_ string, _ string, _ map[string]string) (
+func (t *testBackend) OnHandshakeSuccess(_ string, _ string, _ *auth2.ConnectionMetadata) (
 	connection sshserver.SSHConnectionHandler,
 	failureReason error,
 ) {
@@ -184,7 +185,7 @@ func (h *authHandler) OnPassword(
 	Password []byte,
 	_ string,
 	_ string,
-) (bool, map[string]string, error) {
+) (bool, *auth2.ConnectionMetadata, error) {
 	if Username == "foo" && string(Password) == "bar" {
 		return true, nil, nil
 	}
@@ -200,7 +201,16 @@ func (h *authHandler) OnPubKey(
 	_ string,
 	_ string,
 	_ string,
-) (bool, map[string]string, error) {
+) (bool, *auth2.ConnectionMetadata, error) {
+	return false, nil, nil
+}
+
+func (h *authHandler) OnAuthorization(
+	_ string,
+	_ string,
+	_ string,
+	_ string,
+) (bool, *auth2.ConnectionMetadata, error) {
 	return false, nil, nil
 }
 

@@ -11,7 +11,9 @@ import (
 	"time"
 
 	"github.com/containerssh/libcontainerssh/auditlog/message"
+	auth2 "github.com/containerssh/libcontainerssh/auth"
 	"github.com/containerssh/libcontainerssh/config"
+	"github.com/containerssh/libcontainerssh/internal/auth"
 	"github.com/containerssh/libcontainerssh/internal/auditlog/codec/binary"
 	"github.com/containerssh/libcontainerssh/internal/auditlog/storage/file"
 	"github.com/containerssh/libcontainerssh/internal/geoip"
@@ -209,7 +211,7 @@ func (b *backendHandler) OnAuthKeyboardInteractive(
 		questions sshserver.KeyboardInteractiveQuestions,
 	) (answers sshserver.KeyboardInteractiveAnswers, err error),
 	_ string,
-) (response sshserver.AuthResponse, metadata map[string]string, reason error) {
+) (response sshserver.AuthResponse, metadata *auth2.ConnectionMetadata, reason error) {
 	answers, err := challenge(
 		"Test",
 		sshserver.KeyboardInteractiveQuestions{{
@@ -307,7 +309,7 @@ func (b *backendHandler) OnSessionChannel(_ uint64, _ []byte, session sshserver.
 
 func (b *backendHandler) OnAuthPassword(username string, _ []byte, _ string) (
 	response sshserver.AuthResponse,
-	metadata map[string]string,
+	metadata *auth2.ConnectionMetadata,
 	reason error,
 ) {
 	if username == "test" {
@@ -318,15 +320,19 @@ func (b *backendHandler) OnAuthPassword(username string, _ []byte, _ string) (
 
 func (b *backendHandler) OnAuthPubKey(_ string, _ string, _ string) (
 	response sshserver.AuthResponse,
-	metadata map[string]string,
+	metadata *auth2.ConnectionMetadata,
 	reason error,
 ) {
 	return sshserver.AuthResponseFailure, nil, nil
 }
 
+func (b *backendHandler) OnAuthGSSAPI() auth.GSSAPIServer {
+	return nil
+}
+
 func (b *backendHandler) OnHandshakeFailed(_ error) {}
 
-func (b *backendHandler) OnHandshakeSuccess(_ string, _ string, _ map[string]string) (
+func (b *backendHandler) OnHandshakeSuccess(_ string, _ string, _ *auth2.ConnectionMetadata) (
 	connection sshserver.SSHConnectionHandler,
 	failureReason error,
 ) {

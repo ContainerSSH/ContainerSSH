@@ -18,6 +18,7 @@ import (
 
 	containerssh "github.com/containerssh/libcontainerssh"
 	"github.com/containerssh/libcontainerssh/auth/webhook"
+	"github.com/containerssh/libcontainerssh/auth"
 	"github.com/containerssh/libcontainerssh/config"
 	internalssh "github.com/containerssh/libcontainerssh/internal/ssh"
 	"github.com/containerssh/libcontainerssh/internal/test"
@@ -404,7 +405,7 @@ type authHandler struct {
 
 func (a *authHandler) OnPassword(Username string, Password []byte, RemoteAddress string, ConnectionID string) (
 	bool,
-	map[string]string,
+	*auth.ConnectionMetadata,
 	error,
 ) {
 	user, err := a.userdb.GetUser(Username)
@@ -419,7 +420,7 @@ func (a *authHandler) OnPassword(Username string, Password []byte, RemoteAddress
 
 func (a *authHandler) OnPubKey(Username string, PublicKey string, RemoteAddress string, ConnectionID string) (
 	bool,
-	map[string]string,
+	*auth.ConnectionMetadata,
 	error,
 ) {
 	user, err := a.userdb.GetUser(Username)
@@ -432,6 +433,14 @@ func (a *authHandler) OnPubKey(Username string, PublicKey string, RemoteAddress 
 		}
 	}
 	return false, nil, fmt.Errorf("authentication failed")
+}
+
+func (a *authHandler) OnAuthorization(PrincipalUsername string, LoginUsername string, RemoteAddress string, ConnectionID string) (
+	bool,
+	*auth.ConnectionMetadata,
+	error,
+){
+	return true, nil, nil
 }
 
 func (c *testContext) authServer(t *testing.T, userdb AuthUserStorage, port int) {

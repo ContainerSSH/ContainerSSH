@@ -13,6 +13,7 @@ import (
 )
 
 type handler struct {
+	authzHandler    goHttp.Handler
 	passwordHandler goHttp.Handler
 	pubkeyHandler   goHttp.Handler
 }
@@ -20,6 +21,8 @@ type handler struct {
 func (h handler) ServeHTTP(writer goHttp.ResponseWriter, request *goHttp.Request) {
 	parts := strings.Split(request.URL.Path, "/")
 	switch parts[len(parts)-1] {
+	case "authz":
+		h.authzHandler.ServeHTTP(writer, request)
 	case "password":
 		h.passwordHandler.ServeHTTP(writer, request)
 	case "pubkey":
@@ -27,6 +30,41 @@ func (h handler) ServeHTTP(writer goHttp.ResponseWriter, request *goHttp.Request
 	default:
 		writer.WriteHeader(404)
 	}
+}
+
+type authzHandler struct {
+	backend Handler
+	logger log.Logger
+}
+
+func (p *authzHandler) OnRequest(request http.ServerRequest, response http.ServerResponse) error {
+	requestObject := auth.AuthorizationRequest{}
+	if err := request.Decode(&requestObject); err != nil {
+		return err
+	}
+	success, metadata, err := p.backend.OnAuthorization(
+		requestObject.PrincipalUsername,
+		requestObject.LoginUsername,
+		requestObject.RemoteAddress,
+		requestObject.ConnectionID,
+	)
+	if err != nil {
+		p.logger.Debug(message.Wrap(err, message.EAuthRequestDecodeFailed, "failed to execute authorization request"))
+		response.SetStatus(500)
+		response.SetBody(
+			auth.ResponseBody{
+				Success:  false,
+				Metadata: metadata,
+			})
+		return nil
+	} else {
+		response.SetBody(
+			auth.ResponseBody{
+				Success:  success,
+				Metadata: metadata,
+			})
+	}
+	return nil
 }
 
 type passwordHandler struct {

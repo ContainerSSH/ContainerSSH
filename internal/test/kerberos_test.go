@@ -5,8 +5,8 @@ import (
 	"testing"
 
 	"github.com/containerssh/libcontainerssh/internal/test"
-	"github.com/jcmturner/gokrb5/v8/client"
-	"github.com/jcmturner/gokrb5/v8/config"
+	"github.com/containerssh/gokrb5/v8/client"
+	"github.com/containerssh/gokrb5/v8/config"
 )
 
 var krbConf = `

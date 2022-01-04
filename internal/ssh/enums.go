@@ -11,3 +11,7 @@ const (
 	RequestTypeWindow    RequestType = "window-change"
 	RequestTypeSignal    RequestType = "signal"
 )
+
+const (
+	SSH_MSG_USERAUTH_REQUEST = 50
+)

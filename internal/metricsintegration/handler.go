@@ -5,6 +5,8 @@ import (
 	"net"
 	"sync"
 
+	auth2 "github.com/containerssh/libcontainerssh/auth"
+	"github.com/containerssh/libcontainerssh/internal/auth"
 	"github.com/containerssh/libcontainerssh/internal/metrics"
 	"github.com/containerssh/libcontainerssh/internal/sshserver"
 )
@@ -58,7 +60,7 @@ func (m *metricsNetworkHandler) OnShutdown(shutdownContext context.Context) {
 
 func (m *metricsNetworkHandler) OnAuthPassword(username string, password []byte, clientVersion string) (
 	response sshserver.AuthResponse,
-	metadata map[string]string,
+	metadata *auth2.ConnectionMetadata,
 	reason error,
 ) {
 	return m.backend.OnAuthPassword(username, password, clientVersion)
@@ -66,7 +68,7 @@ func (m *metricsNetworkHandler) OnAuthPassword(username string, password []byte,
 
 func (m *metricsNetworkHandler) OnAuthPubKey(username string, pubKey string, clientVersion string) (
 	response sshserver.AuthResponse,
-	metadata map[string]string,
+	metadata *auth2.ConnectionMetadata,
 	reason error,
 ) {
 	return m.backend.OnAuthPubKey(username, pubKey, clientVersion)
@@ -81,10 +83,14 @@ func (m *metricsNetworkHandler) OnAuthKeyboardInteractive(
 	clientVersion string,
 ) (
 	response sshserver.AuthResponse,
-	metadata map[string]string,
+	metadata *auth2.ConnectionMetadata,
 	reason error,
 ) {
 	return m.backend.OnAuthKeyboardInteractive(user, challenge, clientVersion)
+}
+
+func (m *metricsNetworkHandler) OnAuthGSSAPI() auth.GSSAPIServer {
+	return m.backend.OnAuthGSSAPI()
 }
 
 func (m *metricsNetworkHandler) OnHandshakeFailed(reason error) {
@@ -92,7 +98,7 @@ func (m *metricsNetworkHandler) OnHandshakeFailed(reason error) {
 	m.backend.OnHandshakeFailed(reason)
 }
 
-func (m *metricsNetworkHandler) OnHandshakeSuccess(username string, clientVersion string, metadata map[string]string) (
+func (m *metricsNetworkHandler) OnHandshakeSuccess(username string, clientVersion string, metadata *auth2.ConnectionMetadata) (
 	connection sshserver.SSHConnectionHandler,
 	failureReason error,
 ) {

@@ -96,3 +96,15 @@ const EAuthDeviceFlowRateLimitExceeded = "OAUTH_DEVICE_FLOW_RATE_LIMIT_EXCEEDED"
 // EAuthGitHubUsernameDoesNotMatch indicates that the user specified a username other than their GitHub login and
 // enforceUsername was set to on.
 const EAuthGitHubUsernameDoesNotMatch = "GITHUB_USERNAME_DOES_NOT_MATCH"
+
+// EAuthKerberosVerificationFailed indicates that there was an error verifying the kerberos ticket sent by the client
+const EAuthKerberosVerificationFailed = "KRB_VERIFY_ERROR"
+
+// EAuthKerberosUsernameDoesNotMatch indicates that the user tried to a user other than their own and enforceUsername was set to on
+const EAuthKerberosUsernameDoesNotMatch = "KRB_USERNAME_DOES_NOT_MATCH"
+
+// EAuthKerberosBackendError indicates that there was an error contacting the authorization server
+const EAuthKerberosBackendError = "KRB_BACKEND_ERROR"
+
+// EAuthzFailed indicates that the authorization server rejected the user
+const EAuthzFailed = "AUTHZ_FAILED"

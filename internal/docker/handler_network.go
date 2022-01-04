@@ -7,6 +7,7 @@ import (
 	"strings"
 	"sync"
 
+	"github.com/containerssh/libcontainerssh/auth"
 	"github.com/containerssh/libcontainerssh/config"
 	"github.com/containerssh/libcontainerssh/internal/sshserver"
 	"github.com/containerssh/libcontainerssh/log"
@@ -30,17 +31,17 @@ type networkHandler struct {
 	done                chan struct{}
 }
 
-func (n *networkHandler) OnAuthPassword(_ string, _ []byte, _ string) (sshserver.AuthResponse, map[string]string, error) {
+func (n *networkHandler) OnAuthPassword(_ string, _ []byte, _ string) (sshserver.AuthResponse, *auth.ConnectionMetadata, error) {
 	return sshserver.AuthResponseUnavailable, nil, fmt.Errorf("docker does not support authentication")
 }
 
-func (n *networkHandler) OnAuthPubKey(_ string, _ string, _ string) (sshserver.AuthResponse, map[string]string, error) {
+func (n *networkHandler) OnAuthPubKey(_ string, _ string, _ string) (sshserver.AuthResponse, *auth.ConnectionMetadata, error) {
 	return sshserver.AuthResponseUnavailable, nil, fmt.Errorf("docker does not support authentication")
 }
 
 func (n *networkHandler) OnHandshakeFailed(_ error) {}
 
-func (n *networkHandler) OnHandshakeSuccess(username string, _ string, metadata map[string]string) (
+func (n *networkHandler) OnHandshakeSuccess(username string, _ string, metadata *auth.ConnectionMetadata) (
 	connection sshserver.SSHConnectionHandler,
 	failureReason error,
 ) {
@@ -53,7 +54,12 @@ func (n *networkHandler) OnHandshakeSuccess(username string, _ string, metadata 
 	n.username = username
 	var env map[string]string
 	if n.config.Execution.ExposeAuthMetadataAsEnv {
-		env = metadata
+		env = metadata.GetMetadata()
+	} else {
+		env = make(map[string]string)
+	}
+	for k, v := range metadata.GetEnvironment() {
+		env[k] = v
 	}
 
 	if err := n.setupDockerClient(ctx, n.config); err != nil {
@@ -76,6 +82,17 @@ func (n *networkHandler) OnHandshakeSuccess(username string, _ string, metadata 
 		n.container = cnt
 		if err := n.container.start(ctx); err != nil {
 			return nil, err
+		}
+
+		for path, content := range metadata.GetFiles() {
+			err := cnt.writeFile(path, content)
+			if err != nil {
+				n.logger.Warning(message.Wrap(
+					err,
+					message.EDockerWriteFileFailed,
+					"Failed to write file",
+				))
+			}
 		}
 	}
 

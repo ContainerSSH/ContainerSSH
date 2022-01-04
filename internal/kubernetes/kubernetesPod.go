@@ -13,6 +13,8 @@ type kubernetesPod interface {
 	// the start context.
 	createExec(ctx context.Context, program []string, env map[string]string, tty bool) (kubernetesExecution, error)
 
+	writeFile(ctx context.Context, path string, content []byte) error
+
 	// remove removes the Pod within the given context.
 	remove(ctx context.Context) error
 }

@@ -1,5 +1,9 @@
 package auth
 
+import (
+	"github.com/containerssh/libcontainerssh/auth"
+)
+
 type Handler interface {
 	// OnPassword is called if the client requests a password authentication.
 	//
@@ -16,7 +20,7 @@ type Handler interface {
 		Password []byte,
 		RemoteAddress string,
 		ConnectionID string,
-	) (bool, map[string]string, error)
+	) (bool, *auth.ConnectionMetadata, error)
 
 	// OnPubKey is called when the client requests a public key authentication.
 	//
@@ -33,5 +37,18 @@ type Handler interface {
 		PublicKey string,
 		RemoteAddress string,
 		ConnectionID string,
-	) (bool, map[string]string, error)
+	) (bool, *auth.ConnectionMetadata, error)
+
+	// OnAuthorization is called when the client requests user authorization.
+	//
+	// - PrincipalUsername is the authenticated username of the user, this is the real identity
+	// - LoginUsername is the username the user requests to log in as
+	// - RemoteAddress is the IP address of the user.
+	// - SessionID is an opaque identifier for the current session.
+	OnAuthorization(
+		PrincipalUsername string,
+		LoginUsername string,
+		RemoteAddress string,
+		ConnectionID string,
+	) (bool, *auth.ConnectionMetadata, error)
 }

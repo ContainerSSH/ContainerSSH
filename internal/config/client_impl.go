@@ -6,6 +6,7 @@ import (
 	"net"
 	"time"
 
+	"github.com/containerssh/libcontainerssh/auth"
 	"github.com/containerssh/libcontainerssh/config"
 	"github.com/containerssh/libcontainerssh/http"
 	"github.com/containerssh/libcontainerssh/internal/metrics"
@@ -25,7 +26,7 @@ func (c *client) Get(
 	username string,
 	remoteAddr net.TCPAddr,
 	connectionID string,
-	metadata map[string]string,
+	metadata *auth.ConnectionMetadata,
 ) (config.AppConfig, error) {
 	if c.httpClient == nil {
 		return config.AppConfig{}, nil
@@ -33,7 +34,7 @@ func (c *client) Get(
 	logger := c.logger.
 		WithLabel("connectionId", connectionID).
 		WithLabel("username", username)
-	request, response := c.createRequestResponse(username, remoteAddr, connectionID, metadata)
+	request, response := c.createRequestResponse(username, remoteAddr, connectionID, metadata.Transmit())
 	var lastError error = nil
 	var lastLabels []metrics.MetricLabel
 loop:
@@ -73,7 +74,7 @@ func (c *client) createRequestResponse(
 	username string,
 	remoteAddr net.TCPAddr,
 	connectionID string,
-	metadata map[string]string,
+	metadata *auth.ConnectionMetadata,
 ) (config.Request, config.ResponseBody) {
 	request := config.Request{
 		Username:     username,

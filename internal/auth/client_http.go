@@ -31,7 +31,7 @@ type httpAuthClient struct {
 
 type httpAuthContext struct {
 	success  bool
-	metadata map[string]string
+	metadata *auth.ConnectionMetadata
 	err      error
 }
 
@@ -43,7 +43,7 @@ func (h httpAuthContext) Error() error {
 	return h.err
 }
 
-func (h httpAuthContext) Metadata() map[string]string {
+func (h httpAuthContext) Metadata() *auth.ConnectionMetadata {
 	return h.metadata
 }
 
@@ -122,6 +122,10 @@ func (client *httpAuthClient) PubKey(
 	authType := "pubkey"
 
 	return client.processAuthWithRetry(username, method, authType, connectionID, url, authRequest, remoteAddr)
+}
+
+func (client *httpAuthClient) GSSAPIConfig(connectionId string, addr net.IP) GSSAPIServer {
+	return nil
 }
 
 func (client *httpAuthClient) processAuthWithRetry(

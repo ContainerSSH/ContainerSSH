@@ -13,6 +13,7 @@ import (
 	"testing"
 	"time"
 
+	auth2 "github.com/containerssh/libcontainerssh/auth"
 	"github.com/containerssh/libcontainerssh/config"
 	"github.com/containerssh/libcontainerssh/internal/sshserver"
 	"github.com/containerssh/libcontainerssh/internal/structutils"
@@ -128,6 +129,80 @@ func TestAuthKeyboardInteractive(t *testing.T) {
 		t.Fatalf("valid keyboard-interactive authentication resulted in an error (%v)", err)
 	}
 	_ = conn.Close()
+
+	defer srv.Stop(10 * time.Second)
+}
+
+type gssApiClient struct {
+	username string
+}
+
+func (c *gssApiClient) InitSecContext(target string, token []byte, isGSSDelegCreds bool) (outputToken []byte, needContinue bool, err error) {
+	if token == nil {
+		return []byte(c.username), true, nil
+	} else {
+		if string(token) != c.username {
+			return []byte{}, false, fmt.Errorf("Invalid test token, expecting username")
+		}
+		return []byte{}, false, nil
+	}
+}
+
+func (c *gssApiClient) GetMIC(micField []byte) ([]byte, error) {
+	return append(micField, []byte(c.username)...), nil
+}
+
+func (c *gssApiClient) DeleteSecContext() error {
+	return nil
+}
+
+// Test the GSSAPI plumbing within the sshserver
+func TestAuthGSSAPI(t *testing.T) {
+	user2 := sshserver.NewTestUser("foo")
+	logger := log.NewTestLogger(t)
+
+	sshconf := config.SSHConfig{}
+	structutils.Defaults(&sshconf)
+
+	srv := sshserver.NewTestServer(
+		t,
+		sshserver.NewTestAuthenticationHandler(
+			sshserver.NewTestHandler(),
+			user2,
+		),
+		logger,
+		nil,
+	)
+	srv.Start()
+
+	gssClient := gssApiClient{
+		username: "foo",
+	}
+	sshConfig := &ssh.ClientConfig{
+		User: "foo",
+		Auth: []ssh.AuthMethod{ssh.GSSAPIWithMICAuthMethod(&gssClient, "testing.containerssh.io")},
+	}
+	sshConfig.HostKeyCallback = func(hostname string, remote net.Addr, key ssh.PublicKey) error {
+		marshaledKey := key.Marshal()
+		private, err := ssh.ParsePrivateKey([]byte(srv.GetHostKey()))
+		if err != nil {
+			panic(err)
+		}
+		if bytes.Equal(marshaledKey, private.PublicKey().Marshal()) {
+			return nil
+		}
+		return fmt.Errorf("invalid host")
+	}
+
+	sshConnection, err := ssh.Dial("tcp", srv.GetListen(), sshConfig)
+	if err != nil {
+		if !strings.Contains(err.Error(), "unable to authenticate") {
+			assert.Fail(t, "handshake failed for non-auth reasons", err)
+		}
+	} else {
+		_ = sshConnection.Close()
+		assert.Fail(t, "authentication succeeded", err)
+	}
 
 	defer srv.Stop(10 * time.Second)
 }
@@ -596,21 +671,21 @@ func (f *fullNetworkConnectionHandler) OnAuthPassword(
 	username string,
 	password []byte,
 	_ string,
-) (response sshserver.AuthResponse, metadata map[string]string, reason error) {
+) (response sshserver.AuthResponse, metadata *auth2.ConnectionMetadata, reason error) {
 	if storedPassword, ok := f.handler.passwords[username]; ok && bytes.Equal(storedPassword, password) {
 		return sshserver.AuthResponseSuccess, nil, nil
 	}
 	return sshserver.AuthResponseFailure, nil, fmt.Errorf("authentication failed")
 }
 
-func (f *fullNetworkConnectionHandler) OnAuthPubKey(username string, pubKey string, _ string) (response sshserver.AuthResponse, metadata map[string]string, reason error) {
+func (f *fullNetworkConnectionHandler) OnAuthPubKey(username string, pubKey string, _ string) (response sshserver.AuthResponse, metadata *auth2.ConnectionMetadata, reason error) {
 	if storedPubKey, ok := f.handler.pubKeys[username]; ok && storedPubKey == pubKey {
 		return sshserver.AuthResponseSuccess, nil, nil
 	}
 	return sshserver.AuthResponseFailure, nil, fmt.Errorf("authentication failed")
 }
 
-func (f *fullNetworkConnectionHandler) OnHandshakeSuccess(_ string, _ string, _ map[string]string) (connection sshserver.SSHConnectionHandler, failureReason error) {
+func (f *fullNetworkConnectionHandler) OnHandshakeSuccess(_ string, _ string, _ *auth2.ConnectionMetadata) (connection sshserver.SSHConnectionHandler, failureReason error) {
 	return &fullSSHConnectionHandler{
 		handler: f.handler,
 	}, nil

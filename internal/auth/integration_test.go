@@ -7,6 +7,7 @@ import (
 	"testing"
 	"time"
 
+	auth2 "github.com/containerssh/libcontainerssh/auth"
 	"github.com/containerssh/libcontainerssh/config"
 	"github.com/containerssh/libcontainerssh/internal/auth"
 	"github.com/containerssh/libcontainerssh/internal/geoip/dummy"
@@ -26,7 +27,7 @@ func (h *handler) OnPassword(
 	password []byte,
 	remoteAddress string,
 	connectionID string,
-) (bool, map[string]string, error) {
+) (bool, *auth2.ConnectionMetadata, error) {
 	if remoteAddress != "127.0.0.1" {
 		return false, nil, fmt.Errorf("invalid IP: %s", remoteAddress)
 	}
@@ -48,7 +49,7 @@ func (h *handler) OnPubKey(
 	publicKey string,
 	remoteAddress string,
 	connectionID string,
-) (bool, map[string]string, error) {
+) (bool, *auth2.ConnectionMetadata, error) {
 	if remoteAddress != "127.0.0.1" {
 		return false, nil, fmt.Errorf("invalid IP: %s", remoteAddress)
 	}
@@ -62,6 +63,15 @@ func (h *handler) OnPubKey(
 		// Simulate a database failure
 		return false, nil, fmt.Errorf("database error")
 	}
+	return false, nil, nil
+}
+
+func (h *handler) OnAuthorization(
+	principalUsername string,
+	loginUsername string,
+	remoteAddress string,
+	connectionID string,
+) (bool, *auth2.ConnectionMetadata, error) {
 	return false, nil, nil
 }
 

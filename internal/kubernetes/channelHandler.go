@@ -18,6 +18,7 @@ type channelHandler struct {
 	networkHandler *networkHandler
 	username       string
 	env            map[string]string
+	files          map[string][]byte
 	pty            bool
 	columns        uint32
 	rows           uint32
@@ -157,6 +158,29 @@ func (c *channelHandler) handleExecModeSession(
 	if err != nil {
 		return nil, err
 	}
+
+	for path, content := range c.files {
+		ctx, cancelFunc := context.WithTimeout(
+			context.Background(),
+			c.networkHandler.config.Timeouts.CommandStart,
+		)
+		c.networkHandler.logger.Debug(message.NewMessage(
+			message.MKubernetesFileModification,
+			"Writing to file %s",
+			path,
+		))
+		defer cancelFunc()
+		err := pod.writeFile(ctx, path, content)
+		if err != nil {
+			c.networkHandler.logger.Warning(message.Wrap(
+				err,
+				message.EKubernetesFileModificationFailed,
+				"Failed to write to %s",
+				path,
+			))
+		}
+	}
+
 	c.exec, err = pod.attach(ctx)
 	if err != nil {
 		c.removePod(pod)

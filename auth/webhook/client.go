@@ -3,6 +3,7 @@ package webhook
 import (
 	"net"
 
+	auth2 "github.com/containerssh/libcontainerssh/auth"
 	"github.com/containerssh/libcontainerssh/config"
 	"github.com/containerssh/libcontainerssh/internal/auth"
 	"github.com/containerssh/libcontainerssh/internal/geoip/dummy"
@@ -37,7 +38,7 @@ type AuthenticationContext interface {
 	// Error returns the error that happened during the authentication.
 	Error() error
 	// Metadata returns a set of metadata entries that have been obtained during the authentication.
-	Metadata() map[string]string
+	Metadata() *auth2.ConnectionMetadata
 }
 
 // NewTestClient creates a new copy of a client usable for testing purposes.

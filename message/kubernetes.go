@@ -65,6 +65,12 @@ const EKubernetesCannotSendSignalNoAgent = "KUBERNETES_EXEC_SIGNAL_FAILED_NO_AGE
 // MKubernetesExecSignalSuccessful indicates that the ContainerSSH Kubernetes module successfully delivered the requested signal.
 const MKubernetesExecSignalSuccessful = "KUBERNETES_EXEC_SIGNAL_SUCCESSFUL"
 
+// MKubernetesFileModification indicates that the ContainerSSH Kubernetes module is modifying a file on the container based on connection metadata
+const MKubernetesFileModification = "KUBERNETES_FILE_WRITE"
+
+// EKubernetesFileModificationFailed indicates that the ContainerSSH Kubernetes module failed to modify a file on the container
+const EKubernetesFileModificationFailed = "KUBERNETES_FILE_WRITE_FAILED"
+
 // EKubernetesFetchingExitCodeFailed indicates that the ContainerSSH Kubernetes module has failed to fetch the exit code of the
 // program.
 const EKubernetesFetchingExitCodeFailed = "KUBERNETES_EXIT_CODE_FAILED"

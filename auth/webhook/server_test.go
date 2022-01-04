@@ -5,6 +5,7 @@ import (
 	"os"
 	"time"
 
+	"github.com/containerssh/libcontainerssh/auth"
 	"github.com/containerssh/libcontainerssh/auth/webhook"
 	"github.com/containerssh/libcontainerssh/config"
 	"github.com/containerssh/libcontainerssh/log"
@@ -23,7 +24,7 @@ func (m *myAuthReqHandler) OnPassword(
 	connectionID string,
 ) (
 	success bool,
-	metadata map[string]string,
+	metadata *auth.ConnectionMetadata,
 	err error,
 ) {
 	return true, nil, nil
@@ -37,7 +38,21 @@ func (m *myAuthReqHandler) OnPubKey(
 	connectionID string,
 ) (
 	success bool,
-	metadata map[string]string,
+	metadata *auth.ConnectionMetadata,
+	err error,
+) {
+	return true, nil, nil
+}
+
+// OnAuthorization will be called after login in non-webhook auth handlers to verify the user is authorized to login
+func (m *myAuthReqHandler) OnAuthorization(
+	principalUsername string,
+	loginUsername string,
+	remoteAddress string,
+	connectionID string,
+) (
+	success bool,
+	metadata *auth.ConnectionMetadata,
 	err error,
 ) {
 	return true, nil, nil

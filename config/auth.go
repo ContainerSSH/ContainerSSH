@@ -19,6 +19,14 @@ type AuthConfig struct {
 	// OAuth2 is the configuration for OAuth2 authentication via Keyboard-Interactive.
 	OAuth2 AuthOAuth2ClientConfig `json:"oauth2" yaml:"oauth2"`
 
+	// Kerberos is the configuration for Kerberos authentication via GSSAPI and/or password.
+	Kerberos AuthKerberosClientConfig `json:"kerberos" yaml:"kerberos"`
+
+	// Authz is the authorization configuration. The authorization server
+	// will receive a webhook after successful user authentication to
+	// determine whether the specified user has access to the service.
+	Authz AuthzConfig `json:"authz" yaml:"authz"`
+
 	// AuthTimeout is the timeout for the overall authentication call (e.g. verifying a password). If the server
 	// responds with a non-200 response the call will be retried until this timeout is reached. This timeout
 	// should be increased to ~180s for OAuth2 login.
@@ -56,12 +64,18 @@ func (c *AuthConfig) Validate() error {
 		err = c.Webhook.Validate()
 	case AuthMethodOAuth2:
 		err = c.OAuth2.Validate()
+	case AuthMethodKerberos:
+		err = c.Kerberos.Validate()
 	default:
 		return fmt.Errorf("invalid method: %s", c.Method)
 	}
-
 	if err != nil {
 		return fmt.Errorf("invalid %s client configuration (%w)", c.Method, err)
+	}
+
+	err = c.Authz.Validate()
+	if err != nil {
+		return fmt.Errorf("Invalid authz configuration (%w)", err)
 	}
 
 	return nil
@@ -71,7 +85,7 @@ type AuthMethod string
 
 // Validate checks if the provided method is valid or not.
 func (m AuthMethod) Validate() error {
-	if m == "webhook" || m == "oauth2" {
+	if m == "webhook" || m == "oauth2" || m == "kerberos" {
 		return nil
 	}
 	return fmt.Errorf("invalid value for method: %s", m)
@@ -82,6 +96,8 @@ const AuthMethodWebhook AuthMethod = "webhook"
 
 // AuthMethodOAuth2 authenticates by sending the user to a web interface using the keyboard-interactive facility.
 const AuthMethodOAuth2 AuthMethod = "oauth2"
+
+const AuthMethodKerberos AuthMethod = "kerberos"
 
 // AuthWebhookClientConfig is the configuration for webhook authentication.
 type AuthWebhookClientConfig struct {
@@ -292,4 +308,61 @@ func (o *AuthOIDCConfig) Validate() error {
 		return fmt.Errorf("at least one of deviceFlow or authorizationCodeFlow must be enabled")
 	}
 	return o.HTTPClientConfiguration.Validate()
+}
+
+// AuthzConfig is the configuration for the authorization flow
+type AuthzConfig struct {
+	HTTPClientConfiguration `json:",inline" yaml:",inline"`
+	// Controls whether the authorization flow is enabled. If set to false
+	// all authenticated users are allowed in the service.
+	Enable bool `json:"enable" yaml:"enable" default:"false"`
+}
+
+func (k *AuthzConfig) Validate() error {
+	if k.Enable {
+		return k.HTTPClientConfiguration.Validate()
+	}
+	return nil
+}
+
+// AuthKerberosClientConfig is the configuration for the Kerberos authentication method.
+type AuthKerberosClientConfig struct {
+	// Keytab is the path to the kerberos keytab. If unset it defaults to
+	// the default of /etc/krb5.keytab. If this file doesn't exist and
+	// kerberos authentication is requested ContainerSSH will fail to start
+	Keytab string `json:"keytab" yaml:"keytab" default:"/etc/krb5.keytab"`
+	// Acceptor is the name of the keytab entry to authenticate against.
+	// The value of this field needs to be in the form of `service/name`.
+	//
+	// The special value of `host` will authenticate clients only against
+	// the service `host/hostname` where hostname is the system hostname
+	// The special value of 'any' will authenticate against all keytab
+	// entries regardless of name
+	Acceptor string `json:"acceptor" yaml:"acceptor" default:"any"`
+	// EnforceUsername specifies whether to check that the username of the
+	// authenticated user matches the SSH username entered. If set to false
+	// the authorization server must be responsible for ensuring proper
+	// access control.
+	//
+	// WARNING: If authorization is unset and this is set to false all
+	// authenticated users can log in to any account!
+	EnforceUsername bool `json:"enforceUsername" yaml:"enforceUsername" default:"true"`
+	// CredentialCachePath is the path in which the kerberos credentials
+	// will be written inside the user containers.
+	CredentialCachePath string `json:"credentialCachePath" yaml:"credentialCachePath" default:"/tmp/krb5cc"`
+	// AllowPassword controls whether kerberos-based password
+	// authentication should be allowed. If set to false only GSSAPI
+	// authentication will be permitted
+	AllowPassword bool `json:"allowPassword" yaml:"allowPassword" default:"true"`
+	// ConfigPath is the path of the kerberos configuration file. This is
+	// only used for password authentication.
+	ConfigPath string `json:"configPath" yaml:"configPath" default:"/etc/containerssh/krb5.conf"`
+	// ClockSkew is the maximum allowed clock skew for kerberos messages,
+	// any messages older than this will be rejected. This value is also
+	// used for the replay cache.
+	ClockSkew time.Duration `json:"clockSkew" yaml:"clockSkew" default:"5m"`
+}
+
+func (k *AuthKerberosClientConfig) Validate() error {
+	return nil
 }

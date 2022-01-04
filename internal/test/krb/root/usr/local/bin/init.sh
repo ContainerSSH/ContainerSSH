@@ -25,6 +25,18 @@ kadmin.local -q "addprinc -pw ${KERBEROS_PASSWORD} ${KERBEROS_USERNAME}"
 echo -n "" >/etc/krb5kdc/kadm5.acl
 echo "${KERBEROS_USERNAME}@TESTING.CONTAINERSSH.IO *" >>/etc/krb5kdc/kadm5.acl
 
+echo -e "\e[32mAdding host principal testing.containerssh.io ...\e[0m"
+kadmin.local -q "addprinc -randkey host/testing.containerssh.io"
+
+echo -e "\e[32mGenerating keytab...\e[0m"
+kadmin.local -q "ktadd -k /test.keytab host/testing.containerssh.io"
+
+echo -e "\e[32mCreating sample user...\e[0m"
+kadmin.local -q "addprinc -policy users -pw test foo"
+
+echo -e "\e[32mCreating secondary user...\e[0m"
+kadmin.local -q "addprinc -policy users -pw pwbar bar"
+
 trap finish SIGCHLD EXIT
 finish() {
     echo -e "\e[33mSignal received, exiting...\e[0m"

@@ -8,6 +8,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/containerssh/libcontainerssh/auth"
 	"github.com/containerssh/libcontainerssh/config"
 	ssh2 "github.com/containerssh/libcontainerssh/internal/ssh"
 	"github.com/containerssh/libcontainerssh/log"
@@ -129,8 +130,8 @@ func (s *serverImpl) disconnectClients(lifecycle service.Lifecycle, allClientsEx
 func (s *serverImpl) createPasswordAuthenticator(
 	handlerNetworkConnection NetworkConnectionHandler,
 	logger log.Logger,
-) func(conn ssh.ConnMetadata, password []byte) (*ssh.Permissions, map[string]string, error) {
-	return func(conn ssh.ConnMetadata, password []byte) (*ssh.Permissions, map[string]string, error) {
+) func(conn ssh.ConnMetadata, password []byte) (*ssh.Permissions, *auth.ConnectionMetadata, error) {
+	return func(conn ssh.ConnMetadata, password []byte) (*ssh.Permissions, *auth.ConnectionMetadata, error) {
 		authResponse, metadata, err := handlerNetworkConnection.OnAuthPassword(
 			conn.User(),
 			password,
@@ -221,8 +222,8 @@ func (s *serverImpl) logAuthSuccessful(logger log.Logger, conn ssh.ConnMetadata,
 func (s *serverImpl) createPubKeyAuthenticator(
 	handlerNetworkConnection NetworkConnectionHandler,
 	logger log.Logger,
-) func(conn ssh.ConnMetadata, pubKey ssh.PublicKey) (*ssh.Permissions, map[string]string, error) {
-	return func(conn ssh.ConnMetadata, pubKey ssh.PublicKey) (*ssh.Permissions, map[string]string, error) {
+) func(conn ssh.ConnMetadata, pubKey ssh.PublicKey) (*ssh.Permissions, *auth.ConnectionMetadata, error) {
+	return func(conn ssh.ConnMetadata, pubKey ssh.PublicKey) (*ssh.Permissions, *auth.ConnectionMetadata, error) {
 		authorizedKey := strings.TrimSpace(string(ssh.MarshalAuthorizedKey(pubKey)))
 		authResponse, metadata, err := handlerNetworkConnection.OnAuthPubKey(
 			conn.User(),
@@ -249,11 +250,11 @@ func (s *serverImpl) createPubKeyAuthenticator(
 func (s *serverImpl) createKeyboardInteractiveHandler(
 	handlerNetworkConnection *networkConnectionWrapper,
 	logger log.Logger,
-) func(conn ssh.ConnMetadata, challenge ssh.KeyboardInteractiveChallenge) (*ssh.Permissions, map[string]string, error) {
+) func(conn ssh.ConnMetadata, challenge ssh.KeyboardInteractiveChallenge) (*ssh.Permissions, *auth.ConnectionMetadata, error) {
 	return func(
 		conn ssh.ConnMetadata,
 		challenge ssh.KeyboardInteractiveChallenge,
-	) (*ssh.Permissions, map[string]string, error) {
+	) (*ssh.Permissions, *auth.ConnectionMetadata, error) {
 		challengeWrapper := func(
 			instruction string,
 			questions KeyboardInteractiveQuestions,
@@ -301,10 +302,11 @@ func (s *serverImpl) createConfiguration(
 	handlerNetworkConnection *networkConnectionWrapper,
 	logger log.Logger,
 ) *ssh.ServerConfig {
-	passwordCallback, pubkeyCallback, keyboardInteractiveCallback := s.createAuthenticators(
+	passwordCallback, pubkeyCallback, keyboardInteractiveCallback, gssConfig := s.createAuthenticators(
 		handlerNetworkConnection,
 		logger,
 	)
+
 	serverConfig := &ssh.ServerConfig{
 		Config: ssh.Config{
 			KeyExchanges: s.cfg.KexAlgorithms.StringList(),
@@ -316,6 +318,7 @@ func (s *serverImpl) createConfiguration(
 		PasswordCallback:            passwordCallback,
 		PublicKeyCallback:           pubkeyCallback,
 		KeyboardInteractiveCallback: keyboardInteractiveCallback,
+		GSSAPIWithMICConfig: gssConfig,
 		ServerVersion:               s.cfg.ServerVersion.String(),
 		BannerCallback:              func(conn ssh.ConnMetadata) string { return s.cfg.Banner },
 	}
@@ -332,11 +335,71 @@ func (s *serverImpl) createAuthenticators(
 	func(conn ssh.ConnMetadata, password []byte) (*ssh.Permissions, error),
 	func(conn ssh.ConnMetadata, key ssh.PublicKey) (*ssh.Permissions, error),
 	func(conn ssh.ConnMetadata, challenge ssh.KeyboardInteractiveChallenge) (*ssh.Permissions, error),
+	*ssh.GSSAPIWithMICConfig,
 ) {
 	passwordCallback := s.createPasswordCallback(handlerNetworkConnection, logger)
 	pubkeyCallback := s.createPubKeyCallback(handlerNetworkConnection, logger)
 	keyboardInteractiveCallback := s.createKeyboardInteractiveCallback(handlerNetworkConnection, logger)
-	return passwordCallback, pubkeyCallback, keyboardInteractiveCallback
+	gssConfig := s.createGSSAPIConfig(handlerNetworkConnection, logger)
+	return passwordCallback, pubkeyCallback, keyboardInteractiveCallback, gssConfig
+}
+
+func (s *serverImpl) createGSSAPIConfig(
+	handlerNetworkConnection *networkConnectionWrapper,
+	logger log.Logger,
+) (*ssh.GSSAPIWithMICConfig){
+	var gssConfig *ssh.GSSAPIWithMICConfig
+
+	gssServer := handlerNetworkConnection.OnAuthGSSAPI()
+	if gssServer != nil {
+		gssConfig = &ssh.GSSAPIWithMICConfig{
+			AllowLogin: func(conn ssh.ConnMetadata, srcName string) (*ssh.Permissions, error) {
+				if !gssServer.Success() {
+					if gssServer.Error() == nil {
+						return nil, messageCodes.NewMessage(
+							messageCodes.ESSHAuthFailed,
+							"Authentication failed",
+						)
+					}
+					return nil, gssServer.Error()
+				}
+
+				if err := gssServer.AllowLogin(conn.User()); err != nil {
+					return nil, err
+				}
+
+				metadata := gssServer.Metadata()
+
+				s.logAuthSuccessful(logger, conn, "GSSAPI")
+				sshConnectionHandler, err := handlerNetworkConnection.OnHandshakeSuccess(
+					conn.User(),
+					string(conn.ClientVersion()),
+					metadata,
+				)
+				if err != nil {
+					err = messageCodes.WrapUser(
+						err,
+						messageCodes.ESSHBackendRejected,
+						"Authentication currently unavailable, please try again later.",
+						"The backend has rejected the user after successful authentication.",
+					)
+					logger.Error(err)
+					return nil, err
+				}
+				handlerNetworkConnection.sshConnectionHandler = sshConnectionHandler
+				return &ssh.Permissions{}, nil
+			},
+			Server: gssServer,
+		}
+	} else {
+		logger.Info(
+			messageCodes.NewMessage(
+				messageCodes.ESSHAuthUnavailable,
+				"GSSAPI Authentication unsupported with current authentication method",
+			),
+		)
+	}
+	return gssConfig
 }
 
 func (s *serverImpl) createKeyboardInteractiveCallback(

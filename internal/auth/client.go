@@ -1,6 +1,7 @@
 package auth
 
 import (
+	"github.com/containerssh/libcontainerssh/auth"
 	"net"
 )
 
@@ -11,7 +12,7 @@ type AuthenticationContext interface {
 	// Error returns the error that happened during the authentication.
 	Error() error
 	// Metadata returns a set of metadata entries that have been obtained during the authentication.
-	Metadata() map[string]string
+	Metadata() *auth.ConnectionMetadata
 	// OnDisconnect is called when the client disconnects, or if the authentication fails due to a different reason.
 	OnDisconnect()
 }
@@ -50,6 +51,12 @@ type Client interface {
 		connectionID string,
 		remoteAddr net.IP,
 	) AuthenticationContext
+
+	// GSSAPIConfig is a method to generate and retrieve a GSSAPIServer interface for GSSAPI authentication
+	GSSAPIConfig(
+		connectionId string,
+		addr net.IP,
+	) GSSAPIServer
 }
 
 // KeyboardInteractiveQuestions is a list of questions for keyboard-interactive authentication
@@ -69,4 +76,24 @@ type KeyboardInteractiveQuestion struct {
 type KeyboardInteractiveAnswers struct {
 	// KeyboardInteractiveQuestion is the original question that was answered.
 	Answers map[string]string
+}
+
+// GSSAPIServer is the interface for GSSAPI authentication
+type GSSAPIServer interface {
+	AuthenticationContext
+
+	// AcceptSecContext is the GSSAPI function to verify the tokens
+	AcceptSecContext(token []byte) (outputToken []byte, srcName string, needContinue bool, err error)
+
+	// VerifyMIC is the GSSAPI function to verify the MIC (Message Integrity Code)
+	VerifyMIC(micField []byte, micToken []byte) error
+
+	// DeleteSecContext is the GSSAPI function to free all resources bound as part of an authentication attempt
+	DeleteSecContext() error
+
+	// AllowLogin is the authorization function. The username parameter
+	// specifies the user that the authenticated user is trying to log in
+	// as. Note! This is different from the gossh AllowLogin function in
+	// which the username field is the authenticated username.
+	AllowLogin(username string) error
 }

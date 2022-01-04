@@ -1,6 +1,7 @@
 package kubernetes
 
 import (
+	"bytes"
 	"context"
 	"fmt"
 	"sync"
@@ -225,6 +226,42 @@ func (k *kubernetesPodImpl) createExecLocked(
 		doneChan:              make(chan struct{}),
 		lock:                  &sync.Mutex{},
 	}, nil
+}
+
+func (k *kubernetesPodImpl) writeFile(ctx context.Context, path string, content []byte) error {
+	writeCmd := []string{k.config.Pod.AgentPath, "write-file", path}
+	if k.config.Pod.Mode == config2.KubernetesExecutionModeSession {
+		writeCmd = append(
+			[]string{k.config.Pod.AgentPath, "console", "--wait", "--"},
+			writeCmd...,
+		)
+	}
+	exec, err := k.createExec(
+		ctx,
+		writeCmd,
+		map[string]string{},
+		false,
+	)
+	if err != nil {
+		return err
+	}
+
+	var stdout bytes.Buffer
+	var stderr bytes.Buffer
+
+	stdin := bytes.NewReader(content)
+
+	exec.run(
+		stdin,
+		&stdout,
+		&stderr,
+		func() error {
+			return nil
+		},
+		func(exitStatus int) {
+		},
+	)
+	return nil
 }
 
 func (k *kubernetesPodImpl) remove(ctx context.Context) error {

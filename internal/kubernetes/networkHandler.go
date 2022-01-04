@@ -7,6 +7,8 @@ import (
 	"strings"
 	"sync"
 
+	"github.com/containerssh/libcontainerssh/auth"
+	"github.com/containerssh/libcontainerssh/message"
 	config2 "github.com/containerssh/libcontainerssh/config"
 	"github.com/containerssh/libcontainerssh/internal/sshserver"
 	"github.com/containerssh/libcontainerssh/log"
@@ -29,18 +31,18 @@ type networkHandler struct {
 	done         chan struct{}
 }
 
-func (n *networkHandler) OnAuthPassword(_ string, _ []byte, _ string) (response sshserver.AuthResponse, metadata map[string]string, reason error) {
+func (n *networkHandler) OnAuthPassword(_ string, _ []byte, _ string) (response sshserver.AuthResponse, metadata *auth.ConnectionMetadata, reason error) {
 	return sshserver.AuthResponseUnavailable, nil, fmt.Errorf("the backend handler does not support authentication")
 }
 
-func (n *networkHandler) OnAuthPubKey(_ string, _ string, _ string) (response sshserver.AuthResponse, metadata map[string]string, reason error) {
+func (n *networkHandler) OnAuthPubKey(_ string, _ string, _ string) (response sshserver.AuthResponse, metadata *auth.ConnectionMetadata, reason error) {
 	return sshserver.AuthResponseUnavailable, nil, fmt.Errorf("the backend handler does not support authentication")
 }
 
 func (n *networkHandler) OnHandshakeFailed(_ error) {
 }
 
-func (n *networkHandler) OnHandshakeSuccess(username string, clientVersion string, metadata map[string]string) (connection sshserver.SSHConnectionHandler, failureReason error) {
+func (n *networkHandler) OnHandshakeSuccess(username string, clientVersion string, metadata *auth.ConnectionMetadata) (connection sshserver.SSHConnectionHandler, failureReason error) {
 	n.mutex.Lock()
 	if n.pod != nil {
 		n.mutex.Unlock()
@@ -57,9 +59,12 @@ func (n *networkHandler) OnHandshakeSuccess(username string, clientVersion strin
 
 	env := map[string]string{}
 	for authMetadataName, envName := range n.config.Pod.ExposeAuthMetadataAsEnv {
-		if value, ok := metadata[authMetadataName]; ok {
+		if value, ok := metadata.GetMetadata()[authMetadataName]; ok {
 			env[envName] = value
 		}
+	}
+	for k, v := range metadata.GetEnvironment() {
+		env[k] = v
 	}
 
 	spec.Containers[n.config.Pod.ConsoleContainerNumber].Command = n.config.Pod.IdleCommand
@@ -68,7 +73,7 @@ func (n *networkHandler) OnHandshakeSuccess(username string, clientVersion strin
 		"containerssh_username":      username,
 	}
 	for authMetadataName, labelName := range n.config.Pod.ExposeAuthMetadataAsLabels {
-		if value, ok := metadata[authMetadataName]; ok {
+		if value, ok := metadata.GetMetadata()[authMetadataName]; ok {
 			n.labels[labelName] = value
 		}
 	}
@@ -77,7 +82,7 @@ func (n *networkHandler) OnHandshakeSuccess(username string, clientVersion strin
 		"containerssh_ip": strings.ReplaceAll(n.client.IP.String(), ":", "-"),
 	}
 	for authMetadataName, annotationName := range n.config.Pod.ExposeAuthMetadataAsAnnotations {
-		if value, ok := metadata[authMetadataName]; ok {
+		if value, ok := metadata.GetMetadata()[authMetadataName]; ok {
 			n.annotations[annotationName] = value
 		}
 	}
@@ -87,12 +92,34 @@ func (n *networkHandler) OnHandshakeSuccess(username string, clientVersion strin
 		if n.pod, err = n.cli.createPod(ctx, n.labels, n.annotations, env, nil, nil); err != nil {
 			return nil, err
 		}
+		for path, content := range metadata.GetFiles() {
+			ctx, cancelFunc := context.WithTimeout(
+				context.Background(),
+				n.config.Timeouts.CommandStart,
+			)
+			n.logger.Debug(message.NewMessage(
+				message.MKubernetesFileModification,
+				"Writing to file %s",
+				path,
+			))
+			defer cancelFunc()
+			err := n.pod.writeFile(ctx, path, content)
+			if err != nil {
+				n.logger.Warning(message.Wrap(
+					err,
+					message.EKubernetesFileModificationFailed,
+					"Failed to write to %s",
+					path,
+				))
+			}
+		}
 	}
 
 	return &sshConnectionHandler{
 		networkHandler: n,
 		username:       username,
 		env:            env,
+		files:          metadata.GetFiles(),
 	}, nil
 }
 

@@ -51,6 +51,8 @@ type dockerContainer interface {
 	// createExec creates an execution process for the given program with the given parameters. The passed context is
 	// the start context.
 	createExec(ctx context.Context, program []string, env map[string]string, tty bool) (dockerExecution, error)
+	// writeFile writes a file at the given path inside the container
+	writeFile(path string, content []byte) error
 
 	// remove removes the container within the given context.
 	remove(ctx context.Context) error

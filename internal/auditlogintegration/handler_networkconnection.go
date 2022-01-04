@@ -3,6 +3,8 @@ package auditlogintegration
 import (
 	"context"
 
+	auth2 "github.com/containerssh/libcontainerssh/auth"
+	"github.com/containerssh/libcontainerssh/internal/auth"
 	"github.com/containerssh/libcontainerssh/auditlog/message"
 	"github.com/containerssh/libcontainerssh/internal/auditlog"
 	"github.com/containerssh/libcontainerssh/internal/sshserver"
@@ -20,7 +22,7 @@ func (n *networkConnectionHandler) OnAuthKeyboardInteractive(
 		questions sshserver.KeyboardInteractiveQuestions,
 	) (answers sshserver.KeyboardInteractiveAnswers, err error),
 	clientVersion string,
-) (response sshserver.AuthResponse, metadata map[string]string, reason error) {
+) (response sshserver.AuthResponse, metadata *auth2.ConnectionMetadata, reason error) {
 	return n.backend.OnAuthKeyboardInteractive(
 		user,
 		func(
@@ -65,7 +67,7 @@ func (n *networkConnectionHandler) OnAuthPassword(
 	username string,
 	password []byte,
 	clientVersion string,
-) (response sshserver.AuthResponse, metadata map[string]string, reason error) {
+) (response sshserver.AuthResponse, metadata *auth2.ConnectionMetadata, reason error) {
 	n.audit.OnAuthPassword(username, password)
 	response, metadata, reason = n.backend.OnAuthPassword(username, password, clientVersion)
 	switch response {
@@ -89,7 +91,7 @@ func (n *networkConnectionHandler) OnAuthPubKey(
 	clientVersion string,
 ) (
 	response sshserver.AuthResponse,
-	metadata map[string]string,
+	metadata *auth2.ConnectionMetadata,
 	reason error,
 ) {
 	n.audit.OnAuthPubKey(username, pubKey)
@@ -109,6 +111,10 @@ func (n *networkConnectionHandler) OnAuthPubKey(
 	return response, metadata, reason
 }
 
+func (n *networkConnectionHandler) OnAuthGSSAPI() auth.GSSAPIServer {
+	return n.backend.OnAuthGSSAPI()
+}
+
 func (n *networkConnectionHandler) OnHandshakeFailed(reason error) {
 	n.backend.OnHandshakeFailed(reason)
 	n.audit.OnHandshakeFailed(reason.Error())
@@ -117,7 +123,7 @@ func (n *networkConnectionHandler) OnHandshakeFailed(reason error) {
 func (n *networkConnectionHandler) OnHandshakeSuccess(
 	username string,
 	clientVersion string,
-	metadata map[string]string,
+	metadata *auth2.ConnectionMetadata,
 ) (
 	connection sshserver.SSHConnectionHandler,
 	failureReason error,
