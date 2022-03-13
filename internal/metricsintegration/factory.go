@@ -17,7 +17,7 @@ func NewHandler(
 
 	connectionsMetric := metricsCollector.MustCreateCounterGeo(
 		MetricNameConnections,
-		"connections",
+		"connections_total",
 		MetricHelpConnections,
 	)
 	currentConnectionsMetric := metricsCollector.MustCreateGaugeGeo(
@@ -28,12 +28,12 @@ func NewHandler(
 
 	handshakeSuccessfulMetric := metricsCollector.MustCreateCounterGeo(
 		MetricNameSuccessfulHandshake,
-		"handshakes",
+		"handshakes_total",
 		MetricHelpSuccessfulHandshake,
 	)
 	handshakeFailedMetric := metricsCollector.MustCreateCounterGeo(
 		MetricNameFailedHandshake,
-		"handshakes",
+		"handshakes_total",
 		MetricHelpFailedHandshake,
 	)
 

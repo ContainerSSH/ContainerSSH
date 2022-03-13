@@ -71,22 +71,22 @@ func createMetrics(metrics metrics.Collector) (
 ) {
 	backendRequestsMetric := metrics.MustCreateCounter(
 		MetricNameAuthBackendRequests,
-		"requests",
+		"requests_total",
 		"The number of requests sent to the configuration server.",
 	)
 	backendFailureMetric := metrics.MustCreateCounter(
 		MetricNameAuthBackendFailure,
-		"requests",
+		"failures_total",
 		"The number of request failures to the configuration server.",
 	)
 	authSuccessMetric := metrics.MustCreateCounterGeo(
 		MetricNameAuthSuccess,
-		"requests",
+		"success_total",
 		"The number of successful authentications.",
 	)
 	authFailureMetric := metrics.MustCreateCounterGeo(
 		MetricNameAuthFailure,
-		"requests",
+		"failures_total",
 		"The number of failed authentications.",
 	)
 	return backendRequestsMetric, backendFailureMetric, authSuccessMetric, authFailureMetric

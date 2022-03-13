@@ -8,10 +8,10 @@ import (
 )
 
 // MetricNameConfigBackendRequests is the number of requests to the config server
-const MetricNameConfigBackendRequests = "containerssh_config_server_requests"
+const MetricNameConfigBackendRequests = "containerssh_config_server_requests_total"
 
 // MetricNameConfigBackendFailure is the number of request failures to the configuration backend.
-const MetricNameConfigBackendFailure = "containerssh_config_server_failures"
+const MetricNameConfigBackendFailure = "containerssh_config_server_failures_total"
 
 // NewClient creates a new configuration client that can be used to fetch a user-specific configuration.
 func NewClient(
@@ -29,12 +29,12 @@ func NewClient(
 	}
 	backendRequestsMetric := metricsCollector.MustCreateCounter(
 		MetricNameConfigBackendRequests,
-		"requests",
+		"requests_total",
 		"The number of requests sent to the configuration server.",
 	)
 	backendFailureMetric := metricsCollector.MustCreateCounter(
 		MetricNameConfigBackendFailure,
-		"requests",
+		"failures_total",
 		"The number of request failures to the configuration server.",
 	)
 	return &client{
