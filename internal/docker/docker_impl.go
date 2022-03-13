@@ -1090,12 +1090,12 @@ loop:
 		}
 		d.logger.Debug(
 			message.Wrap(lastError,
-				message.EDockerFetchingExitCodeFailed, "Failed to fetch exit code, retrying in 10 seconds"),
+				message.EDockerFetchingExitCodeFailed, "Failed to fetch exit code, retrying in 1 second"),
 		)
 		select {
 		case <-ctx.Done():
 			break loop
-		case <-time.After(10 * time.Second):
+		case <-time.After(1 * time.Second):
 		}
 	}
 	if lastError == nil {
