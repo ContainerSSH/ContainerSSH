@@ -1,8 +1,6 @@
 before:
   hooks:
-    - go vet
     - go generate
-    - go test
 builds:
   - id: containerssh
     main: cmd/containerssh/main.go
@@ -66,8 +64,6 @@ nfpms:
       - deb
       - rpm
       - apk
-    empty_folders:
-      - /etc/containerssh
     bindir: /usr/sbin
     suggests:
       - docker
@@ -79,6 +75,12 @@ nfpms:
         dst: /usr/share/doc/containerssh/LICENSE.md
       - src: NOTICE.md
         dst: /usr/share/doc/containerssh/NOTICE.md
+      - dst: /etc/containerssh
+        type: dir
+        file_info:
+          owner: root
+          group: root
+          mode: 0755
 signs:
   - id: sign-all
     artifacts: all

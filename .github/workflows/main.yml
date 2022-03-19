@@ -1,7 +1,5 @@
 name: Build
 on:
-  schedule:
-    - cron: '0 12 * * *'
   pull_request:
   push:
     branches:
@@ -19,31 +17,21 @@ jobs:
         uses: actions/setup-go@v2
         with:
           go-version: 1.18
-      - name: Run golangci-lint
-        uses: golangci/golangci-lint-action@v2
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v1
-      - name: Install KinD
-        run: |
-          sudo curl -Lo /usr/local/bin/kind https://kind.sigs.k8s.io/dl/v0.11.1/kind-linux-amd64
-          sudo curl -Lo /usr/local/bin/kubectl "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
-          sudo chmod +x /usr/local/bin/kind /usr/local/bin/kubectl
-      - name: Bring up KinD cluster
-        run: |
-          kind create cluster --wait 300s
       - name: Import signing key
         if: ${{ startsWith(github.ref, 'refs/tags/') }}
         run: |
           echo "${GPG_KEY}" | base64 -d | gpg --batch --import && echo "${GPG_KEY}" | base64 -d >/tmp/signing.gpg
         env:
           GPG_KEY: "${{ secrets.GPG_KEY }}"
-      - name: Run GoReleaser
+      - name: Run GoReleaser (snapshot)
         if: ${{ ! startsWith(github.ref, 'refs/tags/') }}
         uses: goreleaser/goreleaser-action@v2
         with:
           version: latest
           args: build --snapshot --rm-dist
-      - name: Run GoReleaser
+      - name: Run GoReleaser (release)
         if: ${{ startsWith(github.ref, 'refs/tags/') }}
         uses: goreleaser/goreleaser-action@v2
         with:

@@ -4,6 +4,7 @@ The ContainerSSH codebase is licensed under the MIT No Attribution License (MIT-
 
 1. To keep things fair the ContainerSSH name, logos, and graphic assets located in the [branding repository](https://github.com/ContainerSSH/branding/) may only be used in accordance with the [ContainerSSH brand license](https://github.com/ContainerSSH/branding/blob/main/LICENSE.md).
 2. Company marks such as GitHub, Docker, Twitter, etc. Trademarks are properties of their respective owners and may only be used according to their trademark guidelines.
+3. ContainerSSH binaries and releases contain third party licenses, which you must abide by. The licenses are listed, to the best of our abilities, in the NOTICE.md file shipped with each release.
 
 ## MIT No Attribution License (MIT-0)
 

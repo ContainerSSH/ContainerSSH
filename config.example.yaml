@@ -3,7 +3,10 @@ ssh:
     - /etc/containerssh/ssh_host_rsa_key
 backend: docker
 auth:
-  url: "http://127.0.0.1:8080"
+  password:
+    method: webhook
+    webhook:
+      url: "http://127.0.0.1:8080"
 configserver:
   url: "http://127.0.0.1:8080/config"
 metrics:

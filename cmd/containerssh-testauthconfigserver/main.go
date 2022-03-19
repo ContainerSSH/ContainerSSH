@@ -6,7 +6,7 @@
 //     Schemes: http, https
 //     Host: localhost
 //     BasePath: /
-//     Version: 0.4.1
+//     Version: 0.5.0
 //
 //     Consumes:
 //     - application/json
@@ -18,22 +18,47 @@
 package main
 
 import (
-	"context"
-	goHttp "net/http"
-	"os"
-	"os/signal"
-	"syscall"
+    "context"
+    goHttp "net/http"
+    "os"
+    "os/signal"
+    "syscall"
 
-	"github.com/containerssh/auth"
-	"github.com/containerssh/configuration/v2"
-	"github.com/containerssh/docker/v2"
-	"github.com/containerssh/http"
-	"github.com/containerssh/log"
-	"github.com/containerssh/service"
-	"github.com/docker/docker/api/types/container"
+    "github.com/docker/docker/api/types/container"
+    "go.containerssh.io/libcontainerssh/auth"
+    authWebhook "go.containerssh.io/libcontainerssh/auth/webhook"
+    "go.containerssh.io/libcontainerssh/config"
+    configWebhook "go.containerssh.io/libcontainerssh/config/webhook"
+    "go.containerssh.io/libcontainerssh/http"
+    "go.containerssh.io/libcontainerssh/log"
+    "go.containerssh.io/libcontainerssh/metadata"
+    "go.containerssh.io/libcontainerssh/service"
 )
 
 type authHandler struct {
+}
+
+// swagger:operation POST /authz Authentication authPassword
+//
+// Password authentication
+//
+// ---
+// parameters:
+// - name: request
+//   in: body
+//   description: The authentication request
+//   required: true
+//   schema:
+//     "$ref": "#/definitions/PasswordAuthRequest"
+// responses:
+//   "200":
+//     "$ref": "#/responses/AuthResponse"
+func (a *authHandler) OnAuthorization(meta metadata.ConnectionAuthenticatedMetadata) (
+    bool,
+    metadata.ConnectionAuthenticatedMetadata,
+    error,
+) {
+    return true, meta.Authenticated(meta.Username), nil
 }
 
 // swagger:operation POST /password Authentication authPassword
@@ -51,16 +76,17 @@ type authHandler struct {
 // responses:
 //   "200":
 //     "$ref": "#/responses/AuthResponse"
-func (a *authHandler) OnPassword(Username string, _ []byte, _ string, _ string) (
-	bool,
-	error,
+func (a *authHandler) OnPassword(metadata metadata.ConnectionAuthPendingMetadata, password []byte) (
+    bool,
+    metadata.ConnectionAuthenticatedMetadata,
+    error,
 ) {
-	if os.Getenv("CONTAINERSSH_ALLOW_ALL") == "1" ||
-		Username == "foo" ||
-		Username == "busybox" {
-		return true, nil
-	}
-	return false, nil
+    if os.Getenv("CONTAINERSSH_ALLOW_ALL") == "1" ||
+        metadata.Username == "foo" ||
+        metadata.Username == "busybox" {
+        return true, metadata.Authenticated(metadata.Username), nil
+    }
+    return false, metadata.AuthFailed(), nil
 }
 
 // swagger:operation POST /pubkey Authentication authPubKey
@@ -78,14 +104,15 @@ func (a *authHandler) OnPassword(Username string, _ []byte, _ string, _ string) 
 // responses:
 //   "200":
 //     "$ref": "#/responses/AuthResponse"
-func (a *authHandler) OnPubKey(Username string, _ string, _ string, _ string) (
-	bool,
-	error,
+func (a *authHandler) OnPubKey(meta metadata.ConnectionAuthPendingMetadata, publicKey auth.PublicKey) (
+    bool,
+    metadata.ConnectionAuthenticatedMetadata,
+    error,
 ) {
-	if Username == "foo" || Username == "busybox" {
-		return true, nil
-	}
-	return false, nil
+    if meta.Username == "foo" || meta.Username == "busybox" {
+        return true, meta.Authenticated(meta.Username), nil
+    }
+    return false, meta.AuthFailed(), nil
 }
 
 type configHandler struct {
@@ -106,99 +133,100 @@ type configHandler struct {
 //   "200":
 //     "$ref": "#/responses/ConfigResponse"
 
-func (c *configHandler) OnConfig(request configuration.ConfigRequest) (configuration.AppConfig, error) {
-	config := configuration.AppConfig{}
+func (c *configHandler) OnConfig(request config.Request) (config.AppConfig, error) {
+    cfg := config.AppConfig{}
 
-	if request.Username == "busybox" {
-		config.DockerRun.Config.ContainerConfig = &container.Config{}
-		config.DockerRun.Config.ContainerConfig.Image = "busybox"
+    if request.Username == "busybox" {
+        cfg.Docker.Execution.Launch.ContainerConfig = &container.Config{}
+        cfg.Docker.Execution.Launch.ContainerConfig.Image = "busybox"
+        cfg.Docker.Execution.DisableAgent = true
+        cfg.Docker.Execution.Mode = config.DockerExecutionModeSession
+        cfg.Docker.Execution.ShellCommand = []string{"/bin/sh"}
+    }
 
-		config.Docker.Execution.Launch.ContainerConfig = &container.Config{}
-		config.Docker.Execution.Launch.ContainerConfig.Image = "busybox"
-		config.Docker.Execution.DisableAgent = true
-		config.Docker.Execution.Mode = docker.ExecutionModeSession
-		config.Docker.Execution.ShellCommand = []string{"/bin/sh"}
-	}
-
-	return config, nil
+    return cfg, nil
 }
 
 type handler struct {
-	auth   goHttp.Handler
-	config goHttp.Handler
+    auth   goHttp.Handler
+    config goHttp.Handler
 }
 
 func (h *handler) ServeHTTP(writer goHttp.ResponseWriter, request *goHttp.Request) {
-	switch request.URL.Path {
-	case "/password":
-		fallthrough
-	case "/pubkey":
-		h.auth.ServeHTTP(writer, request)
-	case "/config":
-		h.config.ServeHTTP(writer, request)
-	default:
-		writer.WriteHeader(404)
-	}
+    switch request.URL.Path {
+    case "/password":
+        fallthrough
+    case "/pubkey":
+        h.auth.ServeHTTP(writer, request)
+    case "/config":
+        h.config.ServeHTTP(writer, request)
+    default:
+        writer.WriteHeader(404)
+    }
 }
 
 func main() {
-	logger, err := log.NewLogger(log.Config{
-		Level:       log.LevelDebug,
-		Format:      log.FormatLJSON,
-		Destination: log.DestinationStdout,
-	})
-	if err != nil {
-		panic(err)
-	}
-	authHTTPHandler := auth.NewHandler(&authHandler{}, logger)
-	configHTTPHandler, err := configuration.NewHandler(&configHandler{}, logger)
-	if err != nil {
-		panic(err)
-	}
+    logger, err := log.NewLogger(
+        config.LogConfig{
+            Level:       config.LogLevelDebug,
+            Format:      config.LogFormatLJSON,
+            Destination: config.LogDestinationStdout,
+        },
+    )
+    if err != nil {
+        panic(err)
+    }
+    authHTTPHandler := authWebhook.NewHandler(&authHandler{}, logger)
+    configHTTPHandler, err := configWebhook.NewHandler(&configHandler{}, logger)
+    if err != nil {
+        panic(err)
+    }
 
-	srv, err := http.NewServer(
-		"authconfig",
-		http.ServerConfiguration{
-			Listen: "0.0.0.0:8080",
-		},
-		&handler{
-			auth:   authHTTPHandler,
-			config: configHTTPHandler,
-		},
-		logger,
-		func(s string) {
+    srv, err := http.NewServer(
+        "authconfig",
+        config.HTTPServerConfiguration{
+            Listen: "0.0.0.0:8080",
+        },
+        &handler{
+            auth:   authHTTPHandler,
+            config: configHTTPHandler,
+        },
+        logger,
+        func(s string) {
 
-		},
-	)
-	if err != nil {
-		panic(err)
-	}
+        },
+    )
+    if err != nil {
+        panic(err)
+    }
 
-	running := make(chan struct{})
-	stopped := make(chan struct{})
-	lifecycle := service.NewLifecycle(srv)
-	lifecycle.OnRunning(
-		func(s service.Service, l service.Lifecycle) {
-			println("Test Auth-Config Server is now running...")
-			close(running)
-		}).OnStopped(
-		func(s service.Service, l service.Lifecycle) {
-			close(stopped)
-		})
-	exitSignalList := []os.Signal{os.Interrupt, os.Kill, syscall.SIGINT, syscall.SIGTERM}
-	exitSignals := make(chan os.Signal, 1)
-	signal.Notify(exitSignals, exitSignalList...)
-	go func() {
-		if err := lifecycle.Run(); err != nil {
-			panic(err)
-		}
-	}()
-	select {
-	case <-running:
-		if _, ok := <-exitSignals; ok {
-			println("Stopping Test Auth-Config Server...")
-			lifecycle.Stop(context.Background())
-		}
-	case <-stopped:
-	}
+    running := make(chan struct{})
+    stopped := make(chan struct{})
+    lifecycle := service.NewLifecycle(srv)
+    lifecycle.OnRunning(
+        func(s service.Service, l service.Lifecycle) {
+            println("Test Auth-Config Server is now running...")
+            close(running)
+        },
+    ).OnStopped(
+        func(s service.Service, l service.Lifecycle) {
+            close(stopped)
+        },
+    )
+    exitSignalList := []os.Signal{os.Interrupt, os.Kill, syscall.SIGINT, syscall.SIGTERM}
+    exitSignals := make(chan os.Signal, 1)
+    signal.Notify(exitSignals, exitSignalList...)
+    go func() {
+        if err := lifecycle.Run(); err != nil {
+            panic(err)
+        }
+    }()
+    select {
+    case <-running:
+        if _, ok := <-exitSignals; ok {
+            println("Stopping Test Auth-Config Server...")
+            lifecycle.Stop(context.Background())
+        }
+    case <-stopped:
+    }
 }
