@@ -1,0 +1,36 @@
+run:
+  timeout: 5m
+linters:
+  enable:
+    - nolintlint
+    - unconvert
+    - asciicheck
+    - bodyclose
+    - dupl
+    - exportloopref
+    - dogsled
+    - importas
+    - errorlint
+    - durationcheck
+    - testpackage
+    - whitespace
+  disable:
+    - unused
+    - deadcode
+linters-settings:
+  gomoddirectives:
+    replace-allow-list:
+      - gopkg.in/yaml.v2
+  govet:
+    enable-all: true
+    check-shadowing: false
+    disable:
+      # Remove this in a future PR to optimize struct usage.
+      - fieldalignment
+      # We don't care about variable shadowing.
+      - shadow
+  stylecheck:
+    checks:
+      - all
+issues:
+  exclude-use-default: false
