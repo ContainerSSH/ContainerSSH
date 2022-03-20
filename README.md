@@ -13,9 +13,13 @@
 
 ## ContainerSSH in One Minute
 
-In a hurry? This one minute video explains everything you need to know about ContainerSSH.
+In a hurry? This one-minute video explains everything you need to know about ContainerSSH.
 
 [![An image with a YouTube play button on it.](https://containerssh.io/images/containerssh-intro-preview.png)](https://youtu.be/Cs9OrnPi2IM)
+
+## Need help?
+
+[Join the Slack channel »](https://join.slack.com/t/containerssh/shared_invite/zt-w2ulatkm-hjGHk8OaxQCBX79XKJHAQQ)
 
 ## Use cases
 
