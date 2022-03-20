@@ -51,5 +51,6 @@ jobs:
           args: release --rm-dist
       - uses: actions/upload-artifact@v3
         with:
-          name: build
-          path: build-results
+          name: build-results
+          path: build
+          if-no-files-found: error
