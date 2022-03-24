@@ -22,7 +22,7 @@ require (
 	github.com/containerssh/sshserver v1.0.0
 	github.com/containerssh/structutils v1.1.0
 	github.com/cucumber/godog v0.11.0
-	github.com/docker/docker v20.10.6+incompatible
+	github.com/docker/docker v20.10.14+incompatible
 	github.com/docker/go-connections v0.4.0
 	github.com/go-enry/go-license-detector/v4 v4.1.0
 	github.com/google/go-cmp v0.5.6 // indirect
