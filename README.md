@@ -23,29 +23,23 @@ In a hurry? This one-minute video explains everything you need to know about Con
 
 ## Use cases
 
-### Offering SSH in a web hosting service?
+### Build a lab
 
-ContainerSSH lets you dynamically create and destroy containers when your users connect. Authenticate against your existing user database and mount directories based on your existing permission matrix.
+Building a lab environment can be time-consuming. ContainerSSH solves this by providing dynamic SSH access with APIs, automatic cleanup on logout using ephemeral containers, and persistent volumes for storing data. **Perfect for vendor and student labs.**
 
-[Read more »](https://containerssh.io/usecases/webhosting/)
+[Read more »](https://containerssh.io/usecases/lab/)
 
-### Looking for a Linux learning environment?
+### Debug a production system
 
-With ContainerSSH you can launch Linux-based containers on demand when your students connect. You can supply your own container image and mount folders with learning and testing material as needed.</p>
+Provide **production access to your developers**, give them their usual tools while logging all changes. Authorize their access and create short-lived credentials for the database using simple webhooks. Clean up the environment on disconnect.
 
-[Read more »](https://containerssh.io/usecases/learning/)
+[Read more »](https://containerssh.io/usecases/debugging/)
 
-### Building a honeypot?
+### Run a honeypot
 
-With the dynamic authentication server of ContainerSSH you can capture usernames and passwords, and you container environment can log commands that are executed.
+Study SSH attack patterns up close. Drop attackers safely into network-isolated containers or even virtual machines, and **capture their every move** using the audit logging ContainerSSH provides. The built-in S3 upload ensures you don't lose your data.
 
 [Read more »](https://containerssh.io/usecases/honeypots/)
-
-### Building a high security environment?
-
-ContainerSSH is being used to provide dynamic console access to an environment with sensitive credentials. Use the authentication and configuration server to dynamically provision credentials in conjunction with secret management systems such as Hashicorp Vault.
-
-[Read more »](https://containerssh.io/usecases/security/)
 
 ## How does it work?
 
