@@ -4,11 +4,11 @@ import (
 	"context"
 	"fmt"
 	"io"
-	"net"
 
 	"github.com/containerssh/libcontainerssh/auth"
 	auth2 "github.com/containerssh/libcontainerssh/internal/auth"
 	message2 "github.com/containerssh/libcontainerssh/message"
+	"github.com/containerssh/libcontainerssh/metadata"
 
 	"golang.org/x/crypto/ssh"
 )
@@ -27,10 +27,7 @@ type Handler interface {
 
 	// OnNetworkConnection is called when a new network connection is opened. It must either return a
 	// NetworkConnectionHandler object or an error. In case of an error the network connection is closed.
-	//
-	// The ip parameter provides the IP address of the connecting user. The connectionID parameter provides an opaque
-	// binary identifier for the connection that can be used to track the connection across multiple subsystems.
-	OnNetworkConnection(client net.TCPAddr, connectionID string) (NetworkConnectionHandler, error)
+	OnNetworkConnection(metadata.ConnectionMetadata) (NetworkConnectionHandler, metadata.ConnectionMetadata, error)
 }
 
 // AuthResponse is the result of the authentication process.
@@ -98,44 +95,56 @@ func (k *KeyboardInteractiveAnswers) GetByQuestionText(question string) (string,
 // handshake.
 type NetworkConnectionHandler interface {
 	// OnAuthPassword is called when a user attempts a password authentication. The implementation must always supply
-	//                AuthResponse and may supply error as a reason description.
-	OnAuthPassword(username string, password []byte, clientVersion string) (response AuthResponse, metadata *auth.ConnectionMetadata, reason error)
+	// AuthResponse and may supply error as a reason description.
+	OnAuthPassword(meta metadata.ConnectionAuthPendingMetadata, password []byte) (
+		AuthResponse,
+		metadata.ConnectionAuthenticatedMetadata,
+		error,
+	)
 
-	// OnAuthPassword is called when a user attempts a pubkey authentication. The implementation must always supply
-	//                AuthResponse and may supply error as a reason description. The pubKey parameter is an SSH key in
-	//               the form of "ssh-rsa KEY HERE".
-	OnAuthPubKey(username string, pubKey string, clientVersion string) (response AuthResponse, metadata *auth.ConnectionMetadata, reason error)
+	// OnAuthPubKey is called when a user attempts a pubkey authentication. The implementation must always supply
+	// AuthResponse and may supply error as a reason description. The pubKey parameter is an SSH key in
+	// the form of "ssh-rsa KEY HERE".
+	OnAuthPubKey(meta metadata.ConnectionAuthPendingMetadata, pubKey auth.PublicKey) (
+		AuthResponse,
+		metadata.ConnectionAuthenticatedMetadata,
+		error,
+	)
 
 	// OnAuthKeyboardInteractive is a callback for interactive authentication. The implementer will be passed a callback
 	// function that can be used to issue challenges to the user. These challenges can, but do not have to contain
 	// questions.
 	OnAuthKeyboardInteractive(
-		user string,
+		meta metadata.ConnectionAuthPendingMetadata,
 		challenge func(
 			instruction string,
 			questions KeyboardInteractiveQuestions,
 		) (answers KeyboardInteractiveAnswers, err error),
-		clientVersion string,
-	) (response AuthResponse, metadata *auth.ConnectionMetadata, reason error)
+	) (AuthResponse, metadata.ConnectionAuthenticatedMetadata, error)
 
-	OnAuthGSSAPI() auth2.GSSAPIServer
+	// OnAuthGSSAPI returns a GSSAPIServer which can perform a GSSAPI authentication.
+	OnAuthGSSAPI(metadata metadata.ConnectionMetadata) auth2.GSSAPIServer
 
 	// OnHandshakeFailed is called when the SSH handshake failed. This method is also called after an authentication
-	//                   failure. After this method is the connection will be closed and the OnDisconnect method will be
-	//                   called.
-	OnHandshakeFailed(reason error)
+	// failure. After this method is the connection will be closed and the OnDisconnect method will be
+	// called.
+	OnHandshakeFailed(metadata metadata.ConnectionMetadata, reason error)
 
-	// OnHandshakeSuccess is called when the SSH handshake was successful. It returns connection to process
-	//                    requests, or failureReason to indicate that a backend error has happened. In this case, the
-	//                    connection will be closed and OnDisconnect will be called.
-	OnHandshakeSuccess(username string, clientVersion string, metadata *auth.ConnectionMetadata) (connection SSHConnectionHandler, failureReason error)
+	// OnHandshakeSuccess is called when the SSH handshake was successful. It returns metadata to process
+	// requests, or failureReason to indicate that a backend error has happened. In this case, the
+	// metadata will be closed and OnDisconnect will be called.
+	OnHandshakeSuccess(metadata.ConnectionAuthenticatedMetadata) (
+		connection SSHConnectionHandler,
+		meta metadata.ConnectionAuthenticatedMetadata,
+		failureReason error,
+	)
 
 	// OnDisconnect is called when the network connection is closed.
 	OnDisconnect()
 
 	// OnShutdown is called when a shutdown of the SSH server is desired. The shutdownContext is passed as a deadline
-	//            for the shutdown, after which the server should abort all running connections and return as fast as
-	//            possible.
+	// for the shutdown, after which the server should abort all running connections and return as fast as
+	// possible.
 	OnShutdown(shutdownContext context.Context)
 }
 
@@ -186,11 +195,11 @@ type SSHConnectionHandler interface {
 	//                  the channel result if the channel was successful, or failureReason to state why the channel
 	//                  should be rejected.
 	//
-	// channelID is an ID uniquely identifying the channel within the connection.
+	// channelMetadata contains the metadata for the channel.
 	// extraData contains the binary extra data submitted by the client. This is usually empty.
 	// session contains a set of calls that can be used to manipulate the SSH session.
 	OnSessionChannel(
-		channelID uint64,
+		channelMetadata metadata.ChannelMetadata,
 		extraData []byte,
 		session SessionChannel,
 	) (channel SessionChannelHandler, failureReason ChannelRejection)

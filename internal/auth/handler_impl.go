@@ -34,7 +34,7 @@ func (h handler) ServeHTTP(writer goHttp.ResponseWriter, request *goHttp.Request
 
 type authzHandler struct {
 	backend Handler
-	logger log.Logger
+	logger  log.Logger
 }
 
 func (p *authzHandler) OnRequest(request http.ServerRequest, response http.ServerResponse) error {
@@ -42,26 +42,24 @@ func (p *authzHandler) OnRequest(request http.ServerRequest, response http.Serve
 	if err := request.Decode(&requestObject); err != nil {
 		return err
 	}
-	success, metadata, err := p.backend.OnAuthorization(
-		requestObject.PrincipalUsername,
-		requestObject.LoginUsername,
-		requestObject.RemoteAddress,
-		requestObject.ConnectionID,
+	success, meta, err := p.backend.OnAuthorization(
+		requestObject.ConnectionAuthenticatedMetadata,
 	)
 	if err != nil {
 		p.logger.Debug(message.Wrap(err, message.EAuthRequestDecodeFailed, "failed to execute authorization request"))
 		response.SetStatus(500)
 		response.SetBody(
 			auth.ResponseBody{
-				Success:  false,
-				Metadata: metadata,
-			})
+				ConnectionAuthenticatedMetadata: requestObject.ConnectionAuthenticatedMetadata,
+				Success:                         false,
+			},
+		)
 		return nil
 	} else {
 		response.SetBody(
 			auth.ResponseBody{
-				Success:  success,
-				Metadata: metadata,
+				ConnectionAuthenticatedMetadata: meta,
+				Success:                         success,
 			})
 	}
 	return nil
@@ -81,26 +79,21 @@ func (p *passwordHandler) OnRequest(request http.ServerRequest, response http.Se
 	if err != nil {
 		return fmt.Errorf("failed to decode password (%w)", err)
 	}
-	success, metadata, err := p.backend.OnPassword(
-		requestObject.Username,
-		password,
-		requestObject.RemoteAddress,
-		requestObject.ConnectionID,
-	)
+	success, meta, err := p.backend.OnPassword(requestObject.ConnectionAuthPendingMetadata, password)
 	if err != nil {
 		p.logger.Debug(message.Wrap(err, message.EAuthRequestDecodeFailed, "failed to execute password request"))
 		response.SetStatus(500)
 		response.SetBody(
 			auth.ResponseBody{
-				Success:  false,
-				Metadata: metadata,
+				ConnectionAuthenticatedMetadata: meta,
+				Success:                         false,
 			})
 		return nil
 	} else {
 		response.SetBody(
 			auth.ResponseBody{
-				Success:  success,
-				Metadata: metadata,
+				ConnectionAuthenticatedMetadata: meta,
+				Success:                         success,
 			})
 	}
 	return nil
@@ -116,26 +109,25 @@ func (p *pubKeyHandler) OnRequest(request http.ServerRequest, response http.Serv
 	if err := request.Decode(&requestObject); err != nil {
 		return err
 	}
-	success, metadata, err := p.backend.OnPubKey(
-		requestObject.Username,
+	success, meta, err := p.backend.OnPubKey(
+		requestObject.ConnectionAuthPendingMetadata,
 		requestObject.PublicKey,
-		requestObject.RemoteAddress,
-		requestObject.ConnectionID,
 	)
 	if err != nil {
 		p.logger.Debug(message.Wrap(err, message.EAuthRequestDecodeFailed, "failed to execute public key request"))
 		response.SetStatus(500)
 		response.SetBody(
 			auth.ResponseBody{
-				Success:  false,
-				Metadata: metadata,
-			})
+				ConnectionAuthenticatedMetadata: meta,
+				Success:                         false,
+			},
+		)
 		return nil
 	} else {
 		response.SetBody(
 			auth.ResponseBody{
-				Success:  success,
-				Metadata: metadata,
+				ConnectionAuthenticatedMetadata: meta,
+				Success:                         success,
 			})
 	}
 	return nil

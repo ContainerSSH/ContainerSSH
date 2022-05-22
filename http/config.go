@@ -29,4 +29,3 @@ func (r RequestEncoding) Validate() error {
 		return fmt.Errorf("invalid request encoding: %s", r)
 	}
 }
-

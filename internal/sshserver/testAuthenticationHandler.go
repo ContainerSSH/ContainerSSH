@@ -2,7 +2,8 @@ package sshserver
 
 import (
 	"context"
-	"net"
+
+	"github.com/containerssh/libcontainerssh/metadata"
 )
 
 // testAuthenticationHandler is a conformanceTestHandler that authenticates and passes authentication to the configured backend.
@@ -20,16 +21,15 @@ func (t *testAuthenticationHandler) OnShutdown(ctx context.Context) {
 }
 
 func (t *testAuthenticationHandler) OnNetworkConnection(
-	client net.TCPAddr,
-	connectionID string,
-) (NetworkConnectionHandler, error) {
-	backend, err := t.backend.OnNetworkConnection(client, connectionID)
+	meta metadata.ConnectionMetadata,
+) (NetworkConnectionHandler, metadata.ConnectionMetadata, error) {
+	backend, meta, err := t.backend.OnNetworkConnection(meta)
 	if err != nil {
-		return nil, err
+		return nil, meta, err
 	}
 
 	return &testAuthenticationNetworkHandler{
 		rootHandler: t,
 		backend:     backend,
-	}, nil
+	}, meta, nil
 }

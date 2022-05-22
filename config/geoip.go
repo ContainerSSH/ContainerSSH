@@ -34,12 +34,12 @@ type GeoIPConfig struct {
 // Validate checks the configuration.
 func (config GeoIPConfig) Validate() error {
 	if err := config.Provider.Validate(); err != nil {
-		return err
+		return wrap(err, "provider")
 	}
 	if config.Provider == GeoIPMaxMindProvider {
 		stat, err := os.Stat(config.GeoIP2File)
 		if err != nil {
-			return fmt.Errorf("invalid MaxMind GeoIP2 file: %s (%w)", config.GeoIP2File, err)
+			return wrapWithMessage(err, "maxmind-geoip2-file", "invalid MaxMind GeoIP2 file: %s", config.GeoIP2File)
 		}
 		if stat.IsDir() {
 			return fmt.Errorf("invalid MaxMind GeoIP2 file: %s (is a directory)", config.GeoIP2File)

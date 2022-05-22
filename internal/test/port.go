@@ -45,5 +45,3 @@ func GetNextPort(t *testing.T, purpose string) int {
 	t.Logf("Allocating port %d for test %s for %s", port, t.Name(), purpose)
 	return port
 }
-
-

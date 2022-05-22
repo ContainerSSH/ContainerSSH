@@ -7,9 +7,9 @@ import (
 )
 
 type lifecycle struct {
-	service Service
-	state   State
-	mutex   *sync.Mutex
+	service           Service
+	state             State
+	mutex             *sync.Mutex
 	runningContext    context.Context
 	cancelRun         func()
 	shutdownContext   context.Context

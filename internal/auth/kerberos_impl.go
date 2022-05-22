@@ -4,49 +4,53 @@ import (
 	"fmt"
 	"net"
 
-	"github.com/containerssh/libcontainerssh/internal/ssh"
-	"github.com/containerssh/libcontainerssh/auth"
-	"github.com/containerssh/libcontainerssh/log"
-	"github.com/containerssh/libcontainerssh/message"
-	"github.com/containerssh/libcontainerssh/config"
-	internalSsh "github.com/containerssh/libcontainerssh/internal/ssh"
-
-	"github.com/containerssh/gokrb5/v8/gssapi"
-	"gopkg.in/jcmturner/goidentity.v3"
-	"github.com/containerssh/gokrb5/v8/keytab"
-	"github.com/containerssh/gokrb5/v8/credentials"
+	"github.com/containerssh/gokrb5/v8/asn1tools"
 	"github.com/containerssh/gokrb5/v8/client"
 	krbconf "github.com/containerssh/gokrb5/v8/config"
+	"github.com/containerssh/gokrb5/v8/credentials"
+	"github.com/containerssh/gokrb5/v8/gssapi"
+	"github.com/containerssh/gokrb5/v8/iana/keyusage"
+	"github.com/containerssh/gokrb5/v8/keytab"
 	krbmsg "github.com/containerssh/gokrb5/v8/messages"
 	krb5svc "github.com/containerssh/gokrb5/v8/service"
 	"github.com/containerssh/gokrb5/v8/spnego"
 	"github.com/containerssh/gokrb5/v8/types"
-	"github.com/containerssh/gokrb5/v8/iana/keyusage"
-	"github.com/containerssh/gokrb5/v8/asn1tools"
+	"github.com/containerssh/libcontainerssh/config"
+	"github.com/containerssh/libcontainerssh/internal/ssh"
+	internalSsh "github.com/containerssh/libcontainerssh/internal/ssh"
+	"github.com/containerssh/libcontainerssh/log"
+	"github.com/containerssh/libcontainerssh/message"
+	"github.com/containerssh/libcontainerssh/metadata"
+	"gopkg.in/jcmturner/goidentity.v3"
 )
 
 type kerberosAuthContext struct {
 	client *kerberosAuthClient
 
 	connectionId string
-	remoteAddr net.IP
+	remoteAddr   net.IP
 
-	key types.EncryptionKey
+	key               types.EncryptionKey
 	principalUsername string
-	loginUsername string
-	credentials []byte
+	loginUsername     string
+	credentials       []byte
 
-	metadata *auth.ConnectionMetadata
+	meta    metadata.ConnectionAuthenticatedMetadata
 	success bool
-	err error
+	err     error
+}
+
+func (k kerberosAuthContext) AuthenticatedUsername() string {
+	return k.principalUsername
 }
 
 type kerberosAuthClient struct {
-	logger log.Logger
-	config config.AuthKerberosClientConfig
-	keytab *keytab.Keytab
+	logger     log.Logger
+	config     config.AuthKerberosClientConfig
+	keytab     *keytab.Keytab
 	clientConf *krbconf.Config
-	acceptor *types.PrincipalName
+	acceptor   *types.PrincipalName
+	authType   AuthenticationType
 }
 
 func (k kerberosAuthContext) Success() bool {
@@ -55,133 +59,125 @@ func (k kerberosAuthContext) Success() bool {
 
 func (k kerberosAuthContext) Error() error {
 	if !k.success && k.err == nil {
-		k.err = fmt.Errorf("Unknown error happened during kerberos authentication")
+		k.err = fmt.Errorf("an unknown error happened during kerberos authentication")
 	}
 	return k.err
 }
 
-func (k kerberosAuthContext) Metadata() *auth.ConnectionMetadata {
-	if k.metadata == nil {
-		k.metadata = &auth.ConnectionMetadata{}
-	}
+func (k kerberosAuthContext) Metadata() metadata.ConnectionAuthenticatedMetadata {
 	if k.client == nil {
-		return nil
+		return k.meta
 	}
+	meta := k.meta
 	if k.client.config.CredentialCachePath != "" && k.credentials != nil {
 		path := k.client.config.CredentialCachePath
-		k.metadata.GetFiles()[path] = k.credentials
-		k.metadata.GetEnvironment()["KRB5CCNAME"] = "FILE:" + k.client.config.CredentialCachePath
+		meta.GetFiles()[path] = metadata.BinaryValue{
+			Value:     k.credentials,
+			Sensitive: true,
+		}
+		meta.GetEnvironment()["KRB5CCNAME"] = metadata.Value{
+			Value: "FILE:" + k.client.config.CredentialCachePath,
+		}
 	}
-	return k.metadata
+	return meta
 }
 
 func (k kerberosAuthContext) OnDisconnect() {
 
 }
 
-func (c *kerberosAuthClient) KeyboardInteractive(
-	_ string,
-	_ func(instruction string, questions KeyboardInteractiveQuestions) (
-		answers KeyboardInteractiveAnswers,
-		err error,
-	),
-	_ string,
-	_ net.IP,
-) AuthenticationContext {
-	return &kerberosAuthContext{
-		client: c,
-		err: message.UserMessage(
-			message.EAuthUnsupported,
-			"Keyboard-interactive authentication is not available.",
-			"Kerberos authentication doesn't support keyboard-interactive.",
-		),
-	}
-}
-
 func (c *kerberosAuthClient) Password(
-	username string,
+	meta metadata.ConnectionAuthPendingMetadata,
 	password []byte,
-	connectionID string,
-	remoteAddr net.IP,
 ) AuthenticationContext {
-	if !c.config.AllowPassword {
+	if c.authType != AuthenticationTypePassword && c.authType != AuthenticationTypeAll {
 		return &kerberosAuthContext{
-			client: c,
+			meta:    meta.AuthFailed(),
 			success: false,
-			err: fmt.Errorf("Password authentication disabled for kerberos backend"),
+			err:     fmt.Errorf("authentication client not configured for password authentication"),
 		}
 	}
 
 	cl := client.NewWithPassword(
-		username,
+		meta.Username,
 		c.clientConf.LibDefaults.DefaultRealm,
 		string(password),
 		c.clientConf,
-		client.DisablePAFXFAST(true), //Breaks Active-Directory
+		client.DisablePAFXFAST(true), // PAFXFAST breaks Active-Directory, see https://github.com/jcmturner/gokrb5/blob/master/USAGE.md#active-directory-kdc-and-fast-negotiation
 	)
 
 	err := cl.Login()
 	if err != nil {
 		return kerberosAuthContext{
-			client: c,
+			client:  c,
 			success: false,
-			err: err,
+			err:     err,
 		}
 	}
 
 	ccache, err := cl.GetCCache()
 	if err != nil {
 		return kerberosAuthContext{
-			client: c,
+			client:  c,
 			success: false,
-			err: err,
+			err:     err,
 		}
 	}
 
 	ccacheMar, err := ccache.Marshal()
 	if err != nil {
 		return kerberosAuthContext{
-			client: c,
+			client:  c,
 			success: false,
-			err: err,
+			err:     err,
 		}
 	}
 
 	ctx := kerberosAuthContext{
-		client: c,
-		principalUsername: username,
-		loginUsername: username,
-		credentials: ccacheMar,
-		connectionId: connectionID,
-		remoteAddr: remoteAddr,
-		success: true,
-		err: nil,
+		client:            c,
+		principalUsername: meta.Username,
+		loginUsername:     meta.Username,
+		credentials:       ccacheMar,
+		connectionId:      meta.ConnectionID,
+		remoteAddr:        meta.RemoteAddress.IP,
+		success:           true,
+		err:               nil,
 	}
 
-	if err := ctx.AllowLogin(username); err != nil {
+	authMeta, err := ctx.AllowLogin(meta.Username, meta)
+	if err != nil {
 		return kerberosAuthContext{
-			client: c,
+			client:  c,
 			success: false,
-			err: err,
+			err:     err,
 		}
 	}
 
-	return ctx
+	return kerberosPasswordAuthContext{
+		ctx,
+		authMeta,
+	}
 }
 
-func (c *kerberosAuthClient) PubKey(
-	_ string,
-	_ string,
-	_ string,
-	_ net.IP,
-) AuthenticationContext {
+type kerberosPasswordAuthContext struct {
+	kerberosAuthContext
+
+	meta metadata.ConnectionAuthenticatedMetadata
+}
+
+func (c *kerberosAuthClient) GSSAPI(meta metadata.ConnectionMetadata) GSSAPIServer {
+	if c.authType != AuthenticationTypeGSSAPI && c.authType != AuthenticationTypeAll {
+		return &kerberosAuthContext{
+			connectionId: meta.ConnectionID,
+			remoteAddr:   meta.RemoteAddress.IP,
+			success:      false,
+			err:          fmt.Errorf("authentication client not configured for GSSAPI authentication"),
+		}
+	}
 	return &kerberosAuthContext{
-		client: c,
-		err: message.UserMessage(
-			message.EAuthUnsupported,
-			"Keyboard-interactive authentication is not available.",
-			"Kerberos authentication doesn't support keyboard-interactive.",
-		),
+		client:       c,
+		connectionId: meta.ConnectionID,
+		remoteAddr:   meta.RemoteAddress.IP,
 	}
 }
 
@@ -240,7 +236,7 @@ func (k *kerberosAuthContext) AcceptSecContext(token []byte) (outputToken []byte
 
 		repToken := spnego.NewKRB5TokenAPREP()
 		repToken.APRep = rep
-		mar2, err:= repToken.Marshal()
+		mar2, err := repToken.Marshal()
 		asn1tools.AddASNAppTag(mar2, 060)
 		if err != nil {
 			return nil, "", false, message.Wrap(
@@ -371,39 +367,23 @@ func (k *kerberosAuthContext) DeleteSecContext() error {
 	return nil
 }
 
-func (k *kerberosAuthContext) AllowLogin(username string) error {
+func (k *kerberosAuthContext) AllowLogin(
+	username string,
+	meta metadata.ConnectionAuthPendingMetadata,
+) (metadata.ConnectionAuthenticatedMetadata, error) {
 	if !k.Success() {
-		return k.Error()
+		return meta.AuthFailed(), nil
 	}
 
 	if k.loginUsername != username {
-		return message.NewMessage(
-			message.EAuthKerberosVerificationFailed,
-			"Tried to authorize on a username %s different from the one in the MIC %s",
-			username,
-			k.loginUsername,
-		)
+		return meta.AuthFailed(), nil
 	}
 
 	// Note: this is a redundant check as VerifyMIC already checks this
-	// case, but it never hurts to be paranoid
+	// case, but it never hurts to be paranoid.
 	if k.client.config.EnforceUsername && username != k.principalUsername {
-		return message.UserMessage(
-			message.EAuthKerberosVerificationFailed,
-			"Unable login with the requested username",
-			"Cannot login to account %s using principal %s",
-			username,
-			k.principalUsername,
-		)
+		return meta.AuthFailed(), nil
 	}
 
-	return nil
-}
-
-func (c *kerberosAuthClient) GSSAPIConfig(connectionId string, remoteAddr net.IP) GSSAPIServer {
-	return &kerberosAuthContext{
-		client: c,
-		connectionId: connectionId,
-		remoteAddr: remoteAddr,
-	}
+	return meta.Authenticated(username), nil
 }

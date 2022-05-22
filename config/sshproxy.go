@@ -49,31 +49,31 @@ type SSHProxyConfig struct {
 // Validate checks the configuration for the backing SSH server.
 func (c SSHProxyConfig) Validate() error {
 	if c.Server == "" {
-		return fmt.Errorf("server cannot be empty")
+		return newError("server", "server cannot be empty")
 	}
 	if c.Port == 0 || c.Port > 65535 {
-		return fmt.Errorf("invalid port number: %d", c.Port)
+		return newError("port", "invalid port number: %d", c.Port)
 	}
 	if c.Username == "" && !c.UsernamePassThrough {
-		return fmt.Errorf("username cannot be empty when usernamePassThrough is not set")
+		return newError("username", "username cannot be empty when usernamePassThrough is not set")
 	}
 	if len(c.AllowedHostKeyFingerprints) == 0 {
-		return fmt.Errorf("allowedHostKeyFingerprints cannot be empty")
+		return newError("allowedHostKeyFingerprints", "allowedHostKeyFingerprints cannot be empty")
 	}
 	if err := c.Ciphers.Validate(); err != nil {
-		return fmt.Errorf("invalid cipher configuration (%w)", err)
+		return wrap(err, "ciphers")
 	}
 	if err := c.KexAlgorithms.Validate(); err != nil {
-		return fmt.Errorf("invalid key exchange configuration (%w)", err)
+		return wrap(err, "kex")
 	}
 	if err := c.MACs.Validate(); err != nil {
-		return fmt.Errorf("invalid MAC configuration (%w)", err)
+		return wrap(err, "macs")
 	}
 	if err := c.HostKeyAlgorithms.Validate(); err != nil {
-		return fmt.Errorf("invalid host key algorithms (%w)", err)
+		return wrap(err, "hostKeyAlgos")
 	}
 	if err := c.ClientVersion.Validate(); err != nil {
-		return fmt.Errorf("invalid SSH client version (%w)", err)
+		return wrap(err, "clientVersion")
 	}
 	return nil
 }

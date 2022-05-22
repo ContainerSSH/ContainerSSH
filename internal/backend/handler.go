@@ -7,7 +7,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/containerssh/libcontainerssh/auth"
+	auth2 "github.com/containerssh/libcontainerssh/auth"
 	"github.com/containerssh/libcontainerssh/config"
 	internalConfig "github.com/containerssh/libcontainerssh/internal/config"
 	"github.com/containerssh/libcontainerssh/internal/docker"
@@ -19,6 +19,7 @@ import (
 	"github.com/containerssh/libcontainerssh/internal/structutils"
 	"github.com/containerssh/libcontainerssh/log"
 	"github.com/containerssh/libcontainerssh/message"
+	"github.com/containerssh/libcontainerssh/metadata"
 )
 
 type handler struct {
@@ -35,18 +36,17 @@ type handler struct {
 }
 
 func (h *handler) OnNetworkConnection(
-	remoteAddr net.TCPAddr,
-	connectionID string,
-) (sshserver.NetworkConnectionHandler, error) {
+	meta metadata.ConnectionMetadata,
+) (sshserver.NetworkConnectionHandler, metadata.ConnectionMetadata, error) {
 	return &networkHandler{
 		logger: h.logger.
-			WithLabel("connectionId", connectionID).
-			WithLabel("remoteAddr", remoteAddr.IP.String()),
+			WithLabel("connectionId", meta.ConnectionID).
+			WithLabel("remoteAddr", meta.RemoteAddress.IP.String()),
 		rootHandler:  h,
-		remoteAddr:   remoteAddr,
-		connectionID: connectionID,
+		remoteAddr:   net.TCPAddr(meta.RemoteAddress),
+		connectionID: meta.ConnectionID,
 		lock:         &sync.Mutex{},
-	}, nil
+	}, meta, nil
 }
 
 type networkHandler struct {
@@ -60,47 +60,62 @@ type networkHandler struct {
 	logger       log.Logger
 }
 
-func (n *networkHandler) OnAuthPassword(_ string, _ []byte, _ string) (response sshserver.AuthResponse, metadata *auth.ConnectionMetadata, reason error) {
-	return n.authResponse()
+func (n *networkHandler) OnAuthPassword(meta metadata.ConnectionAuthPendingMetadata, _ []byte) (
+	sshserver.AuthResponse,
+	metadata.ConnectionAuthenticatedMetadata,
+	error,
+) {
+	return n.authResponse(meta)
 }
 
-func (n *networkHandler) authResponse() (sshserver.AuthResponse, *auth.ConnectionMetadata, error) {
+func (n *networkHandler) authResponse(meta metadata.ConnectionAuthPendingMetadata) (
+	sshserver.AuthResponse,
+	metadata.ConnectionAuthenticatedMetadata,
+	error,
+) {
 	switch n.rootHandler.authResponse {
 	case sshserver.AuthResponseUnavailable:
-		return sshserver.AuthResponseUnavailable, nil, fmt.Errorf("the backend handler does not support authentication")
+		return sshserver.AuthResponseUnavailable, meta.AuthFailed(), fmt.Errorf("the backend handler does not support authentication")
+	case sshserver.AuthResponseSuccess:
+		return sshserver.AuthResponseSuccess, meta.Authenticated(meta.Username), nil
 	default:
-		return n.rootHandler.authResponse, nil, nil
+		return sshserver.AuthResponseFailure, meta.AuthFailed(), nil
 	}
 }
 
-func (n *networkHandler) OnAuthPubKey(_ string, _ string, _ string) (response sshserver.AuthResponse, metadata *auth.ConnectionMetadata, reason error) {
-	return n.authResponse()
+func (n *networkHandler) OnAuthPubKey(
+	meta metadata.ConnectionAuthPendingMetadata,
+	_ auth2.PublicKey,
+) (response sshserver.AuthResponse, metadata metadata.ConnectionAuthenticatedMetadata, reason error) {
+	return n.authResponse(meta)
 }
 
-func (n *networkHandler) OnHandshakeFailed(_ error) {
+func (n *networkHandler) OnHandshakeFailed(metadata.ConnectionMetadata, error) {
 }
 
-func (n *networkHandler) OnHandshakeSuccess(username string, clientVersion string, metadata *auth.ConnectionMetadata) (
+func (n *networkHandler) OnHandshakeSuccess(meta metadata.ConnectionAuthenticatedMetadata) (
 	connection sshserver.SSHConnectionHandler,
+	resultMeta metadata.ConnectionAuthenticatedMetadata,
 	failureReason error,
 ) {
-	appConfig, err := n.loadConnectionSpecificConfig(username, metadata)
+	appConfig, newMeta, err := n.loadConnectionSpecificConfig(meta)
 	if err != nil {
-		return nil, err
+		return nil, meta, err
 	}
 
-	backendLogger := n.logger.WithLevel(appConfig.Log.Level).WithLabel("username", username)
+	backendLogger := n.logger.WithLevel(appConfig.Log.Level).WithLabel(
+		"username",
+		meta.Username,
+	).WithLabel("authenticatedUsername", meta.AuthenticatedUsername)
 
-	return n.initBackend(username, appConfig, backendLogger, clientVersion, metadata)
+	return n.initBackend(newMeta, appConfig, backendLogger)
 }
 
 func (n *networkHandler) initBackend(
-	username string,
+	meta metadata.ConnectionAuthenticatedMetadata,
 	appConfig config.AppConfig,
 	backendLogger log.Logger,
-	version string,
-	metadata *auth.ConnectionMetadata,
-) (sshserver.SSHConnectionHandler, error) {
+) (sshserver.SSHConnectionHandler, metadata.ConnectionAuthenticatedMetadata, error) {
 	backend, failureReason := n.getConfiguredBackend(
 		appConfig,
 		backendLogger,
@@ -108,17 +123,17 @@ func (n *networkHandler) initBackend(
 		n.rootHandler.backendErrorCounter.WithLabels(metrics.Label(MetricLabelBackend, string(appConfig.Backend))),
 	)
 	if failureReason != nil {
-		return nil, failureReason
+		return nil, meta, failureReason
 	}
 
 	// Inject security overlay
 	backend, failureReason = security.New(appConfig.Security, backend, n.logger)
 	if failureReason != nil {
-		return nil, failureReason
+		return nil, meta, failureReason
 	}
 	n.backend = backend
 
-	return backend.OnHandshakeSuccess(username, version, metadata)
+	return backend.OnHandshakeSuccess(meta)
 }
 
 func (n *networkHandler) getConfiguredBackend(
@@ -162,10 +177,10 @@ func (n *networkHandler) getConfiguredBackend(
 }
 
 func (n *networkHandler) loadConnectionSpecificConfig(
-	username string,
-	metadata *auth.ConnectionMetadata,
+	meta metadata.ConnectionAuthenticatedMetadata,
 ) (
 	config.AppConfig,
+	metadata.ConnectionAuthenticatedMetadata,
 	error,
 ) {
 	ctx, cancelFunc := context.WithTimeout(context.Background(), 60*time.Second)
@@ -173,18 +188,16 @@ func (n *networkHandler) loadConnectionSpecificConfig(
 
 	appConfig := config.AppConfig{}
 	if err := structutils.Copy(&appConfig, &n.rootHandler.config); err != nil {
-		return appConfig, fmt.Errorf("failed to copy application configuration (%w)", err)
+		return appConfig, meta, fmt.Errorf("failed to copy application configuration (%w)", err)
 	}
 
-	if err := n.rootHandler.configLoader.LoadConnection(
+	newMeta, err := n.rootHandler.configLoader.LoadConnection(
 		ctx,
-		username,
-		n.remoteAddr,
-		n.connectionID,
-		metadata,
+		meta,
 		&appConfig,
-	); err != nil {
-		return appConfig, fmt.Errorf("failed to load connections-specific configuration (%w)", err)
+	)
+	if err != nil {
+		return appConfig, meta, fmt.Errorf("failed to load connections-specific configuration (%w)", err)
 	}
 
 	if err := appConfig.Validate(true); err != nil {
@@ -196,10 +209,10 @@ func (n *networkHandler) loadConnectionSpecificConfig(
 				"configuration server returned invalid configuration",
 			),
 		)
-		return appConfig, newErr
+		return appConfig, meta, newErr
 	}
 
-	return appConfig, nil
+	return appConfig, meta.Merge(newMeta), nil
 }
 
 func (n *networkHandler) OnDisconnect() {

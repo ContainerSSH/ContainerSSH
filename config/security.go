@@ -40,28 +40,28 @@ type SecurityConfig struct {
 // Validate validates a shell configuration
 func (c SecurityConfig) Validate() error {
 	if err := c.DefaultMode.Validate(); err != nil {
-		return fmt.Errorf("invalid defaultMode configuration (%w)", err)
+		return wrap(err, "defaultMode")
 	}
 	if err := c.Env.Validate(); err != nil {
-		return fmt.Errorf("invalid env configuration (%w)", err)
+		return wrap(err, "env")
 	}
 	if err := c.Command.Validate(); err != nil {
-		return fmt.Errorf("invalid command configuration (%w)", err)
+		return wrap(err, "command")
 	}
 	if err := c.Shell.Validate(); err != nil {
-		return fmt.Errorf("invalid shell configuration (%w)", err)
+		return wrap(err, "shell")
 	}
 	if err := c.Subsystem.Validate(); err != nil {
-		return fmt.Errorf("invalid subsystem configuration (%w)", err)
+		return wrap(err, "subsystem")
 	}
 	if err := c.TTY.Validate(); err != nil {
-		return fmt.Errorf("invalid TTY configuration (%w)", err)
+		return wrap(err, "tty")
 	}
 	if err := c.Signal.Validate(); err != nil {
-		return fmt.Errorf("invalid signal configuration (%w)", err)
+		return wrap(err, "signal")
 	}
 	if c.MaxSessions < -1 {
-		return fmt.Errorf("invalid maxSessions setting: %d", c.MaxSessions)
+		return newError("maxSessions", "invalid maxSessions setting: %d", c.MaxSessions)
 	}
 	return nil
 }
@@ -81,7 +81,7 @@ type SecurityEnvConfig struct {
 // Validate validates a shell configuration
 func (e SecurityEnvConfig) Validate() error {
 	if err := e.Mode.Validate(); err != nil {
-		return fmt.Errorf("invalid mode (%w)", err)
+		return wrap(err, "mode")
 	}
 	return nil
 }
@@ -98,7 +98,7 @@ type CommandConfig struct {
 // Validate validates a shell configuration
 func (c CommandConfig) Validate() error {
 	if err := c.Mode.Validate(); err != nil {
-		return fmt.Errorf("invalid mode (%w)", err)
+		return wrap(err, "mode")
 	}
 	return nil
 }
@@ -112,7 +112,7 @@ type SecurityShellConfig struct {
 // Validate validates a shell configuration
 func (s SecurityShellConfig) Validate() error {
 	if err := s.Mode.Validate(); err != nil {
-		return fmt.Errorf("invalid mode (%w)", err)
+		return wrap(err, "mode")
 	}
 	return nil
 }
@@ -131,7 +131,7 @@ type SubsystemConfig struct {
 // Validate validates a subsystem configuration
 func (s SubsystemConfig) Validate() error {
 	if err := s.Mode.Validate(); err != nil {
-		return fmt.Errorf("invalid mode (%w)", err)
+		return wrap(err, "mode")
 	}
 	return nil
 }
@@ -145,7 +145,7 @@ type SecurityTTYConfig struct {
 // Validate validates the TTY configuration
 func (t SecurityTTYConfig) Validate() error {
 	if err := t.Mode.Validate(); err != nil {
-		return fmt.Errorf("invalid mode (%w)", err)
+		return wrap(err, "mode")
 	}
 	return nil
 }
@@ -163,7 +163,7 @@ type SecuritySignalConfig struct {
 // Validate validates the signal configuration
 func (s SecuritySignalConfig) Validate() error {
 	if err := s.Mode.Validate(); err != nil {
-		return fmt.Errorf("invalid mode (%w)", err)
+		return wrap(err, "mode")
 	}
 	return nil
 }

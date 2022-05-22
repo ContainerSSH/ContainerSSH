@@ -24,13 +24,13 @@ type KubernetesConfig struct {
 // Validate checks the configuration options and returns an error if the configuration is invalid.
 func (c KubernetesConfig) Validate() error {
 	if err := c.Connection.Validate(); err != nil {
-		return err
+		return wrap(err, "connection")
 	}
 	if err := c.Pod.Validate(); err != nil {
-		return err
+		return wrap(err, "pod")
 	}
 	if err := c.Timeouts.Validate(); err != nil {
-		return err
+		return wrap(err, "timeouts")
 	}
 	return nil
 }
@@ -79,14 +79,14 @@ type KubernetesConnectionConfig struct {
 
 func (c KubernetesConnectionConfig) Validate() error {
 	if c.Host == "" {
-		return fmt.Errorf("no host specified")
+		return newError("host", "no host specified")
 	}
 	if c.APIPath == "" {
-		return fmt.Errorf("no API path specified")
+		return newError("path", "no API path specified")
 	}
 	if c.BearerTokenFile != "" {
 		if _, err := os.Stat(c.BearerTokenFile); err != nil {
-			return fmt.Errorf("bearer token file %s not found (%w)", c.BearerTokenFile, err)
+			return wrapWithMessage(err, "bearerTokenFile", "bearer token file %s not found", c.BearerTokenFile)
 		}
 	}
 	return nil
@@ -146,43 +146,47 @@ type KubernetesPodConfig struct {
 // Validate validates the pod configuration.
 func (c KubernetesPodConfig) Validate() error {
 	if c.Metadata.Namespace == "" {
-		return fmt.Errorf("no namespace specified in pod config")
+		return wrap(newError("namespace", "no namespace specified in pod config"), "metadata")
 	}
 	if c.ConsoleContainerNumber >= len(c.Spec.Containers) {
-		return fmt.Errorf("the specified container for consoles does not exist in the pod spec")
+		return newError("consoleContainerNumber", "the specified container for consoles does not exist in the pod spec")
 	}
 	if !c.DisableAgent {
 		if c.AgentPath == "" {
-			return fmt.Errorf("the agent path is required when the agent is not disabled")
+			return newError("agentPath", "the agent path is required when the agent is not disabled")
 		}
 	}
 	if len(c.Spec.Containers) == 0 {
-		return fmt.Errorf("no containers specified in the pod spec")
+		return wrap(newError("containers", "no containers specified in the pod spec"), "spec")
 	}
 	for i, container := range c.Spec.Containers {
 		if container.Image == "" {
-			return fmt.Errorf("container %d in pod spec has no image name", i)
+			return wrap(wrap(newError("image", "missing image name"), fmt.Sprintf("%d", i)), "spec")
 		}
 	}
 	if err := c.Mode.Validate(); err != nil {
-		return err
+		return wrap(err, "mode")
 	}
 	if c.Mode == KubernetesExecutionModeConnection {
 		if len(c.IdleCommand) == 0 {
-			return fmt.Errorf("idle command is required when the execution mode is connection")
+			return newError("idleCommand", "idle command is required when the execution mode is connection")
 		}
 		if len(c.ShellCommand) == 0 {
-			return fmt.Errorf("shell command is required when the execution mode is connection")
+			return newError("shellCommand", "shell command is required when the execution mode is connection")
 		}
 	} else if c.Mode == KubernetesExecutionModeSession {
 		if c.Spec.RestartPolicy != "" && c.Spec.RestartPolicy != v1.RestartPolicyNever {
-			return fmt.Errorf(
-				"invalid restart policy in session mode: %s only \"Never\" is allowed",
-				c.Spec.RestartPolicy,
+			return wrap(
+				newError(
+					"restartPolicy",
+					"invalid restart policy in session mode: %s only \"Never\" is allowed",
+					c.Spec.RestartPolicy,
+				),
+				"spec",
 			)
 		}
 		if !c.DisableAgent && len(c.ShellCommand) == 0 {
-			return fmt.Errorf("shell command is required when using the agent")
+			return newError("shellCommand", "shell command is required when using the agent")
 		}
 	}
 	return nil

@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/containerssh/libcontainerssh/internal/sshserver"
+	"github.com/containerssh/libcontainerssh/metadata"
 )
 
 type sshConnectionHandler struct {
@@ -22,7 +23,11 @@ func (s *sshConnectionHandler) OnUnsupportedChannel(_ uint64, _ string, _ []byte
 func (s *sshConnectionHandler) OnShutdown(_ context.Context) {
 }
 
-func (s *sshConnectionHandler) OnSessionChannel(channelID uint64, _ []byte, session sshserver.SessionChannel) (
+func (s *sshConnectionHandler) OnSessionChannel(
+	meta metadata.ChannelMetadata,
+	_ []byte,
+	session sshserver.SessionChannel,
+) (
 	channel sshserver.SessionChannelHandler,
 	failureReason sshserver.ChannelRejection,
 ) {
@@ -32,7 +37,7 @@ func (s *sshConnectionHandler) OnSessionChannel(channelID uint64, _ []byte, sess
 	}
 	return &channelHandler{
 		session:        session,
-		channelID:      channelID,
+		channelID:      meta.ChannelID,
 		networkHandler: s.networkHandler,
 		username:       s.username,
 		env:            env,

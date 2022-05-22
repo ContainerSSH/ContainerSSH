@@ -1,52 +1,49 @@
 package auth
 
 import (
-	"fmt"
-
 	"github.com/containerssh/libcontainerssh/config"
 	"github.com/containerssh/libcontainerssh/http"
 	"github.com/containerssh/libcontainerssh/internal/metrics"
 	"github.com/containerssh/libcontainerssh/log"
 )
 
-// NewHttpAuthClient creates a new HTTP authentication client
+// NewWebhookClient creates a new HTTP authentication client.
 //goland:noinspection GoUnusedExportedFunction
-func NewHttpAuthzClient(
-	backend Client,
-	cfg config.AuthConfig,
+func NewWebhookClient(
+	authType AuthenticationType,
+	cfg config.AuthWebhookClientConfig,
 	logger log.Logger,
 	metrics metrics.Collector,
-) (Client, error) {
-	if !cfg.Authz.Enable{
-		return nil, fmt.Errorf("authorization is disabled")
-	}
+) (WebhookClient, error) {
 	if err := cfg.Validate(); err != nil {
 		return nil, err
 	}
 
-	httpClient, err := http.NewClient(
-		cfg.Authz.HTTPClientConfiguration,
+	realClient, err := http.NewClient(
+		cfg.HTTPClientConfiguration,
 		logger,
 	)
 	if err != nil {
 		return nil, err
 	}
 
-	backendRequestsMetric, backendFailureMetric, authSuccessMetric, authFailureMetric := createAuthzMetrics(metrics)
-	return &httpAuthzClient{
-		backend:               backend,
+	backendRequestsMetric, backendFailureMetric, authSuccessMetric, authFailureMetric := createMetrics(metrics)
+	return &webhookClient{
 		timeout:               cfg.AuthTimeout,
-		httpClient:            httpClient,
+		httpClient:            realClient,
 		logger:                logger,
 		metrics:               metrics,
 		backendRequestsMetric: backendRequestsMetric,
 		backendFailureMetric:  backendFailureMetric,
 		authSuccessMetric:     authSuccessMetric,
 		authFailureMetric:     authFailureMetric,
+		enablePassword:        authType == AuthenticationTypePassword || authType == AuthenticationTypeAll,
+		enablePubKey:          authType == AuthenticationTypePublicKey || authType == AuthenticationTypeAll,
+		enableAuthz:           authType == AuthenticationTypeAuthz || authType == AuthenticationTypeAll,
 	}, nil
 }
 
-func createAuthzMetrics(metrics metrics.Collector) (
+func createMetrics(metrics metrics.Collector) (
 	metrics.Counter,
 	metrics.Counter,
 	metrics.GeoCounter,
@@ -54,23 +51,23 @@ func createAuthzMetrics(metrics metrics.Collector) (
 ) {
 	backendRequestsMetric := metrics.MustCreateCounter(
 		MetricNameAuthBackendRequests,
-		"requests",
+		"requests_total",
 		"The number of requests sent to the configuration server.",
 	)
 	backendFailureMetric := metrics.MustCreateCounter(
 		MetricNameAuthBackendFailure,
-		"requests",
+		"failures_total",
 		"The number of request failures to the configuration server.",
 	)
 	authSuccessMetric := metrics.MustCreateCounterGeo(
 		MetricNameAuthSuccess,
-		"requests",
-		"The number of successful authorizations.",
+		"success_total",
+		"The number of successful authentications.",
 	)
 	authFailureMetric := metrics.MustCreateCounterGeo(
 		MetricNameAuthFailure,
-		"requests",
-		"The number of failed authorizations.",
+		"failures_total",
+		"The number of failed authentications.",
 	)
 	return backendRequestsMetric, backendFailureMetric, authSuccessMetric, authFailureMetric
 }

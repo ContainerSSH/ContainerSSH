@@ -186,7 +186,7 @@ func createAuthHandler(
 	pool service.Pool,
 ) (sshserver.Handler, error) {
 	authLogger := logger.WithLabel("module", "auth")
-	handler, svc, err := authintegration.New(
+	handler, services, err := authintegration.New(
 		cfg.Auth,
 		backend,
 		authLogger,
@@ -196,7 +196,7 @@ func createAuthHandler(
 	if err != nil {
 		return nil, err
 	}
-	if svc != nil {
+	for _, svc := range services {
 		pool.Add(svc)
 	}
 	return handler, nil

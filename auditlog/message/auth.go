@@ -18,6 +18,31 @@ func (p PayloadAuthPassword) Equals(other Payload) bool {
 	return p.Username == p2.Username && bytes.Equal(p.Password, p2.Password)
 }
 
+// PayloadAuthPasswordSuccessful is a payload for a message that indicates a successful authentication with a
+// password.
+type PayloadAuthPasswordSuccessful struct {
+	Username              string                         `json:"username" yaml:"username"`
+	AuthenticatedUsername string                         `json:"authenticatedUsername" yaml:"authenticatedUsername"`
+	Password              []byte                         `json:"password" yaml:"password"`
+	Metadata              map[string]MetadataValue       `json:"metadata,omitempty"`
+	Environment           map[string]MetadataValue       `json:"environment,omitempty"`
+	Files                 map[string]MetadataBinaryValue `json:"files,omitempty"`
+}
+
+// Equals compares two PayloadAuthPasswordSuccessful payloads.
+func (p PayloadAuthPasswordSuccessful) Equals(other Payload) bool {
+	p2, ok := other.(PayloadAuthPasswordSuccessful)
+	if !ok {
+		return false
+	}
+	return p.Username == p2.Username &&
+		p.AuthenticatedUsername == p2.AuthenticatedUsername &&
+		bytes.Equal(
+			p.Password,
+			p2.Password,
+		)
+}
+
 // PayloadAuthPasswordBackendError is a payload for a message that indicates a backend failure during authentication.
 type PayloadAuthPasswordBackendError struct {
 	Username string `json:"username" yaml:"username"`

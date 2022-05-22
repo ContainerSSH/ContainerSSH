@@ -37,6 +37,8 @@ func Kubernetes(t *testing.T) KubernetesTestConfiguration {
 			err,
 		)
 		kubeConfigFile = launchKubernetesCluster(t)
+	} else {
+		t.Logf("Found Kubernetes connection in user home directory.")
 	}
 
 	cfg, err := readKubeConfig(kubeConfigFile)
@@ -79,6 +81,7 @@ func Kubernetes(t *testing.T) KubernetesTestConfiguration {
 }
 
 func canaryTestKubernetes(t *testing.T, testConfig KubernetesTestConfiguration) {
+	t.Logf("Testing Kubernetes cluster with a canary pod...")
 	restConfig := getKubernetesRestConfig(testConfig)
 
 	cli, err := kubernetes.NewForConfig(&restConfig)
@@ -125,6 +128,7 @@ func canaryTestKubernetes(t *testing.T, testConfig KubernetesTestConfiguration) 
 			t.Fatalf("Failed to bring up canary pod in test Kubernetes cluster (%v)", err)
 		}
 		if pod.Status.Phase == v1.PodRunning {
+			t.Logf("Pod is running.")
 			break
 		}
 		if pod.Status.Phase == v1.PodFailed {
@@ -154,6 +158,7 @@ func getKubernetesRestConfig(testConfig KubernetesTestConfiguration) restclient.
 
 func launchKubernetesCluster(t *testing.T) string {
 	t.Helper()
+	t.Logf("Launching Kubernetes cluster via kind...")
 
 	clusterName := strings.Replace(
 		strings.Replace(
@@ -209,6 +214,7 @@ func launchKubernetesCluster(t *testing.T) string {
 	); err != nil {
 		t.Fatalf("failed to create Kubernetes cluster (%v)", err)
 	}
+	t.Logf("Kind cluster is running.")
 	t.Cleanup(
 		func() {
 			t.Logf("Test finished, removing Kubernetes cluster...")

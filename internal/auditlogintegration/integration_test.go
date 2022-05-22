@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"io"
 	"io/ioutil"
-	"net"
 	"os"
 	"testing"
 	"time"
@@ -13,15 +12,15 @@ import (
 	"github.com/containerssh/libcontainerssh/auditlog/message"
 	auth2 "github.com/containerssh/libcontainerssh/auth"
 	"github.com/containerssh/libcontainerssh/config"
-	"github.com/containerssh/libcontainerssh/internal/auth"
 	"github.com/containerssh/libcontainerssh/internal/auditlog/codec/binary"
 	"github.com/containerssh/libcontainerssh/internal/auditlog/storage/file"
+	"github.com/containerssh/libcontainerssh/internal/auditlogintegration"
+	"github.com/containerssh/libcontainerssh/internal/auth"
 	"github.com/containerssh/libcontainerssh/internal/geoip"
 	"github.com/containerssh/libcontainerssh/internal/sshserver"
 	"github.com/containerssh/libcontainerssh/log"
+	"github.com/containerssh/libcontainerssh/metadata"
 	"github.com/stretchr/testify/assert"
-
-	"github.com/containerssh/libcontainerssh/internal/auditlogintegration"
 )
 
 func TestKeyboardInteractiveAuthentication(t *testing.T) {
@@ -205,30 +204,31 @@ type backendHandler struct {
 }
 
 func (b *backendHandler) OnAuthKeyboardInteractive(
-	_ string,
+	meta metadata.ConnectionAuthPendingMetadata,
 	challenge func(
 		instruction string,
 		questions sshserver.KeyboardInteractiveQuestions,
 	) (answers sshserver.KeyboardInteractiveAnswers, err error),
-	_ string,
-) (response sshserver.AuthResponse, metadata *auth2.ConnectionMetadata, reason error) {
+) (sshserver.AuthResponse, metadata.ConnectionAuthenticatedMetadata, error) {
 	answers, err := challenge(
 		"Test",
-		sshserver.KeyboardInteractiveQuestions{{
-			Question:     "Challenge",
-			EchoResponse: true,
-		}},
+		sshserver.KeyboardInteractiveQuestions{
+			{
+				Question:     "Challenge",
+				EchoResponse: true,
+			},
+		},
 	)
 	if err != nil {
-		return sshserver.AuthResponseFailure, nil, err
+		return sshserver.AuthResponseFailure, meta.AuthFailed(), err
 	}
 	answerText, err := answers.GetByQuestionText("Challenge")
 	if err == nil {
 		if answerText != "Response" {
-			return sshserver.AuthResponseUnavailable, nil, fmt.Errorf("invalid response")
+			return sshserver.AuthResponseUnavailable, meta.AuthFailed(), fmt.Errorf("invalid response")
 		}
 	}
-	return sshserver.AuthResponseSuccess, nil, err
+	return sshserver.AuthResponseSuccess, meta.Authenticated(meta.Username), err
 }
 
 func (b *backendHandler) OnClose() {
@@ -299,7 +299,7 @@ func (b *backendHandler) OnUnsupportedGlobalRequest(_ uint64, _ string, _ []byte
 func (b *backendHandler) OnUnsupportedChannel(_ uint64, _ string, _ []byte) {
 }
 
-func (b *backendHandler) OnSessionChannel(_ uint64, _ []byte, session sshserver.SessionChannel) (
+func (b *backendHandler) OnSessionChannel(_ metadata.ChannelMetadata, _ []byte, session sshserver.SessionChannel) (
 	channel sshserver.SessionChannelHandler,
 	failureReason sshserver.ChannelRejection,
 ) {
@@ -307,36 +307,37 @@ func (b *backendHandler) OnSessionChannel(_ uint64, _ []byte, session sshserver.
 	return b, nil
 }
 
-func (b *backendHandler) OnAuthPassword(username string, _ []byte, _ string) (
+func (b *backendHandler) OnAuthPassword(meta metadata.ConnectionAuthPendingMetadata, _ []byte) (
 	response sshserver.AuthResponse,
-	metadata *auth2.ConnectionMetadata,
+	metadata metadata.ConnectionAuthenticatedMetadata,
 	reason error,
 ) {
-	if username == "test" {
-		return sshserver.AuthResponseSuccess, nil, nil
+	if meta.Username == "test" {
+		return sshserver.AuthResponseSuccess, meta.Authenticated(meta.Username), nil
 	}
-	return sshserver.AuthResponseFailure, nil, nil
+	return sshserver.AuthResponseFailure, meta.AuthFailed(), nil
 }
 
-func (b *backendHandler) OnAuthPubKey(_ string, _ string, _ string) (
+func (b *backendHandler) OnAuthPubKey(meta metadata.ConnectionAuthPendingMetadata, _ auth2.PublicKey) (
 	response sshserver.AuthResponse,
-	metadata *auth2.ConnectionMetadata,
+	metadata metadata.ConnectionAuthenticatedMetadata,
 	reason error,
 ) {
-	return sshserver.AuthResponseFailure, nil, nil
+	return sshserver.AuthResponseFailure, meta.AuthFailed(), nil
 }
 
-func (b *backendHandler) OnAuthGSSAPI() auth.GSSAPIServer {
+func (b *backendHandler) OnAuthGSSAPI(_ metadata.ConnectionMetadata) auth.GSSAPIServer {
 	return nil
 }
 
-func (b *backendHandler) OnHandshakeFailed(_ error) {}
+func (b *backendHandler) OnHandshakeFailed(_ metadata.ConnectionMetadata, _ error) {}
 
-func (b *backendHandler) OnHandshakeSuccess(_ string, _ string, _ *auth2.ConnectionMetadata) (
+func (b *backendHandler) OnHandshakeSuccess(meta metadata.ConnectionAuthenticatedMetadata) (
 	connection sshserver.SSHConnectionHandler,
+	metadata metadata.ConnectionAuthenticatedMetadata,
 	failureReason error,
 ) {
-	return b, nil
+	return b, meta, nil
 }
 
 func (b *backendHandler) OnDisconnect() {
@@ -351,8 +352,7 @@ func (b *backendHandler) OnShutdown(_ context.Context) {
 }
 
 func (b *backendHandler) OnNetworkConnection(
-	_ net.TCPAddr,
-	_ string,
-) (sshserver.NetworkConnectionHandler, error) {
-	return b, nil
+	meta metadata.ConnectionMetadata,
+) (sshserver.NetworkConnectionHandler, metadata.ConnectionMetadata, error) {
+	return b, meta, nil
 }

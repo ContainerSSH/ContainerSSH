@@ -7,15 +7,17 @@ import (
 	"testing"
 	"time"
 
+	"github.com/docker/docker/api/types/container"
+	"github.com/stretchr/testify/assert"
+
 	configuration "github.com/containerssh/libcontainerssh/config"
 	"github.com/containerssh/libcontainerssh/internal/config"
 	"github.com/containerssh/libcontainerssh/internal/geoip"
 	"github.com/containerssh/libcontainerssh/internal/metrics"
 	"github.com/containerssh/libcontainerssh/internal/test"
 	"github.com/containerssh/libcontainerssh/log"
+	"github.com/containerssh/libcontainerssh/metadata"
 	service2 "github.com/containerssh/libcontainerssh/service"
-	"github.com/docker/docker/api/types/container"
-	"github.com/stretchr/testify/assert"
 )
 
 func TestHTTP(t *testing.T) {
@@ -35,7 +37,8 @@ func TestHTTP(t *testing.T) {
 	lifecycle.OnRunning(
 		func(s service2.Service, l service2.Lifecycle) {
 			ready <- struct{}{}
-		})
+		},
+	)
 	go func() {
 		_ = lifecycle.Run()
 	}()
@@ -53,15 +56,27 @@ func TestHTTP(t *testing.T) {
 
 	connectionID := "0123456789ABCDEF"
 
-	cfg, err := client.Get(
+	cfg, _, err := client.Get(
 		context.Background(),
-		"foo",
-		net.TCPAddr{
-			IP:   net.ParseIP("127.0.0.1"),
-			Port: port,
+		metadata.ConnectionAuthenticatedMetadata{
+			ConnectionAuthPendingMetadata: metadata.ConnectionAuthPendingMetadata{
+				ConnectionMetadata: metadata.ConnectionMetadata{
+					RemoteAddress: metadata.RemoteAddress(
+						net.TCPAddr{
+							IP:   net.ParseIP("127.0.0.1"),
+							Port: port,
+						},
+					),
+					ConnectionID: connectionID,
+					Metadata:     map[string]metadata.Value{},
+					Environment:  map[string]metadata.Value{},
+					Files:        map[string]metadata.BinaryValue{},
+				},
+				ClientVersion: "",
+				Username:      "foo",
+			},
+			AuthenticatedUsername: "foo",
 		},
-		connectionID,
-		nil,
 	)
 	assert.NoError(t, err)
 	assert.Equal(t, "yourcompany/yourimage", cfg.Docker.Execution.Launch.ContainerConfig.Image)

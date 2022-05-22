@@ -7,6 +7,7 @@ import (
 	"github.com/containerssh/libcontainerssh/auditlog/message"
 	"github.com/containerssh/libcontainerssh/internal/auditlog"
 	"github.com/containerssh/libcontainerssh/internal/sshserver"
+	"github.com/containerssh/libcontainerssh/metadata"
 )
 
 type sshConnectionHandler struct {
@@ -31,18 +32,18 @@ func (s *sshConnectionHandler) OnUnsupportedChannel(channelID uint64, channelTyp
 }
 
 func (s *sshConnectionHandler) OnSessionChannel(
-	channelID uint64,
+	meta metadata.ChannelMetadata,
 	extraData []byte,
 	session sshserver.SessionChannel,
 ) (channel sshserver.SessionChannelHandler, failureReason sshserver.ChannelRejection) {
 	proxy := &sessionProxy{
 		backend: session,
 	}
-	backend, err := s.backend.OnSessionChannel(channelID, extraData, proxy)
+	backend, err := s.backend.OnSessionChannel(meta, extraData, proxy)
 	if err != nil {
 		return nil, err
 	}
-	auditChannel := s.audit.OnNewChannelSuccess(message.MakeChannelID(channelID), "session")
+	auditChannel := s.audit.OnNewChannelSuccess(message.MakeChannelID(meta.ChannelID), "session")
 	proxy.audit = auditChannel
 	return &sessionChannelHandler{
 		backend: backend,

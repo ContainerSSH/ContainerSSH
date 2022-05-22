@@ -5,11 +5,11 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"net"
 
-	"github.com/containerssh/libcontainerssh/auth"
 	"github.com/containerssh/libcontainerssh/config"
+	"github.com/containerssh/libcontainerssh/internal/structutils"
 	"github.com/containerssh/libcontainerssh/log"
+	"github.com/containerssh/libcontainerssh/metadata"
 	"gopkg.in/yaml.v3"
 )
 
@@ -50,18 +50,16 @@ func (y *readerLoader) Load(_ context.Context, config *config.AppConfig) (err er
 	if err := fixCompatibility(config, y.logger); err != nil {
 		return err
 	}
+	structutils.Defaults(config)
 	return nil
 }
 
 func (y *readerLoader) LoadConnection(
 	_ context.Context,
-	_ string,
-	_ net.TCPAddr,
-	_ string,
-	_ *auth.ConnectionMetadata,
+	meta metadata.ConnectionAuthenticatedMetadata,
 	_ *config.AppConfig,
-) error {
-	return nil
+) (metadata.ConnectionAuthenticatedMetadata, error) {
+	return meta, nil
 }
 
 func (y *readerLoader) loadYAML(reader io.Reader, config *config.AppConfig) error {

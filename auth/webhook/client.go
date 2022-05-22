@@ -1,56 +1,49 @@
 package webhook
 
 import (
-	"net"
-
 	auth2 "github.com/containerssh/libcontainerssh/auth"
 	"github.com/containerssh/libcontainerssh/config"
 	"github.com/containerssh/libcontainerssh/internal/auth"
 	"github.com/containerssh/libcontainerssh/internal/geoip/dummy"
 	"github.com/containerssh/libcontainerssh/internal/metrics"
 	"github.com/containerssh/libcontainerssh/log"
+	"github.com/containerssh/libcontainerssh/metadata"
 )
 
 type Client interface {
 	// Password authenticates with a password from the client. It returns a bool if the authentication as successful
 	// or not. If an error happened while contacting the authentication server it will return an error.
 	Password(
-		username string,
+		metadata metadata.ConnectionAuthPendingMetadata,
 		password []byte,
-		connectionID string,
-		remoteAddr net.IP,
-	) AuthenticationContext
+	) AuthenticationResponse
 
 	// PubKey authenticates with a public key from the client. It returns a bool if the authentication as successful
 	// or not. If an error happened while contacting the authentication server it will return an error.
 	PubKey(
-		username string,
-		pubKey string,
-		connectionID string,
-		remoteAddr net.IP,
-	) AuthenticationContext
+		metadata metadata.ConnectionAuthPendingMetadata,
+		pubKey auth2.PublicKey,
+	) AuthenticationResponse
 }
 
-// AuthenticationContext holds the results of an authentication.
-type AuthenticationContext interface {
+// AuthenticationResponse holds the results of an authentication.
+type AuthenticationResponse interface {
 	// Success must return true or false of the authentication was successful / unsuccessful.
 	Success() bool
-	// Error returns the error that happened during the authentication.
+	// Error returns the error that happened during the authentication. This is useful for returning detailed error
+	// message.
 	Error() error
 	// Metadata returns a set of metadata entries that have been obtained during the authentication.
-	Metadata() *auth2.ConnectionMetadata
+	Metadata() metadata.ConnectionAuthenticatedMetadata
 }
 
 // NewTestClient creates a new copy of a client usable for testing purposes.
 func NewTestClient(cfg config.AuthWebhookClientConfig, logger log.Logger) (Client, error) {
-	clientConfig := config.AuthConfig{
-		Method:  config.AuthMethodWebhook,
-		Webhook: cfg,
-	}
 	metricsCollector := metrics.New(dummy.New())
 
-	authClient, err := auth.NewHttpAuthClient(
-		clientConfig,
+	authClient, err := auth.NewWebhookClient(
+		auth.AuthenticationTypeAll,
+		cfg,
 		logger,
 		metricsCollector,
 	)
@@ -63,23 +56,19 @@ func NewTestClient(cfg config.AuthWebhookClientConfig, logger log.Logger) (Clien
 }
 
 type authClientWrapper struct {
-	c auth.Client
+	c auth.WebhookClient
 }
 
 func (a authClientWrapper) Password(
-	username string,
+	metadata metadata.ConnectionAuthPendingMetadata,
 	password []byte,
-	connectionID string,
-	remoteAddr net.IP,
-) AuthenticationContext {
-	return a.c.Password(username, password, connectionID, remoteAddr)
+) AuthenticationResponse {
+	return a.c.Password(metadata, password)
 }
 
 func (a authClientWrapper) PubKey(
-	username string,
-	pubKey string,
-	connectionID string,
-	remoteAddr net.IP,
-) AuthenticationContext {
-	return a.c.PubKey(username, pubKey, connectionID, remoteAddr)
+	metadata metadata.ConnectionAuthPendingMetadata,
+	pubKey auth2.PublicKey,
+) AuthenticationResponse {
+	return a.c.PubKey(metadata, pubKey)
 }

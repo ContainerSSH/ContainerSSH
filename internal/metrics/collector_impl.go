@@ -57,7 +57,13 @@ func (c *collector) createMetric(name string, unit string, help string, metricTy
 	c.mutex.Lock()
 	defer c.mutex.Unlock()
 
-	if _, ok := c.metricsMap[name]; ok {
+	if existingMetric, ok := c.metricsMap[name]; ok {
+		if existingMetric.Name == name &&
+			existingMetric.Unit == unit &&
+			existingMetric.Help == help &&
+			existingMetric.Type == metricType {
+			return nil
+		}
 		return MetricAlreadyExists
 	}
 	metric := Metric{

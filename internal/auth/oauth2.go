@@ -3,7 +3,15 @@ package auth
 import (
 	"context"
 	"time"
+
+	"github.com/containerssh/libcontainerssh/metadata"
 )
+
+// OAuth2Client is the client supporting OAuth2-based authentication. It only supports keyboard-interactive
+// authentication as that is the only method to output the login-link to the user.
+type OAuth2Client interface {
+	KeyboardInteractiveAuthenticator
+}
 
 // OAuth2Provider is an OAuth2 backing provider with a specific API implementation.
 type OAuth2Provider interface {
@@ -11,14 +19,17 @@ type OAuth2Provider interface {
 	SupportsDeviceFlow() bool
 	// GetDeviceFlow returns the OAuth2DeviceFlow for a single client used for performing a device flow
 	// authorization with the OAuth2 server. The method must panic if the device flow is not supported.
-	GetDeviceFlow(connectionID string, username string) (OAuth2DeviceFlow, error)
+	GetDeviceFlow(connectionMetadata metadata.ConnectionAuthPendingMetadata) (OAuth2DeviceFlow, error)
 
 	// SupportsAuthorizationCodeFlow returns true if the provider supports the authorization code flow.
 	SupportsAuthorizationCodeFlow() bool
 	// GetAuthorizationCodeFlow returns the OAuth2AuthorizationCodeFlow for a single client used for performing
 	// authorization code flow authorization with the OAuth2 server. The method must panic if the device flow is not
 	// supported.
-	GetAuthorizationCodeFlow(connectionID string, username string) (OAuth2AuthorizationCodeFlow, error)
+	GetAuthorizationCodeFlow(connectionMetadata metadata.ConnectionAuthPendingMetadata) (
+		OAuth2AuthorizationCodeFlow,
+		error,
+	)
 }
 
 type OAuth2Flow interface {
@@ -32,18 +43,22 @@ type OAuth2AuthorizationCodeFlow interface {
 	// GetAuthorizationURL returns the authorization URL a user should be redirected to to begin the login process.
 	GetAuthorizationURL(ctx context.Context) (string, error)
 
-	// Verify verifies the authorizationCode with the OAuth2 server and obtains an access token. It can optionally also
-	// a key-value map of parameters that are passed to the configuration server.
+	// Verify verifies the authorizationCode with the OAuth2 server and obtains an access token. It may also return
+	// metadata that can be exposed to the configuration server or the backend itself for further use.
 	//
 	// The implementation should retry obtaining the access token until ctx is canceled if the server
 	// responds in an unexpected fashion.
-	Verify(ctx context.Context, state string, authorizationCode string) (map[string]string, error)
+	Verify(ctx context.Context, state string, authorizationCode string) (
+		string,
+		metadata.ConnectionAuthenticatedMetadata,
+		error,
+	)
 }
 
 type OAuth2DeviceFlow interface {
 	OAuth2Flow
 
-	// GetAuthorizationURL returns the authorization URL a user should be redirected to to begin the login process.
+	// GetAuthorizationURL returns the authorization URL a user should be redirected to begin the login process.
 	GetAuthorizationURL(ctx context.Context) (
 		verificationLink string,
 		userCode string,
@@ -59,7 +74,5 @@ type OAuth2DeviceFlow interface {
 	//
 	// The method should return when the OAuth2 server either returns with a positive or negative
 	// result. It should not return if the final result has not been obtained yet.
-	//
-	// The implementation should return an error only if the
-	Verify(ctx context.Context) (map[string]string, error)
+	Verify(ctx context.Context) (string, metadata.ConnectionAuthenticatedMetadata, error)
 }

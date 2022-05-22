@@ -4,9 +4,9 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/containerssh/libcontainerssh/internal/test"
 	"github.com/containerssh/gokrb5/v8/client"
 	"github.com/containerssh/gokrb5/v8/config"
+	"github.com/containerssh/libcontainerssh/internal/test"
 )
 
 var krbConf = `

@@ -2,10 +2,9 @@ package config
 
 import (
 	"context"
-	"net"
 
-	"github.com/containerssh/libcontainerssh/auth"
 	"github.com/containerssh/libcontainerssh/config"
+	"github.com/containerssh/libcontainerssh/metadata"
 )
 
 // Loader is a utility to load and update an existing configuration structure.
@@ -22,16 +21,11 @@ type Loader interface {
 	// LoadConnection loads the configuration for a specific connection source.
 	//
 	// - ctx is the deadline for loading the configuration.
-	// - username is the username from the SSH connection.
-	// - remoteAddr is the source IP address and port of the connection.
-	// - connectionID is an opaque ID made of hexadecimal numbers identifying the connection.
+	// - meta is the metadata for the currenct connection
 	// - config is the configuration struct to be loaded into.
 	LoadConnection(
 		ctx context.Context,
-		username string,
-		remoteAddr net.TCPAddr,
-		connectionID string,
-		metadata *auth.ConnectionMetadata,
+		meta metadata.ConnectionAuthenticatedMetadata,
 		config *config.AppConfig,
-	) error
+	) (metadata.ConnectionAuthenticatedMetadata, error)
 }

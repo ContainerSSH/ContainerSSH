@@ -3,15 +3,14 @@ package config
 import (
 	"context"
 	"errors"
-	"net"
 	"time"
 
-	"github.com/containerssh/libcontainerssh/auth"
 	"github.com/containerssh/libcontainerssh/config"
 	"github.com/containerssh/libcontainerssh/http"
 	"github.com/containerssh/libcontainerssh/internal/metrics"
 	"github.com/containerssh/libcontainerssh/log"
 	"github.com/containerssh/libcontainerssh/message"
+	"github.com/containerssh/libcontainerssh/metadata"
 )
 
 type client struct {
@@ -23,18 +22,15 @@ type client struct {
 
 func (c *client) Get(
 	ctx context.Context,
-	username string,
-	remoteAddr net.TCPAddr,
-	connectionID string,
-	metadata *auth.ConnectionMetadata,
-) (config.AppConfig, error) {
+	meta metadata.ConnectionAuthenticatedMetadata,
+) (config.AppConfig, metadata.ConnectionAuthenticatedMetadata, error) {
 	if c.httpClient == nil {
-		return config.AppConfig{}, nil
+		return config.AppConfig{}, meta, nil
 	}
 	logger := c.logger.
-		WithLabel("connectionId", connectionID).
-		WithLabel("username", username)
-	request, response := c.createRequestResponse(username, remoteAddr, connectionID, metadata.Transmit())
+		WithLabel("connectionId", meta.ConnectionID).
+		WithLabel("username", meta.Username)
+	request, response := c.createRequestResponse(meta)
 	var lastError error = nil
 	var lastLabels []metrics.MetricLabel
 loop:
@@ -56,7 +52,7 @@ loop:
 		lastError = c.configServerRequest(&request, &response)
 		if lastError == nil {
 			c.logConfigResponse(logger)
-			return response.Config, nil
+			return response.Config, response.ConnectionAuthenticatedMetadata, nil
 		}
 		reason := c.getReason(lastError)
 		lastLabels = append(lastLabels, metrics.Label("reason", reason))
@@ -67,21 +63,14 @@ loop:
 		case <-time.After(10 * time.Second):
 		}
 	}
-	return c.logAndReturnPermanentFailure(lastError, lastLabels, logger)
+	return c.logAndReturnPermanentFailure(meta, lastError, lastLabels, logger)
 }
 
 func (c *client) createRequestResponse(
-	username string,
-	remoteAddr net.TCPAddr,
-	connectionID string,
-	metadata *auth.ConnectionMetadata,
+	meta metadata.ConnectionAuthenticatedMetadata,
 ) (config.Request, config.ResponseBody) {
 	request := config.Request{
-		Username:     username,
-		RemoteAddr:   remoteAddr.IP.String(),
-		ConnectionID: connectionID,
-		SessionID:    connectionID,
-		Metadata:     metadata,
+		ConnectionAuthenticatedMetadata: meta,
 	}
 	response := config.ResponseBody{}
 	return request, response
@@ -98,10 +87,11 @@ func (c *client) logAttempt(logger log.Logger, lastLabels []metrics.MetricLabel)
 }
 
 func (c *client) logAndReturnPermanentFailure(
+	meta metadata.ConnectionAuthenticatedMetadata,
 	lastError error,
 	lastLabels []metrics.MetricLabel,
 	logger log.Logger,
-) (config.AppConfig, error) {
+) (config.AppConfig, metadata.ConnectionAuthenticatedMetadata, error) {
 	err := message.Wrap(
 		lastError,
 		message.EConfigBackendError,
@@ -115,7 +105,7 @@ func (c *client) logAndReturnPermanentFailure(
 		)...,
 	)
 	logger.Error(err)
-	return config.AppConfig{}, err
+	return config.AppConfig{}, meta, err
 }
 
 func (c *client) logTemporaryFailure(

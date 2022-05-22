@@ -1,7 +1,7 @@
 package sshserver
 
 import (
-	"net"
+	"github.com/containerssh/libcontainerssh/metadata"
 )
 
 type conformanceTestHandler struct {
@@ -10,6 +10,6 @@ type conformanceTestHandler struct {
 	backend NetworkConnectionHandler
 }
 
-func (h *conformanceTestHandler) OnNetworkConnection(_ net.TCPAddr, _ string) (NetworkConnectionHandler, error) {
-	return h.backend, nil
+func (h *conformanceTestHandler) OnNetworkConnection(meta metadata.ConnectionMetadata) (NetworkConnectionHandler, metadata.ConnectionMetadata, error) {
+	return h.backend, meta, nil
 }

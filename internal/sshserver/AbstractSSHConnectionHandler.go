@@ -4,6 +4,7 @@ import (
 	"context"
 
 	messageCodes "github.com/containerssh/libcontainerssh/message"
+	"github.com/containerssh/libcontainerssh/metadata"
 	"golang.org/x/crypto/ssh"
 )
 
@@ -29,7 +30,7 @@ func (a *AbstractSSHConnectionHandler) OnUnsupportedChannel(_ uint64, _ string, 
 // OnSessionChannel is called when a channel of the session type is requested. The implementer must either return
 //                  the channel result if the channel was successful, or failureReason to state why the channel
 //                  should be rejected.
-func (a *AbstractSSHConnectionHandler) OnSessionChannel(_ uint64, _ []byte, _ SessionChannel) (
+func (a *AbstractSSHConnectionHandler) OnSessionChannel(_ metadata.ChannelMetadata, _ []byte, _ SessionChannel) (
 	channel SessionChannelHandler, failureReason ChannelRejection,
 ) {
 	return nil, NewChannelRejection(

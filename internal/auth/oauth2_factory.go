@@ -13,29 +13,26 @@ import (
 	"github.com/containerssh/libcontainerssh/service"
 )
 
-func NewOAuth2Client(cfg config.AuthConfig, logger log.Logger, collector metrics.Collector) (
-	Client,
+func NewOAuth2Client(cfg config.AuthOAuth2ClientConfig, logger log.Logger, collector metrics.Collector) (
+	KeyboardInteractiveAuthenticator,
 	service.Service,
 	error,
 ) {
 	var err error
-	if cfg.Method != config.AuthMethodOAuth2 {
-		return nil, nil, fmt.Errorf("authentication is not set to oauth2")
-	}
 	if err := cfg.Validate(); err != nil {
 		return nil, nil, err
 	}
 
 	var fs goHttp.FileSystem
-	if cfg.OAuth2.Redirect.Webroot != "" {
-		fs = goHttp.Dir(cfg.OAuth2.Redirect.Webroot)
+	if cfg.Redirect.Webroot != "" {
+		fs = goHttp.Dir(cfg.Redirect.Webroot)
 	} else {
 		fs = oauth2.GetFilesystem()
 	}
 
 	redirectServer, err := http.NewServer(
 		"OAuth2 Redirect Server",
-		cfg.OAuth2.Redirect.HTTPServerConfiguration,
+		cfg.Redirect.HTTPServerConfiguration,
 		goHttp.FileServer(fs),
 		logger,
 		func(url string) {
@@ -51,7 +48,7 @@ func NewOAuth2Client(cfg config.AuthConfig, logger log.Logger, collector metrics
 	}
 
 	var provider OAuth2Provider
-	switch cfg.OAuth2.Provider {
+	switch cfg.Provider {
 	case config.AuthOAuth2GitHubProvider:
 		provider, err = newGitHubProvider(cfg, logger)
 		if err != nil {

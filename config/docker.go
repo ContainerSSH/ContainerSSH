@@ -25,10 +25,10 @@ type DockerConfig struct {
 // Validate validates the provided configuration and returns an error if invalid.
 func (c DockerConfig) Validate() error {
 	if err := c.Connection.Validate(); err != nil {
-		return fmt.Errorf("invalid connection configuration")
+		return wrap(err, "connection")
 	}
 	if err := c.Execution.Validate(); err != nil {
-		return fmt.Errorf("invalid execution configuration")
+		return wrap(err, "execution")
 	}
 	return nil
 }
@@ -128,28 +128,32 @@ type DockerExecutionConfig struct {
 // Validate validates the docker config structure.
 func (c DockerExecutionConfig) Validate() error {
 	if c.Mode == DockerExecutionModeConnection && len(c.IdleCommand) == 0 {
-		return fmt.Errorf("idle command required for execution mode \"connection\"")
+		return newError("idleCommand", "idle command required for execution mode \"connection\"")
 	}
 	if c.Mode == DockerExecutionModeConnection && len(c.ShellCommand) == 0 {
-		return fmt.Errorf("shell command required for execution mode \"connection\"")
+		return newError("shellCommand", "shell command required for execution mode \"connection\"")
 	}
 	switch c.Mode {
 	case DockerExecutionModeSession:
 		if c.Launch.HostConfig != nil && !c.Launch.HostConfig.RestartPolicy.IsNone() {
-			return fmt.Errorf(
-				"unsupported restart policy for execution mode \"session\": %s (session containers may not restart)",
-				c.Launch.HostConfig.RestartPolicy.Name,
+			return wrap(
+				newError(
+					"restartPolicy",
+					"unsupported restart policy for execution mode \"session\": %s (session containers may not restart)",
+					c.Launch.HostConfig.RestartPolicy.Name,
+				),
+				"hostConfig",
 			)
 		}
 	}
 	if err := c.ImagePullPolicy.Validate(); err != nil {
-		return err
+		return wrap(err, "imagePullPolicy")
 	}
 	if err := c.Launch.Validate(); err != nil {
 		return err
 	}
 	if err := c.Mode.Validate(); err != nil {
-		return err
+		return wrap(err, "mode")
 	}
 	return nil
 }
@@ -336,10 +340,10 @@ func (l *DockerLaunchConfig) UnmarshalYAML(unmarshal func(interface{}) error) er
 // Validate validates the launch configuration.
 func (l *DockerLaunchConfig) Validate() error {
 	if l.ContainerConfig == nil {
-		return fmt.Errorf("no container config provided")
+		return newError("container", "no container config provided")
 	}
 	if l.ContainerConfig.Image == "" {
-		return fmt.Errorf("no image name provided")
+		return wrap(newError("image", "no image name provided"), "container")
 	}
 	return nil
 }

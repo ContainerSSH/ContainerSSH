@@ -2,6 +2,8 @@ package sshserver
 
 import (
 	"context"
+
+	"github.com/containerssh/libcontainerssh/metadata"
 )
 
 type testSSHHandler struct {
@@ -9,11 +11,11 @@ type testSSHHandler struct {
 
 	rootHandler    *testHandlerImpl
 	networkHandler *testNetworkHandlerImpl
-	username       string
 	shutdown       bool
+	metadata       metadata.ConnectionAuthenticatedMetadata
 }
 
-func (t *testSSHHandler) OnSessionChannel(_ uint64, _ []byte, session SessionChannel) (
+func (t *testSSHHandler) OnSessionChannel(_ metadata.ChannelMetadata, _ []byte, session SessionChannel) (
 	channel SessionChannelHandler,
 	failureReason ChannelRejection,
 ) {

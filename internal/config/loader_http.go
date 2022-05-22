@@ -2,13 +2,12 @@ package config
 
 import (
 	"context"
-	"net"
 
-	"github.com/containerssh/libcontainerssh/auth"
 	"github.com/containerssh/libcontainerssh/config"
 	"github.com/containerssh/libcontainerssh/internal/metrics"
 	"github.com/containerssh/libcontainerssh/internal/structutils"
 	"github.com/containerssh/libcontainerssh/log"
+	"github.com/containerssh/libcontainerssh/metadata"
 )
 
 // NewHTTPLoader loads configuration from HTTP servers for specific connections.
@@ -37,18 +36,15 @@ func (h *httpLoader) Load(_ context.Context, _ *config.AppConfig) error {
 
 func (h *httpLoader) LoadConnection(
 	ctx context.Context,
-	username string,
-	remoteAddr net.TCPAddr,
-	connectionID string,
-	metadata *auth.ConnectionMetadata,
+	meta metadata.ConnectionAuthenticatedMetadata,
 	config *config.AppConfig,
-) error {
-	newAppConfig, err := h.client.Get(ctx, username, remoteAddr, connectionID, metadata)
+) (metadata.ConnectionAuthenticatedMetadata, error) {
+	newAppConfig, newMeta, err := h.client.Get(ctx, meta)
 	if err != nil {
-		return err
+		return meta, err
 	}
 	if err := structutils.Merge(config, &newAppConfig); err != nil {
-		return err
+		return meta, err
 	}
-	return nil
+	return newMeta, err
 }

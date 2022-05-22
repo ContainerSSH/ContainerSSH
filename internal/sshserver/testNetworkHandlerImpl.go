@@ -4,7 +4,7 @@ import (
 	"context"
 	"net"
 
-	"github.com/containerssh/libcontainerssh/auth"
+	"github.com/containerssh/libcontainerssh/metadata"
 )
 
 type testNetworkHandlerImpl struct {
@@ -16,15 +16,12 @@ type testNetworkHandlerImpl struct {
 	shutdown     bool
 }
 
-func (t *testNetworkHandlerImpl) OnHandshakeSuccess(username string, clientVersion string, metadata *auth.ConnectionMetadata) (
-	connection SSHConnectionHandler,
-	failureReason error,
-) {
+func (t *testNetworkHandlerImpl) OnHandshakeSuccess(meta metadata.ConnectionAuthenticatedMetadata) (SSHConnectionHandler, metadata.ConnectionAuthenticatedMetadata, error) {
 	return &testSSHHandler{
 		rootHandler:    t.rootHandler,
 		networkHandler: t,
-		username:       username,
-	}, nil
+		metadata:       meta,
+	}, meta, nil
 }
 
 func (t *testNetworkHandlerImpl) OnShutdown(_ context.Context) {

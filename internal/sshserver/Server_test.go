@@ -13,12 +13,13 @@ import (
 	"testing"
 	"time"
 
-	auth2 "github.com/containerssh/libcontainerssh/auth"
+	"github.com/containerssh/libcontainerssh/auth"
 	"github.com/containerssh/libcontainerssh/config"
 	"github.com/containerssh/libcontainerssh/internal/sshserver"
 	"github.com/containerssh/libcontainerssh/internal/structutils"
 	"github.com/containerssh/libcontainerssh/internal/test"
 	"github.com/containerssh/libcontainerssh/log"
+	"github.com/containerssh/libcontainerssh/metadata"
 	"github.com/containerssh/libcontainerssh/service"
 	"github.com/stretchr/testify/assert"
 	"golang.org/x/crypto/ssh"
@@ -344,7 +345,6 @@ func TestKeepAlive(t *testing.T) {
 	srv.Start()
 	defer srv.Stop(1 * time.Minute)
 
-
 	hostkey, err := ssh.ParsePrivateKey([]byte(srv.GetHostKey()))
 	if err != nil {
 		t.Fatal("Failed to parse private key")
@@ -394,10 +394,10 @@ func TestKeepAlive(t *testing.T) {
 
 	elapsed := recv2.Sub(recv1)
 
-	if elapsed > 2 * time.Second {
+	if elapsed > 2*time.Second {
 		t.Fatal("Received keepalive in too big of an interval", elapsed)
 	}
-	if elapsed < time.Second / 2 {
+	if elapsed < time.Second/2 {
 		t.Fatal("Received keepalive in too short of an interval", elapsed)
 	}
 }
@@ -601,8 +601,12 @@ func (r *rejectHandler) OnReady() error {
 func (r *rejectHandler) OnShutdown(_ context.Context) {
 }
 
-func (r *rejectHandler) OnNetworkConnection(_ net.TCPAddr, _ string) (sshserver.NetworkConnectionHandler, error) {
-	return nil, fmt.Errorf("not implemented")
+func (r *rejectHandler) OnNetworkConnection(meta metadata.ConnectionMetadata) (
+	sshserver.NetworkConnectionHandler,
+	metadata.ConnectionMetadata,
+	error,
+) {
+	return nil, meta, fmt.Errorf("not implemented")
 }
 
 //endregion
@@ -651,10 +655,14 @@ func (f *fullHandler) OnShutdown(shutdownContext context.Context) {
 	close(f.shutdownDone)
 }
 
-func (f *fullHandler) OnNetworkConnection(_ net.TCPAddr, _ string) (sshserver.NetworkConnectionHandler, error) {
+func (f *fullHandler) OnNetworkConnection(meta metadata.ConnectionMetadata) (
+	sshserver.NetworkConnectionHandler,
+	metadata.ConnectionMetadata,
+	error,
+) {
 	return &fullNetworkConnectionHandler{
 		handler: f,
-	}, nil
+	}, meta, nil
 }
 
 //endregion
@@ -668,27 +676,33 @@ type fullNetworkConnectionHandler struct {
 }
 
 func (f *fullNetworkConnectionHandler) OnAuthPassword(
-	username string,
+	meta metadata.ConnectionAuthPendingMetadata,
 	password []byte,
-	_ string,
-) (response sshserver.AuthResponse, metadata *auth2.ConnectionMetadata, reason error) {
-	if storedPassword, ok := f.handler.passwords[username]; ok && bytes.Equal(storedPassword, password) {
-		return sshserver.AuthResponseSuccess, nil, nil
+) (sshserver.AuthResponse, metadata.ConnectionAuthenticatedMetadata, error) {
+	if storedPassword, ok := f.handler.passwords[meta.Username]; ok && bytes.Equal(storedPassword, password) {
+		return sshserver.AuthResponseSuccess, meta.Authenticated(meta.Username), nil
 	}
-	return sshserver.AuthResponseFailure, nil, fmt.Errorf("authentication failed")
+	return sshserver.AuthResponseFailure, meta.AuthFailed(), fmt.Errorf("authentication failed")
 }
 
-func (f *fullNetworkConnectionHandler) OnAuthPubKey(username string, pubKey string, _ string) (response sshserver.AuthResponse, metadata *auth2.ConnectionMetadata, reason error) {
-	if storedPubKey, ok := f.handler.pubKeys[username]; ok && storedPubKey == pubKey {
-		return sshserver.AuthResponseSuccess, nil, nil
+func (f *fullNetworkConnectionHandler) OnAuthPubKey(
+	meta metadata.ConnectionAuthPendingMetadata,
+	pubKey auth.PublicKey,
+) (sshserver.AuthResponse, metadata.ConnectionAuthenticatedMetadata, error) {
+	if storedPubKey, ok := f.handler.pubKeys[meta.Username]; ok && storedPubKey == pubKey.PublicKey {
+		return sshserver.AuthResponseSuccess, meta.Authenticated(meta.Username), nil
 	}
-	return sshserver.AuthResponseFailure, nil, fmt.Errorf("authentication failed")
+	return sshserver.AuthResponseFailure, meta.AuthFailed(), fmt.Errorf("authentication failed")
 }
 
-func (f *fullNetworkConnectionHandler) OnHandshakeSuccess(_ string, _ string, _ *auth2.ConnectionMetadata) (connection sshserver.SSHConnectionHandler, failureReason error) {
+func (f *fullNetworkConnectionHandler) OnHandshakeSuccess(meta metadata.ConnectionAuthenticatedMetadata) (
+	sshserver.SSHConnectionHandler,
+	metadata.ConnectionAuthenticatedMetadata,
+	error,
+) {
 	return &fullSSHConnectionHandler{
 		handler: f.handler,
-	}, nil
+	}, meta, nil
 }
 
 //endregion
@@ -702,7 +716,7 @@ type fullSSHConnectionHandler struct {
 }
 
 func (f *fullSSHConnectionHandler) OnSessionChannel(
-	_ uint64,
+	_ metadata.ChannelMetadata,
 	_ []byte,
 	session sshserver.SessionChannel,
 ) (channel sshserver.SessionChannelHandler, failureReason sshserver.ChannelRejection) {

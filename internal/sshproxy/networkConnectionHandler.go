@@ -8,11 +8,12 @@ import (
 	"time"
 
 	auth2 "github.com/containerssh/libcontainerssh/auth"
-	"github.com/containerssh/libcontainerssh/internal/auth"
 	"github.com/containerssh/libcontainerssh/config"
+	"github.com/containerssh/libcontainerssh/internal/auth"
 	"github.com/containerssh/libcontainerssh/internal/metrics"
 	"github.com/containerssh/libcontainerssh/log"
 	"github.com/containerssh/libcontainerssh/message"
+	"github.com/containerssh/libcontainerssh/metadata"
 
 	"golang.org/x/crypto/ssh"
 
@@ -34,64 +35,62 @@ type networkConnectionHandler struct {
 	done                  bool
 }
 
-func (s *networkConnectionHandler) OnAuthPassword(_ string, _ []byte, _ string) (
+func (s *networkConnectionHandler) OnAuthPassword(meta metadata.ConnectionAuthPendingMetadata, _ []byte) (
 	_ sshserver.AuthResponse,
-	_ *auth2.ConnectionMetadata,
+	_ metadata.ConnectionAuthenticatedMetadata,
 	_ error,
 ) {
-	return sshserver.AuthResponseUnavailable, nil, fmt.Errorf(
+	return sshserver.AuthResponseUnavailable, meta.AuthFailed(), fmt.Errorf(
 		"ssh proxy does not support authentication",
 	)
 }
 
-func (s *networkConnectionHandler) OnAuthPubKey(_ string, _ string, _ string) (
+func (s *networkConnectionHandler) OnAuthPubKey(meta metadata.ConnectionAuthPendingMetadata, _ auth2.PublicKey) (
 	sshserver.AuthResponse,
-	*auth2.ConnectionMetadata,
+	metadata.ConnectionAuthenticatedMetadata,
 	error,
 ) {
-	return sshserver.AuthResponseUnavailable, nil, fmt.Errorf(
+	return sshserver.AuthResponseUnavailable, meta.AuthFailed(), fmt.Errorf(
 		"ssh proxy does not support authentication",
 	)
 }
 
 func (s *networkConnectionHandler) OnAuthKeyboardInteractive(
-	_ string,
+	meta metadata.ConnectionAuthPendingMetadata,
 	_ func(
 		_ string,
 		_ sshserver.KeyboardInteractiveQuestions,
 	) (answers sshserver.KeyboardInteractiveAnswers, err error),
-	_ string,
-) (response sshserver.AuthResponse, metadata *auth2.ConnectionMetadata, reason error) {
-	return sshserver.AuthResponseUnavailable, nil, fmt.Errorf(
+) (sshserver.AuthResponse, metadata.ConnectionAuthenticatedMetadata, error) {
+	return sshserver.AuthResponseUnavailable, meta.AuthFailed(), fmt.Errorf(
 		"ssh proxy does not support authentication",
 	)
 }
 
-func (s *networkConnectionHandler) OnAuthGSSAPI() auth.GSSAPIServer {
+func (s *networkConnectionHandler) OnAuthGSSAPI(_ metadata.ConnectionMetadata) auth.GSSAPIServer {
 	return nil
 }
 
-func (s *networkConnectionHandler) OnHandshakeFailed(_ error) {}
+func (s *networkConnectionHandler) OnHandshakeFailed(_ metadata.ConnectionMetadata, _ error) {}
 
 func (s *networkConnectionHandler) OnHandshakeSuccess(
-	username string,
-	clientVersion string,
-	metadata *auth2.ConnectionMetadata,
+	meta metadata.ConnectionAuthenticatedMetadata,
 ) (
 	connection sshserver.SSHConnectionHandler,
+	metadata metadata.ConnectionAuthenticatedMetadata,
 	failureReason error,
 ) {
 	s.lock.Lock()
 	defer s.lock.Unlock()
 	if s.disconnected {
-		return nil, message.NewMessage(
+		return nil, meta, message.NewMessage(
 			message.ESSHProxyDisconnected,
 			"could not connect to backend because the user already disconnected",
 		)
 	}
-	sshConn, newChannels, requests, cli, err := s.createBackendSSHConnection(username)
+	sshConn, newChannels, requests, cli, err := s.createBackendSSHConnection(meta.Username)
 	if err != nil {
-		return nil, err
+		return nil, meta, err
 	}
 
 	return &sshConnectionHandler{
@@ -101,7 +100,7 @@ func (s *networkConnectionHandler) OnHandshakeSuccess(
 		newChannels:    newChannels,
 		requests:       requests,
 		logger:         s.logger,
-	}, nil
+	}, meta, nil
 }
 
 func (s *networkConnectionHandler) createBackendSSHConnection(username string) (

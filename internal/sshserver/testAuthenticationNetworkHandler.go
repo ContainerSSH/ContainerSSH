@@ -4,10 +4,10 @@ import (
 	"bytes"
 	"context"
 	"fmt"
-	"net"
 
 	auth2 "github.com/containerssh/libcontainerssh/auth"
 	"github.com/containerssh/libcontainerssh/internal/auth"
+	"github.com/containerssh/libcontainerssh/metadata"
 )
 
 type testAuthenticationNetworkHandler struct {
@@ -16,22 +16,21 @@ type testAuthenticationNetworkHandler struct {
 }
 
 func (t *testAuthenticationNetworkHandler) OnAuthKeyboardInteractive(
-	username string,
+	meta metadata.ConnectionAuthPendingMetadata,
 	challenge func(
 		instruction string,
 		questions KeyboardInteractiveQuestions,
 	) (answers KeyboardInteractiveAnswers, err error),
-	_ string,
-) (response AuthResponse, metadata *auth2.ConnectionMetadata, reason error) {
+) (response AuthResponse, authenticatedMetadata metadata.ConnectionAuthenticatedMetadata, reason error) {
 	var foundUser *TestUser
 	for _, user := range t.rootHandler.users {
-		if user.Username() == username {
+		if user.Username() == meta.Username {
 			foundUser = user
 			break
 		}
 	}
 	if foundUser == nil {
-		return AuthResponseFailure, nil, fmt.Errorf("user not found")
+		return AuthResponseFailure, metadata.ConnectionAuthenticatedMetadata{}, fmt.Errorf("user not found")
 	}
 
 	questions := make([]KeyboardInteractiveQuestion, len(foundUser.keyboardInteractive))
@@ -47,18 +46,18 @@ func (t *testAuthenticationNetworkHandler) OnAuthKeyboardInteractive(
 
 	answers, err := challenge("", questions)
 	if err != nil {
-		return AuthResponseFailure, nil, err
+		return AuthResponseFailure, metadata.ConnectionAuthenticatedMetadata{}, err
 	}
 	for question, expectedAnswer := range foundUser.keyboardInteractive {
 		answerText, err := answers.GetByQuestionText(question)
 		if err != nil {
-			return AuthResponseFailure, nil, err
+			return AuthResponseFailure, metadata.ConnectionAuthenticatedMetadata{}, err
 		}
 		if answerText != expectedAnswer {
-			return AuthResponseFailure, nil, fmt.Errorf("invalid response")
+			return AuthResponseFailure, metadata.ConnectionAuthenticatedMetadata{}, fmt.Errorf("invalid response")
 		}
 	}
-	return AuthResponseSuccess, nil, nil
+	return AuthResponseSuccess, meta.Authenticated(foundUser.username), nil
 }
 
 func (t *testAuthenticationNetworkHandler) OnDisconnect() {
@@ -69,35 +68,40 @@ func (t *testAuthenticationNetworkHandler) OnShutdown(shutdownContext context.Co
 	t.backend.OnShutdown(shutdownContext)
 }
 
-func (t *testAuthenticationNetworkHandler) OnAuthPassword(username string, password []byte, clientVersion string) (response AuthResponse, metadata *auth2.ConnectionMetadata, reason error) {
+func (t *testAuthenticationNetworkHandler) OnAuthPassword(
+	meta metadata.ConnectionAuthPendingMetadata,
+	password []byte,
+) (response AuthResponse, responseMeta metadata.ConnectionAuthenticatedMetadata, reason error) {
 	for _, user := range t.rootHandler.users {
-		if user.username == username && user.password == string(password) {
-			return AuthResponseSuccess, nil, nil
+		if user.username == meta.Username && user.password == string(password) {
+			return AuthResponseSuccess, meta.Authenticated(user.username), nil
 		}
 	}
-	return AuthResponseFailure, nil, ErrAuthenticationFailed
+	return AuthResponseFailure, metadata.ConnectionAuthenticatedMetadata{}, ErrAuthenticationFailed
 }
 
-func (t *testAuthenticationNetworkHandler) OnAuthPubKey(username string, pubKey string, clientVersion string) (response AuthResponse, metadata *auth2.ConnectionMetadata, reason error) {
+func (t *testAuthenticationNetworkHandler) OnAuthPubKey(
+	meta metadata.ConnectionAuthPendingMetadata,
+	pubKey auth2.PublicKey,
+) (response AuthResponse, responseMeta metadata.ConnectionAuthenticatedMetadata, reason error) {
 	for _, user := range t.rootHandler.users {
-		if user.username == username {
+		if user.username == meta.Username {
 			for _, authorizedKey := range user.authorizedKeys {
-				if pubKey == authorizedKey {
-					return AuthResponseSuccess, nil, nil
+				if pubKey.PublicKey == authorizedKey {
+					return AuthResponseSuccess, meta.Authenticated(user.username), nil
 				}
 			}
 		}
 	}
-	return AuthResponseFailure, nil, ErrAuthenticationFailed
+	return AuthResponseFailure, metadata.ConnectionAuthenticatedMetadata{}, ErrAuthenticationFailed
 }
 
 // NOTE: This is a dummy implementation to test the plumbing, by no means how
 // GSSAPI is supposed to work :)
 type gssApiServer struct {
 	username string
-	success bool
+	success  bool
 }
-
 
 func (s *gssApiServer) AcceptSecContext(token []byte) (outputToken []byte, srcName string, needContinue bool, err error) {
 	s.username = string(token)
@@ -110,15 +114,21 @@ func (s *gssApiServer) VerifyMIC(micField []byte, micToken []byte) error {
 		s.success = true
 		return nil
 	}
-	return fmt.Errorf("Invalid username")
+	return fmt.Errorf("invalid username")
 }
 
 func (s *gssApiServer) DeleteSecContext() error {
 	return nil
 }
 
-func (s *gssApiServer) AllowLogin(username string) error {
-	return nil
+func (s *gssApiServer) AllowLogin(
+	username string,
+	meta metadata.ConnectionAuthPendingMetadata,
+) (metadata.ConnectionAuthenticatedMetadata, error) {
+	if s.success {
+		return meta.Authenticated(username), nil
+	}
+	return meta.AuthFailed(), nil
 }
 
 func (s *gssApiServer) Error() error {
@@ -129,38 +139,25 @@ func (s *gssApiServer) Success() bool {
 	return s.success
 }
 
-func (s *gssApiServer) Metadata() *auth2.ConnectionMetadata {
-	return nil
-}
-
 func (s *gssApiServer) OnDisconnect() {
 }
 
-func (s *gssApiServer) Password(_ string, _ []byte, _ string, _ net.IP) auth.AuthenticationContext {
-	s.success = false
+func (s *gssApiServer) GSSAPI(meta metadata.ConnectionMetadata) auth.GSSAPIServer {
 	return s
 }
 
-func (s *gssApiServer) PubKey(_ string, _ string, _ string, _ net.IP) auth.AuthenticationContext {
-	s.success = false
-	return s
-}
-
-func (s *gssApiServer) GSSAPIConfig(connectionId string, addr net.IP) auth.GSSAPIServer {
-	return s
-}
-
-func (t *testAuthenticationNetworkHandler) OnAuthGSSAPI() auth.GSSAPIServer {
+func (t *testAuthenticationNetworkHandler) OnAuthGSSAPI(_ metadata.ConnectionMetadata) auth.GSSAPIServer {
 	return &gssApiServer{}
 }
 
-func (t *testAuthenticationNetworkHandler) OnHandshakeFailed(err error) {
-	t.backend.OnHandshakeFailed(err)
+func (t *testAuthenticationNetworkHandler) OnHandshakeFailed(meta metadata.ConnectionMetadata, err error) {
+	t.backend.OnHandshakeFailed(meta, err)
 }
 
-func (t *testAuthenticationNetworkHandler) OnHandshakeSuccess(username string, clientVersion string, metadata *auth2.ConnectionMetadata) (
+func (t *testAuthenticationNetworkHandler) OnHandshakeSuccess(authenticatedMetadata metadata.ConnectionAuthenticatedMetadata) (
 	connection SSHConnectionHandler,
+	meta metadata.ConnectionAuthenticatedMetadata,
 	failureReason error,
 ) {
-	return t.backend.OnHandshakeSuccess(username, clientVersion, metadata)
+	return t.backend.OnHandshakeSuccess(authenticatedMetadata)
 }

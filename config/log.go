@@ -37,13 +37,13 @@ type LogConfig struct {
 // Validate validates the log configuration.
 func (c *LogConfig) Validate() error {
 	if err := c.Level.Validate(); err != nil {
-		return err
+		return wrap(err, "level")
 	}
 	if err := c.Format.Validate(); err != nil {
-		return err
+		return wrap(err, "format")
 	}
 	if err := c.Destination.Validate(); err != nil {
-		return err
+		return wrap(err, "destination")
 	}
 	if c.Destination == LogDestinationTest && c.T == nil {
 		return fmt.Errorf("test log destination selected but no test case provided")

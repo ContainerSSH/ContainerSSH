@@ -3,6 +3,8 @@ package sshserver
 import (
 	"context"
 	"net"
+
+	"github.com/containerssh/libcontainerssh/metadata"
 )
 
 // testHandlerImpl is a conformanceTestHandler implementation that fakes a "real" backend.
@@ -16,10 +18,10 @@ func (t *testHandlerImpl) OnShutdown(_ context.Context) {
 	t.shutdown = true
 }
 
-func (t *testHandlerImpl) OnNetworkConnection(client net.TCPAddr, connectionID string) (NetworkConnectionHandler, error) {
+func (t *testHandlerImpl) OnNetworkConnection(meta metadata.ConnectionMetadata) (NetworkConnectionHandler, metadata.ConnectionMetadata, error) {
 	return &testNetworkHandlerImpl{
-		client:       client,
-		connectionID: connectionID,
+		client:       net.TCPAddr(meta.RemoteAddress),
+		connectionID: meta.ConnectionID,
 		rootHandler:  t,
-	}, nil
+	}, meta, nil
 }

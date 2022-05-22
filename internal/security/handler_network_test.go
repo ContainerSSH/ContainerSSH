@@ -3,12 +3,14 @@ package security //nolint:testpackage
 import (
 	"context"
 	"io"
+	"net"
 	"sync"
 	"testing"
 
 	"github.com/containerssh/libcontainerssh/config"
 	"github.com/containerssh/libcontainerssh/internal/sshserver"
 	"github.com/containerssh/libcontainerssh/log"
+	"github.com/containerssh/libcontainerssh/metadata"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -26,16 +28,41 @@ func TestMaxSessions(t *testing.T) {
 	}
 
 	for i := 0; i < ssh.config.MaxSessions; i++ {
-		handler, err := ssh.OnSessionChannel(uint64(i), []byte{}, &sessionChannel{})
+		handler, err := ssh.OnSessionChannel(createChannelMetadata(i), []byte{}, &sessionChannel{})
 		assert.NoError(t, err)
 		assert.NoError(
 			t, handler.OnShell(0),
 		)
 	}
-	_, err := ssh.OnSessionChannel(uint64(ssh.config.MaxSessions), []byte{}, &sessionChannel{})
+	_, err := ssh.OnSessionChannel(createChannelMetadata(ssh.config.MaxSessions), []byte{}, &sessionChannel{})
 	assert.Error(t, err)
 	for i := 0; i < ssh.config.MaxSessions; i++ {
 		backend.exitChannel <- struct{}{}
+	}
+}
+
+func createChannelMetadata(i int) metadata.ChannelMetadata {
+	return metadata.ChannelMetadata{
+		Connection: metadata.ConnectionAuthenticatedMetadata{
+			ConnectionAuthPendingMetadata: metadata.ConnectionAuthPendingMetadata{
+				ConnectionMetadata: metadata.ConnectionMetadata{
+					RemoteAddress: metadata.RemoteAddress(
+						net.TCPAddr{
+							IP:   net.ParseIP("127.0.0.1"),
+							Port: 22,
+						},
+					),
+					ConnectionID: "asdf",
+					Metadata:     nil,
+					Environment:  nil,
+					Files:        nil,
+				},
+				ClientVersion: "",
+				Username:      "test",
+			},
+			AuthenticatedUsername: "test",
+		},
+		ChannelID: uint64(i),
 	}
 }
 
@@ -87,7 +114,7 @@ func (d *dummySSHBackend) OnUnsupportedChannel(_ uint64, _ string, _ []byte) {
 }
 
 func (d *dummySSHBackend) OnSessionChannel(
-	_ uint64,
+	_ metadata.ChannelMetadata,
 	_ []byte,
 	_ sshserver.SessionChannel,
 ) (channel sshserver.SessionChannelHandler, failureReason sshserver.ChannelRejection) {

@@ -5,10 +5,11 @@ import (
 	"sync"
 
 	auth2 "github.com/containerssh/libcontainerssh/auth"
-	"github.com/containerssh/libcontainerssh/internal/auth"
 	config2 "github.com/containerssh/libcontainerssh/config"
+	"github.com/containerssh/libcontainerssh/internal/auth"
 	"github.com/containerssh/libcontainerssh/internal/sshserver"
 	"github.com/containerssh/libcontainerssh/log"
+	"github.com/containerssh/libcontainerssh/metadata"
 )
 
 type networkHandler struct {
@@ -18,17 +19,15 @@ type networkHandler struct {
 }
 
 func (n *networkHandler) OnAuthKeyboardInteractive(
-	user string,
+	meta metadata.ConnectionAuthPendingMetadata,
 	challenge func(
 		instruction string,
 		questions sshserver.KeyboardInteractiveQuestions,
 	) (answers sshserver.KeyboardInteractiveAnswers, err error),
-	clientVersion string,
-) (response sshserver.AuthResponse, metadata *auth2.ConnectionMetadata, reason error) {
+) (sshserver.AuthResponse, metadata.ConnectionAuthenticatedMetadata, error) {
 	return n.backend.OnAuthKeyboardInteractive(
-		user,
+		meta,
 		challenge,
-		clientVersion,
 	)
 }
 
@@ -36,44 +35,45 @@ func (n *networkHandler) OnShutdown(shutdownContext context.Context) {
 	n.backend.OnShutdown(shutdownContext)
 }
 
-func (n *networkHandler) OnAuthPassword(username string, password []byte, clientVersion string) (
+func (n *networkHandler) OnAuthPassword(meta metadata.ConnectionAuthPendingMetadata, password []byte) (
 	response sshserver.AuthResponse,
-	metadata *auth2.ConnectionMetadata,
+	metadata metadata.ConnectionAuthenticatedMetadata,
 	reason error,
 ) {
-	return n.backend.OnAuthPassword(username, password, clientVersion)
+	return n.backend.OnAuthPassword(meta, password)
 }
 
-func (n *networkHandler) OnAuthPubKey(username string, pubKey string, clientVersion string) (
+func (n *networkHandler) OnAuthPubKey(meta metadata.ConnectionAuthPendingMetadata, pubKey auth2.PublicKey) (
 	response sshserver.AuthResponse,
-	metadata *auth2.ConnectionMetadata,
+	metadata metadata.ConnectionAuthenticatedMetadata,
 	reason error,
 ) {
-	return n.backend.OnAuthPubKey(username, pubKey, clientVersion)
+	return n.backend.OnAuthPubKey(meta, pubKey)
 }
 
-func (n *networkHandler) OnAuthGSSAPI() auth.GSSAPIServer {
-	return n.backend.OnAuthGSSAPI()
+func (n *networkHandler) OnAuthGSSAPI(meta metadata.ConnectionMetadata) auth.GSSAPIServer {
+	return n.backend.OnAuthGSSAPI(meta)
 }
 
-func (n *networkHandler) OnHandshakeFailed(reason error) {
-	n.backend.OnHandshakeFailed(reason)
+func (n *networkHandler) OnHandshakeFailed(meta metadata.ConnectionMetadata, reason error) {
+	n.backend.OnHandshakeFailed(meta, reason)
 }
 
-func (n *networkHandler) OnHandshakeSuccess(username string, clientVersion string, metadata *auth2.ConnectionMetadata) (
+func (n *networkHandler) OnHandshakeSuccess(meta metadata.ConnectionAuthenticatedMetadata) (
 	connection sshserver.SSHConnectionHandler,
+	metadata metadata.ConnectionAuthenticatedMetadata,
 	failureReason error,
 ) {
-	backend, failureReason := n.backend.OnHandshakeSuccess(username, clientVersion, metadata)
+	backend, _, failureReason := n.backend.OnHandshakeSuccess(meta)
 	if failureReason != nil {
-		return nil, failureReason
+		return nil, meta, failureReason
 	}
 	return &sshConnectionHandler{
 		config:  n.config,
 		backend: backend,
 		lock:    &sync.Mutex{},
 		logger:  n.logger,
-	}, nil
+	}, meta, nil
 }
 
 func (n *networkHandler) OnDisconnect() {

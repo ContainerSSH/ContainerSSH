@@ -89,16 +89,16 @@ func (config *AuditLogConfig) Validate() error {
 		return nil
 	}
 	if err := config.Format.Validate(); err != nil {
-		return err
+		return wrap(err, "format")
 	}
 	if err := config.Storage.Validate(); err != nil {
-		return fmt.Errorf("invalid audit log storage (%w)", err)
+		return wrap(err, "storage")
 	}
 	switch config.Storage {
 	case AuditLogStorageFile:
-		return config.File.Validate()
+		return wrap(config.File.Validate(), "file")
 	case AuditLogStorageS3:
-		return config.S3.Validate()
+		return wrap(config.S3.Validate(), "s3")
 	}
 	return nil
 }
@@ -111,27 +111,26 @@ type AuditLogFileConfig struct {
 func (c *AuditLogFileConfig) Validate() error {
 	stat, err := os.Stat(c.Directory)
 	if err != nil {
-		return fmt.Errorf("invalid audit log directory: %s (%w)", c.Directory, err)
+		return wrapWithMessage(err, "directory", "invalid audit log directory: %s", c.Directory)
 	}
 	if !stat.IsDir() {
-		return fmt.Errorf("invalid audit log directory: %s (not a directory)", c.Directory)
+		return newError("directory", "invalid audit log directory: %s (not a directory)", c.Directory)
 	}
 	return nil
 }
 
-
 // AuditLogS3Config S3 storage configuration
 type AuditLogS3Config struct {
-	Local           string   `json:"local" yaml:"local" default:"/var/lib/audit"`
-	AccessKey       string   `json:"accessKey" yaml:"accessKey"`
-	SecretKey       string   `json:"secretKey" yaml:"secretKey"`
-	Bucket          string   `json:"bucket" yaml:"bucket"`
-	Region          string   `json:"region" yaml:"region"`
-	Endpoint        string   `json:"endpoint" yaml:"endpoint"`
-	CACert          string   `json:"cacert" yaml:"cacert"`
-	ACL             string   `json:"acl" yaml:"acl"`
-	PathStyleAccess bool     `json:"pathStyleAccess" yaml:"pathStyleAccess"`
-	UploadPartSize  uint     `json:"uploadPartSize" yaml:"uploadPartSize" default:"5242880"`
+	Local           string             `json:"local" yaml:"local" default:"/var/lib/audit"`
+	AccessKey       string             `json:"accessKey" yaml:"accessKey"`
+	SecretKey       string             `json:"secretKey" yaml:"secretKey"`
+	Bucket          string             `json:"bucket" yaml:"bucket"`
+	Region          string             `json:"region" yaml:"region"`
+	Endpoint        string             `json:"endpoint" yaml:"endpoint"`
+	CACert          string             `json:"cacert" yaml:"cacert"`
+	ACL             string             `json:"acl" yaml:"acl"`
+	PathStyleAccess bool               `json:"pathStyleAccess" yaml:"pathStyleAccess"`
+	UploadPartSize  uint               `json:"uploadPartSize" yaml:"uploadPartSize" default:"5242880"`
 	ParallelUploads uint               `json:"parallelUploads" yaml:"parallelUploads" default:"20"`
 	Metadata        AuditLogS3Metadata `json:"metadata" yaml:"metadata"`
 }
@@ -139,29 +138,29 @@ type AuditLogS3Config struct {
 // Validate validates the
 func (config AuditLogS3Config) Validate() error {
 	if config.Local == "" {
-		return fmt.Errorf("empty local storage directory provided")
+		return newError("local", "empty local storage directory provided")
 	}
 	stat, err := os.Stat(config.Local)
 	if err != nil {
-		return fmt.Errorf("invalid local directory: %s (%w)", config.Local, err)
+		return wrapWithMessage(err, "local", "invalid local directory: %s", config.Local)
 	}
 	if !stat.IsDir() {
-		return fmt.Errorf("invalid local directory: %s (not a directory)", config.Local)
+		return newError("local", "invalid local directory: %s (not a directory)", config.Local)
 	}
 	if config.AccessKey == "" {
-		return fmt.Errorf("no access key provided")
+		return newError("accessKey", "no access key provided")
 	}
 	if config.SecretKey == "" {
-		return fmt.Errorf("no secret key provided")
+		return newError("secretKey", "no secret key provided")
 	}
 	if config.Bucket == "" {
-		return fmt.Errorf("no bucket name provided")
+		return newError("bucket", "no bucket name provided")
 	}
 	if config.UploadPartSize < 5242880 {
-		return fmt.Errorf("upload part size too low %d (minimum 5 MB)", config.UploadPartSize)
+		return newError("uploadPartSize", "upload part size too low %d (minimum 5 MB)", config.UploadPartSize)
 	}
 	if config.ParallelUploads < 1 {
-		return fmt.Errorf("parallel uploads invalid: %d (must be positive)", config.ParallelUploads)
+		return newError("parallelUploads", "parallel uploads invalid: %d (must be positive)", config.ParallelUploads)
 	}
 	return nil
 }
@@ -171,4 +170,3 @@ type AuditLogS3Metadata struct {
 	IP       bool `json:"ip" yaml:"ip"`
 	Username bool `json:"username" yaml:"username"`
 }
-

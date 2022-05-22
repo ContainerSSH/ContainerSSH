@@ -8,6 +8,7 @@ import (
 	"github.com/containerssh/libcontainerssh/internal/sshserver"
 	"github.com/containerssh/libcontainerssh/log"
 	"github.com/containerssh/libcontainerssh/message"
+	"github.com/containerssh/libcontainerssh/metadata"
 	"golang.org/x/crypto/ssh"
 )
 
@@ -27,7 +28,7 @@ func (s *sshConnectionHandler) OnUnsupportedChannel(_ uint64, _ string, _ []byte
 }
 
 func (s *sshConnectionHandler) OnSessionChannel(
-	_ uint64,
+	_ metadata.ChannelMetadata,
 	extraData []byte,
 	session sshserver.SessionChannel,
 ) (channel sshserver.SessionChannelHandler, failureReason sshserver.ChannelRejection) {

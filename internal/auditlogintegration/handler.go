@@ -9,6 +9,7 @@ import (
 	"github.com/containerssh/libcontainerssh/auditlog/message"
 	"github.com/containerssh/libcontainerssh/internal/auditlog"
 	"github.com/containerssh/libcontainerssh/internal/sshserver"
+	"github.com/containerssh/libcontainerssh/metadata"
 )
 
 type handler struct {
@@ -34,16 +35,20 @@ func (h *handler) OnShutdown(shutdownContext context.Context) {
 	wg.Wait()
 }
 
-func (h *handler) OnNetworkConnection(client net.TCPAddr, connectionID string) (sshserver.NetworkConnectionHandler, error) {
-	backend, err := h.backend.OnNetworkConnection(client, connectionID)
+func (h *handler) OnNetworkConnection(meta metadata.ConnectionMetadata) (
+	sshserver.NetworkConnectionHandler,
+	metadata.ConnectionMetadata,
+	error,
+) {
+	backend, meta, err := h.backend.OnNetworkConnection(meta)
 	if err != nil {
-		return nil, err
+		return nil, meta, err
 	}
-	auditConnection, err := h.logger.OnConnect(message.ConnectionID(connectionID), client)
+	auditConnection, err := h.logger.OnConnect(message.ConnectionID(meta.ConnectionID), net.TCPAddr(meta.RemoteAddress))
 	if err != nil {
-		return nil, fmt.Errorf(
+		return nil, meta, fmt.Errorf(
 			"failed to initialize audit logger for connection from %s (%w)",
-			client.IP.String(),
+			meta.RemoteAddress.IP.String(),
 			err,
 		)
 	}
@@ -51,5 +56,5 @@ func (h *handler) OnNetworkConnection(client net.TCPAddr, connectionID string) (
 	return &networkConnectionHandler{
 		backend: backend,
 		audit:   auditConnection,
-	}, nil
+	}, meta, nil
 }

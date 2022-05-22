@@ -1,32 +1,19 @@
 package auth
 
+import (
+	"github.com/containerssh/libcontainerssh/metadata"
+)
+
 // PasswordAuthRequest is an authentication request for password authentication.
 //
 // swagger:model PasswordAuthRequest
 type PasswordAuthRequest struct {
-	// Username is the username provided for authentication.
-	//
-	// required: true
-	Username string `json:"username"`
-
-	// RemoteAddress is the IP address of the user trying to authenticate.
-	//
-	// required: true
-	RemoteAddress string `json:"remoteAddress"`
-
-	// ConnectionID is an opaque ID to identify the SSH connection in question.
-	//
-	// required: true
-	ConnectionID string `json:"connectionId"`
-
-	// SessionID is a deprecated alias for ConnectionID and will be removed in the future.
-	//
-	// required: true
-	SessionID string `json:"sessionId"`
+	metadata.ConnectionAuthPendingMetadata `json:",inline"`
 
 	// Password the user provided for authentication.
 	//
 	// required: true
+	// swagger:strfmt Base64
 	Password string `json:"passwordBase64"`
 }
 
@@ -34,30 +21,9 @@ type PasswordAuthRequest struct {
 //
 // swagger:model PublicKeyAuthRequest
 type PublicKeyAuthRequest struct {
-	// Username is the username provided for authentication.
-	//
-	// required: true
-	Username string `json:"username"`
+	metadata.ConnectionAuthPendingMetadata `json:",inline"`
 
-	// RemoteAddress is the IP address of the user trying to authenticate.
-	//
-	// required: true
-	RemoteAddress string `json:"remoteAddress"`
-
-	// ConnectionID is an opaque ID to identify the SSH connection in question.
-	//
-	// required: true
-	ConnectionID string `json:"connectionId"`
-
-	// SessionID is a deprecated alias for ConnectionID and will be removed in the future.
-	//
-	// required: true
-	SessionID string `json:"sessionId"`
-
-	// PublicKey is the key in the authorized key format.
-	//
-	// required: true
-	PublicKey string `json:"publicKey"`
+	PublicKey `json:",inline"`
 }
 
 // AuthorizationRequest is the authorization request used after some
@@ -66,46 +32,20 @@ type PublicKeyAuthRequest struct {
 //
 // swagger:model AuthorizationRequest
 type AuthorizationRequest struct {
-	// PrincipalUsername is the authenticated username of the user, this
-	// username has been verified to be correct and to correspond to the
-	// user that is connecting.
-	//
-	// required: true
-	PrincipalUsername string `json:"principalUsername"`
-	// LoginUsername is the username the user wishes to log in as. In
-	// general, the authorization must check that this matches the
-	// PrincipalUsername, however in some cases it may be beneficial to let
-	// some users log in as others (e.g. administrators logging in as
-	// normal users to debug)
-	//
-	// required: true
-	LoginUsername string `json:"loginUsername"`
-	// RemoteAddress is the address the user is connecting from
-	//
-	// required: true
-	RemoteAddress string `json:"remoteAddress"`
-	// ConnectionID is an opaque ID to identify the SSH connection
-	//
-	// required: true
-	ConnectionID string `json:"connectionId"`
+	metadata.ConnectionAuthenticatedMetadata `json:",inline"`
 }
 
 // ResponseBody is a response to authentication requests.
 //
 // swagger:model AuthResponseBody
 type ResponseBody struct {
+	metadata.ConnectionAuthenticatedMetadata `json:",inline"`
+
 	// Success indicates if the authentication was successful.
 	//
 	// required: true
+	// in: body
 	Success bool `json:"success"`
-
-	// Metadata is a set of key-value pairs that can be returned and either
-	// consumed by the configuration server or
-	// exposed in the backend as environment variables.
-	// They can also be used to deploy files in the container
-	//
-	// required: false
-	Metadata *ConnectionMetadata `json:"metadata,omitempty"`
 }
 
 // Response is the full HTTP authentication response.

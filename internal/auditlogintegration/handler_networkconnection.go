@@ -3,11 +3,12 @@ package auditlogintegration
 import (
 	"context"
 
-	auth2 "github.com/containerssh/libcontainerssh/auth"
-	"github.com/containerssh/libcontainerssh/internal/auth"
 	"github.com/containerssh/libcontainerssh/auditlog/message"
+	publicAuth "github.com/containerssh/libcontainerssh/auth"
 	"github.com/containerssh/libcontainerssh/internal/auditlog"
+	internalAuth "github.com/containerssh/libcontainerssh/internal/auth"
 	"github.com/containerssh/libcontainerssh/internal/sshserver"
+	"github.com/containerssh/libcontainerssh/metadata"
 )
 
 type networkConnectionHandler struct {
@@ -16,27 +17,28 @@ type networkConnectionHandler struct {
 }
 
 func (n *networkConnectionHandler) OnAuthKeyboardInteractive(
-	user string,
+	meta metadata.ConnectionAuthPendingMetadata,
 	challenge func(
 		instruction string,
 		questions sshserver.KeyboardInteractiveQuestions,
 	) (answers sshserver.KeyboardInteractiveAnswers, err error),
-	clientVersion string,
-) (response sshserver.AuthResponse, metadata *auth2.ConnectionMetadata, reason error) {
+) (response sshserver.AuthResponse, metadata metadata.ConnectionAuthenticatedMetadata, reason error) {
 	return n.backend.OnAuthKeyboardInteractive(
-		user,
+		meta,
 		func(
 			instruction string,
 			questions sshserver.KeyboardInteractiveQuestions,
 		) (answers sshserver.KeyboardInteractiveAnswers, err error) {
 			var auditQuestions []message.KeyboardInteractiveQuestion
 			for _, q := range questions {
-				auditQuestions = append(auditQuestions, message.KeyboardInteractiveQuestion{
-					Question: q.Question,
-					Echo:     q.EchoResponse,
-				})
+				auditQuestions = append(
+					auditQuestions, message.KeyboardInteractiveQuestion{
+						Question: q.Question,
+						Echo:     q.EchoResponse,
+					},
+				)
 			}
-			n.audit.OnAuthKeyboardInteractiveChallenge(user, instruction, auditQuestions)
+			n.audit.OnAuthKeyboardInteractiveChallenge(meta.Username, instruction, auditQuestions)
 			answers, err = challenge(instruction, questions)
 			if err != nil {
 				return answers, err
@@ -52,10 +54,9 @@ func (n *networkConnectionHandler) OnAuthKeyboardInteractive(
 					Answer:   a,
 				})
 			}
-			n.audit.OnAuthKeyboardInteractiveAnswer(user, auditAnswers)
+			n.audit.OnAuthKeyboardInteractiveAnswer(meta.Username, auditAnswers)
 			return answers, err
 		},
-		clientVersion,
 	)
 }
 
@@ -64,79 +65,81 @@ func (n *networkConnectionHandler) OnShutdown(shutdownContext context.Context) {
 }
 
 func (n *networkConnectionHandler) OnAuthPassword(
-	username string,
+	meta metadata.ConnectionAuthPendingMetadata,
 	password []byte,
-	clientVersion string,
-) (response sshserver.AuthResponse, metadata *auth2.ConnectionMetadata, reason error) {
-	n.audit.OnAuthPassword(username, password)
-	response, metadata, reason = n.backend.OnAuthPassword(username, password, clientVersion)
+) (response sshserver.AuthResponse, authenticatedMetadata metadata.ConnectionAuthenticatedMetadata, reason error) {
+	n.audit.OnAuthPassword(meta.Username, password)
+	response, authenticatedMetadata, reason = n.backend.OnAuthPassword(meta, password)
 	switch response {
 	case sshserver.AuthResponseSuccess:
-		n.audit.OnAuthPasswordSuccess(username, password)
+		// TODO add authenticated username
+		n.audit.OnAuthPasswordSuccess(meta.Username, password)
 	case sshserver.AuthResponseFailure:
-		n.audit.OnAuthPasswordFailed(username, password)
+		// TODO add authenticated username
+		n.audit.OnAuthPasswordFailed(meta.Username, password)
 	case sshserver.AuthResponseUnavailable:
 		if reason != nil {
-			n.audit.OnAuthPasswordBackendError(username, password, reason.Error())
+			n.audit.OnAuthPasswordBackendError(meta.Username, password, reason.Error())
 		} else {
-			n.audit.OnAuthPasswordBackendError(username, password, "")
+			n.audit.OnAuthPasswordBackendError(meta.Username, password, "")
 		}
 	}
-	return response, metadata, reason
+	return response, authenticatedMetadata, reason
 }
 
 func (n *networkConnectionHandler) OnAuthPubKey(
-	username string,
-	pubKey string,
-	clientVersion string,
+	meta metadata.ConnectionAuthPendingMetadata,
+	pubKey publicAuth.PublicKey,
 ) (
 	response sshserver.AuthResponse,
-	metadata *auth2.ConnectionMetadata,
+	metadata metadata.ConnectionAuthenticatedMetadata,
 	reason error,
 ) {
-	n.audit.OnAuthPubKey(username, pubKey)
-	response, metadata, reason = n.backend.OnAuthPubKey(username, pubKey, clientVersion)
+	// TODO add authenticated username
+	n.audit.OnAuthPubKey(meta.Username, pubKey.PublicKey)
+	response, authMeta, reason := n.backend.OnAuthPubKey(meta, pubKey)
 	switch response {
 	case sshserver.AuthResponseSuccess:
-		n.audit.OnAuthPubKeySuccess(username, pubKey)
+		n.audit.OnAuthPubKeySuccess(authMeta.Username, pubKey.PublicKey)
 	case sshserver.AuthResponseFailure:
-		n.audit.OnAuthPubKeyFailed(username, pubKey)
+		n.audit.OnAuthPubKeyFailed(authMeta.Username, pubKey.PublicKey)
 	case sshserver.AuthResponseUnavailable:
 		if reason != nil {
-			n.audit.OnAuthPubKeyBackendError(username, pubKey, reason.Error())
+			n.audit.OnAuthPubKeyBackendError(authMeta.Username, pubKey.PublicKey, reason.Error())
 		} else {
-			n.audit.OnAuthPubKeyBackendError(username, pubKey, "")
+			n.audit.OnAuthPubKeyBackendError(authMeta.Username, pubKey.PublicKey, "")
 		}
 	}
-	return response, metadata, reason
+	return response, authMeta, reason
 }
 
-func (n *networkConnectionHandler) OnAuthGSSAPI() auth.GSSAPIServer {
-	return n.backend.OnAuthGSSAPI()
+func (n *networkConnectionHandler) OnAuthGSSAPI(meta metadata.ConnectionMetadata) internalAuth.GSSAPIServer {
+	// TODO add audit logging
+	return n.backend.OnAuthGSSAPI(meta)
 }
 
-func (n *networkConnectionHandler) OnHandshakeFailed(reason error) {
-	n.backend.OnHandshakeFailed(reason)
+func (n *networkConnectionHandler) OnHandshakeFailed(meta metadata.ConnectionMetadata, reason error) {
+	n.backend.OnHandshakeFailed(meta, reason)
 	n.audit.OnHandshakeFailed(reason.Error())
 }
 
 func (n *networkConnectionHandler) OnHandshakeSuccess(
-	username string,
-	clientVersion string,
-	metadata *auth2.ConnectionMetadata,
+	meta metadata.ConnectionAuthenticatedMetadata,
 ) (
 	connection sshserver.SSHConnectionHandler,
+	metadata metadata.ConnectionAuthenticatedMetadata,
 	failureReason error,
 ) {
-	n.audit.OnHandshakeSuccessful(username)
-	backend, err := n.backend.OnHandshakeSuccess(username, clientVersion, metadata)
+	// TODO log authenticated username
+	n.audit.OnHandshakeSuccessful(meta.Username)
+	backend, meta, err := n.backend.OnHandshakeSuccess(meta)
 	if err != nil {
-		return nil, err
+		return nil, meta, err
 	}
 	return &sshConnectionHandler{
 		backend: backend,
 		audit:   n.audit,
-	}, nil
+	}, meta, nil
 }
 
 func (n *networkConnectionHandler) OnDisconnect() {

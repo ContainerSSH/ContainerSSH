@@ -1,9 +1,5 @@
 package config
 
-import (
-	"fmt"
-)
-
 type MetricsConfig struct {
 	HTTPServerConfiguration `json:",inline" yaml:",inline" default:"{\"listen\":\"0.0.0.0:9100\"}"`
 
@@ -17,7 +13,7 @@ func (c MetricsConfig) Validate() error {
 		return nil
 	}
 	if c.Path == "" {
-		return fmt.Errorf("metrics path cannot be empty")
+		return newError("path", "metrics path cannot be empty")
 	}
 	return c.HTTPServerConfiguration.Validate()
 }

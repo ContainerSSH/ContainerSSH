@@ -24,12 +24,13 @@ import (
 	"os/signal"
 	"syscall"
 
-	auth2 "github.com/containerssh/libcontainerssh/auth"
+	publicAuth "github.com/containerssh/libcontainerssh/auth"
 	"github.com/containerssh/libcontainerssh/config"
 	configWebhook "github.com/containerssh/libcontainerssh/config/webhook"
 	"github.com/containerssh/libcontainerssh/http"
 	"github.com/containerssh/libcontainerssh/internal/auth"
 	"github.com/containerssh/libcontainerssh/log"
+	"github.com/containerssh/libcontainerssh/metadata"
 	"github.com/containerssh/libcontainerssh/service"
 	"github.com/docker/docker/api/types/container"
 )
@@ -52,17 +53,17 @@ type authHandler struct {
 // responses:
 //   "200":
 //     "$ref": "#/responses/AuthResponse"
-func (a *authHandler) OnPassword(Username string, _ []byte, _ string, _ string) (
+func (a *authHandler) OnPassword(meta metadata.ConnectionAuthPendingMetadata, Password []byte) (
 	bool,
-	*auth2.ConnectionMetadata,
+	metadata.ConnectionAuthenticatedMetadata,
 	error,
 ) {
 	if os.Getenv("CONTAINERSSH_ALLOW_ALL") == "1" ||
-		Username == "foo" ||
-		Username == "busybox" {
-		return true, nil, nil
+		meta.Username == "foo" ||
+		meta.Username == "busybox" {
+		return true, meta.Authenticated(meta.Username), nil
 	}
-	return false, nil, nil
+	return false, meta.AuthFailed(), nil
 }
 
 // swagger:operation POST /pubkey Authentication authPubKey
@@ -80,15 +81,15 @@ func (a *authHandler) OnPassword(Username string, _ []byte, _ string, _ string) 
 // responses:
 //   "200":
 //     "$ref": "#/responses/AuthResponse"
-func (a *authHandler) OnPubKey(Username string, _ string, _ string, _ string) (
+func (a *authHandler) OnPubKey(meta metadata.ConnectionAuthPendingMetadata, publicKey publicAuth.PublicKey) (
 	bool,
-	*auth2.ConnectionMetadata,
+	metadata.ConnectionAuthenticatedMetadata,
 	error,
 ) {
-	if Username == "foo" || Username == "busybox" {
-		return true, nil, nil
+	if meta.Username == "foo" || meta.Username == "busybox" {
+		return true, meta.Authenticated(meta.Username), nil
 	}
-	return false, nil, nil
+	return false, meta.AuthFailed(), nil
 }
 
 // swagger:operation POST /authz Authentication authz
@@ -106,15 +107,15 @@ func (a *authHandler) OnPubKey(Username string, _ string, _ string, _ string) (
 // responses:
 //   "200":
 //     "$ref": "#/responses/AuthResponse"
-func (a *authHandler) OnAuthorization(PrincipalUsername string, _ string,_ string, _ string) (
+func (a *authHandler) OnAuthorization(meta metadata.ConnectionAuthenticatedMetadata) (
 	bool,
-	*auth2.ConnectionMetadata,
+	metadata.ConnectionAuthenticatedMetadata,
 	error,
 ) {
-	if PrincipalUsername == "foo" || PrincipalUsername == "busybox" {
-		return true, nil, nil
+	if meta.Username == "foo" || meta.Username == "busybox" {
+		return true, meta.Authenticated(meta.Username), nil
 	}
-	return false, nil, nil
+	return false, meta.AuthFailed(), nil
 }
 
 type configHandler struct {
@@ -130,10 +131,10 @@ type configHandler struct {
 //   in: body
 //   description: The configuration request
 //   schema:
-//     "$ref": "#/definitions/Request"
+//     "$ref": "#/definitions/ConfigRequest"
 // responses:
 //   "200":
-//     "$ref": "#/responses/Response"
+//     "$ref": "#/responses/ConfigResponse"
 func (c *configHandler) OnConfig(request config.Request) (config.AppConfig, error) {
 	cfg := config.AppConfig{}
 

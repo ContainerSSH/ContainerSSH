@@ -3,12 +3,11 @@ package auth
 import (
 	"context"
 	"fmt"
-	"net"
 	"strings"
 
-	"github.com/containerssh/libcontainerssh/auth"
 	"github.com/containerssh/libcontainerssh/log"
 	"github.com/containerssh/libcontainerssh/message"
+	"github.com/containerssh/libcontainerssh/metadata"
 )
 
 type oauth2Client struct {
@@ -18,7 +17,7 @@ type oauth2Client struct {
 
 type oauth2Context struct {
 	success  bool
-	metadata *auth.ConnectionMetadata
+	metadata metadata.ConnectionAuthenticatedMetadata
 	err      error
 	flow     OAuth2Flow
 }
@@ -31,7 +30,7 @@ func (o *oauth2Context) Error() error {
 	return o.err
 }
 
-func (o *oauth2Context) Metadata() *auth.ConnectionMetadata {
+func (o *oauth2Context) Metadata() metadata.ConnectionAuthenticatedMetadata {
 	return o.metadata
 }
 
@@ -41,28 +40,8 @@ func (o *oauth2Context) OnDisconnect() {
 	}
 }
 
-func (o *oauth2Client) Password(_ string, _ []byte, _ string, _ net.IP) AuthenticationContext {
-	return &oauth2Context{false, nil, message.UserMessage(
-		message.EAuthUnsupported,
-		"Password authentication is not available.",
-		"OAuth2 doesn't support password authentication.",
-	), nil}
-}
-
-func (o *oauth2Client) PubKey(_ string, _ string, _ string, _ net.IP) AuthenticationContext {
-	return &oauth2Context{false, nil, message.UserMessage(
-		message.EAuthUnsupported,
-		"Public key authentication is not available.",
-		"OAuth2 doesn't support public key authentication.",
-	), nil}
-}
-
-func (client *oauth2Client) GSSAPIConfig(connectionId string, addr net.IP) GSSAPIServer {
-	return nil
-}
-
 func (o *oauth2Client) KeyboardInteractive(
-	username string,
+	meta metadata.ConnectionAuthPendingMetadata,
 	challenge func(
 		instruction string,
 		questions KeyboardInteractiveQuestions,
@@ -70,14 +49,11 @@ func (o *oauth2Client) KeyboardInteractive(
 		answers KeyboardInteractiveAnswers,
 		err error,
 	),
-	connectionID string,
-	_ net.IP,
 ) AuthenticationContext {
 	ctx := context.TODO()
-	metadata := &auth.ConnectionMetadata{}
 	var err error
 	if o.provider.SupportsDeviceFlow() {
-		deviceFlow, err := o.provider.GetDeviceFlow(connectionID, username)
+		deviceFlow, err := o.provider.GetDeviceFlow(meta)
 		if err == nil {
 			authorizationURL, userCode, expiration, err := deviceFlow.GetAuthorizationURL(ctx)
 			if err == nil {
@@ -90,23 +66,23 @@ func (o *oauth2Client) KeyboardInteractive(
 					KeyboardInteractiveQuestions{},
 				)
 				if err != nil {
-					return &oauth2Context{false, metadata, err, deviceFlow}
+					return &oauth2Context{false, meta.AuthFailed(), err, deviceFlow}
 				}
 				verifyContext, cancelFunc := context.WithTimeout(ctx, expiration)
 				defer cancelFunc()
-				metadata.Metadata, err = deviceFlow.Verify(verifyContext)
+				_, authenticatedMeta, err := deviceFlow.Verify(verifyContext)
 				// TODO fallback to authorization code flow if the device flow rate limit is exceeded.
 				if err != nil {
 					deviceFlow.Deauthorize(ctx)
-					return &oauth2Context{false, metadata, err, deviceFlow}
+					return &oauth2Context{false, authenticatedMeta, err, deviceFlow}
 				} else {
-					return &oauth2Context{true, metadata, nil, deviceFlow}
+					return &oauth2Context{true, authenticatedMeta, nil, deviceFlow}
 				}
 			}
 		}
 	}
 	if o.provider.SupportsAuthorizationCodeFlow() {
-		authCodeFlow, err := o.provider.GetAuthorizationCodeFlow(connectionID, username)
+		authCodeFlow, err := o.provider.GetAuthorizationCodeFlow(meta)
 		if err == nil {
 			link, err := authCodeFlow.GetAuthorizationURL(ctx)
 			if err == nil {
@@ -124,30 +100,36 @@ func (o *oauth2Client) KeyboardInteractive(
 					},
 				)
 				if err != nil {
-					return &oauth2Context{false, metadata, err, authCodeFlow}
+					return &oauth2Context{false, meta.AuthFailed(), err, authCodeFlow}
 				} else {
 					if code, ok := answers.Answers["code"]; ok {
 						parts := strings.SplitN(code, "|", 2)
 						if len(parts) != 2 {
-							return &oauth2Context{false, metadata, message.UserMessage(
-								message.EAuthFailed,
-								"Authentication failed.",
-								"Authentication failed because the return code did not contain the requisite state and code.",
-							), authCodeFlow}
+							return &oauth2Context{
+								false, meta.AuthFailed(), message.UserMessage(
+									message.EAuthFailed,
+									"Authentication failed.",
+									"Authentication failed because the return code did not contain the requisite state and code.",
+								), authCodeFlow,
+							}
 						}
-						metadata.Metadata, err = authCodeFlow.Verify(ctx, parts[0], parts[1])
+						_, authenticatedMeta, err := authCodeFlow.Verify(ctx, parts[0], parts[1])
 						if err != nil {
-							return &oauth2Context{false, metadata, err, authCodeFlow}
+							return &oauth2Context{false, authenticatedMeta, err, authCodeFlow}
 						} else {
-							return &oauth2Context{true, metadata, nil, authCodeFlow}
+							return &oauth2Context{true, authenticatedMeta, nil, authCodeFlow}
 						}
 					} else {
-						return &oauth2Context{false, metadata, err, authCodeFlow}
+						return &oauth2Context{false, meta.AuthFailed(), err, authCodeFlow}
 					}
 				}
 			}
 		}
 	}
-	return &oauth2Context{false, metadata, message.WrapUser(err,
-		message.EAuthFailed, "Authentication failed.", "Authentication failed."), nil}
+	return &oauth2Context{
+		false, meta.AuthFailed(), message.WrapUser(
+			err,
+			message.EAuthFailed, "Authentication failed.", "Authentication failed.",
+		), nil,
+	}
 }

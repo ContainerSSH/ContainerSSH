@@ -9,6 +9,7 @@ import (
 	"github.com/containerssh/libcontainerssh/internal/auth"
 	"github.com/containerssh/libcontainerssh/internal/metrics"
 	"github.com/containerssh/libcontainerssh/internal/sshserver"
+	"github.com/containerssh/libcontainerssh/metadata"
 )
 
 type metricsHandler struct {
@@ -29,21 +30,20 @@ func (m *metricsHandler) OnShutdown(shutdownContext context.Context) {
 }
 
 func (m *metricsHandler) OnNetworkConnection(
-	client net.TCPAddr,
-	connectionID string,
-) (sshserver.NetworkConnectionHandler, error) {
-	networkBackend, err := m.backend.OnNetworkConnection(client, connectionID)
+	meta metadata.ConnectionMetadata,
+) (sshserver.NetworkConnectionHandler, metadata.ConnectionMetadata, error) {
+	networkBackend, meta, err := m.backend.OnNetworkConnection(meta)
 	if err != nil {
-		return networkBackend, err
+		return networkBackend, meta, err
 	}
-	m.connectionsMetric.Increment(client.IP)
-	m.currentConnectionsMetric.Increment(client.IP)
+	m.connectionsMetric.Increment(meta.RemoteAddress.IP)
+	m.currentConnectionsMetric.Increment(meta.RemoteAddress.IP)
 	return &metricsNetworkHandler{
-		client:  client,
+		client:  net.TCPAddr(meta.RemoteAddress),
 		backend: networkBackend,
 		handler: m,
 		lock:    &sync.Mutex{},
-	}, nil
+	}, meta, nil
 }
 
 type metricsNetworkHandler struct {
@@ -58,57 +58,57 @@ func (m *metricsNetworkHandler) OnShutdown(shutdownContext context.Context) {
 	m.backend.OnShutdown(shutdownContext)
 }
 
-func (m *metricsNetworkHandler) OnAuthPassword(username string, password []byte, clientVersion string) (
+func (m *metricsNetworkHandler) OnAuthPassword(meta metadata.ConnectionAuthPendingMetadata, password []byte) (
 	response sshserver.AuthResponse,
-	metadata *auth2.ConnectionMetadata,
+	metadata metadata.ConnectionAuthenticatedMetadata,
 	reason error,
 ) {
-	return m.backend.OnAuthPassword(username, password, clientVersion)
+	return m.backend.OnAuthPassword(meta, password)
 }
 
-func (m *metricsNetworkHandler) OnAuthPubKey(username string, pubKey string, clientVersion string) (
+func (m *metricsNetworkHandler) OnAuthPubKey(meta metadata.ConnectionAuthPendingMetadata, pubKey auth2.PublicKey) (
 	response sshserver.AuthResponse,
-	metadata *auth2.ConnectionMetadata,
+	metadata metadata.ConnectionAuthenticatedMetadata,
 	reason error,
 ) {
-	return m.backend.OnAuthPubKey(username, pubKey, clientVersion)
+	return m.backend.OnAuthPubKey(meta, pubKey)
 }
 
 func (m *metricsNetworkHandler) OnAuthKeyboardInteractive(
-	user string,
+	meta metadata.ConnectionAuthPendingMetadata,
 	challenge func(
 		instruction string,
 		questions sshserver.KeyboardInteractiveQuestions,
 	) (answers sshserver.KeyboardInteractiveAnswers, err error),
-	clientVersion string,
 ) (
 	response sshserver.AuthResponse,
-	metadata *auth2.ConnectionMetadata,
+	metadata metadata.ConnectionAuthenticatedMetadata,
 	reason error,
 ) {
-	return m.backend.OnAuthKeyboardInteractive(user, challenge, clientVersion)
+	return m.backend.OnAuthKeyboardInteractive(meta, challenge)
 }
 
-func (m *metricsNetworkHandler) OnAuthGSSAPI() auth.GSSAPIServer {
-	return m.backend.OnAuthGSSAPI()
+func (m *metricsNetworkHandler) OnAuthGSSAPI(meta metadata.ConnectionMetadata) auth.GSSAPIServer {
+	return m.backend.OnAuthGSSAPI(meta)
 }
 
-func (m *metricsNetworkHandler) OnHandshakeFailed(reason error) {
+func (m *metricsNetworkHandler) OnHandshakeFailed(meta metadata.ConnectionMetadata, reason error) {
 	m.handler.handshakeFailedMetric.Increment(m.client.IP)
-	m.backend.OnHandshakeFailed(reason)
+	m.backend.OnHandshakeFailed(meta, reason)
 }
 
-func (m *metricsNetworkHandler) OnHandshakeSuccess(username string, clientVersion string, metadata *auth2.ConnectionMetadata) (
+func (m *metricsNetworkHandler) OnHandshakeSuccess(meta metadata.ConnectionAuthenticatedMetadata) (
 	connection sshserver.SSHConnectionHandler,
+	metadata metadata.ConnectionAuthenticatedMetadata,
 	failureReason error,
 ) {
-	connectionHandler, failureReason := m.backend.OnHandshakeSuccess(username, clientVersion, metadata)
+	connectionHandler, meta, failureReason := m.backend.OnHandshakeSuccess(meta)
 	if failureReason != nil {
 		m.handler.handshakeFailedMetric.Increment(m.client.IP)
-		return connectionHandler, failureReason
+		return connectionHandler, meta, failureReason
 	}
 	m.handler.handshakeSuccessfulMetric.Increment(m.client.IP)
-	return connectionHandler, failureReason
+	return connectionHandler, meta, failureReason
 }
 
 func (m *metricsNetworkHandler) OnDisconnect() {

@@ -3,11 +3,10 @@ package authintegration_test
 import (
 	"context"
 	"fmt"
-	"net"
 	"testing"
 	"time"
 
-	auth2 "github.com/containerssh/libcontainerssh/auth"
+	publicAuth "github.com/containerssh/libcontainerssh/auth"
 	"github.com/containerssh/libcontainerssh/config"
 	"github.com/containerssh/libcontainerssh/internal/auth"
 	"github.com/containerssh/libcontainerssh/internal/authintegration"
@@ -18,6 +17,7 @@ import (
 	"github.com/containerssh/libcontainerssh/internal/test"
 	"github.com/containerssh/libcontainerssh/log"
 	"github.com/containerssh/libcontainerssh/message"
+	"github.com/containerssh/libcontainerssh/metadata"
 	"github.com/containerssh/libcontainerssh/service"
 	"github.com/stretchr/testify/assert"
 	"golang.org/x/crypto/ssh"
@@ -68,14 +68,15 @@ func startSSHServer(t *testing.T, logger log.Logger, authServerPort int) (config
 	collector := metrics.New(dummy.New())
 	handler, _, err := authintegration.New(
 		config.AuthConfig{
-			Method: config.AuthMethodWebhook,
-			Webhook: config.AuthWebhookClientConfig{
-				HTTPClientConfiguration: config.HTTPClientConfiguration{
-					URL:     fmt.Sprintf("http://127.0.0.1:%d", authServerPort),
-					Timeout: 10 * time.Second,
+			PasswordAuth: config.PasswordAuthConfig{
+				Method: config.PasswordAuthMethodWebhook,
+				Webhook: config.AuthWebhookClientConfig{
+					HTTPClientConfiguration: config.HTTPClientConfiguration{
+						URL:     fmt.Sprintf("http://127.0.0.1:%d", authServerPort),
+						Timeout: 10 * time.Second,
+					},
+					AuthTimeout: 30 * time.Second,
 				},
-				Password: true,
-				PubKey:   false,
 			},
 		},
 		backend,
@@ -139,20 +140,21 @@ func (t *testBackend) OnUnsupportedGlobalRequest(_ uint64, _ string, _ []byte) {
 
 func (t *testBackend) OnUnsupportedChannel(_ uint64, _ string, _ []byte) {}
 
-func (t *testBackend) OnSessionChannel(_ uint64, _ []byte, _ sshserver.SessionChannel) (
+func (t *testBackend) OnSessionChannel(_ metadata.ChannelMetadata, _ []byte, _ sshserver.SessionChannel) (
 	_ sshserver.SessionChannelHandler,
 	_ sshserver.ChannelRejection,
 ) {
 	return nil, sshserver.NewChannelRejection(ssh.UnknownChannelType, message.MTest, "not supported", "not supported")
 }
 
-func (t *testBackend) OnHandshakeFailed(_ error) {}
+func (t *testBackend) OnHandshakeFailed(_ metadata.ConnectionMetadata, _ error) {}
 
-func (t *testBackend) OnHandshakeSuccess(_ string, _ string, _ *auth2.ConnectionMetadata) (
+func (t *testBackend) OnHandshakeSuccess(meta metadata.ConnectionAuthenticatedMetadata) (
 	connection sshserver.SSHConnectionHandler,
+	metadata metadata.ConnectionAuthenticatedMetadata,
 	failureReason error,
 ) {
-	return t, nil
+	return t, meta, nil
 }
 
 func (t *testBackend) OnDisconnect() {
@@ -167,11 +169,12 @@ func (t *testBackend) OnShutdown(_ context.Context) {
 
 }
 
-func (t *testBackend) OnNetworkConnection(_ net.TCPAddr, _ string) (
+func (t *testBackend) OnNetworkConnection(meta metadata.ConnectionMetadata) (
 	sshserver.NetworkConnectionHandler,
+	metadata.ConnectionMetadata,
 	error,
 ) {
-	return t, nil
+	return t, meta, nil
 }
 
 // endregion
@@ -181,37 +184,30 @@ type authHandler struct {
 }
 
 func (h *authHandler) OnPassword(
-	Username string,
+	meta metadata.ConnectionAuthPendingMetadata,
 	Password []byte,
-	_ string,
-	_ string,
-) (bool, *auth2.ConnectionMetadata, error) {
-	if Username == "foo" && string(Password) == "bar" {
-		return true, nil, nil
+) (bool, metadata.ConnectionAuthenticatedMetadata, error) {
+	if meta.Username == "foo" && string(Password) == "bar" {
+		return true, meta.Authenticated(meta.Username), nil
 	}
-	if Username == "crash" {
+	if meta.Username == "crash" {
 		// Simulate a database failure
-		return false, nil, fmt.Errorf("database error")
+		return false, meta.AuthFailed(), fmt.Errorf("database error")
 	}
-	return false, nil, nil
+	return false, meta.AuthFailed(), nil
 }
 
 func (h *authHandler) OnPubKey(
-	_ string,
-	_ string,
-	_ string,
-	_ string,
-) (bool, *auth2.ConnectionMetadata, error) {
-	return false, nil, nil
+	meta metadata.ConnectionAuthPendingMetadata,
+	_ publicAuth.PublicKey,
+) (bool, metadata.ConnectionAuthenticatedMetadata, error) {
+	return false, meta.AuthFailed(), nil
 }
 
 func (h *authHandler) OnAuthorization(
-	_ string,
-	_ string,
-	_ string,
-	_ string,
-) (bool, *auth2.ConnectionMetadata, error) {
-	return false, nil, nil
+	meta metadata.ConnectionAuthenticatedMetadata,
+) (bool, metadata.ConnectionAuthenticatedMetadata, error) {
+	return false, meta.AuthFailed(), nil
 }
 
 // endregion

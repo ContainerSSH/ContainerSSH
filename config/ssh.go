@@ -103,22 +103,22 @@ func (cfg *SSHConfig) LoadHostKeys() ([]ssh.Signer, error) {
 // Validate validates the configuration and returns an error if invalid.
 func (cfg SSHConfig) Validate() error {
 	if err := cfg.ServerVersion.Validate(); err != nil {
-		return fmt.Errorf("invalid server version (%w)", err)
+		return wrap(err, "serverVersion")
 	}
 	if err := cfg.Ciphers.Validate(); err != nil {
-		return fmt.Errorf("invalid cipher list (%w)", err)
+		return wrap(err, "ciphers")
 	}
 	if err := cfg.KexAlgorithms.Validate(); err != nil {
-		return fmt.Errorf("invalid key exchange algorithms list (%w)", err)
+		return wrap(err, "kex")
 	}
 	if err := cfg.MACs.Validate(); err != nil {
-		return fmt.Errorf("invalid MAc list (%w)", err)
+		return wrap(err, "macs")
 	}
-	if cfg.ClientAliveInterval != 0 && cfg.ClientAliveInterval < 1 * time.Second {
-		return fmt.Errorf("clientAliveInterval should be at least 1 second long")
+	if cfg.ClientAliveInterval != 0 && cfg.ClientAliveInterval < 1*time.Second {
+		return newError("clientAliveInterval", "clientAliveInterval should be at least 1 second long")
 	}
 	if cfg.ClientAliveCountMax <= 0 {
-		return fmt.Errorf("clientAliveCountMax should be at least 1")
+		return newError("clientAliveCountMax", "clientAliveCountMax should be at least 1")
 	}
 	return nil
 }

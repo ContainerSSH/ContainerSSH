@@ -33,7 +33,7 @@ func NewTestServer(t *testing.T, handler Handler, logger log.Logger, config *con
 	lifecycle.OnRunning(
 		func(s service.Service, l service.Lifecycle) {
 			started <- struct{}{}
-	})
+		})
 
 	t.Cleanup(func() {
 		lifecycle.Stop(context.Background())

@@ -2,10 +2,10 @@ package auth_test
 
 import (
 	"fmt"
-	"net"
-	"testing"
 	"io/ioutil"
+	"net"
 	"os"
+	"testing"
 
 	configuration "github.com/containerssh/libcontainerssh/config"
 	"github.com/containerssh/libcontainerssh/internal/auth"
@@ -14,6 +14,7 @@ import (
 	"github.com/containerssh/libcontainerssh/internal/structutils"
 	"github.com/containerssh/libcontainerssh/internal/test"
 	"github.com/containerssh/libcontainerssh/log"
+	"github.com/containerssh/libcontainerssh/metadata"
 	"github.com/stretchr/testify/assert"
 
 	"golang.org/x/crypto/ssh"
@@ -36,7 +37,11 @@ func tempFile(t *testing.T) *os.File {
 	return file
 }
 
-func setupKerberosClient(t *testing.T, config configuration.AuthConfig) auth.Client {
+func setupKerberosClient(
+	t *testing.T,
+	authType auth.AuthenticationType,
+	config configuration.AuthKerberosClientConfig,
+) auth.KerberosClient {
 	krb := test.Kerberos(t)
 	kt := tempFile(t)
 	n, err := kt.Write(krb.Keytab())
@@ -52,13 +57,14 @@ func setupKerberosClient(t *testing.T, config configuration.AuthConfig) auth.Cli
 	if n != len(krb.Keytab()) {
 		t.Fatal("Failed to write keytab")
 	}
-	config.Kerberos.Keytab = kt.Name()
+	config.Keytab = kt.Name()
 	err = kt.Close()
 	if err != nil {
 		t.Fatal("Failed to close keytab file", err)
 	}
 
 	c, err := auth.NewKerberosClient(
+		authType,
 		config,
 		log.NewTestLogger(t),
 		metrics.New(dummy.New()),
@@ -70,71 +76,139 @@ func setupKerberosClient(t *testing.T, config configuration.AuthConfig) auth.Cli
 }
 
 func TestKerberosPasswordAuth(t *testing.T) {
-	config := configuration.AuthConfig{
-		Method: configuration.AuthMethodKerberos,
-		Kerberos: configuration.AuthKerberosClientConfig{
-			EnforceUsername: true,
-			AllowPassword: true,
-			ConfigPath: "testdata/krb5.conf",
-		},
+	config := configuration.AuthKerberosClientConfig{
+		EnforceUsername: true,
+		ConfigPath:      "testdata/krb5.conf",
 	}
-	c := setupKerberosClient(t, config)
+	c := setupKerberosClient(t, auth.AuthenticationTypePassword, config)
 
-	ctx := c.Password("foo", []byte("test"), "asdf", net.ParseIP("127.0.0.1"))
+	ctx := c.Password(
+		metadata.ConnectionAuthPendingMetadata{
+			ConnectionMetadata: metadata.ConnectionMetadata{
+				RemoteAddress: metadata.RemoteAddress(
+					net.TCPAddr{
+						IP:   net.IPv4(127, 0, 0, 1),
+						Port: 22,
+					},
+				),
+				ConnectionID: "asdf",
+				Metadata:     map[string]metadata.Value{},
+				Environment:  map[string]metadata.Value{},
+				Files:        map[string]metadata.BinaryValue{},
+			},
+			Username: "foo",
+		},
+		[]byte("test"),
+	)
 	if !ctx.Success() {
 		assert.Fail(t, "Failed to login as foo", ctx.Error())
 	}
 
-	ctx = c.Password("foo", []byte("wrongpass"), "asdf", net.ParseIP("127.0.0.1"))
+	ctx = c.Password(
+		metadata.ConnectionAuthPendingMetadata{
+			ConnectionMetadata: metadata.ConnectionMetadata{
+				RemoteAddress: metadata.RemoteAddress(
+					net.TCPAddr{
+						IP:   net.IPv4(127, 0, 0, 1),
+						Port: 22,
+					},
+				),
+				ConnectionID: "asdf",
+				Metadata:     map[string]metadata.Value{},
+				Environment:  map[string]metadata.Value{},
+				Files:        map[string]metadata.BinaryValue{},
+			},
+			Username: "foo",
+		},
+		[]byte("wrongpass"),
+	)
 	if ctx.Success() {
 		assert.Fail(t, "Logged in as foo with wrong password")
 	}
 }
 
 func TestKerberosNoPassword(t *testing.T) {
-	config := configuration.AuthConfig{
-		Method: configuration.AuthMethodKerberos,
-		Kerberos: configuration.AuthKerberosClientConfig{
-			EnforceUsername: true,
-			AllowPassword: false,
-			ConfigPath: "testdata/krb5.conf",
-		},
+	config := configuration.AuthKerberosClientConfig{
+		EnforceUsername: true,
+		ConfigPath:      "testdata/krb5.conf",
 	}
-	c := setupKerberosClient(t, config)
+	c := setupKerberosClient(t, auth.AuthenticationTypeGSSAPI, config)
 
-	ctx := c.Password("foo", []byte("test"), "asdf", net.ParseIP("127.0.0.1"))
+	ctx := c.Password(
+		metadata.ConnectionAuthPendingMetadata{
+			ConnectionMetadata: metadata.ConnectionMetadata{
+				RemoteAddress: metadata.RemoteAddress(
+					net.TCPAddr{
+						IP:   net.IPv4(127, 0, 0, 1),
+						Port: 22,
+					},
+				),
+				ConnectionID: "asdf",
+				Metadata:     map[string]metadata.Value{},
+				Environment:  map[string]metadata.Value{},
+				Files:        map[string]metadata.BinaryValue{},
+			},
+			Username: "foo",
+		},
+		[]byte("test"),
+	)
 	if ctx.Success() {
 		assert.Fail(t, "Logged in as foo even though password is disallowed")
 	}
 
-	ctx = c.Password("foo", []byte("wrongpass"), "asdf", net.ParseIP("127.0.0.1"))
+	ctx = c.Password(
+		metadata.ConnectionAuthPendingMetadata{
+			ConnectionMetadata: metadata.ConnectionMetadata{
+				RemoteAddress: metadata.RemoteAddress(
+					net.TCPAddr{
+						IP:   net.IPv4(127, 0, 0, 1),
+						Port: 22,
+					},
+				),
+				ConnectionID: "asdf",
+				Metadata:     map[string]metadata.Value{},
+				Environment:  map[string]metadata.Value{},
+				Files:        map[string]metadata.BinaryValue{},
+			},
+			Username: "foo",
+		},
+		[]byte("wrongpass"),
+	)
 	if ctx.Success() {
 		assert.Fail(t, "Logged in as foo with wrong password")
 	}
 }
 
 func TestKerberosGSSAPIAuth(t *testing.T) {
-	config := configuration.AuthConfig{}
+	config := configuration.AuthKerberosClientConfig{}
 	structutils.Defaults(&config)
-	config.Method = configuration.AuthMethodKerberos
-	config.Kerberos.ConfigPath = "testdata/krb5.conf"
+	config.ConfigPath = "testdata/krb5.conf"
 
-	authCl := setupKerberosClient(t, config)
+	authCl := setupKerberosClient(t, auth.AuthenticationTypeGSSAPI, config)
 	userCl := krbAuth(t, "foo", "test")
 
 	gssClient := testGssApiClient{
 		client: userCl,
 	}
 
-
 	name, err := doGssAuth(
 		t,
 		"foo",
 		"host/testing.containerssh.io",
 		false,
-		authCl.GSSAPIConfig(
-			"asdf",
-			net.IPv4(127, 0, 0, 1),
+		authCl.GSSAPI(
+			metadata.ConnectionMetadata{
+				RemoteAddress: metadata.RemoteAddress(
+					net.TCPAddr{
+						IP:   net.IPv4(127, 0, 0, 1),
+						Port: 22,
+					},
+				),
+				ConnectionID: "asdf",
+				Metadata:     map[string]metadata.Value{},
+				Environment:  map[string]metadata.Value{},
+				Files:        map[string]metadata.BinaryValue{},
+			},
 		),
 		gssClient,
 	)
@@ -150,9 +224,19 @@ func TestKerberosGSSAPIAuth(t *testing.T) {
 		"foo",
 		"host/testing.containerssh.io",
 		true,
-		authCl.GSSAPIConfig(
-			"asdf",
-			net.IPv4(127, 0, 0, 1),
+		authCl.GSSAPI(
+			metadata.ConnectionMetadata{
+				RemoteAddress: metadata.RemoteAddress(
+					net.TCPAddr{
+						IP:   net.IPv4(127, 0, 0, 1),
+						Port: 22,
+					},
+				),
+				ConnectionID: "asdf",
+				Metadata:     map[string]metadata.Value{},
+				Environment:  map[string]metadata.Value{},
+				Files:        map[string]metadata.BinaryValue{},
+			},
 		),
 		gssClient,
 	)
@@ -168,9 +252,19 @@ func TestKerberosGSSAPIAuth(t *testing.T) {
 		"bar",
 		"host/testing.containerssh.io",
 		false,
-		authCl.GSSAPIConfig(
-			"asdf",
-			net.IPv4(127, 0, 0, 1),
+		authCl.GSSAPI(
+			metadata.ConnectionMetadata{
+				RemoteAddress: metadata.RemoteAddress(
+					net.TCPAddr{
+						IP:   net.IPv4(127, 0, 0, 1),
+						Port: 22,
+					},
+				),
+				ConnectionID: "asdf",
+				Metadata:     map[string]metadata.Value{},
+				Environment:  map[string]metadata.Value{},
+				Files:        map[string]metadata.BinaryValue{},
+			},
 		),
 		gssClient,
 	)
@@ -179,11 +273,10 @@ func TestKerberosGSSAPIAuth(t *testing.T) {
 	}
 }
 
-
 func krbAuth(t *testing.T, username string, password string) *client.Client {
 	conf, err := krb5cfg.Load("testdata/krb5.conf")
 	if err != nil {
-		panic (err)
+		panic(err)
 	}
 
 	cl := client.NewWithPassword(
@@ -201,7 +294,14 @@ func krbAuth(t *testing.T, username string, password string) *client.Client {
 	return cl
 }
 
-func doGssAuth(t *testing.T, username string, principal string, deleg bool, server auth.GSSAPIServer, client testGssApiClient) (string, error) {
+func doGssAuth(
+	t *testing.T,
+	username string,
+	principal string,
+	deleg bool,
+	server auth.GSSAPIServer,
+	client testGssApiClient,
+) (string, error) {
 	tok, cont, err := client.InitSecContext(principal, nil, deleg)
 	if err != nil {
 		return "", fmt.Errorf("Client failed to initialize context (%w)", err)
@@ -245,10 +345,10 @@ func doGssAuth(t *testing.T, username string, principal string, deleg bool, serv
 func buildMic(username string) []byte {
 	mic := auth.GSSAPIMicField{
 		SessionIdentifier: "abcdefg",
-		Request: 50,
-		UserName: username,
-		Service: "ssh-connection",
-		Method: "gssapi-with-mic",
+		Request:           50,
+		UserName:          username,
+		Service:           "ssh-connection",
+		Method:            "gssapi-with-mic",
 	}
 
 	return ssh.Marshal(mic)
@@ -256,7 +356,7 @@ func buildMic(username string) []byte {
 
 type testGssApiClient struct {
 	client *client.Client
-	key types.EncryptionKey
+	key    types.EncryptionKey
 }
 
 func (c *testGssApiClient) generateContext(target string, deleg bool) (outputToken []byte, needContinue bool, err error) {

@@ -7,11 +7,12 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/containerssh/libcontainerssh/auth"
+	auth2 "github.com/containerssh/libcontainerssh/auth"
 	"github.com/containerssh/libcontainerssh/config"
 	"github.com/containerssh/libcontainerssh/internal/sshserver"
 	"github.com/containerssh/libcontainerssh/log"
 	"github.com/containerssh/libcontainerssh/message"
+	"github.com/containerssh/libcontainerssh/metadata"
 )
 
 type networkHandler struct {
@@ -31,42 +32,51 @@ type networkHandler struct {
 	done                chan struct{}
 }
 
-func (n *networkHandler) OnAuthPassword(_ string, _ []byte, _ string) (sshserver.AuthResponse, *auth.ConnectionMetadata, error) {
-	return sshserver.AuthResponseUnavailable, nil, fmt.Errorf("docker does not support authentication")
+func (n *networkHandler) OnAuthPassword(meta metadata.ConnectionAuthPendingMetadata, _ []byte) (
+	sshserver.AuthResponse,
+	metadata.ConnectionAuthenticatedMetadata,
+	error,
+) {
+	return sshserver.AuthResponseUnavailable, meta.AuthFailed(), fmt.Errorf("docker does not support authentication")
 }
 
-func (n *networkHandler) OnAuthPubKey(_ string, _ string, _ string) (sshserver.AuthResponse, *auth.ConnectionMetadata, error) {
-	return sshserver.AuthResponseUnavailable, nil, fmt.Errorf("docker does not support authentication")
+func (n *networkHandler) OnAuthPubKey(
+	meta metadata.ConnectionAuthPendingMetadata,
+	_ auth2.PublicKey,
+) (sshserver.AuthResponse, metadata.ConnectionAuthenticatedMetadata, error) {
+	return sshserver.AuthResponseUnavailable, meta.AuthFailed(), fmt.Errorf("docker does not support authentication")
 }
 
-func (n *networkHandler) OnHandshakeFailed(_ error) {}
+func (n *networkHandler) OnHandshakeFailed(metadata.ConnectionMetadata, error) {}
 
-func (n *networkHandler) OnHandshakeSuccess(username string, _ string, metadata *auth.ConnectionMetadata) (
+func (n *networkHandler) OnHandshakeSuccess(meta metadata.ConnectionAuthenticatedMetadata) (
 	connection sshserver.SSHConnectionHandler,
+	metadata metadata.ConnectionAuthenticatedMetadata,
 	failureReason error,
 ) {
 	n.mutex.Lock()
 	defer n.mutex.Unlock()
 	ctx, cancelFunc := context.WithTimeout(
 		context.Background(),
-		n.config.Timeouts.ContainerStart)
+		n.config.Timeouts.ContainerStart,
+	)
 	defer cancelFunc()
-	n.username = username
-	var env map[string]string
+	n.username = meta.Username
+	env := map[string]string{}
 	if n.config.Execution.ExposeAuthMetadataAsEnv {
-		env = metadata.GetMetadata()
-	} else {
-		env = make(map[string]string)
+		for k, v := range meta.GetMetadata() {
+			env[k] = v.Value
+		}
 	}
-	for k, v := range metadata.GetEnvironment() {
-		env[k] = v
+	for k, v := range meta.GetEnvironment() {
+		env[k] = v.Value
 	}
 
 	if err := n.setupDockerClient(ctx, n.config); err != nil {
-		return nil, err
+		return nil, meta, err
 	}
 	if err := n.pullImage(ctx); err != nil {
-		return nil, err
+		return nil, meta, err
 	}
 	labels := map[string]string{}
 	labels["containerssh_connection_id"] = n.connectionID
@@ -77,30 +87,32 @@ func (n *networkHandler) OnHandshakeSuccess(username string, _ string, metadata 
 	var err error
 	if n.config.Execution.Mode == config.DockerExecutionModeConnection {
 		if cnt, err = n.dockerClient.createContainer(ctx, labels, env, nil, nil); err != nil {
-			return nil, err
+			return nil, meta, err
 		}
 		n.container = cnt
 		if err := n.container.start(ctx); err != nil {
-			return nil, err
+			return nil, meta, err
 		}
 
-		for path, content := range metadata.GetFiles() {
-			err := cnt.writeFile(path, content)
+		for path, content := range meta.GetFiles() {
+			err := cnt.writeFile(path, content.Value)
 			if err != nil {
-				n.logger.Warning(message.Wrap(
-					err,
-					message.EDockerWriteFileFailed,
-					"Failed to write file",
-				))
+				n.logger.Warning(
+					message.Wrap(
+						err,
+						message.EDockerWriteFileFailed,
+						"Failed to write file",
+					),
+				)
 			}
 		}
 	}
 
 	return &sshConnectionHandler{
 		networkHandler: n,
-		username:       username,
+		username:       meta.Username,
 		env:            env,
-	}, nil
+	}, meta, nil
 }
 
 func (n *networkHandler) pullNeeded(ctx context.Context) (bool, error) {

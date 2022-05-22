@@ -298,7 +298,7 @@ type HTTPClientConfiguration struct {
 
 	// CACert is either the CA certificate to expect on the server in PEM format
 	//         or the name of a file containing the PEM.
-	CACert string `json:"cacert" yaml:"cacert" comment:"CA certificate in PEM format to use for host verification. Note: due to a bug in Go on Windows this has to be explicitly provided."`
+	CACert string `json:"cacert" yaml:"cacert" comment:"CA certificate in PEM format to use for host verification."`
 
 	// ClientCert is a PEM containing an x509 certificate to present to the server or a file name containing the PEM.
 	ClientCert string `json:"cert" yaml:"cert" comment:"Client certificate file in PEM format."`
@@ -339,14 +339,14 @@ func (c *HTTPClientConfiguration) ValidateWithCerts() (*HTTPClientCerts, error) 
 
 	_, err := url.ParseRequestURI(c.URL)
 	if err != nil {
-		return nil, fmt.Errorf("invalid URL: %s", c.URL)
+		return nil, newError("url", "invalid URL: %s", c.URL)
 	}
 	if c.Timeout < 100*time.Millisecond {
-		return nil, fmt.Errorf("timeout value %s is too low, must be at least 100ms", c.Timeout.String())
+		return nil, newError("timeout", "timeout value %s is too low, must be at least 100ms", c.Timeout.String())
 	}
 
 	if err := c.validateCACert(result); err != nil {
-		return nil, err
+		return nil, wrap(err, "cacert")
 	}
 
 	if err := c.RequestEncoding.Validate(); err != nil {
@@ -355,13 +355,13 @@ func (c *HTTPClientConfiguration) ValidateWithCerts() (*HTTPClientCerts, error) 
 
 	if strings.HasPrefix(c.URL, "https://") {
 		if err := c.TLSVersion.Validate(); err != nil {
-			return nil, fmt.Errorf("invalid TLS version (%w)", err)
+			return nil, wrap(err, "tlsVersion")
 		}
 		if err := c.ECDHCurves.Validate(); err != nil {
-			return nil, fmt.Errorf("invalid curve algorithms (%w)", err)
+			return nil, wrap(err, "curves")
 		}
 		if err := c.CipherSuites.Validate(); err != nil {
-			return nil, fmt.Errorf("invalid cipher suites (%w)", err)
+			return nil, wrap(err, "cipher")
 		}
 	}
 
@@ -371,23 +371,23 @@ func (c *HTTPClientConfiguration) ValidateWithCerts() (*HTTPClientCerts, error) 
 
 func (c *HTTPClientConfiguration) validateClientCert(certs *HTTPClientCerts) error {
 	if c.ClientCert != "" && c.ClientKey == "" {
-		return fmt.Errorf("client certificate provided without client key")
+		return newError("clientCert", "client certificate provided without client key")
 	} else if c.ClientCert == "" && c.ClientKey != "" {
-		return fmt.Errorf("client key provided without client certificate")
+		return newError("clientKey", "client key provided without client certificate")
 	}
 
 	if c.ClientCert != "" && c.ClientKey != "" {
 		clientCert, err := loadPEM(c.ClientCert)
 		if err != nil {
-			return fmt.Errorf("failed to load client certificate (%w)", err)
+			return wrapWithMessage(err, "clientCert", "failed to load client certificate")
 		}
 		clientKey, err := loadPEM(c.ClientKey)
 		if err != nil {
-			return fmt.Errorf("failed to load client certificate (%w)", err)
+			return wrapWithMessage(err, "clientKey", "failed to load client certificate")
 		}
 		cert, err := tls.X509KeyPair(clientCert, clientKey)
 		if err != nil {
-			return fmt.Errorf("failed to load certificate or key (%w)", err)
+			return wrapWithMessage(err, "clientCert", "failed to load certificate or key")
 		}
 		certs.Cert = &cert
 	}

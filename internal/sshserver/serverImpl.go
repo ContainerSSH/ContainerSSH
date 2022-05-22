@@ -13,6 +13,7 @@ import (
 	ssh2 "github.com/containerssh/libcontainerssh/internal/ssh"
 	"github.com/containerssh/libcontainerssh/log"
 	messageCodes "github.com/containerssh/libcontainerssh/message"
+	"github.com/containerssh/libcontainerssh/metadata"
 	"github.com/containerssh/libcontainerssh/service"
 	"golang.org/x/crypto/ssh"
 )
@@ -97,9 +98,7 @@ func (s *serverImpl) RunWithLifecycle(lifecycle service.Lifecycle) error {
 	s.wg.Wait()
 	close(allClientsExited)
 	<-shutdownHandlerExited
-	// nilerr will complain about this return becaus err may be not nil above, but that's not a problem since the
-	// err only indicates an Accept failure.
-	return nil //nolint:nilerr
+	return nil
 }
 
 func (s *serverImpl) handleListenSocketOnShutdown(lifecycle service.Lifecycle) {
@@ -128,34 +127,39 @@ func (s *serverImpl) disconnectClients(lifecycle service.Lifecycle, allClientsEx
 }
 
 func (s *serverImpl) createPasswordAuthenticator(
+	connectionMetadata metadata.ConnectionMetadata,
 	handlerNetworkConnection NetworkConnectionHandler,
 	logger log.Logger,
-) func(conn ssh.ConnMetadata, password []byte) (*ssh.Permissions, *auth.ConnectionMetadata, error) {
-	return func(conn ssh.ConnMetadata, password []byte) (*ssh.Permissions, *auth.ConnectionMetadata, error) {
-		authResponse, metadata, err := handlerNetworkConnection.OnAuthPassword(
-			conn.User(),
+) func(conn ssh.ConnMetadata, password []byte) (*ssh.Permissions, metadata.ConnectionAuthenticatedMetadata, error) {
+	return func(conn ssh.ConnMetadata, password []byte) (
+		*ssh.Permissions,
+		metadata.ConnectionAuthenticatedMetadata,
+		error,
+	) {
+		authenticatingMetadata := connectionMetadata.StartAuthentication(string(conn.ClientVersion()), conn.User())
+		authResponse, authenticatedMetadata, err := handlerNetworkConnection.OnAuthPassword(
+			authenticatingMetadata,
 			password,
-			string(conn.ClientVersion()),
 		)
 		//goland:noinspection GoNilness
 		switch authResponse {
 		case AuthResponseSuccess:
-			s.logAuthSuccessful(logger, conn, "Password")
-			return &ssh.Permissions{}, metadata, nil
+			s.logAuthSuccessful(logger, authenticatedMetadata, "Password")
+			return &ssh.Permissions{}, authenticatedMetadata, nil
 		case AuthResponseFailure:
-			err = s.wrapAndLogAuthFailure(logger, conn, "Password", err)
-			return nil, nil, err
+			err = s.wrapAndLogAuthFailure(logger, authenticatingMetadata, "Password", err)
+			return nil, authenticatedMetadata, err
 		case AuthResponseUnavailable:
-			err = s.wrapAndLogAuthUnavailable(logger, conn, "Password", err)
-			return nil, nil, err
+			err = s.wrapAndLogAuthUnavailable(logger, authenticatingMetadata, "Password", err)
+			return nil, authenticatedMetadata, err
 		}
-		return nil, nil, fmt.Errorf("authentication currently unavailable")
+		return nil, authenticatedMetadata, fmt.Errorf("authentication currently unavailable")
 	}
 }
 
 func (s *serverImpl) wrapAndLogAuthUnavailable(
 	logger log.Logger,
-	conn ssh.ConnMetadata,
+	conn metadata.ConnectionAuthPendingMetadata,
 	authMethod string,
 	err error,
 ) error {
@@ -165,9 +169,9 @@ func (s *serverImpl) wrapAndLogAuthUnavailable(
 		"Authentication is currently unavailable, please try a different authentication method or try again later.",
 		"%s authentication for user %s currently unavailable.",
 		authMethod,
-		conn.User(),
+		conn.Username,
 	).
-		Label("username", conn.User()).
+		Label("username", conn.Username).
 		Label("method", strings.ToLower(authMethod)).
 		Label("reason", err.Error())
 	logger.Info(err)
@@ -176,7 +180,7 @@ func (s *serverImpl) wrapAndLogAuthUnavailable(
 
 func (s *serverImpl) wrapAndLogAuthFailure(
 	logger log.Logger,
-	conn ssh.ConnMetadata,
+	conn metadata.ConnectionAuthPendingMetadata,
 	authMethod string,
 	err error,
 ) error {
@@ -186,9 +190,9 @@ func (s *serverImpl) wrapAndLogAuthFailure(
 			"Authentication failed.",
 			"%s authentication for user %s failed.",
 			authMethod,
-			conn.User(),
+			conn.Username,
 		).
-			Label("username", conn.User()).
+			Label("username", conn.Username).
 			Label("method", strings.ToLower(authMethod))
 		logger.Info(err)
 	} else {
@@ -198,9 +202,9 @@ func (s *serverImpl) wrapAndLogAuthFailure(
 			"Authentication failed.",
 			"%s authentication for user %s failed.",
 			authMethod,
-			conn.User(),
+			conn.Username,
 		).
-			Label("username", conn.User()).
+			Label("username", conn.Username).
 			Label("method", strings.ToLower(authMethod)).
 			Label("reason", err.Error())
 		logger.Info(err)
@@ -208,53 +212,72 @@ func (s *serverImpl) wrapAndLogAuthFailure(
 	return err
 }
 
-func (s *serverImpl) logAuthSuccessful(logger log.Logger, conn ssh.ConnMetadata, authMethod string) {
+func (s *serverImpl) logAuthSuccessful(
+	logger log.Logger,
+	conn metadata.ConnectionAuthenticatedMetadata,
+	authMethod string,
+) {
 	err := messageCodes.UserMessage(
 		messageCodes.ESSHAuthSuccessful,
 		"Authentication successful.",
 		"%s authentication for user %s successful.",
 		authMethod,
-		conn.User(),
-	).Label("username", conn.User()).Label("method", strings.ToLower(authMethod))
+		conn.Username,
+	).Label("username", conn.Username).Label("method", strings.ToLower(authMethod))
 	logger.Info(err)
 }
 
 func (s *serverImpl) createPubKeyAuthenticator(
+	connectionMetadata metadata.ConnectionMetadata,
 	handlerNetworkConnection NetworkConnectionHandler,
 	logger log.Logger,
-) func(conn ssh.ConnMetadata, pubKey ssh.PublicKey) (*ssh.Permissions, *auth.ConnectionMetadata, error) {
-	return func(conn ssh.ConnMetadata, pubKey ssh.PublicKey) (*ssh.Permissions, *auth.ConnectionMetadata, error) {
+) func(conn ssh.ConnMetadata, pubKey ssh.PublicKey) (
+	*ssh.Permissions,
+	metadata.ConnectionAuthenticatedMetadata,
+	error,
+) {
+	return func(conn ssh.ConnMetadata, pubKey ssh.PublicKey) (
+		*ssh.Permissions,
+		metadata.ConnectionAuthenticatedMetadata,
+		error,
+	) {
+		authenticatingMetadata := connectionMetadata.StartAuthentication(string(conn.ClientVersion()), conn.User())
 		authorizedKey := strings.TrimSpace(string(ssh.MarshalAuthorizedKey(pubKey)))
-		authResponse, metadata, err := handlerNetworkConnection.OnAuthPubKey(
-			conn.User(),
-			authorizedKey,
-			string(conn.ClientVersion()),
+		authResponse, authenticatedMetadata, err := handlerNetworkConnection.OnAuthPubKey(
+			authenticatingMetadata,
+			auth.PublicKey{PublicKey: authorizedKey},
 		)
 		//goland:noinspection GoNilness
 		switch authResponse {
 		case AuthResponseSuccess:
-			s.logAuthSuccessful(logger, conn, "Public key")
-			return &ssh.Permissions{}, metadata, nil
+			s.logAuthSuccessful(logger, authenticatedMetadata, "Public key")
+			return &ssh.Permissions{}, authenticatedMetadata, nil
 		case AuthResponseFailure:
-			err = s.wrapAndLogAuthFailure(logger, conn, "Public key", err)
-			return nil, nil, err
+			err = s.wrapAndLogAuthFailure(logger, authenticatingMetadata, "Public key", err)
+			return nil, authenticatedMetadata, err
 		case AuthResponseUnavailable:
-			err = s.wrapAndLogAuthUnavailable(logger, conn, "Public key", err)
-			return nil, nil, err
+			err = s.wrapAndLogAuthUnavailable(logger, authenticatingMetadata, "Public key", err)
+			return nil, authenticatedMetadata, err
 		}
 		// This should never happen
-		return nil, nil, fmt.Errorf("authentication currently unavailable")
+		return nil, authenticatedMetadata, fmt.Errorf("authentication currently unavailable")
 	}
 }
 
 func (s *serverImpl) createKeyboardInteractiveHandler(
+	connectionMetadata metadata.ConnectionMetadata,
 	handlerNetworkConnection *networkConnectionWrapper,
 	logger log.Logger,
-) func(conn ssh.ConnMetadata, challenge ssh.KeyboardInteractiveChallenge) (*ssh.Permissions, *auth.ConnectionMetadata, error) {
+) func(conn ssh.ConnMetadata, challenge ssh.KeyboardInteractiveChallenge) (
+	*ssh.Permissions,
+	metadata.ConnectionAuthenticatedMetadata,
+	error,
+) {
 	return func(
 		conn ssh.ConnMetadata,
 		challenge ssh.KeyboardInteractiveChallenge,
-	) (*ssh.Permissions, *auth.ConnectionMetadata, error) {
+	) (*ssh.Permissions, metadata.ConnectionAuthenticatedMetadata, error) {
+		authenticatingMetadata := connectionMetadata.StartAuthentication(string(conn.ClientVersion()), conn.User())
 		challengeWrapper := func(
 			instruction string,
 			questions KeyboardInteractiveQuestions,
@@ -277,32 +300,33 @@ func (s *serverImpl) createKeyboardInteractiveHandler(
 			}
 			return answers, err
 		}
-		authResponse, metadata, err := handlerNetworkConnection.OnAuthKeyboardInteractive(
-			conn.User(),
+		authResponse, authenticatedMetadata, err := handlerNetworkConnection.OnAuthKeyboardInteractive(
+			authenticatingMetadata,
 			challengeWrapper,
-			string(conn.ClientVersion()),
 		)
 		//goland:noinspection GoNilness
 		switch authResponse {
 		case AuthResponseSuccess:
-			s.logAuthSuccessful(logger, conn, "Keyboard-interactive")
-			return &ssh.Permissions{}, metadata, nil
+			s.logAuthSuccessful(logger, authenticatedMetadata, "Keyboard-interactive")
+			return &ssh.Permissions{}, authenticatedMetadata, nil
 		case AuthResponseFailure:
-			err = s.wrapAndLogAuthFailure(logger, conn, "Keyboard-interactive", err)
-			return nil, nil, err
+			err = s.wrapAndLogAuthFailure(logger, authenticatingMetadata, "Keyboard-interactive", err)
+			return nil, authenticatedMetadata, err
 		case AuthResponseUnavailable:
-			err = s.wrapAndLogAuthUnavailable(logger, conn, "Keyboard-interactive", err)
-			return nil, nil, err
+			err = s.wrapAndLogAuthUnavailable(logger, authenticatingMetadata, "Keyboard-interactive", err)
+			return nil, authenticatedMetadata, err
 		}
-		return nil, nil, fmt.Errorf("authentication currently unavailable")
+		return nil, authenticatedMetadata, fmt.Errorf("authentication currently unavailable")
 	}
 }
 
 func (s *serverImpl) createConfiguration(
+	meta metadata.ConnectionMetadata,
 	handlerNetworkConnection *networkConnectionWrapper,
 	logger log.Logger,
 ) *ssh.ServerConfig {
 	passwordCallback, pubkeyCallback, keyboardInteractiveCallback, gssConfig := s.createAuthenticators(
+		meta,
 		handlerNetworkConnection,
 		logger,
 	)
@@ -318,7 +342,7 @@ func (s *serverImpl) createConfiguration(
 		PasswordCallback:            passwordCallback,
 		PublicKeyCallback:           pubkeyCallback,
 		KeyboardInteractiveCallback: keyboardInteractiveCallback,
-		GSSAPIWithMICConfig: gssConfig,
+		GSSAPIWithMICConfig:         gssConfig,
 		ServerVersion:               s.cfg.ServerVersion.String(),
 		BannerCallback:              func(conn ssh.ConnMetadata) string { return s.cfg.Banner },
 	}
@@ -329,6 +353,7 @@ func (s *serverImpl) createConfiguration(
 }
 
 func (s *serverImpl) createAuthenticators(
+	meta metadata.ConnectionMetadata,
 	handlerNetworkConnection *networkConnectionWrapper,
 	logger log.Logger,
 ) (
@@ -337,20 +362,21 @@ func (s *serverImpl) createAuthenticators(
 	func(conn ssh.ConnMetadata, challenge ssh.KeyboardInteractiveChallenge) (*ssh.Permissions, error),
 	*ssh.GSSAPIWithMICConfig,
 ) {
-	passwordCallback := s.createPasswordCallback(handlerNetworkConnection, logger)
-	pubkeyCallback := s.createPubKeyCallback(handlerNetworkConnection, logger)
-	keyboardInteractiveCallback := s.createKeyboardInteractiveCallback(handlerNetworkConnection, logger)
-	gssConfig := s.createGSSAPIConfig(handlerNetworkConnection, logger)
+	passwordCallback := s.createPasswordCallback(meta, handlerNetworkConnection, logger)
+	pubkeyCallback := s.createPubKeyCallback(meta, handlerNetworkConnection, logger)
+	keyboardInteractiveCallback := s.createKeyboardInteractiveCallback(meta, handlerNetworkConnection, logger)
+	gssConfig := s.createGSSAPIConfig(meta, handlerNetworkConnection, logger)
 	return passwordCallback, pubkeyCallback, keyboardInteractiveCallback, gssConfig
 }
 
 func (s *serverImpl) createGSSAPIConfig(
+	connectionMetadata metadata.ConnectionMetadata,
 	handlerNetworkConnection *networkConnectionWrapper,
 	logger log.Logger,
-) (*ssh.GSSAPIWithMICConfig){
+) *ssh.GSSAPIWithMICConfig {
 	var gssConfig *ssh.GSSAPIWithMICConfig
 
-	gssServer := handlerNetworkConnection.OnAuthGSSAPI()
+	gssServer := handlerNetworkConnection.OnAuthGSSAPI(connectionMetadata)
 	if gssServer != nil {
 		gssConfig = &ssh.GSSAPIWithMICConfig{
 			AllowLogin: func(conn ssh.ConnMetadata, srcName string) (*ssh.Permissions, error) {
@@ -364,17 +390,15 @@ func (s *serverImpl) createGSSAPIConfig(
 					return nil, gssServer.Error()
 				}
 
-				if err := gssServer.AllowLogin(conn.User()); err != nil {
-					return nil, err
+				authenticating := connectionMetadata.StartAuthentication(string(conn.ClientVersion()), conn.User())
+				authenticated, err := gssServer.AllowLogin(conn.User(), authenticating)
+				if err != nil {
+					return nil, s.wrapAndLogAuthFailure(logger, authenticating, "GSSAPI", err)
 				}
-
-				metadata := gssServer.Metadata()
-
-				s.logAuthSuccessful(logger, conn, "GSSAPI")
-				sshConnectionHandler, err := handlerNetworkConnection.OnHandshakeSuccess(
-					conn.User(),
-					string(conn.ClientVersion()),
-					metadata,
+				handlerNetworkConnection.authenticatedMetadata = authenticated
+				s.logAuthSuccessful(logger, authenticated, "GSSAPI")
+				sshConnectionHandler, _, err := handlerNetworkConnection.OnHandshakeSuccess(
+					authenticated,
 				)
 				if err != nil {
 					err = messageCodes.WrapUser(
@@ -391,35 +415,31 @@ func (s *serverImpl) createGSSAPIConfig(
 			},
 			Server: gssServer,
 		}
-	} else {
-		logger.Info(
-			messageCodes.NewMessage(
-				messageCodes.ESSHAuthUnavailable,
-				"GSSAPI Authentication unsupported with current authentication method",
-			),
-		)
 	}
 	return gssConfig
 }
 
 func (s *serverImpl) createKeyboardInteractiveCallback(
+	connectionMetadata metadata.ConnectionMetadata,
 	handlerNetworkConnection *networkConnectionWrapper,
 	logger log.Logger,
 ) func(conn ssh.ConnMetadata, challenge ssh.KeyboardInteractiveChallenge) (*ssh.Permissions, error) {
-	keyboardInteractiveHandler := s.createKeyboardInteractiveHandler(handlerNetworkConnection, logger)
+	keyboardInteractiveHandler := s.createKeyboardInteractiveHandler(
+		connectionMetadata,
+		handlerNetworkConnection,
+		logger,
+	)
 	keyboardInteractiveCallback := func(
 		conn ssh.ConnMetadata,
 		challenge ssh.KeyboardInteractiveChallenge,
 	) (*ssh.Permissions, error) {
-		permissions, metadata, err := keyboardInteractiveHandler(conn, challenge)
+		permissions, authenticatedMetadata, err := keyboardInteractiveHandler(conn, challenge)
 		if err != nil {
 			return permissions, err
 		}
 		// HACK: check HACKS.md "OnHandshakeSuccess conformanceTestHandler"
-		sshConnectionHandler, err := handlerNetworkConnection.OnHandshakeSuccess(
-			conn.User(),
-			string(conn.ClientVersion()),
-			metadata,
+		sshConnectionHandler, _, err := handlerNetworkConnection.OnHandshakeSuccess(
+			authenticatedMetadata,
 		)
 		if err != nil {
 			err = messageCodes.WrapUser(
@@ -431,6 +451,7 @@ func (s *serverImpl) createKeyboardInteractiveCallback(
 			logger.Error(err)
 			return permissions, err
 		}
+		handlerNetworkConnection.authenticatedMetadata = authenticatedMetadata
 		handlerNetworkConnection.sshConnectionHandler = sshConnectionHandler
 		return permissions, err
 	}
@@ -438,20 +459,19 @@ func (s *serverImpl) createKeyboardInteractiveCallback(
 }
 
 func (s *serverImpl) createPubKeyCallback(
+	meta metadata.ConnectionMetadata,
 	handlerNetworkConnection *networkConnectionWrapper,
 	logger log.Logger,
 ) func(conn ssh.ConnMetadata, key ssh.PublicKey) (*ssh.Permissions, error) {
-	pubKeyHandler := s.createPubKeyAuthenticator(handlerNetworkConnection, logger)
+	pubKeyHandler := s.createPubKeyAuthenticator(meta, handlerNetworkConnection, logger)
 	pubkeyCallback := func(conn ssh.ConnMetadata, key ssh.PublicKey) (*ssh.Permissions, error) {
-		permissions, metadata, err := pubKeyHandler(conn, key)
+		permissions, authenticatedMetadata, err := pubKeyHandler(conn, key)
 		if err != nil {
 			return permissions, err
 		}
 		// HACK: check HACKS.md "OnHandshakeSuccess conformanceTestHandler"
-		sshConnectionHandler, err := handlerNetworkConnection.OnHandshakeSuccess(
-			conn.User(),
-			string(conn.ClientVersion()),
-			metadata,
+		sshConnectionHandler, _, err := handlerNetworkConnection.OnHandshakeSuccess(
+			authenticatedMetadata,
 		)
 		if err != nil {
 			err = messageCodes.WrapUser(
@@ -463,6 +483,7 @@ func (s *serverImpl) createPubKeyCallback(
 			logger.Error(err)
 			return permissions, err
 		}
+		handlerNetworkConnection.authenticatedMetadata = authenticatedMetadata
 		handlerNetworkConnection.sshConnectionHandler = sshConnectionHandler
 		return permissions, err
 	}
@@ -470,20 +491,19 @@ func (s *serverImpl) createPubKeyCallback(
 }
 
 func (s *serverImpl) createPasswordCallback(
+	meta metadata.ConnectionMetadata,
 	handlerNetworkConnection *networkConnectionWrapper,
 	logger log.Logger,
 ) func(conn ssh.ConnMetadata, password []byte) (*ssh.Permissions, error) {
-	passwordHandler := s.createPasswordAuthenticator(handlerNetworkConnection, logger)
+	passwordHandler := s.createPasswordAuthenticator(meta, handlerNetworkConnection, logger)
 	passwordCallback := func(conn ssh.ConnMetadata, password []byte) (*ssh.Permissions, error) {
-		permissions, metadata, err := passwordHandler(conn, password)
+		permissions, authenticatedMetadata, err := passwordHandler(conn, password)
 		if err != nil {
 			return permissions, err
 		}
 		// HACK: check HACKS.md "OnHandshakeSuccess conformanceTestHandler"
-		sshConnectionHandler, err := handlerNetworkConnection.OnHandshakeSuccess(
-			conn.User(),
-			string(conn.ClientVersion()),
-			metadata,
+		sshConnectionHandler, _, err := handlerNetworkConnection.OnHandshakeSuccess(
+			authenticatedMetadata,
 		)
 		if err != nil {
 			err = messageCodes.WrapUser(
@@ -495,6 +515,7 @@ func (s *serverImpl) createPasswordCallback(
 			logger.Error(err)
 			return permissions, err
 		}
+		handlerNetworkConnection.authenticatedMetadata = authenticatedMetadata
 		handlerNetworkConnection.sshConnectionHandler = sshConnectionHandler
 		return permissions, err
 	}
@@ -507,7 +528,15 @@ func (s *serverImpl) handleConnection(conn net.Conn) {
 	logger := s.logger.
 		WithLabel("remoteAddr", addr.IP.String()).
 		WithLabel("connectionId", connectionID)
-	handlerNetworkConnection, err := s.handler.OnNetworkConnection(*addr, connectionID)
+	connectionMeta := metadata.ConnectionMetadata{
+		RemoteAddress: metadata.RemoteAddress(*addr),
+		ConnectionID:  connectionID,
+		Metadata:      map[string]metadata.Value{},
+		Environment:   map[string]metadata.Value{},
+		Files:         map[string]metadata.BinaryValue{},
+	}
+
+	handlerNetworkConnection, connectionMeta, err := s.handler.OnNetworkConnection(connectionMeta)
 	if err != nil {
 		logger.Info(err)
 		_ = conn.Close()
@@ -528,10 +557,13 @@ func (s *serverImpl) handleConnection(conn net.Conn) {
 		NetworkConnectionHandler: handlerNetworkConnection,
 	}
 
-	sshConn, channels, globalRequests, err := ssh.NewServerConn(conn, s.createConfiguration(&wrapper, logger))
+	sshConn, channels, globalRequests, err := ssh.NewServerConn(
+		conn,
+		s.createConfiguration(connectionMeta, &wrapper, logger),
+	)
 	if err != nil {
 		logger.Info(messageCodes.Wrap(err, messageCodes.ESSHHandshakeFailed, "SSH handshake failed"))
-		handlerNetworkConnection.OnHandshakeFailed(err)
+		handlerNetworkConnection.OnHandshakeFailed(connectionMeta, err)
 		s.shutdownHandlers.Unregister(shutdownHandlerID)
 		logger.Debug(messageCodes.NewMessage(messageCodes.MSSHDisconnected, "Client disconnected"))
 		handlerNetworkConnection.OnDisconnect()
@@ -539,6 +571,7 @@ func (s *serverImpl) handleConnection(conn net.Conn) {
 		s.wg.Done()
 		return
 	}
+	authenticatedMetadata := wrapper.authenticatedMetadata
 	logger = logger.WithLabel("username", sshConn.User())
 	logger.Debug(messageCodes.NewMessage(messageCodes.MSSHHandshakeSuccessful, "SSH handshake successful"))
 	s.lock.Lock()
@@ -587,8 +620,8 @@ func (s *serverImpl) handleConnection(conn net.Conn) {
 	handlerSSHConnection := wrapper.sshConnectionHandler
 	s.shutdownHandlers.Register(sshShutdownHandlerID, handlerSSHConnection)
 
-	go s.handleChannels(connectionID, channels, handlerSSHConnection, logger)
-	go s.handleGlobalRequests(globalRequests, handlerSSHConnection, logger)
+	go s.handleChannels(authenticatedMetadata, channels, handlerSSHConnection, logger)
+	go s.handleGlobalRequests(authenticatedMetadata, globalRequests, handlerSSHConnection, logger)
 }
 
 func (s *serverImpl) handleKeepAliveRequest(req *ssh.Request, logger log.Logger) {
@@ -630,6 +663,7 @@ func (s *serverImpl) handleUnknownGlobalRequest(req *ssh.Request, requestID uint
 }
 
 func (s *serverImpl) handleGlobalRequests(
+	authenticatedMetadata metadata.ConnectionAuthenticatedMetadata,
 	requests <-chan *ssh.Request,
 	connection SSHConnectionHandler,
 	logger log.Logger,
@@ -652,7 +686,7 @@ func (s *serverImpl) handleGlobalRequests(
 }
 
 func (s *serverImpl) handleChannels(
-	connectionID string,
+	authenticatedMetadata metadata.ConnectionAuthenticatedMetadata,
 	channels <-chan ssh.NewChannel,
 	connection SSHConnectionHandler,
 	logger log.Logger,
@@ -680,13 +714,12 @@ func (s *serverImpl) handleChannels(
 			}
 			continue
 		}
-		go s.handleSessionChannel(connectionID, channelID, newChannel, connection, logger)
+		go s.handleSessionChannel(authenticatedMetadata.Channel(channelID), newChannel, connection, logger)
 	}
 }
 
 func (s *serverImpl) handleSessionChannel(
-	connectionID string,
-	channelID uint64,
+	channelMetadata metadata.ChannelMetadata,
 	newChannel ssh.NewChannel,
 	connection SSHConnectionHandler,
 	logger log.Logger,
@@ -695,7 +728,7 @@ func (s *serverImpl) handleSessionChannel(
 		logger: logger,
 		lock:   &sync.Mutex{},
 	}
-	handlerChannel, rejection := connection.OnSessionChannel(channelID, newChannel.ExtraData(), channelCallbacks)
+	handlerChannel, rejection := connection.OnSessionChannel(channelMetadata, newChannel.ExtraData(), channelCallbacks)
 	if rejection != nil {
 		logger.Debug(
 			messageCodes.Wrap(
@@ -710,7 +743,11 @@ func (s *serverImpl) handleSessionChannel(
 		}
 		return
 	}
-	shutdownHandlerID := fmt.Sprintf("session-%s-%d", connectionID, channelID)
+	shutdownHandlerID := fmt.Sprintf(
+		"session-%s-%d",
+		channelMetadata.Connection.ConnectionID,
+		channelMetadata.ChannelID,
+	)
 	s.shutdownHandlers.Register(shutdownHandlerID, handlerChannel)
 	channel, requests, err := newChannel.Accept()
 	if err != nil {

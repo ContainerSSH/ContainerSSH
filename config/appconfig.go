@@ -111,27 +111,27 @@ func (cfg *AppConfig) Validate(dynamic bool) error {
 	}
 
 	queue := newValidationQueue()
-	queue.add("SSH", &cfg.SSH)
-	queue.add("config server", &cfg.ConfigServer)
-	queue.add("authentication", &cfg.Auth)
-	queue.add("logging", &cfg.Log)
+	queue.add("ssh", &cfg.SSH)
+	queue.add("configserver", &cfg.ConfigServer)
+	queue.add("auth", &cfg.Auth)
+	queue.add("log", &cfg.Log)
 	queue.add("metrics", &cfg.Metrics)
-	queue.add("GeoIP", &cfg.GeoIP)
-	queue.add("audit log", &cfg.Audit)
+	queue.add("geoip", &cfg.GeoIP)
+	queue.add("audit", &cfg.Audit)
 	queue.add("health", &cfg.Health)
 
 	if cfg.ConfigServer.URL != "" && !dynamic {
 		return queue.Validate()
 	}
-	queue.add("security configuration", &cfg.Security)
+	queue.add("security", &cfg.Security)
 	queue.add("backend", &cfg.Backend)
 	switch cfg.Backend {
 	case BackendDocker:
-		queue.add("Docker", &cfg.Docker)
+		queue.add("docker", &cfg.Docker)
 	case BackendKubernetes:
-		queue.add("Kubernetes", &cfg.Kubernetes)
+		queue.add("kubernetes", &cfg.Kubernetes)
 	case BackendSSHProxy:
-		queue.add("SSH proxy", &cfg.SSHProxy)
+		queue.add("sshproxy", &cfg.SSHProxy)
 	}
 
 	return queue.Validate()
@@ -158,7 +158,7 @@ func (v *validationQueue) add(name string, item validatable) {
 func (v *validationQueue) Validate() error {
 	for name, item := range v.items {
 		if err := item.Validate(); err != nil {
-			return fmt.Errorf("invalid %s configuration (%w)", name, err)
+			return wrap(err, name)
 		}
 	}
 	return nil

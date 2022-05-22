@@ -8,6 +8,7 @@ import (
 	http2 "github.com/containerssh/libcontainerssh/http"
 	"github.com/containerssh/libcontainerssh/log"
 	"github.com/containerssh/libcontainerssh/message"
+	"github.com/containerssh/libcontainerssh/metadata"
 )
 
 //region Config
@@ -18,7 +19,7 @@ import (
 
 //region GeoIPProvider
 
-func newOIDCProvider(config config.AuthConfig, logger log.Logger) (OAuth2Provider, error) {
+func newOIDCProvider(config config.AuthOIDCConfig, logger log.Logger) (OAuth2Provider, error) {
 	return &oidcProvider{
 		config: config,
 		logger: logger,
@@ -26,47 +27,49 @@ func newOIDCProvider(config config.AuthConfig, logger log.Logger) (OAuth2Provide
 }
 
 type oidcProvider struct {
-	config config.AuthConfig
+	config config.AuthOIDCConfig
 	logger log.Logger
 }
 
 func (o *oidcProvider) SupportsDeviceFlow() bool {
-	return o.config.OAuth2.OIDC.DeviceFlow
+	return o.config.DeviceFlow
 }
 
-func (o *oidcProvider) GetDeviceFlow(connectionID string, username string) (OAuth2DeviceFlow, error) {
-	flow, err := o.createFlow(connectionID, username)
+func (o *oidcProvider) GetDeviceFlow(meta metadata.ConnectionAuthPendingMetadata) (OAuth2DeviceFlow, error) {
+	flow, err := o.createFlow(meta)
 	if err != nil {
 		return nil, err
 	}
 
 	return &oidcDeviceFlow{
 		flow,
+		meta,
 	}, nil
 }
 
 func (o *oidcProvider) SupportsAuthorizationCodeFlow() bool {
-	return o.config.OAuth2.OIDC.AuthorizationCodeFlow
+	return o.config.AuthorizationCodeFlow
 }
 
-func (o *oidcProvider) GetAuthorizationCodeFlow(connectionID string, username string) (
+func (o *oidcProvider) GetAuthorizationCodeFlow(meta metadata.ConnectionAuthPendingMetadata) (
 	OAuth2AuthorizationCodeFlow,
 	error,
 ) {
-	flow, err := o.createFlow(connectionID, username)
+	flow, err := o.createFlow(meta)
 	if err != nil {
 		return nil, err
 	}
 
 	return &oidcAuthorizationCodeFlow{
 		flow,
+		meta,
 	}, nil
 }
 
-func (o *oidcProvider) createFlow(connectionID string, username string) (oidcFlow, error) {
-	logger := o.logger.WithLabel("connectionID", connectionID).WithLabel("username", username)
+func (o *oidcProvider) createFlow(meta metadata.ConnectionAuthPendingMetadata) (oidcFlow, error) {
+	logger := o.logger.WithLabel("connectionID", meta.ConnectionID).WithLabel("username", meta.Username)
 
-	client, err := http2.NewClient(o.config.OAuth2.OIDC.HTTPClientConfiguration, logger)
+	client, err := http2.NewClient(o.config.HTTPClientConfiguration, logger)
 	if err != nil {
 		return oidcFlow{}, message.WrapUser(
 			err,
@@ -77,9 +80,10 @@ func (o *oidcProvider) createFlow(connectionID string, username string) (oidcFlo
 	}
 
 	flow := oidcFlow{
+		meta:         meta,
 		provider:     o,
-		connectionID: connectionID,
-		username:     username,
+		connectionID: meta.ConnectionID,
+		username:     meta.Username,
 		logger:       logger,
 		client:       client,
 	}
@@ -96,6 +100,7 @@ type oidcFlow struct {
 	username     string
 	logger       log.Logger
 	client       http2.Client
+	meta         metadata.ConnectionAuthPendingMetadata
 }
 
 func (o *oidcFlow) Deauthorize(ctx context.Context) {
@@ -108,6 +113,7 @@ func (o *oidcFlow) Deauthorize(ctx context.Context) {
 
 type oidcDeviceFlow struct {
 	oidcFlow
+	meta metadata.ConnectionAuthPendingMetadata
 }
 
 func (o *oidcDeviceFlow) GetAuthorizationURL(ctx context.Context) (
@@ -119,7 +125,7 @@ func (o *oidcDeviceFlow) GetAuthorizationURL(ctx context.Context) (
 	panic("implement me")
 }
 
-func (o *oidcDeviceFlow) Verify(ctx context.Context) (map[string]string, error) {
+func (o *oidcDeviceFlow) Verify(ctx context.Context) (string, metadata.ConnectionAuthenticatedMetadata, error) {
 	panic("implement me")
 }
 
@@ -129,6 +135,7 @@ func (o *oidcDeviceFlow) Verify(ctx context.Context) (map[string]string, error) 
 
 type oidcAuthorizationCodeFlow struct {
 	oidcFlow
+	meta metadata.ConnectionAuthPendingMetadata
 }
 
 func (o *oidcAuthorizationCodeFlow) GetAuthorizationURL(ctx context.Context) (string, error) {
@@ -139,7 +146,7 @@ func (o *oidcAuthorizationCodeFlow) Verify(
 	ctx context.Context,
 	state string,
 	authorizationCode string,
-) (map[string]string, error) {
+) (string, metadata.ConnectionAuthenticatedMetadata, error) {
 	panic("implement me")
 }
 

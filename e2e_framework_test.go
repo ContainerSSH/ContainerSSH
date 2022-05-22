@@ -17,13 +17,14 @@ import (
 	"time"
 
 	containerssh "github.com/containerssh/libcontainerssh"
+	auth2 "github.com/containerssh/libcontainerssh/auth"
 	"github.com/containerssh/libcontainerssh/auth/webhook"
-	"github.com/containerssh/libcontainerssh/auth"
 	"github.com/containerssh/libcontainerssh/config"
 	internalssh "github.com/containerssh/libcontainerssh/internal/ssh"
 	"github.com/containerssh/libcontainerssh/internal/test"
 	"github.com/containerssh/libcontainerssh/log"
 	"github.com/containerssh/libcontainerssh/message"
+	"github.com/containerssh/libcontainerssh/metadata"
 	"github.com/containerssh/libcontainerssh/service"
 	"golang.org/x/crypto/ssh"
 )
@@ -114,9 +115,10 @@ func (c *testContext) StartContainerSSH() {
 
 	c.authPort = test.GetNextPort(c.T, "auth server")
 	c.authServer(c.T, c.users, c.authPort)
-	c.cfg.Auth.Webhook.URL = fmt.Sprintf("http://127.0.0.1:%d", c.authPort)
-	c.cfg.Auth.Webhook.Password = true
-	c.cfg.Auth.Webhook.PubKey = true
+	c.cfg.Auth.PasswordAuth.Method = config.PasswordAuthMethodWebhook
+	c.cfg.Auth.PasswordAuth.Webhook.URL = fmt.Sprintf("http://127.0.0.1:%d", c.authPort)
+	c.cfg.Auth.PublicKeyAuth.Method = config.PubKeyAuthMethodWebhook
+	c.cfg.Auth.PublicKeyAuth.Webhook.URL = fmt.Sprintf("http://127.0.0.1:%d", c.authPort)
 
 	c.sshPort = test.GetNextPort(c.T, "ContainerSSH")
 	c.cfg.SSH.Listen = fmt.Sprintf("127.0.0.1:%d", c.sshPort)
@@ -134,15 +136,21 @@ func (c *testContext) StartContainerSSH() {
 	running := make(chan struct{})
 	stopped := make(chan struct{})
 	crashed := make(chan struct{})
-	lifecycle.OnRunning(func(s service.Service, l service.Lifecycle) {
-		close(running)
-	})
-	lifecycle.OnStopping(func(s service.Service, l service.Lifecycle, shutdownContext context.Context) {
-		close(stopped)
-	})
-	lifecycle.OnCrashed(func(s service.Service, l service.Lifecycle, err error) {
-		close(crashed)
-	})
+	lifecycle.OnRunning(
+		func(s service.Service, l service.Lifecycle) {
+			close(running)
+		},
+	)
+	lifecycle.OnStopping(
+		func(s service.Service, l service.Lifecycle, shutdownContext context.Context) {
+			close(stopped)
+		},
+	)
+	lifecycle.OnCrashed(
+		func(s service.Service, l service.Lifecycle, err error) {
+			close(crashed)
+		},
+	)
 	go func() {
 		_ = cssh.RunWithLifecycle(lifecycle)
 	}()
@@ -403,44 +411,44 @@ type authHandler struct {
 	userdb AuthUserStorage
 }
 
-func (a *authHandler) OnPassword(Username string, Password []byte, RemoteAddress string, ConnectionID string) (
+func (a *authHandler) OnPassword(meta metadata.ConnectionAuthPendingMetadata, Password []byte) (
 	bool,
-	*auth.ConnectionMetadata,
+	metadata.ConnectionAuthenticatedMetadata,
 	error,
 ) {
-	user, err := a.userdb.GetUser(Username)
+	user, err := a.userdb.GetUser(meta.Username)
 	if err != nil {
-		return false, nil, err
+		return false, meta.AuthFailed(), err
 	}
 	if pw := user.GetPassword(); pw != nil && *pw == string(Password) {
-		return true, nil, nil
+		return true, meta.Authenticated(meta.Username), nil
 	}
-	return false, nil, fmt.Errorf("incorrect password")
+	return false, meta.AuthFailed(), fmt.Errorf("incorrect password")
 }
 
-func (a *authHandler) OnPubKey(Username string, PublicKey string, RemoteAddress string, ConnectionID string) (
+func (a *authHandler) OnPubKey(meta metadata.ConnectionAuthPendingMetadata, publicKey auth2.PublicKey) (
 	bool,
-	*auth.ConnectionMetadata,
+	metadata.ConnectionAuthenticatedMetadata,
 	error,
 ) {
-	user, err := a.userdb.GetUser(Username)
+	user, err := a.userdb.GetUser(meta.Username)
 	if err != nil {
-		return false, nil, err
+		return false, meta.AuthFailed(), err
 	}
 	for _, key := range user.GetAuthorizedKeys() {
-		if key == PublicKey {
-			return true, nil, nil
+		if key == publicKey.PublicKey {
+			return true, meta.Authenticated(meta.Username), nil
 		}
 	}
-	return false, nil, fmt.Errorf("authentication failed")
+	return false, meta.AuthFailed(), fmt.Errorf("authentication failed")
 }
 
-func (a *authHandler) OnAuthorization(PrincipalUsername string, LoginUsername string, RemoteAddress string, ConnectionID string) (
+func (a *authHandler) OnAuthorization(meta metadata.ConnectionAuthenticatedMetadata) (
 	bool,
-	*auth.ConnectionMetadata,
+	metadata.ConnectionAuthenticatedMetadata,
 	error,
-){
-	return true, nil, nil
+) {
+	return true, meta, nil
 }
 
 func (c *testContext) authServer(t *testing.T, userdb AuthUserStorage, port int) {
@@ -577,9 +585,7 @@ func (a *authUser) GetKeys() []ssh.Signer {
 	a.lock.Lock()
 	defer a.lock.Unlock()
 	result := make([]ssh.Signer, len(a.keys))
-	for i, key := range a.keys {
-		result[i] = key
-	}
+	copy(result, a.keys)
 	return result
 }
 

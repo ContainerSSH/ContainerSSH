@@ -5,10 +5,11 @@ import (
 	"os"
 	"time"
 
-	"github.com/containerssh/libcontainerssh/auth"
+	auth2 "github.com/containerssh/libcontainerssh/auth"
 	"github.com/containerssh/libcontainerssh/auth/webhook"
 	"github.com/containerssh/libcontainerssh/config"
 	"github.com/containerssh/libcontainerssh/log"
+	"github.com/containerssh/libcontainerssh/metadata"
 	"github.com/containerssh/libcontainerssh/service"
 )
 
@@ -18,44 +19,37 @@ type myAuthReqHandler struct {
 
 // OnPassword will be called when the user requests password authentication.
 func (m *myAuthReqHandler) OnPassword(
-	username string,
+	meta metadata.ConnectionAuthPendingMetadata,
 	password []byte,
-	remoteAddress string,
-	connectionID string,
 ) (
 	success bool,
-	metadata *auth.ConnectionMetadata,
+	metadata metadata.ConnectionAuthenticatedMetadata,
 	err error,
 ) {
-	return true, nil, nil
+	return true, meta.Authenticated(meta.Username), nil
 }
 
 // OnPubKey will be called when the user requests public key authentication.
 func (m *myAuthReqHandler) OnPubKey(
-	username string,
-	publicKey string,
-	remoteAddress string,
-	connectionID string,
+	meta metadata.ConnectionAuthPendingMetadata,
+	publicKey auth2.PublicKey,
 ) (
 	success bool,
-	metadata *auth.ConnectionMetadata,
+	metadata metadata.ConnectionAuthenticatedMetadata,
 	err error,
 ) {
-	return true, nil, nil
+	return true, meta.Authenticated(meta.Username), nil
 }
 
 // OnAuthorization will be called after login in non-webhook auth handlers to verify the user is authorized to login
 func (m *myAuthReqHandler) OnAuthorization(
-	principalUsername string,
-	loginUsername string,
-	remoteAddress string,
-	connectionID string,
+	meta metadata.ConnectionAuthenticatedMetadata,
 ) (
 	success bool,
-	metadata *auth.ConnectionMetadata,
+	metadata metadata.ConnectionAuthenticatedMetadata,
 	err error,
 ) {
-	return true, nil, nil
+	return true, meta, nil
 }
 
 // ExampleNewServer demonstrates how to set up an authentication server.

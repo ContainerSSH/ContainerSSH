@@ -1,14 +1,10 @@
 package config
 
-import (
-	"fmt"
-)
-
 // HealthConfig is the configuration for the health service.
 type HealthConfig struct {
-	Enable                   bool `json:"enable" yaml:"enable"`
+	Enable                  bool `json:"enable" yaml:"enable"`
 	HTTPServerConfiguration `json:",inline" yaml:",inline" default:"{\"listen\":\"0.0.0.0:7000\"}"`
-	Client                   HTTPClientConfiguration `json:"client" yaml:"client" default:"{\"url\":\"http://127.0.0.1:7000/\"}"`
+	Client                  HTTPClientConfiguration `json:"client" yaml:"client" default:"{\"url\":\"http://127.0.0.1:7000/\"}"`
 }
 
 func (c HealthConfig) Validate() error {
@@ -19,7 +15,7 @@ func (c HealthConfig) Validate() error {
 		return err
 	}
 	if err := c.Client.Validate(); err != nil {
-		return fmt.Errorf("invalid client configuration (%w)", err)
+		return wrap(err, "client")
 	}
 	return nil
 }

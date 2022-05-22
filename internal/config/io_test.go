@@ -30,7 +30,7 @@ func testSaveLoad(t *testing.T, format config.Format) {
 	newCfg := &configuration.AppConfig{}
 	structutils.Defaults(cfg)
 
-	cfg.Auth.Webhook.URL = "http://localhost:8080"
+	cfg.Auth.PasswordAuth.Webhook.URL = "http://localhost:8080"
 
 	buf := &bytes.Buffer{}
 	// endregion

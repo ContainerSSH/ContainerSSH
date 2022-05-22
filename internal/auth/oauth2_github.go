@@ -13,6 +13,7 @@ import (
 	"github.com/containerssh/libcontainerssh/internal/structutils"
 	"github.com/containerssh/libcontainerssh/log"
 	"github.com/containerssh/libcontainerssh/message"
+	"github.com/containerssh/libcontainerssh/metadata"
 )
 
 //region AuthGitHubConfig
@@ -22,36 +23,39 @@ import (
 //region gitHubProvider
 
 // newGitHubProvider creates a new, GitHub-specific OAuth2 provider.
-func newGitHubProvider(cfg config.AuthConfig, logger log.Logger) (OAuth2Provider, error) {
+func newGitHubProvider(cfg config.AuthOAuth2ClientConfig, logger log.Logger) (OAuth2Provider, error) {
+	if cfg.Provider != config.AuthOAuth2GitHubProvider {
+		return nil, fmt.Errorf("GitHub is not configured as the oAuth2 provider")
+	}
 	if err := cfg.Validate(); err != nil {
 		return nil, fmt.Errorf("invalid GitHub configuration (%w)", err)
 	}
 
-	parsedURL, err := url.Parse(cfg.OAuth2.GitHub.URL)
+	parsedURL, err := url.Parse(cfg.GitHub.URL)
 	if err != nil {
 		return nil, message.Wrap(
 			err,
 			message.EAuthConfigError,
 			"Failed to parse GitHub URL (%s)",
-			cfg.OAuth2.GitHub.URL,
+			cfg.GitHub.URL,
 		)
 	}
 
-	parsedAPIURL, err := url.Parse(cfg.OAuth2.GitHub.APIURL)
+	parsedAPIURL, err := url.Parse(cfg.GitHub.APIURL)
 	if err != nil {
 		return nil, message.Wrap(
 			err,
 			message.EAuthConfigError,
 			"Failed to parse GitHub API URL (%s)",
-			cfg.OAuth2.GitHub.APIURL,
+			cfg.GitHub.APIURL,
 		)
 	}
 
 	wwwClientConfig := config.HTTPClientConfiguration{}
 	structutils.Defaults(&wwwClientConfig)
-	wwwClientConfig.URL = cfg.OAuth2.GitHub.URL
-	wwwClientConfig.CACert = cfg.OAuth2.GitHub.CACert
-	wwwClientConfig.Timeout = cfg.OAuth2.GitHub.RequestTimeout
+	wwwClientConfig.URL = cfg.GitHub.URL
+	wwwClientConfig.CACert = cfg.GitHub.CACert
+	wwwClientConfig.Timeout = cfg.GitHub.RequestTimeout
 	wwwClientConfig.RequestEncoding = http.RequestEncodingWWWURLEncoded
 	if err := wwwClientConfig.Validate(); err != nil {
 		return nil, err
@@ -59,9 +63,9 @@ func newGitHubProvider(cfg config.AuthConfig, logger log.Logger) (OAuth2Provider
 
 	jsonWWWClientConfig := config.HTTPClientConfiguration{}
 	structutils.Defaults(&jsonWWWClientConfig)
-	jsonWWWClientConfig.URL = cfg.OAuth2.GitHub.URL
-	jsonWWWClientConfig.CACert = cfg.OAuth2.GitHub.CACert
-	jsonWWWClientConfig.Timeout = cfg.OAuth2.GitHub.RequestTimeout
+	jsonWWWClientConfig.URL = cfg.GitHub.URL
+	jsonWWWClientConfig.CACert = cfg.GitHub.CACert
+	jsonWWWClientConfig.Timeout = cfg.GitHub.RequestTimeout
 	jsonWWWClientConfig.RequestEncoding = http.RequestEncodingWWWURLEncoded
 	if err := jsonWWWClientConfig.Validate(); err != nil {
 		return nil, err
@@ -69,9 +73,9 @@ func newGitHubProvider(cfg config.AuthConfig, logger log.Logger) (OAuth2Provider
 
 	apiClientConfig := config.HTTPClientConfiguration{}
 	structutils.Defaults(&apiClientConfig)
-	apiClientConfig.URL = cfg.OAuth2.GitHub.APIURL
-	apiClientConfig.CACert = cfg.OAuth2.GitHub.CACert
-	apiClientConfig.Timeout = cfg.OAuth2.GitHub.RequestTimeout
+	apiClientConfig.URL = cfg.GitHub.APIURL
+	apiClientConfig.CACert = cfg.GitHub.CACert
+	apiClientConfig.Timeout = cfg.GitHub.RequestTimeout
 	apiClientConfig.RequestEncoding = http.RequestEncodingWWWURLEncoded
 	if err := apiClientConfig.Validate(); err != nil {
 		return nil, err
@@ -81,13 +85,13 @@ func newGitHubProvider(cfg config.AuthConfig, logger log.Logger) (OAuth2Provider
 		logger:                logger,
 		url:                   parsedURL,
 		apiURL:                parsedAPIURL,
-		clientID:              cfg.OAuth2.ClientID,
-		clientSecret:          cfg.OAuth2.ClientSecret,
-		requiredOrgMembership: cfg.OAuth2.GitHub.RequireOrgMembership,
-		scopes:                cfg.OAuth2.GitHub.ExtraScopes,
-		enforceUsername:       cfg.OAuth2.GitHub.EnforceUsername,
-		enforceScopes:         cfg.OAuth2.GitHub.EnforceScopes,
-		require2FA:            cfg.OAuth2.GitHub.Require2FA,
+		clientID:              cfg.ClientID,
+		clientSecret:          cfg.ClientSecret,
+		requiredOrgMembership: cfg.GitHub.RequireOrgMembership,
+		scopes:                cfg.GitHub.ExtraScopes,
+		enforceUsername:       cfg.GitHub.EnforceUsername,
+		enforceScopes:         cfg.GitHub.EnforceScopes,
+		require2FA:            cfg.GitHub.Require2FA,
 		wwwClientConfig:       wwwClientConfig,
 		jsonWWWClientConfig:   jsonWWWClientConfig,
 		apiClientConfig:       apiClientConfig,
@@ -114,13 +118,14 @@ func (p *gitHubProvider) SupportsDeviceFlow() bool {
 	return true
 }
 
-func (p *gitHubProvider) GetDeviceFlow(connectionID string, username string) (OAuth2DeviceFlow, error) {
-	flow, err := p.createFlow(connectionID, username)
+func (p *gitHubProvider) GetDeviceFlow(meta metadata.ConnectionAuthPendingMetadata) (OAuth2DeviceFlow, error) {
+	flow, err := p.createFlow(meta)
 	if err != nil {
 		return nil, err
 	}
 
 	return &gitHubDeviceFlow{
+		meta:       meta,
 		gitHubFlow: flow,
 		interval:   10 * time.Second,
 	}, nil
@@ -130,25 +135,26 @@ func (p *gitHubProvider) SupportsAuthorizationCodeFlow() bool {
 	return true
 }
 
-func (p *gitHubProvider) GetAuthorizationCodeFlow(connectionID string, username string) (
+func (p *gitHubProvider) GetAuthorizationCodeFlow(meta metadata.ConnectionAuthPendingMetadata) (
 	OAuth2AuthorizationCodeFlow,
 	error,
 ) {
-	flow, err := p.createFlow(connectionID, username)
+	flow, err := p.createFlow(meta)
 	if err != nil {
 		return nil, err
 	}
 
 	return &gitHubAuthorizationCodeFlow{
+		meta:       meta,
 		gitHubFlow: flow,
 	}, nil
 }
 
-func (p *gitHubProvider) createFlow(connectionID string, username string) (
+func (p *gitHubProvider) createFlow(meta metadata.ConnectionAuthPendingMetadata) (
 	gitHubFlow,
 	error,
 ) {
-	logger := p.logger.WithLabel("connectionID", connectionID).WithLabel("username", username)
+	logger := p.logger.WithLabel("connectionID", meta.ConnectionID).WithLabel("username", meta.Username)
 
 	client, err := http.NewClient(p.wwwClientConfig, logger)
 	if err != nil {
@@ -174,8 +180,6 @@ func (p *gitHubProvider) createFlow(connectionID string, username string) (
 		provider:        p,
 		clientID:        p.clientID,
 		clientSecret:    p.clientSecret,
-		connectionID:    connectionID,
-		username:        username,
 		logger:          logger,
 		client:          client,
 		jsonClient:      jsonClient,
@@ -261,8 +265,6 @@ type gitHubUserResponse struct {
 
 type gitHubFlow struct {
 	provider        *gitHubProvider
-	connectionID    string
-	username        string
 	accessToken     string
 	clientID        string
 	clientSecret    string
@@ -315,14 +317,14 @@ func (g *gitHubFlow) checkGrantedScopes(scope string) error {
 
 func (g *gitHubFlow) getIdentity(
 	ctx context.Context,
-	username string,
+	meta metadata.ConnectionAuthPendingMetadata,
 	accessToken string,
-) (map[string]string, error) {
+) (string, metadata.ConnectionAuthenticatedMetadata, error) {
 	var statusCode int
 	var lastError error
 	apiClient, err := g.getAPIClient(accessToken, false)
 	if err != nil {
-		return nil, err
+		return g.accessToken, meta.AuthFailed(), err
 	}
 loop:
 	for {
@@ -330,14 +332,14 @@ loop:
 		statusCode, lastError = apiClient.Get("/user", response)
 		if lastError == nil {
 			if statusCode == 200 {
-				if g.provider.enforceUsername && response.Login != username {
+				if g.provider.enforceUsername && response.Login != meta.Username {
 					err := message.UserMessage(
 						message.EAuthUsernameDoesNotMatch,
 						"The username entered in your SSH client does not match your GitHub login.",
 						"The user's username entered in the SSH username and on GitHub login do not match, but enforceUsername is enabled.",
 					)
 					g.logger.Debug(err)
-					return nil, err
+					return g.accessToken, meta.AuthFailed(), err
 				}
 
 				result := map[string]string{}
@@ -352,7 +354,7 @@ loop:
 								"The user does not have two-factor authentication enabled on their GitHub account.",
 							)
 							g.logger.Debug(err)
-							return nil, err
+							return g.accessToken, meta.AuthFailed(), err
 						}
 						result["GITHUB_2FA"] = "false"
 					}
@@ -363,27 +365,34 @@ loop:
 						"The user did not provide the read:user permission to read the 2FA status.",
 					)
 					g.logger.Debug(err)
-					return nil, err
+					return g.accessToken, meta.AuthFailed(), err
 				}
-				result["GITHUB_METHOD"] = "device"
-				result["GITHUB_TOKEN"] = accessToken
-				result["GITHUB_LOGIN"] = response.Login
-				result["GITHUB_ID"] = fmt.Sprintf("%d", response.ID)
-				result["GITHUB_NODE_ID"] = response.NodeID
-				result["GITHUB_NAME"] = response.Name
-				result["GITHUB_AVATAR_URL"] = response.AvatarURL
-				result["GITHUB_BIO"] = response.Bio
-				result["GITHUB_COMPANY"] = response.Company
-				result["GITHUB_EMAIL"] = response.Email
-				result["GITHUB_BLOG_URL"] = response.BlogURL
-				result["GITHUB_LOCATION"] = response.Location
-				result["GITHUB_TWITTER_USERNAME"] = response.TwitterUsername
-				result["GITHUB_PROFILE_URL"] = response.ProfileURL
-				result["GITHUB_AVATAR_URL"] = response.AvatarURL
-				if g.provider.enforceUsername && response.Login != username {
-					return nil, message.UserMessage(message.EAuthGitHubUsernameDoesNotMatch, "Your GitHub username does not match your SSH login. Please try again and specify your GitHub username when connecting.", "User did not use their GitHub username in the SSH login.")
+				m := meta.GetMetadata()
+				m["GITHUB_METHOD"] = metadata.Value{Value: "device"}
+				// Note: we are adding all entries as sensitive since they are personally identifiable data and should
+				// not be passed around or logged needlessly. Doing so would possibly incur a problem under GDPR.
+				m["GITHUB_TOKEN"] = metadata.Value{Value: accessToken, Sensitive: true}
+				m["GITHUB_LOGIN"] = metadata.Value{Value: response.Login, Sensitive: true}
+				m["GITHUB_ID"] = metadata.Value{Value: fmt.Sprintf("%d", response.ID), Sensitive: true}
+				m["GITHUB_NODE_ID"] = metadata.Value{Value: response.NodeID, Sensitive: true}
+				m["GITHUB_NAME"] = metadata.Value{Value: response.Name, Sensitive: true}
+				m["GITHUB_AVATAR_URL"] = metadata.Value{Value: response.AvatarURL, Sensitive: true}
+				m["GITHUB_BIO"] = metadata.Value{Value: response.Bio, Sensitive: true}
+				m["GITHUB_COMPANY"] = metadata.Value{Value: response.Company, Sensitive: true}
+				m["GITHUB_EMAIL"] = metadata.Value{Value: response.Email, Sensitive: true}
+				m["GITHUB_BLOG_URL"] = metadata.Value{Value: response.BlogURL, Sensitive: true}
+				m["GITHUB_LOCATION"] = metadata.Value{Value: response.Location, Sensitive: true}
+				m["GITHUB_TWITTER_USERNAME"] = metadata.Value{Value: response.TwitterUsername, Sensitive: true}
+				m["GITHUB_PROFILE_URL"] = metadata.Value{Value: response.ProfileURL, Sensitive: true}
+				m["GITHUB_AVATAR_URL"] = metadata.Value{Value: response.AvatarURL, Sensitive: true}
+				if g.provider.enforceUsername && response.Login != meta.Username {
+					return g.accessToken, meta.AuthFailed(), message.UserMessage(
+						message.EAuthGitHubUsernameDoesNotMatch,
+						"Your GitHub username does not match your SSH login. Please try again and specify your GitHub username when connecting.",
+						"User did not use their GitHub username in the SSH login.",
+					)
 				}
-				return result, nil
+				return g.accessToken, meta.Authenticated(response.Login), nil
 			} else {
 				g.logger.Debug(
 					message.NewMessage(
@@ -415,7 +424,7 @@ loop:
 		"Timeout while trying fetch user identity from GitHub.",
 	)
 	g.logger.Debug(err)
-	return map[string]string{}, err
+	return g.accessToken, meta.AuthFailed(), err
 }
 
 func (g *gitHubFlow) getAPIClient(token string, basicAuth bool) (http.Client, error) {
@@ -502,6 +511,7 @@ loop:
 
 type gitHubAuthorizationCodeFlow struct {
 	gitHubFlow
+	meta metadata.ConnectionAuthPendingMetadata
 }
 
 func (g *gitHubAuthorizationCodeFlow) GetAuthorizationURL(_ context.Context) (string, error) {
@@ -510,19 +520,20 @@ func (g *gitHubAuthorizationCodeFlow) GetAuthorizationURL(_ context.Context) (st
 	link.Path = "/login/oauth/authorize"
 	query := link.Query()
 	query.Set("client_id", g.provider.clientID)
-	query.Set("login", g.username)
+	query.Set("login", g.meta.Username)
 	query.Set("scope", g.provider.getScope())
-	query.Set("state", g.connectionID)
+	query.Set("state", g.meta.ConnectionID)
 	link.RawQuery = query.Encode()
 	return link.String(), nil
 }
 
 func (g *gitHubAuthorizationCodeFlow) Verify(ctx context.Context, state string, authorizationCode string) (
-	map[string]string,
+	string,
+	metadata.ConnectionAuthenticatedMetadata,
 	error,
 ) {
-	if state != g.connectionID {
-		return nil, message.UserMessage(
+	if state != g.meta.ConnectionID {
+		return g.accessToken, g.meta.AuthFailed(), message.UserMessage(
 			message.EAuthGitHubStateDoesNotMatch,
 			"The returned code is invalid.",
 			"The user provided a code that contained an invalid state component.",
@@ -534,9 +545,9 @@ func (g *gitHubAuthorizationCodeFlow) Verify(ctx context.Context, state string, 
 		if accessToken != "" {
 			g.Deauthorize(ctx)
 		}
-		return nil, err
+		return g.accessToken, g.meta.AuthFailed(), err
 	}
-	return g.getIdentity(ctx, g.username, accessToken)
+	return g.getIdentity(ctx, g.meta, accessToken)
 }
 
 func (g *gitHubAuthorizationCodeFlow) getAccessToken(ctx context.Context, code string) (string, error) {
@@ -548,7 +559,7 @@ loop:
 			ClientID:     g.provider.clientID,
 			ClientSecret: g.provider.clientSecret,
 			Code:         code,
-			State:        g.connectionID,
+			State:        g.meta.ConnectionID,
 		}
 		resp := &gitHubAccessTokenResponse{}
 		statusCode, lastError = g.client.Post("/login/oauth/access_token", req, resp)
@@ -590,6 +601,7 @@ type gitHubDeviceFlow struct {
 
 	interval   time.Duration
 	deviceCode string
+	meta       metadata.ConnectionAuthPendingMetadata
 }
 
 func (d *gitHubDeviceFlow) GetAuthorizationURL(ctx context.Context) (
@@ -655,16 +667,16 @@ loop:
 	return "", "", 0, err
 }
 
-func (d *gitHubDeviceFlow) Verify(ctx context.Context) (map[string]string, error) {
+func (d *gitHubDeviceFlow) Verify(ctx context.Context) (string, metadata.ConnectionAuthenticatedMetadata, error) {
 	accessToken, err := d.getAccessToken(ctx)
 	d.accessToken = accessToken
 	if err != nil {
 		if accessToken != "" {
 			d.Deauthorize(ctx)
 		}
-		return nil, err
+		return "", d.meta.AuthFailed(), err
 	}
-	return d.getIdentity(ctx, d.username, accessToken)
+	return d.getIdentity(ctx, d.meta, accessToken)
 }
 
 func (d *gitHubDeviceFlow) getAccessToken(ctx context.Context) (string, error) {

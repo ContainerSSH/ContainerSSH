@@ -19,20 +19,71 @@ func New(
 	logger log.Logger,
 	metricsCollector metrics.Collector,
 	behavior Behavior,
-) (sshserver.Handler, service.Service, error) {
-	authClient, srv, err := auth.NewClient(config, logger, metricsCollector)
-	if err != nil {
-		return nil, nil, err
-	}
+) (sshserver.Handler, []service.Service, error) {
 	if backend == nil {
 		return nil, nil, fmt.Errorf("the backend parameter to authintegration.New cannot be nil")
 	}
 	if !behavior.validate() {
 		return nil, nil, fmt.Errorf("the behavior field contains an invalid value: %d", behavior)
 	}
+
+	var services []service.Service
+
+	passwordAuthenticator, svc, err := auth.NewPasswordAuthenticator(config.PasswordAuth, logger, metricsCollector)
+	if err != nil {
+		return nil, nil, err
+	}
+	if svc != nil {
+		services = append(services, svc)
+	}
+
+	publicKeyAuthenticator, svc, err := auth.NewPublicKeyAuthenticator(config.PublicKeyAuth, logger, metricsCollector)
+	if err != nil {
+		return nil, nil, err
+	}
+	if svc != nil {
+		services = append(services, svc)
+	}
+
+	keyboardInteractiveAuthenticator, svc, err := auth.NewKeyboardInteractiveAuthenticator(
+		config.KeyboardInteractiveAuth,
+		logger,
+		metricsCollector,
+	)
+	if err != nil {
+		return nil, nil, err
+	}
+	if svc != nil {
+		services = append(services, svc)
+	}
+
+	gssapiAuthenticator, svc, err := auth.NewGSSAPIAuthenticator(
+		config.GSSAPIAuth,
+		logger,
+		metricsCollector,
+	)
+	if err != nil {
+		return nil, nil, err
+	}
+	if svc != nil {
+		services = append(services, svc)
+	}
+
+	authorizationProvider, svc, err := auth.NewAuthorizationProvider(config.Authz, logger, metricsCollector)
+	if err != nil {
+		return nil, nil, err
+	}
+	if svc != nil {
+		services = append(services, svc)
+	}
+
 	return &handler{
-		authClient: authClient,
-		backend:    backend,
-		behavior:   behavior,
-	}, srv, nil
+		passwordAuthenticator:            passwordAuthenticator,
+		publicKeyAuthenticator:           publicKeyAuthenticator,
+		keyboardInteractiveAuthenticator: keyboardInteractiveAuthenticator,
+		gssapiAuthenticator:              gssapiAuthenticator,
+		authorizationProvider:            authorizationProvider,
+		backend:                          backend,
+		behavior:                         behavior,
+	}, services, nil
 }
