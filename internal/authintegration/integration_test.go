@@ -138,6 +138,8 @@ type testBackend struct {
 
 func (t *testBackend) OnUnsupportedGlobalRequest(_ uint64, _ string, _ []byte) {}
 
+func (b *testBackend) OnFailedDecodeGlobalRequest(_ uint64, _ string, _ []byte, _ error) {}
+
 func (t *testBackend) OnUnsupportedChannel(_ uint64, _ string, _ []byte) {}
 
 func (t *testBackend) OnSessionChannel(_ metadata.ChannelMetadata, _ []byte, _ sshserver.SessionChannel) (
@@ -145,6 +147,51 @@ func (t *testBackend) OnSessionChannel(_ metadata.ChannelMetadata, _ []byte, _ s
 	_ sshserver.ChannelRejection,
 ) {
 	return nil, sshserver.NewChannelRejection(ssh.UnknownChannelType, message.MTest, "not supported", "not supported")
+}
+
+func (s *testBackend) OnTCPForwardChannel(
+	channelID uint64,
+	hostToConnect string,
+	portToConnect uint32,
+	originatorHost string,
+	originatorPort uint32,
+) (channel sshserver.ForwardChannel, failureReason sshserver.ChannelRejection) {
+	return nil, sshserver.NewChannelRejection(ssh.Prohibited, message.ESSHNotImplemented, "Forwading channel unimplemented in docker backend", "Forwading channel unimplemented in docker backend")
+}
+
+func (s *testBackend) OnRequestTCPReverseForward(
+	bindHost string,
+	bindPort uint32,
+	reverseHandler sshserver.ReverseForward,
+) error {
+	return fmt.Errorf("Unimplemented")
+}
+
+func (s *testBackend) OnRequestCancelTCPReverseForward(
+	bindHost string,
+	bindPort uint32,
+) error {
+	return fmt.Errorf("Unimplemented")
+}
+
+func (s *testBackend) OnDirectStreamLocal(
+	channelID uint64,
+	path string,
+) (channel sshserver.ForwardChannel, failureReason sshserver.ChannelRejection) {
+	return nil, sshserver.NewChannelRejection(ssh.Prohibited, message.ESSHNotImplemented, "Forwading channel unimplemented in docker backend", "Forwading channel unimplemented in docker backend")
+}
+
+func (s *testBackend) OnRequestStreamLocal(
+	path string,
+	reverseHandler sshserver.ReverseForward,
+) error {
+	return fmt.Errorf("Unimplemented")
+}
+
+func (s *testBackend) OnRequestCancelStreamLocal(
+	path string,
+) error {
+	return fmt.Errorf("Unimplemented")
 }
 
 func (t *testBackend) OnHandshakeFailed(_ metadata.ConnectionMetadata, _ error) {}

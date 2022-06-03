@@ -20,7 +20,10 @@ import (
 	"github.com/containerssh/libcontainerssh/internal/sshserver"
 	"github.com/containerssh/libcontainerssh/log"
 	"github.com/containerssh/libcontainerssh/metadata"
+	message2 "github.com/containerssh/libcontainerssh/message"
 	"github.com/stretchr/testify/assert"
+
+	"golang.org/x/crypto/ssh"
 )
 
 func TestKeyboardInteractiveAuthentication(t *testing.T) {
@@ -293,7 +296,22 @@ func (b *backendHandler) OnWindow(_ uint64, _ uint32, _ uint32, _ uint32, _ uint
 	return fmt.Errorf("window requests are not supported")
 }
 
+func (s *backendHandler) OnX11Request(
+	requestID uint64,
+	singleConnection bool,
+	protocol string,
+	cookie string,
+	screen uint32,
+	reverseHandler sshserver.ReverseForward,
+) error {
+	return fmt.Errorf("Unimplemented")
+}
+
 func (b *backendHandler) OnUnsupportedGlobalRequest(_ uint64, _ string, _ []byte) {
+}
+
+func (b *backendHandler) OnFailedDecodeGlobalRequest(_ uint64, _ string, _ []byte, _ error) {
+
 }
 
 func (b *backendHandler) OnUnsupportedChannel(_ uint64, _ string, _ []byte) {
@@ -305,6 +323,51 @@ func (b *backendHandler) OnSessionChannel(_ metadata.ChannelMetadata, _ []byte, 
 ) {
 	b.session = session
 	return b, nil
+}
+
+func (s *backendHandler) OnTCPForwardChannel(
+	channelID uint64,
+	hostToConnect string,
+	portToConnect uint32,
+	originatorHost string,
+	originatorPort uint32,
+) (channel sshserver.ForwardChannel, failureReason sshserver.ChannelRejection) {
+	return nil, sshserver.NewChannelRejection(ssh.Prohibited, message2.ESSHNotImplemented, "Forwading channel unimplemented", "Forwading channel unimplemented")
+}
+
+func (s *backendHandler) OnRequestTCPReverseForward(
+	bindHost string,
+	bindPort uint32,
+	reverseHandler sshserver.ReverseForward,
+) error {
+	return fmt.Errorf("Unimplemented")
+}
+
+func (s *backendHandler) OnRequestCancelTCPReverseForward(
+	bindHost string,
+	bindPort uint32,
+) error {
+	return fmt.Errorf("Unimplemented")
+}
+
+func (s *backendHandler) OnDirectStreamLocal(
+	channelID uint64,
+	path string,
+) (channel sshserver.ForwardChannel, failureReason sshserver.ChannelRejection) {
+	return nil, sshserver.NewChannelRejection(ssh.Prohibited, message2.ESSHNotImplemented, "Streamlocal Forwading unimplemented", "Streamlocal Forwading unimplemented")
+}
+
+func (s *backendHandler) OnRequestStreamLocal(
+	path string,
+	reverseHandler sshserver.ReverseForward,
+) error {
+	return fmt.Errorf("Unimplemented")
+}
+
+func (s *backendHandler) OnRequestCancelStreamLocal(
+	path string,
+) error {
+	return fmt.Errorf("Unimplemented")
 }
 
 func (b *backendHandler) OnAuthPassword(meta metadata.ConnectionAuthPendingMetadata, _ []byte) (

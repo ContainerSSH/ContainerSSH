@@ -68,6 +68,9 @@ type Connection interface {
 	// OnGlobalRequestUnknown creates an audit log message for a global request that is not supported.
 	OnGlobalRequestUnknown(requestType string)
 
+	// OnGlobalRequestDecodeFailed creates an audit log message for a global request that is supported but could not be decoded
+	OnGlobalRequestDecodeFailed(requestID uint64, requestType string, payload []byte, reason error)
+
 	// OnNewChannel creates an audit log message for a new channel request.
 	OnNewChannel(channelID message.ChannelID, channelType string)
 	// OnNewChannelFailed creates an audit log message for a failure in requesting a new channel.
@@ -75,6 +78,34 @@ type Connection interface {
 	// OnNewChannelSuccess creates an audit log message for successfully requesting a new channel and returns a
 	//                     channel-specific audit logger.
 	OnNewChannelSuccess(channelID message.ChannelID, channelType string) Channel
+
+	// OnRequestTCPReverseForward creates an audit log message for requesting the server to listen 
+	// on a host and port for incoming connections.
+	OnRequestTCPReverseForward(bindHost string, bindPort uint32)
+
+	// OnRequestCancelTCPReverseForward creates an audit log message for requesting the server to stop listening on a host and port for incoming connections.
+	OnRequestCancelTCPReverseForward(bindHost string, bindPort uint32)
+
+	// OnTCPForwardChannel creates an audit log message for requesting to open a network forwarding channel (proxy).
+	OnTCPForwardChannel(channelID message.ChannelID, hostToConnect string, portToConnect uint32, originatorHost string, originatorPort uint32)
+
+	// OnReverseForwardChannel creates an audit log message for requesting to open a reverse forwarding channel after a connection is received on a listening port.
+	OnReverseForwardChannel(channelID message.ChannelID, connectedHost string, connectedPort uint32, originatorHost string, originatorPort uint32)
+
+	// OnReverseStreamLocalChannel creates an audit log message for requesting to open a reverse forwarding channel after a connection is received on a listening unix socket.
+	OnReverseStreamLocalChannel(channeldID message.ChannelID, path string)
+
+	// OnReverseX11ForwardChannel creates an audit log message for requesting to open a channel to forward an X11 connection to the client.
+	OnReverseX11ForwardChannel(channelID message.ChannelID, originatorHost string, originatorPort uint32)
+
+	// OnDirectStreamLocal creates an audit log message for requesting to open a unix socket forwarding channel.
+	OnDirectStreamLocal(channelID message.ChannelID, path string)
+
+	// OnRequestStreamLocal creates an audit log message for requesting the server to listen on a unix socket for incoming connections.
+	OnRequestStreamLocal(path string)
+
+	// OnRequestCancelStreamLocal creates an audit log message for requesting the server to stop listening on a unix socket for incoming connections.
+	OnRequestCancelStreamLocal(path string)
 }
 
 // Channel is an audit logger for one specific hannel
@@ -93,6 +124,8 @@ type Channel interface {
 	OnRequestExec(requestID uint64, program string)
 	// OnRequestPty creates an audit log message for a channel request to create an interactive terminal.
 	OnRequestPty(requestID uint64, term string, columns uint32, rows uint32, width uint32, height uint32, modeList []byte)
+	// OnX11Request create an audit log message for a channel request to start X11 forwarding
+	OnRequestX11(requestID uint64, singleConnection bool, protocol string, cookie string, screen uint32)
 	// OnRequestExec creates an audit log message for a channel request to execute a shell.
 	OnRequestShell(requestID uint64)
 	// OnRequestExec creates an audit log message for a channel request to send a signal to the currently running
@@ -109,6 +142,8 @@ type Channel interface {
 	GetStdoutProxy(stdout io.Writer) io.Writer
 	// GetStdinProxy creates an intercepting audit log writer proxy for the standard error.
 	GetStderrProxy(stderr io.Writer) io.Writer
+	// GetForwardingProxy creates an intercepting audit log writer proxy for forwarding channels.
+	GetForwardingProxy(forward io.ReadWriteCloser) io.ReadWriteCloser
 
 	// OnExit is called when the executed program quits. The exitStatus parameter contains the exit code of the
 	// application.

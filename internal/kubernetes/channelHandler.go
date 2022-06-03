@@ -14,17 +14,19 @@ import (
 )
 
 type channelHandler struct {
-	channelID      uint64
-	networkHandler *networkHandler
-	username       string
-	env            map[string]string
-	files          map[string][]byte
-	pty            bool
-	columns        uint32
-	rows           uint32
-	exec           kubernetesExecution
-	session        sshserver.SessionChannel
-	pod            kubernetesPod
+	channelID         uint64
+	networkHandler    *networkHandler
+	connectionHandler *sshConnectionHandler
+	username          string
+	env               map[string]string
+	files             map[string][]byte
+	pty               bool
+	x11               bool
+	columns           uint32
+	rows              uint32
+	exec              kubernetesExecution
+	session           sshserver.SessionChannel
+	pod               kubernetesPod
 }
 
 func (c *channelHandler) OnUnsupportedChannelRequest(_ uint64, _ string, _ []byte) {
@@ -274,9 +276,48 @@ func (c *channelHandler) OnWindow(_ uint64, columns uint32, rows uint32, _ uint3
 	return c.exec.resize(ctx, uint(rows), uint(columns))
 }
 
+func (c *channelHandler) OnX11Request(
+	requestID uint64,
+	singleConnection bool,
+	proto string,
+	cookie string,
+	screen uint32,
+	reverseHandler sshserver.ReverseForward,
+) error {
+	if c.x11 {
+		return fmt.Errorf("X11 forwarding already setup for this channel")
+	}
+
+	c.networkHandler.logger.Debug("Setting X11 vars")
+	c.env["DISPLAY"] = "localhost:10"
+	c.networkHandler.logger.Warning("Kubernetes: Starting reverse forward")
+
+	err := c.connectionHandler.agentForward.NewX11Forwarding(
+		c.connectionHandler.setupAgent,
+		c.networkHandler.logger,
+		singleConnection,
+		proto,
+		cookie,
+		screen,
+		reverseHandler,
+	)
+	if err != nil {
+		return err
+	}
+	c.x11 = true
+
+	return nil
+}
+
 func (c *channelHandler) OnClose() {
 	if c.exec != nil {
 		c.exec.kill()
+	}
+	if c.x11 {
+		err := c.connectionHandler.agentForward.CloseX11Forwarding()
+		if err != nil {
+			c.networkHandler.logger.Info(fmt.Errorf("failed to close X11 forwarding (%w)", err))
+		}
 	}
 	pod := c.networkHandler.pod
 	if pod != nil && c.networkHandler.config.Pod.Mode == config.KubernetesExecutionModeSession {

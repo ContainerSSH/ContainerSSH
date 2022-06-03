@@ -15,6 +15,9 @@ import (
 	"github.com/containerssh/libcontainerssh/internal/sshserver"
 	"github.com/containerssh/libcontainerssh/metadata"
 	"github.com/stretchr/testify/assert"
+	"github.com/containerssh/libcontainerssh/message"
+
+	"golang.org/x/crypto/ssh"
 )
 
 func TestMetricsReporting(t *testing.T) {
@@ -216,6 +219,8 @@ func (d *dummyBackendHandler) OnUnsupportedGlobalRequest(_ uint64, _ string, _ [
 
 }
 
+func (b *dummyBackendHandler) OnFailedDecodeGlobalRequest(_ uint64, _ string, _ []byte, _ error) {}
+
 func (d *dummyBackendHandler) OnUnsupportedChannel(_ uint64, _ string, _ []byte) {
 
 }
@@ -228,6 +233,51 @@ func (d *dummyBackendHandler) OnSessionChannel(
 	return &dummySession{
 		session: session,
 	}, nil
+}
+
+func (s *dummyBackendHandler) OnTCPForwardChannel(
+	channelID uint64,
+	hostToConnect string,
+	portToConnect uint32,
+	originatorHost string,
+	originatorPort uint32,
+) (channel sshserver.ForwardChannel, failureReason sshserver.ChannelRejection) {
+	return nil, sshserver.NewChannelRejection(ssh.Prohibited, message.ESSHNotImplemented, "Forwading channel unimplemented in docker backend", "Forwading channel unimplemented in docker backend")
+}
+
+func (s *dummyBackendHandler) OnRequestTCPReverseForward(
+	bindHost string,
+	bindPort uint32,
+	reverseHandler sshserver.ReverseForward,
+) error {
+	return fmt.Errorf("Unimplemented")
+}
+
+func (s *dummyBackendHandler) OnRequestCancelTCPReverseForward(
+	bindHost string,
+	bindPort uint32,
+) error {
+	return fmt.Errorf("Unimplemented")
+}
+
+func (s *dummyBackendHandler) OnDirectStreamLocal(
+	channelID uint64,
+	path string,
+) (channel sshserver.ForwardChannel, failureReason sshserver.ChannelRejection) {
+	return nil, sshserver.NewChannelRejection(ssh.Prohibited, message.ESSHNotImplemented, "Forwading channel unimplemented in docker backend", "Forwading channel unimplemented in docker backend")
+}
+
+func (s *dummyBackendHandler) OnRequestStreamLocal(
+	path string,
+	reverseHandler sshserver.ReverseForward,
+) error {
+	return fmt.Errorf("Unimplemented")
+}
+
+func (s *dummyBackendHandler) OnRequestCancelStreamLocal(
+	path string,
+) error {
+	return fmt.Errorf("Unimplemented")
 }
 
 type dummySession struct {
@@ -320,4 +370,15 @@ func (d *dummySession) OnWindow(
 	_ uint32,
 ) error {
 	return fmt.Errorf("window changes are not supported")
+}
+
+func (s *dummySession) OnX11Request(
+	requestID uint64,
+	singleConnection bool,
+	protocol string,
+	cookie string,
+	screen uint32,
+	reverseHandler sshserver.ReverseForward,
+) error {
+	return fmt.Errorf("Unimplemented")
 }

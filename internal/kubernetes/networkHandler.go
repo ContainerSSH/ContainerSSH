@@ -13,6 +13,7 @@ import (
 	"github.com/containerssh/libcontainerssh/log"
 	"github.com/containerssh/libcontainerssh/message"
 	"github.com/containerssh/libcontainerssh/metadata"
+	"github.com/containerssh/libcontainerssh/internal/agentforward"
 )
 
 type networkHandler struct {
@@ -136,6 +137,7 @@ func (n *networkHandler) OnHandshakeSuccess(meta metadata.ConnectionAuthenticate
 		username:       meta.Username,
 		env:            env,
 		files:          files,
+		agentForward:   agentforward.NewAgentForward(n.logger),
 	}, meta, nil
 }
 

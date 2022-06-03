@@ -20,6 +20,7 @@ import (
 	"github.com/containerssh/libcontainerssh/internal/test"
 	"github.com/containerssh/libcontainerssh/log"
 	"github.com/containerssh/libcontainerssh/metadata"
+	"github.com/containerssh/libcontainerssh/message"
 	"github.com/containerssh/libcontainerssh/service"
 	"github.com/stretchr/testify/assert"
 	"golang.org/x/crypto/ssh"
@@ -727,6 +728,51 @@ func (f *fullSSHConnectionHandler) OnSessionChannel(
 	}, nil
 }
 
+func (s *fullSSHConnectionHandler) OnTCPForwardChannel(
+	channelID uint64,
+	hostToConnect string,
+	portToConnect uint32,
+	originatorHost string,
+	originatorPort uint32,
+) (channel sshserver.ForwardChannel, failureReason sshserver.ChannelRejection) {
+	return nil, sshserver.NewChannelRejection(ssh.Prohibited, message.ESSHNotImplemented, "Forwading channel unimplemented", "Forwading channel unimplemented")
+}
+
+func (s *fullSSHConnectionHandler) OnRequestTCPReverseForward(
+	bindHost string,
+	bindPort uint32,
+	reverseHandler sshserver.ReverseForward,
+) error {
+	return fmt.Errorf("Unimplemented")
+}
+
+func (s *fullSSHConnectionHandler) OnRequestCancelTCPReverseForward(
+	bindHost string,
+	bindPort uint32,
+) error {
+	return fmt.Errorf("Unimplemented")
+}
+
+func (s *fullSSHConnectionHandler) OnDirectStreamLocal(
+	channelID uint64,
+	path string,
+) (channel sshserver.ForwardChannel, failureReason sshserver.ChannelRejection) {
+	return nil, sshserver.NewChannelRejection(ssh.Prohibited, message.ESSHNotImplemented, "Forwading channel unimplemented in docker backend", "Forwading channel unimplemented in docker backend")
+}
+
+func (s *fullSSHConnectionHandler) OnRequestStreamLocal(
+	path string,
+	reverseHandler sshserver.ReverseForward,
+) error {
+	return fmt.Errorf("Unimplemented")
+}
+
+func (s *fullSSHConnectionHandler) OnRequestCancelStreamLocal(
+	path string,
+) error {
+	return fmt.Errorf("Unimplemented")
+}
+
 //endregion
 
 //region Session channel conformanceTestHandler
@@ -777,6 +823,17 @@ func (f *fullSessionChannelHandler) OnSignal(_ uint64, _ string) error {
 }
 
 func (f *fullSessionChannelHandler) OnWindow(_ uint64, _ uint32, _ uint32, _ uint32, _ uint32) error {
+	return nil
+}
+
+func (s *fullSessionChannelHandler) OnX11Request(
+	requestID uint64,
+	singleConnection bool,
+	protocol string,
+	cookie string,
+	screen uint32,
+	reverseHandler sshserver.ReverseForward,
+) error {
 	return nil
 }
 

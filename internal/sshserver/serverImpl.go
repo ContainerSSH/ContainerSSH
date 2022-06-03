@@ -2,12 +2,15 @@ package sshserver
 
 import (
 	"context"
+	"errors"
 	"fmt"
+	"io"
 	"net"
 	"strings"
 	"sync"
 	"time"
 
+	protocol "github.com/containerssh/libcontainerssh/agentprotocol"
 	"github.com/containerssh/libcontainerssh/auth"
 	"github.com/containerssh/libcontainerssh/config"
 	ssh2 "github.com/containerssh/libcontainerssh/internal/ssh"
@@ -18,6 +21,11 @@ import (
 	"golang.org/x/crypto/ssh"
 )
 
+type connection struct {
+	sshConn         *ssh.ServerConn
+	reverseForwards map[string]*protocol.ForwardCtx
+}
+
 type serverImpl struct {
 	cfg                 config.SSHConfig
 	logger              log.Logger
@@ -26,6 +34,7 @@ type serverImpl struct {
 	wg                  *sync.WaitGroup
 	lock                *sync.Mutex
 	clientSockets       map[*ssh.ServerConn]bool
+	connMap             map[string]connection
 	nextGlobalRequestID uint64
 	nextChannelID       uint64
 	hostKeys            []ssh.Signer
@@ -44,6 +53,7 @@ func (s *serverImpl) RunWithLifecycle(lifecycle service.Lifecycle) error {
 		alreadyRunning = true
 	} else {
 		s.clientSockets = make(map[*ssh.ServerConn]bool)
+		s.connMap = make(map[string]connection)
 	}
 	s.shuttingDown = false
 	if alreadyRunning {
@@ -576,6 +586,10 @@ func (s *serverImpl) handleConnection(conn net.Conn) {
 	logger.Debug(messageCodes.NewMessage(messageCodes.MSSHHandshakeSuccessful, "SSH handshake successful"))
 	s.lock.Lock()
 	s.clientSockets[sshConn] = true
+	s.connMap[connectionID] = connection{
+		sshConn:         sshConn,
+		reverseForwards: make(map[string]*protocol.ForwardCtx),
+	}
 	sshShutdownHandlerID := fmt.Sprintf("ssh-%s", connectionID)
 	s.lock.Unlock()
 
@@ -639,6 +653,83 @@ func (s *serverImpl) handleKeepAliveRequest(req *ssh.Request, logger log.Logger)
 	}
 }
 
+//nolint:dupl
+func (s *serverImpl) handleGlobalRequest(authenticatedMetadata metadata.ConnectionAuthenticatedMetadata, requestID uint64, connection SSHConnectionHandler, req *ssh.Request, logger log.Logger) {
+	reply := s.createReply(req, logger)
+	payload, err := s.unmarshalGlobalRequestPayload(req)
+	if payload == nil {
+		connection.OnUnsupportedGlobalRequest(requestID, req.Type, req.Payload)
+		reply(false, fmt.Sprintf("unsupported global request type: %s", req.Type), nil)
+		return
+	}
+	if err != nil {
+		logger.Debug(
+			messageCodes.Wrap(
+				err,
+				messageCodes.ESSHDecodeFailed,
+				"failed to unmarshal %s request payload",
+				req.Type,
+			),
+		)
+		connection.OnFailedDecodeGlobalRequest(requestID, req.Type, req.Payload, err)
+		reply(false, "failed to unmarshal payload", nil)
+		return
+	}
+
+	logger.Debug(
+		messageCodes.NewMessage(
+			messageCodes.MSSHGlobalRequest,
+			"%s global request from client",
+			req.Type,
+		).Label("RequestType", req.Type),
+	)
+	if err := s.handleDecodedGlobalRequest(
+		authenticatedMetadata,
+		requestID,
+		ssh2.RequestType(req.Type),
+		payload,
+		connection,
+	); err != nil {
+		logger.Debug(
+			messageCodes.NewMessage(
+				messageCodes.MSSHGlobalRequestFailed,
+				"%s global request from client failed",
+				req.Type,
+			).Label("RequestType", req.Type),
+		)
+		reply(false, err.Error(), err)
+		return
+	}
+	logger.Debug(
+		messageCodes.NewMessage(
+			messageCodes.MSSHGlobalRequestSuccessful,
+			"%s global request from client successful",
+			req.Type,
+		).Label("RequestType", req.Type),
+	)
+	reply(true, "", nil)
+}
+
+func (s *serverImpl) handleDecodedGlobalRequest(
+	authenticatedMetadata metadata.ConnectionAuthenticatedMetadata,
+	requestID uint64,
+	requestType ssh2.RequestType,
+	payload interface{},
+	connection SSHConnectionHandler,
+) error {
+	switch requestType {
+	case ssh2.RequestTypeReverseForward:
+		return s.onForwardTCPIP(authenticatedMetadata, requestID, payload, connection)
+	case ssh2.RequestTypeCancelReverseForward:
+		return s.onCancelForward(authenticatedMetadata, requestID, payload, connection)
+	case ssh2.RequestTypeStreamLocalForward:
+		return s.onForwardStreamLocal(authenticatedMetadata, requestID, payload, connection)
+	case ssh2.RequestTypeCancelStreamLocalForward:
+		return s.onCancelForwardStreamLocal(authenticatedMetadata, requestID, payload, connection)
+	}
+	return nil
+}
+
 func (s *serverImpl) handleUnknownGlobalRequest(req *ssh.Request, requestID uint64, connection SSHConnectionHandler, logger log.Logger) {
 	logger.Debug(
 		messageCodes.NewMessage(messageCodes.ESSHUnsupportedGlobalRequest, "Unsupported global request").Label(
@@ -676,11 +767,13 @@ func (s *serverImpl) handleGlobalRequests(
 		requestID := s.nextGlobalRequestID
 		s.nextGlobalRequestID++
 
+		// Keepalive gets a fast-track and is not logged because we'll get a lot of those
 		switch request.Type {
 		case "keepalive@openssh.com":
 			s.handleKeepAliveRequest(request, logger)
 		default:
-			s.handleUnknownGlobalRequest(request, requestID, connection, logger)
+			logger.Debug("Handling global request %s", request.Type)
+			s.handleGlobalRequest(authenticatedMetadata, requestID, connection, request, logger)
 		}
 	}
 }
@@ -701,7 +794,14 @@ func (s *serverImpl) handleChannels(
 		s.nextChannelID++
 		s.lock.Unlock()
 		logger = logger.WithLabel("channelId", channelID)
-		if newChannel.ChannelType() != "session" {
+		switch newChannel.ChannelType() {
+		case ChannelTypeSession:
+			go s.handleSessionChannel(authenticatedMetadata.Channel(channelID), newChannel, connection, logger)
+		case ChannelTypeDirectTCPIP:
+			go s.handleDirectForwardingChannel(authenticatedMetadata.Channel(channelID), newChannel, connection, logger)
+		case ChannelTypeDirectStreamLocal:
+			go s.handleDirectStreamLocalChannel(authenticatedMetadata.Channel(channelID), newChannel, connection, logger)
+		default:
 			logger.Debug(
 				messageCodes.NewMessage(
 					messageCodes.ESSHUnsupportedChannelType,
@@ -714,7 +814,6 @@ func (s *serverImpl) handleChannels(
 			}
 			continue
 		}
-		go s.handleSessionChannel(authenticatedMetadata.Channel(channelID), newChannel, connection, logger)
 	}
 }
 
@@ -768,7 +867,136 @@ func (s *serverImpl) handleSessionChannel(
 		}
 		requestID := nextRequestID
 		nextRequestID++
-		s.handleChannelRequest(requestID, request, handlerChannel, logger)
+		s.handleChannelRequest(channelMetadata, requestID, request, handlerChannel, logger)
+	}
+}
+
+func serveConnection(log log.Logger, dst io.WriteCloser, src io.ReadCloser) {
+	_, err := io.Copy(dst, src)
+	if err != nil && !errors.Is(err, io.EOF) {
+		log.Warning("Connection error", err)
+	}
+	_ = dst.Close()
+	_ = src.Close()
+}
+
+func (s *serverImpl) handleDirectForwardingChannel(
+	channelMetadata metadata.ChannelMetadata,
+	newChannel ssh.NewChannel,
+	connection SSHConnectionHandler,
+	logger log.Logger,
+) {
+	var payload ssh2.ForwardTCPChannelOpenPayload
+	err := ssh.Unmarshal(newChannel.ExtraData(), &payload)
+	if err != nil {
+		logger.Warning(
+			messageCodes.Wrap(
+				err,
+				messageCodes.MSSHNewChannelRejected,
+				"Failed to decode new forwarding channel payload",
+			),
+		)
+		return
+	}
+
+	handlerChannel, rejection := connection.OnTCPForwardChannel(channelMetadata.ChannelID, payload.ConnectedAddress, payload.ConnectedPort, payload.OriginatorAddress, payload.OriginatorPort)
+	if rejection != nil {
+		logger.Debug(
+			messageCodes.Wrap(
+				rejection,
+				messageCodes.MSSHNewChannelRejected,
+				"New forwarding channel rejected",
+			).Label("type", newChannel.ChannelType()),
+		)
+
+		if err := newChannel.Reject(rejection.Reason(), rejection.UserMessage()); err != nil {
+			logger.Debug(messageCodes.Wrap(err, messageCodes.ESSHReplyFailed, "Failed to send reply to channel request"))
+		}
+		return
+	}
+	shutdownHandlerID := fmt.Sprintf("direct-tcpip-%s-%d", channelMetadata.Connection.ConnectionID, channelMetadata.ChannelID)
+	s.shutdownHandlers.Register(shutdownHandlerID, &shutdownCloser{
+		closer: handlerChannel,
+	})
+	channel, requests, err := newChannel.Accept()
+	if err != nil {
+		logger.Debug(messageCodes.Wrap(err, messageCodes.ESSHReplyFailed, "failed to accept forwarding channel"))
+		s.shutdownHandlers.Unregister(shutdownHandlerID)
+		return
+	}
+	logger.Debug(messageCodes.NewMessage(messageCodes.MSSHNewChannel, "New SSH channel").Label("type", newChannel.ChannelType()))
+	go serveConnection(logger, handlerChannel, channel)
+	go serveConnection(logger, channel, handlerChannel)
+	for {
+		request, ok := <-requests
+		if !ok {
+			s.shutdownHandlers.Unregister(shutdownHandlerID)
+			_ = handlerChannel.Close()
+			break
+		}
+		if request.WantReply {
+			_ = request.Reply(false, []byte{})
+		}
+	}
+}
+
+func (s *serverImpl) handleDirectStreamLocalChannel(
+	channelMetadata metadata.ChannelMetadata,
+	newChannel ssh.NewChannel,
+	connection SSHConnectionHandler,
+	logger log.Logger,
+) {
+	var payload ssh2.DirectStreamLocalChannelOpenPayload
+	err := ssh.Unmarshal(newChannel.ExtraData(), &payload)
+	if err != nil {
+		logger.Warning(
+			messageCodes.Wrap(
+				err,
+				messageCodes.MSSHNewChannelRejected,
+				"Failed to decode new forwarding channel payload",
+			),
+		)
+		return
+	}
+
+	handlerChannel, rejection := connection.OnDirectStreamLocal(channelMetadata.ChannelID, payload.SocketPath)
+	if rejection != nil {
+		logger.Debug(
+			messageCodes.Wrap(
+				rejection,
+				messageCodes.MSSHNewChannelRejected,
+				"New streamlocal forwarding channel rejected",
+			).Label("type", newChannel.ChannelType()),
+		)
+
+		if err := newChannel.Reject(rejection.Reason(), rejection.UserMessage()); err != nil {
+			logger.Debug(messageCodes.Wrap(err, messageCodes.ESSHReplyFailed, "Failed to send reply to channel request"))
+		}
+		return
+	}
+	shutdownHandlerID := fmt.Sprintf("direct-tcpip-%s-%d", channelMetadata.Connection.ConnectionID, channelMetadata.ChannelID)
+	s.shutdownHandlers.Register(shutdownHandlerID, &shutdownCloser{
+		closer: handlerChannel,
+	})
+	channel, requests, err := newChannel.Accept()
+	if err != nil {
+		logger.Debug(messageCodes.Wrap(err, messageCodes.ESSHReplyFailed, "failed to streamlocal forwarding channel"))
+		s.shutdownHandlers.Unregister(shutdownHandlerID)
+		return
+	}
+	logger.Debug(messageCodes.NewMessage(messageCodes.MSSHNewChannel, "New SSH channel").Label("type", newChannel.ChannelType()))
+	go serveConnection(logger, handlerChannel, channel)
+	go serveConnection(logger, channel, handlerChannel)
+	for {
+		request, ok := <-requests
+		if !ok {
+			s.shutdownHandlers.Unregister(shutdownHandlerID)
+			_ = handlerChannel.Close()
+			break
+		}
+		if request.WantReply {
+			_ = request.Reply(false, []byte{})
+		}
 	}
 }
 
@@ -803,7 +1031,20 @@ func (s *serverImpl) unmarshalSignal(request *ssh.Request) (payload ssh2.SignalR
 	return payload, ssh.Unmarshal(request.Payload, &payload)
 }
 
-func (s *serverImpl) unmarshalPayload(request *ssh.Request) (payload interface{}, err error) {
+func (s *serverImpl) unmarshalTCPIPForward(request *ssh.Request) (payload ssh2.ForwardTCPIPRequestPayload, err error) {
+	return payload, ssh.Unmarshal(request.Payload, &payload)
+}
+
+func (s *serverImpl) unmarshalStreamLocalForward(request *ssh.Request) (payload ssh2.StreamLocalForwardRequestPayload, err error) {
+	s.logger.Debug("Unmarshalling streamlocal: %+v", request.Payload)
+	return payload, ssh.Unmarshal(request.Payload, &payload)
+}
+
+func (s *serverImpl) unmarshalX11(request *ssh.Request) (payload ssh2.X11RequestPayload, err error) {
+	return payload, ssh.Unmarshal(request.Payload, &payload)
+}
+
+func (s *serverImpl) unmarshalChannelRequestPayload(request *ssh.Request) (payload interface{}, err error) {
 	switch ssh2.RequestType(request.Type) {
 	case ssh2.RequestTypeEnv:
 		return s.unmarshalEnv(request)
@@ -819,19 +1060,38 @@ func (s *serverImpl) unmarshalPayload(request *ssh.Request) (payload interface{}
 		return s.unmarshalWindow(request)
 	case ssh2.RequestTypeSignal:
 		return s.unmarshalSignal(request)
+	case ssh2.RequestTypeX11:
+		return s.unmarshalX11(request)
 	default:
 		return nil, nil
 	}
 }
 
+func (s *serverImpl) unmarshalGlobalRequestPayload(request *ssh.Request) (payload interface{}, err error) {
+	switch ssh2.RequestType(request.Type) {
+	case ssh2.RequestTypeReverseForward:
+		return s.unmarshalTCPIPForward(request)
+	case ssh2.RequestTypeCancelReverseForward:
+		return s.unmarshalTCPIPForward(request)
+	case ssh2.RequestTypeStreamLocalForward:
+		return s.unmarshalStreamLocalForward(request)
+	case ssh2.RequestTypeCancelStreamLocalForward:
+		return s.unmarshalStreamLocalForward(request)
+	default:
+		return nil, nil
+	}
+}
+
+//nolint:dupl
 func (s *serverImpl) handleChannelRequest(
+	channelMetadata metadata.ChannelMetadata,
 	requestID uint64,
 	request *ssh.Request,
 	sessionChannel SessionChannelHandler,
 	logger log.Logger,
 ) {
 	reply := s.createReply(request, logger)
-	payload, err := s.unmarshalPayload(request)
+	payload, err := s.unmarshalChannelRequestPayload(request)
 	if payload == nil {
 		sessionChannel.OnUnsupportedChannelRequest(requestID, request.Type, request.Payload)
 		reply(false, fmt.Sprintf("unsupported request type: %s", request.Type), nil)
@@ -858,6 +1118,7 @@ func (s *serverImpl) handleChannelRequest(
 		).Label("RequestType", request.Type),
 	)
 	if err := s.handleDecodedChannelRequest(
+		channelMetadata,
 		requestID,
 		ssh2.RequestType(request.Type),
 		payload,
@@ -908,6 +1169,7 @@ func (s *serverImpl) createReply(request *ssh.Request, logger log.Logger) func(
 }
 
 func (s *serverImpl) handleDecodedChannelRequest(
+	channelMetadata metadata.ChannelMetadata,
 	requestID uint64,
 	requestType ssh2.RequestType,
 	payload interface{},
@@ -928,6 +1190,8 @@ func (s *serverImpl) handleDecodedChannelRequest(
 		return s.onChannel(requestID, sessionChannel, payload)
 	case ssh2.RequestTypeSignal:
 		return s.onSignal(requestID, sessionChannel, payload)
+	case ssh2.RequestTypeX11:
+		return s.onX11(channelMetadata.Connection.ConnectionID, requestID, sessionChannel, payload)
 	}
 	return nil
 }
@@ -977,6 +1241,85 @@ func (s *serverImpl) onSignal(requestID uint64, sessionChannel SessionChannelHan
 		requestID,
 		payload.(ssh2.SignalRequestPayload).Signal,
 	)
+}
+
+func (s *serverImpl) onForwardTCPIP(authenticatedMetadata metadata.ConnectionAuthenticatedMetadata, requestID uint64, payload interface{}, connection SSHConnectionHandler) error {
+	fwdAddress := payload.(ssh2.ForwardTCPIPRequestPayload).Address
+	fwdPort := payload.(ssh2.ForwardTCPIPRequestPayload).Port
+
+	s.lock.Lock()
+	defer s.lock.Unlock()
+	conn, ok := s.connMap[authenticatedMetadata.ConnectionID]
+	if !ok {
+		return fmt.Errorf("Couldn't find connection in map, something terrible happened")
+	}
+
+	reverseForwardHandler := ReverseForwardHandler{
+		sshConn: conn.sshConn,
+		server:  s,
+		logger:  s.logger,
+	}
+	err := connection.OnRequestTCPReverseForward(fwdAddress, fwdPort, &reverseForwardHandler)
+	if err != nil {
+		s.logger.Warning("Failed to forward tcpip %+v", err)
+	}
+	return err
+}
+
+func (s *serverImpl) onForwardStreamLocal(authenticatedMetadata metadata.ConnectionAuthenticatedMetadata, requestID uint64, payload interface{}, connection SSHConnectionHandler) error {
+	path := payload.(ssh2.StreamLocalForwardRequestPayload).SocketPath
+	s.lock.Lock()
+	defer s.lock.Unlock()
+	conn, ok := s.connMap[authenticatedMetadata.ConnectionID]
+	if !ok {
+		return fmt.Errorf("Couldn't find connection in map, something terrible happened")
+	}
+
+	reverseForwardHandler := ReverseForwardHandler{
+		sshConn: conn.sshConn,
+		server:  s,
+		logger:  s.logger,
+	}
+	err := connection.OnRequestStreamLocal(path, &reverseForwardHandler)
+	if err != nil {
+		s.logger.Warning("Failed to forward streamlocal %+v", err)
+	}
+	return err
+}
+
+func (s *serverImpl) onCancelForward(authenticatedMetadata metadata.ConnectionAuthenticatedMetadata, requestID uint64, payload interface{}, connection SSHConnectionHandler) error {
+	fwdAddress := payload.(ssh2.ForwardTCPIPRequestPayload).Address
+	fwdPort := payload.(ssh2.ForwardTCPIPRequestPayload).Port
+
+	return connection.OnRequestCancelTCPReverseForward(fwdAddress, fwdPort)
+}
+
+func (s *serverImpl) onCancelForwardStreamLocal(authenticatedMetadata metadata.ConnectionAuthenticatedMetadata, requestID uint64, payload interface{}, connection SSHConnectionHandler) error {
+	path := payload.(ssh2.StreamLocalForwardRequestPayload).SocketPath
+
+	return connection.OnRequestCancelStreamLocal(path)
+}
+
+func (s *serverImpl) onX11(connectionID string, requestID uint64, sessionChannel SessionChannelHandler, payload interface{}) error {
+	x11 := payload.(ssh2.X11RequestPayload)
+	s.logger.Debug("onX11: Handling X11 %+v", x11)
+
+	s.lock.Lock()
+	defer s.lock.Unlock()
+	conn, ok := s.connMap[connectionID]
+	if !ok {
+		return fmt.Errorf("Couldn't find connection in map, something terrible happened")
+	}
+
+	reverseForwardHandler := ReverseForwardHandler{
+		sshConn: conn.sshConn,
+		logger:  s.logger,
+	}
+	err := sessionChannel.OnX11Request(requestID, x11.SingleConnection, x11.Protocol, x11.Cookie, x11.Screen, &reverseForwardHandler)
+	if err != nil {
+		s.logger.Warning("Failed to start X11 forwarding %+v", err)
+	}
+	return err
 }
 
 func (s *serverImpl) onSubsystem(

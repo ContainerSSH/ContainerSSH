@@ -2,10 +2,12 @@ package security //nolint:testpackage
 
 import (
 	"context"
+	"fmt"
 	"sync"
 	"testing"
 
 	"github.com/containerssh/libcontainerssh/config"
+	"github.com/containerssh/libcontainerssh/internal/sshserver"
 	"github.com/containerssh/libcontainerssh/log"
 	"github.com/stretchr/testify/assert"
 )
@@ -264,6 +266,17 @@ func (d *dummyBackend) OnSignal(_ uint64, _ string) error {
 
 func (d *dummyBackend) OnWindow(_ uint64, _ uint32, _ uint32, _ uint32, _ uint32) error {
 	return nil
+}
+
+func (s *dummyBackend) OnX11Request(
+	requestID uint64,
+	singleConnection bool,
+	protocol string,
+	cookie string,
+	screen uint32,
+	reverseHandler sshserver.ReverseForward,
+) error {
+	return fmt.Errorf("Unimplemented")
 }
 
 // endregion

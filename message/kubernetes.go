@@ -106,3 +106,13 @@ const EKubernetesProgramNotRunning = "KUBERNETES_PROGRAM_NOT_RUNNING"
 // removed since ContainerSSH 0.5. To fix this error please remove the kuberun segment from your configuration or
 // configuration server response. For details please see https://containerssh.io/deprecations/kuberun/ .
 const EKubeRunRemoved = "KUBERNETES_KUBERUN_REMOVED"
+
+// EKubernetesForwardingFailed indicates that the ContainerSSH Kubernetes backend failed to initialize the forwarding backend
+const EKubernetesForwardingFailed = "KUBERNETES_FORWARDING_FAILED"
+
+// EKubernetesAgentFailed indicates that the ContainerSSH Kubernetes backend failed to start the ContianerSSH agent or the agent exitted unexpectedly
+const EKubernetesAgentFailed = "KUBERNETES_AGENT_FAILED"
+
+// MKubernetesAgentLog indicates a log message from the ContainerSSH agent running within a user container.
+// Note that the agent is normally run with the users credentials and as such all log output is to be considered UNTRUSTED and should only be used for debugging purposes
+const MKubernetesAgentLog = "KUBERNETES_AGENT_LOG"

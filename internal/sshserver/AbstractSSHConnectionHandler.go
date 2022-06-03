@@ -19,6 +19,9 @@ type AbstractSSHConnectionHandler struct {
 //           a channel.
 func (a *AbstractSSHConnectionHandler) OnUnsupportedGlobalRequest(_ uint64, _ string, _ []byte) {}
 
+
+func (s *AbstractSSHConnectionHandler) OnFailedDecodeGlobalRequest(_ uint64, _ string, _ []byte, _ error) {}
+
 // OnUnsupportedChannel is called when a new channel is requested of an unsupported type. This gives the implementer
 //                      the ability to log unsupported channel requests.
 //

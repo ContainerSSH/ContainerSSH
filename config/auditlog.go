@@ -81,6 +81,8 @@ type AuditLogInterceptConfig struct {
 	Stderr bool `json:"stderr" yaml:"stderr" default:"false"`
 	// Passwords signals that passwords during authentication should be captured.
 	Passwords bool `json:"passwords" yaml:"passwords" default:"false"`
+	// Forwarding signals that the contents of forward and reverse connection forwardings should be captured.
+	Forwarding bool `json:"forwarding" yaml:"forwarding" default:"false"`
 }
 
 // Validate checks the configuration to enable global configuration check.

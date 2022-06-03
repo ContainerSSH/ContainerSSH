@@ -25,6 +25,11 @@ func (s *sshConnectionHandler) OnUnsupportedGlobalRequest(requestID uint64, requ
 	s.backend.OnUnsupportedGlobalRequest(requestID, requestType, payload)
 }
 
+func (s *sshConnectionHandler) OnFailedDecodeGlobalRequest(requestID uint64, requestType string, payload []byte, reason error) {
+	s.audit.OnGlobalRequestDecodeFailed(requestID, requestType, payload, reason)
+	s.backend.OnFailedDecodeGlobalRequest(requestID, requestType, payload, reason)
+}
+
 func (s *sshConnectionHandler) OnUnsupportedChannel(channelID uint64, channelType string, extraData []byte) {
 	//todo audit extraData
 	s.audit.OnNewChannelFailed(message.MakeChannelID(channelID), channelType, "unsupported channel type")
@@ -46,10 +51,130 @@ func (s *sshConnectionHandler) OnSessionChannel(
 	auditChannel := s.audit.OnNewChannelSuccess(message.MakeChannelID(meta.ChannelID), "session")
 	proxy.audit = auditChannel
 	return &sessionChannelHandler{
-		backend: backend,
-		audit:   auditChannel,
-		session: session,
+		backend:           backend,
+		connectionHandler: s,
+		audit:             auditChannel,
+		session:           session,
 	}, nil
+}
+
+func (s *sshConnectionHandler) OnTCPForwardChannel(
+	channelID uint64,
+	hostToConnect string,
+	portToConnect uint32,
+	originatorHost string,
+	originatorPort uint32,
+) (channel sshserver.ForwardChannel, failureReason sshserver.ChannelRejection) {
+	s.audit.OnTCPForwardChannel(message.MakeChannelID(channelID), hostToConnect, portToConnect, originatorHost, originatorPort)
+
+	backend, err := s.backend.OnTCPForwardChannel(channelID, hostToConnect, portToConnect, originatorHost, originatorPort)
+	if err != nil {
+		return nil, err
+	}
+	auditChannel := s.audit.OnNewChannelSuccess(message.MakeChannelID(channelID), "direct-tcpip")
+	forwardProxy := auditChannel.GetForwardingProxy(backend)
+	return forwardProxy, nil
+}
+
+func (s *sshConnectionHandler) OnRequestTCPReverseForward(
+	bindHost string,
+	bindPort uint32,
+	reverseHandler sshserver.ReverseForward,
+) error {
+	s.audit.OnRequestTCPReverseForward(bindHost, bindPort)
+	return s.backend.OnRequestTCPReverseForward(
+		bindHost,
+		bindPort,
+		&reverseHandlerProxy{
+			backend:           reverseHandler,
+			connectionHandler: s,
+			channelType:       sshserver.ChannelTypeReverseForward,
+		},
+	)
+}
+
+func (s *sshConnectionHandler) OnRequestCancelTCPReverseForward(
+	bindHost string,
+	bindPort uint32,
+) error {
+	s.audit.OnRequestCancelTCPReverseForward(bindHost, bindPort)
+	return s.backend.OnRequestCancelTCPReverseForward(bindHost, bindPort)
+}
+
+func (s *sshConnectionHandler) OnDirectStreamLocal(
+	channelID uint64,
+	path string,
+) (channel sshserver.ForwardChannel, failureReason sshserver.ChannelRejection) {
+	s.audit.OnDirectStreamLocal(message.MakeChannelID(channelID), path)
+	channel, err := s.backend.OnDirectStreamLocal(channelID, path)
+	if err != nil {
+		return nil, err
+	}
+	auditChannel := s.audit.OnNewChannelSuccess(message.MakeChannelID(channelID), sshserver.ChannelTypeDirectStreamLocal)
+	return auditChannel.GetForwardingProxy(channel), nil
+}
+
+func (s *sshConnectionHandler) OnRequestStreamLocal(
+	path string,
+	reverseHandler sshserver.ReverseForward,
+) error {
+	s.audit.OnRequestStreamLocal(path)
+	return s.backend.OnRequestStreamLocal(
+		path,
+		&reverseHandlerProxy{
+			backend:           reverseHandler,
+			connectionHandler: s,
+			channelType:       sshserver.ChannelTypeForwardedStreamLocal,
+		},
+	)
+}
+
+func (s *sshConnectionHandler) OnRequestCancelStreamLocal(
+	path string,
+) error {
+	s.audit.OnRequestCancelStreamLocal(path)
+	return s.backend.OnRequestCancelStreamLocal(path)
+}
+
+type reverseHandlerProxy struct {
+	backend           sshserver.ReverseForward
+	connectionHandler *sshConnectionHandler
+	channelType       string
+}
+
+func (r *reverseHandlerProxy) NewChannelTCP(connectedAddress string, connectedPort uint32, originatorAddress string, originatorPort uint32) (sshserver.ForwardChannel, uint64, error) {
+	channel, id, err := r.backend.NewChannelTCP(connectedAddress, connectedPort, originatorAddress, originatorPort)
+	if err != nil {
+		return nil, 0, err
+	}
+
+	r.connectionHandler.audit.OnReverseForwardChannel(message.MakeChannelID(id), connectedAddress, connectedPort, originatorAddress, originatorPort)
+	auditChannel := r.connectionHandler.audit.OnNewChannelSuccess(message.MakeChannelID(id), r.channelType)
+	forwardProxy := auditChannel.GetForwardingProxy(channel)
+	return forwardProxy, id, nil
+}
+
+func (r *reverseHandlerProxy) NewChannelUnix(path string) (sshserver.ForwardChannel, uint64, error) {
+	channel, id, err := r.backend.NewChannelUnix(path)
+	if err != nil {
+		return nil, 0, err
+	}
+	r.connectionHandler.audit.OnReverseStreamLocalChannel(message.MakeChannelID(id), path)
+	auditChannel := r.connectionHandler.audit.OnNewChannelSuccess(message.MakeChannelID(id), r.channelType)
+	forwardProxy := auditChannel.GetForwardingProxy(channel)
+	return forwardProxy, id, nil
+}
+
+func (r *reverseHandlerProxy) NewChannelX11(originatorAddress string, originatorPort uint32) (sshserver.ForwardChannel, uint64, error) {
+	channel, id, err := r.backend.NewChannelX11(originatorAddress, originatorPort)
+	if err != nil {
+		return nil, 0, err
+	}
+
+	r.connectionHandler.audit.OnReverseX11ForwardChannel(message.MakeChannelID(id), originatorAddress, originatorPort)
+	auditChannel := r.connectionHandler.audit.OnNewChannelSuccess(message.MakeChannelID(id), r.channelType)
+	forwardProxy := auditChannel.GetForwardingProxy(channel)
+	return forwardProxy, id, nil
 }
 
 type sessionProxy struct {

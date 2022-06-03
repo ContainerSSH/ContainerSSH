@@ -99,6 +99,27 @@ func (p PayloadChannelRequestPty) Equals(other Payload) bool {
 		bytes.Equal(p.ModeList, p2.ModeList)
 }
 
+type PayloadChannelRequestX11 struct {
+	RequestID        uint64 `json:"requestId" yaml:"requestId"`
+
+	SingleConnection bool   `json:"singleConnection" yaml:"singleConnection"`
+	AuthProtocol     string `json:"authProtocol" yaml:"authProtocol"`
+	Cookie           string `json:"cookie" yaml:"cookie"`
+	Screen           uint32 `json:"screen" yaml:"screen"`
+}
+
+func (p PayloadChannelRequestX11) Equals(other Payload) bool {
+	p2, ok := other.(PayloadChannelRequestX11)
+	if !ok {
+		return false
+	}
+	return p.RequestID == p2.RequestID &&
+		p.SingleConnection == p2.SingleConnection &&
+		p.AuthProtocol == p2.AuthProtocol &&
+		p.Cookie == p2.Cookie &&
+		p.Screen == p2.Screen
+}
+
 // PayloadChannelRequestShell is a payload signaling a request for a shell.
 type PayloadChannelRequestShell struct {
 	RequestID uint64 `json:"requestId" yaml:"requestId"`

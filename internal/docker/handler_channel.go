@@ -3,6 +3,7 @@ package docker
 import (
 	"context"
 	"errors"
+	"fmt"
 	"io"
 	"strings"
 
@@ -15,16 +16,18 @@ import (
 type channelHandler struct {
 	sshserver.AbstractSessionChannelHandler
 
-	channelID      uint64
-	networkHandler *networkHandler
-	username       string
-	env            map[string]string
-	pty            bool
-	columns        uint32
-	rows           uint32
-	exitSent       bool
-	exec           dockerExecution
-	session        sshserver.SessionChannel
+	channelID         uint64
+	networkHandler    *networkHandler
+	connectionHandler *sshConnectionHandler
+	username          string
+	env               map[string]string
+	pty               bool
+	columns           uint32
+	rows              uint32
+	exitSent          bool
+	x11               bool
+	exec              dockerExecution
+	session           sshserver.SessionChannel
 }
 
 func (c *channelHandler) OnEnvRequest(_ uint64, name string, value string) error {
@@ -253,9 +256,46 @@ func (c *channelHandler) OnWindow(_ uint64, columns uint32, rows uint32, _ uint3
 	return c.exec.resize(ctx, uint(rows), uint(columns))
 }
 
+func (c *channelHandler) OnX11Request(
+	requestID uint64,
+	singleConnection bool,
+	proto string,
+	cookie string,
+	screen uint32,
+	reverseHandler sshserver.ReverseForward,
+) error {
+	if c.x11 {
+		return fmt.Errorf("X11 forwarding already setup for this channel")
+	}
+
+	c.env["DISPLAY"] = "localhost:10"
+
+	err := c.connectionHandler.agentForward.NewX11Forwarding(
+		c.connectionHandler.setupAgent,
+		c.networkHandler.logger,
+		singleConnection,
+		proto,
+		cookie,
+		screen,
+		reverseHandler,
+	)
+	if err != nil {
+		return err
+	}
+	c.x11 = true
+
+	return nil
+}
+
 func (c *channelHandler) OnClose() {
 	if c.exec != nil {
 		c.exec.kill()
+	}
+	if c.x11 {
+		err := c.connectionHandler.agentForward.CloseX11Forwarding()
+		if err != nil {
+			c.networkHandler.logger.Info(fmt.Errorf("Failed to close X11 forwarding (%w)", err))
+		}
 	}
 	container := c.networkHandler.container
 	if container != nil && c.networkHandler.config.Execution.Mode == config.DockerExecutionModeSession {

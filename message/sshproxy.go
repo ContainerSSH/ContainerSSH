@@ -47,6 +47,8 @@ const ESSHProxyBackendRequestFailed = "SSHPROXY_BACKEND_REQUEST_FAILED"
 // may be because of an underlying network issue, a policy-based rejection from the backend server, or a bug in the backend server.
 const ESSHProxyWindowChangeFailed = "SSHPROXY_BACKEND_WINDOW_CHANGE_FAILED"
 
+const ESSHProxyX11RequestFailed = "SSHPROXY_X11_FAILED"
+
 // MSSHProxyShutdown indicates that ContainerSSH is shutting down and is sending TERM and KILL signals on the backend
 // connection.
 const MSSHProxyShutdown = "SSHPROXY_SHUTDOWN"
@@ -62,8 +64,14 @@ const ESSHProxyChannelCloseFailed = "SSHPROXY_CHANNEL_CLOSE_FAILED"
 // Proxy backend.
 const ESSHProxyBackendSessionFailed = "SSHPROXY_BACKEND_SESSION_FAILED"
 
+// ESSHProxyBackendForwardFailed indicates that ContainerSSH failed to open a forwarding channel on the backend server with the SSH Proxy backend
+const ESSHProxyBackendForwardFailed = "SSHPROXY_BACKEND_FORWARD_FAILED"
+
 // MSSHProxySession indicates that the ContainerSSH SSH proxy backend is opening a new session.
 const MSSHProxySession = "SSHPROXY_SESSION"
+
+// MSSHProxyForward indicates that the ContainerSSH proxy backend is opening a new proxy connection
+const MSSHProxyForward = "SSHPROXY_TCP_FORWARD"
 
 // MSSHProxySessionOpen indicates that the ContainerSSH SSH proxy backend has opened a new session.
 const MSSHProxySessionOpen = "SSHPROXY_SESSION_OPEN"
@@ -94,6 +102,9 @@ const MSSHProxyExitStatusDecodeFailed = "SSHPROXY_EXIT_STATUS_DECODE_FAILED"
 
 // MSSHProxyDisconnected indicates that the ContainerSSH SSH proxy received a disconnect from the client.
 const MSSHProxyDisconnected = "SSHPROXY_DISCONNECTED"
+
+// ESSHProxyPayloadUnmarshalFailed indicates that the backend server has sent an invalid payload
+const ESSHProxyPayloadUnmarshalFailed = "SSHPROXY_UNMARSHAL_FAILED"
 
 // ESSHProxyShuttingDown indicates that the action cannot be performed because the connection is shutting down.
 const ESSHProxyShuttingDown = "SSHPROXY_SHUTTING_DOWN"

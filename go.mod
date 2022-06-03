@@ -10,6 +10,7 @@ require (
 	github.com/docker/docker v20.10.13+incompatible
 	github.com/docker/go-connections v0.4.0
 	github.com/fxamacker/cbor v1.5.1
+	github.com/fxamacker/cbor/v2 v2.3.0
 	github.com/google/go-cmp v0.5.6
 	github.com/google/uuid v1.3.0
 	github.com/gorilla/schema v1.2.0

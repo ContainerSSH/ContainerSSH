@@ -70,6 +70,12 @@ const MSSHExit = "SSH_EXIT"
 // MSSHExitSignal indicates that ContainerSSH is sending the exit signal from an abnormally exited program to the user.
 const MSSHExitSignal = "SSH_EXIT_SIGNAL"
 
+const MSSHGlobalRequest = "SSH_GLOBAL_REQUEST"
+
+const MSSHGlobalRequestFailed = "SSH_GLOBAL_REQUEST_FAILED"
+
+const MSSHGlobalRequestSuccessful = "SSH_GLOBAL_REQUEST_SUCCESSFUL"
+
 // MSSHChannelRequest indicates that the user has send a new channel-specific request.
 const MSSHChannelRequest = "SSH_CHANNEL_REQUEST"
 

@@ -302,3 +302,36 @@ func (s *sessionHandler) OnSignal(requestID uint64, signal string) error {
 func (s *sessionHandler) OnWindow(requestID uint64, columns uint32, rows uint32, width uint32, height uint32) error {
 	return s.backend.OnWindow(requestID, columns, rows, width, height)
 }
+
+func (s *sessionHandler) OnX11Request(
+	requestID uint64,
+	singleConnection bool,
+	protocol string,
+	cookie string,
+	screen uint32,
+	reverseHandler sshserver.ReverseForward,
+) error {
+	mode := s.getPolicy(s.config.Forwarding.X11ForwardingMode)
+	switch mode {
+	case config2.ExecutionPolicyDisable:
+		err := message.UserMessage(
+			message.ESecurityX11ForwardingRejected,
+			"X11 forwarding is rejected",
+			"X11 forwarding is rejected because it is disabled in the config",
+		)
+		s.logger.Debug(err)
+		return err
+	case config2.ExecutionPolicyFilter:
+		err := message.UserMessage(
+			message.ESecurityX11ForwardingRejected,
+			"X11 forwarding is rejected",
+			"X11 forwarding is rejected because it is set to filter and filterint X11 requests is not supported",
+		)
+		s.logger.Debug(err)
+		return err
+	case config2.ExecutionPolicyEnable:
+		fallthrough
+	default:
+		return s.backend.OnX11Request(requestID, singleConnection, protocol, cookie, screen, reverseHandler)
+	}
+}

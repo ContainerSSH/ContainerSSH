@@ -301,6 +301,20 @@ func (l *loggerConnection) OnGlobalRequestUnknown(requestType string) {
 	})
 }
 
+func (l *loggerConnection) OnGlobalRequestDecodeFailed(requestID uint64, requestType string, payload []byte, reason error) {
+	l.log(message.Message{
+		ConnectionID: l.connectionID,
+		Timestamp: time.Now().UnixNano(),
+		MessageType: message.TypeGlobalRequestDecodeFailed,
+		Payload: message.PayloadGlobalRequestDecodeFailed{
+			RequestID: requestID,
+			RequestType: requestType,
+			Payload: payload,
+			Reason: reason.Error(),
+		},
+	})
+}
+
 func (l *loggerConnection) OnNewChannel(channelID message.ChannelID, channelType string) {
 	l.log(message.Message{
 		ConnectionID: l.connectionID,
@@ -340,6 +354,121 @@ func (l *loggerConnection) OnNewChannelSuccess(channelID message.ChannelID, chan
 		c:         l,
 		channelID: channelID,
 	}
+}
+
+func (l *loggerConnection) OnRequestTCPReverseForward(bindHost string, bindPort uint32) {
+	l.log(message.Message{
+		ConnectionID: l.connectionID,
+		Timestamp:    time.Now().UnixNano(),
+		MessageType:  message.TypeRequestReverseForward,
+		Payload: message.PayloadRequestReverseForward{
+			BindHost: bindHost,
+			BindPort: bindPort,
+		},
+		ChannelID: nil,
+	})
+}
+
+func (l *loggerConnection) OnRequestCancelTCPReverseForward(bindHost string, bindPort uint32) {
+	l.log(message.Message{
+		ConnectionID: l.connectionID,
+		Timestamp:    time.Now().UnixNano(),
+		MessageType:  message.TypeRequestCancelReverseForward,
+		Payload: message.PayloadRequestReverseForward{
+			BindHost: bindHost,
+			BindPort: bindPort,
+		},
+		ChannelID: nil,
+	})
+}
+
+func (l *loggerConnection) OnTCPForwardChannel(channelID message.ChannelID, hostToConnect string, portToConnect uint32, originatorHost string, originatorPort uint32) {
+	l.log(message.Message{
+		ConnectionID: l.connectionID,
+		Timestamp:    time.Now().UnixNano(),
+		MessageType:  message.TypeNewForwardChannel,
+		Payload: message.PayloadNewForwardChannel{
+			HostToConnect:  hostToConnect,
+			PortToConnect:  portToConnect,
+			OriginatorHost: originatorHost,
+			OriginatorPort: originatorPort,
+		},
+		ChannelID: channelID,
+	})
+}
+
+func (l *loggerConnection) OnReverseForwardChannel(channelID message.ChannelID, connectedHost string, connectedPort uint32, originatorHost string, originatorPort uint32) {
+	l.log(message.Message{
+		ConnectionID: l.connectionID,
+		Timestamp:    time.Now().UnixNano(),
+		MessageType:  message.TypeNewReverseForwardChannel,
+		Payload: message.PayloadNewReverseForwardChannel{
+			ConnectedHost:  connectedHost,
+			ConnectedPort:  connectedPort,
+			OriginatorHost: originatorHost,
+			OriginatorPort: originatorPort,
+		},
+		ChannelID: channelID,
+	})
+}
+
+func (l *loggerConnection) OnReverseStreamLocalChannel(channelID message.ChannelID, path string) {
+	l.log(message.Message{
+		ConnectionID: l.connectionID,
+		Timestamp:    time.Now().UnixNano(),
+		MessageType:  message.TypeNewReverseStreamLocalChannel,
+		Payload: message.PayloadRequestStreamLocal{
+			Path: path,
+		},
+		ChannelID: channelID,
+	})
+}
+
+func (l *loggerConnection) OnReverseX11ForwardChannel(channelID message.ChannelID, originatorHost string, originatorPort uint32) {
+	l.log(message.Message{
+		ConnectionID: l.connectionID,
+		Timestamp:    time.Now().UnixNano(),
+		MessageType:  message.TypeNewReverseX11ForwardChannel,
+		Payload: message.PayloadNewReverseX11ForwardChannel{
+			OriginatorHost: originatorHost,
+			OriginatorPort: originatorPort,
+		},
+		ChannelID: channelID,
+	})
+}
+
+func (l *loggerConnection) OnDirectStreamLocal(channelID message.ChannelID, path string) {
+	l.log(message.Message{
+		ConnectionID: l.connectionID,
+		Timestamp:    time.Now().UnixNano(),
+		MessageType:  message.TypeNewForwardStreamLocalChannel,
+		Payload: message.PayloadRequestStreamLocal{
+			Path: path,
+		},
+		ChannelID: channelID,
+	})
+}
+
+func (l *loggerConnection) OnRequestStreamLocal(path string) {
+	l.log(message.Message{
+		ConnectionID: l.connectionID,
+		Timestamp:    time.Now().UnixNano(),
+		MessageType:  message.TypeRequestStreamLocal,
+		Payload: message.PayloadRequestStreamLocal{
+			Path: path,
+		},
+	})
+}
+
+func (l *loggerConnection) OnRequestCancelStreamLocal(path string) {
+	l.log(message.Message{
+		ConnectionID: l.connectionID,
+		Timestamp:    time.Now().UnixNano(),
+		MessageType:  message.TypeRequestCancelStreamLocal,
+		Payload: message.PayloadRequestStreamLocal{
+			Path: path,
+		},
+	})
 }
 
 //endregion
@@ -428,6 +557,28 @@ func (l *loggerChannel) OnRequestPty(
 	})
 }
 
+func (l *loggerChannel) OnRequestX11(
+	requestID uint64,
+	singleConnection bool,
+	protocol string,
+	cookie string,
+	screen uint32,
+) {
+	l.c.log(message.Message{
+		ConnectionID: l.c.connectionID,
+		Timestamp:    time.Now().UnixNano(),
+		MessageType:  message.TypeChannelRequestX11,
+		Payload: message.PayloadChannelRequestX11{
+			RequestID:        requestID,
+			SingleConnection: singleConnection,
+			AuthProtocol:     protocol,
+			Cookie:           cookie,
+			Screen:           screen,
+		},
+		ChannelID: l.channelID,
+	})
+}
+
 func (l *loggerChannel) OnRequestShell(requestID uint64) {
 	l.c.log(message.Message{
 		ConnectionID: l.c.connectionID,
@@ -493,6 +644,25 @@ func (l *loggerChannel) io(stream message.Stream, data []byte) {
 		},
 		ChannelID: l.channelID,
 	})
+}
+
+func (l *loggerChannel) GetForwardingProxy(forward io.ReadWriteCloser) io.ReadWriteCloser {
+	if !l.c.l.intercept.Forwarding {
+		return forward
+	}
+	return &interceptingReadWriteCloser{
+		backend: forward,
+		reader: interceptingReader{
+			backend: forward,
+			stream:  message.StreamStdin,
+			channel: l,
+		},
+		writer: interceptingWriter{
+			backend: forward,
+			stream:  message.StreamStdout,
+			channel: l,
+		},
+	}
 }
 
 func (l *loggerChannel) GetStdinProxy(stdin io.Reader) io.Reader {

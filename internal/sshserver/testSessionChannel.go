@@ -239,6 +239,17 @@ func (t *testSessionChannel) OnWindow(
 	return nil
 }
 
+func (s *testSessionChannel) OnX11Request(
+	requestID uint64,
+	singleConnection bool,
+	protocol string,
+	cookie string,
+	screen uint32,
+	reverseHandler ReverseForward,
+) error {
+	return fmt.Errorf("Unimplemented")
+}
+
 func (t *testSessionChannel) OnShutdown(_ context.Context) {
 	if t.running {
 		_ = t.session.Close()

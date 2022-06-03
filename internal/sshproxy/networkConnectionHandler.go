@@ -88,33 +88,33 @@ func (s *networkConnectionHandler) OnHandshakeSuccess(
 			"could not connect to backend because the user already disconnected",
 		)
 	}
-	sshConn, newChannels, requests, cli, err := s.createBackendSSHConnection(meta.Username)
+	sshConn, newChannels, requests, err := s.createBackendSSHConnection(meta.Username)
 	if err != nil {
 		return nil, meta, err
 	}
 
-	return &sshConnectionHandler{
+	connectionHandler := &sshConnectionHandler{
 		networkHandler: s,
-		cli:            cli,
 		sshConn:        sshConn,
-		newChannels:    newChannels,
-		requests:       requests,
 		logger:         s.logger,
-	}, meta, nil
+	}
+	go connectionHandler.handleChannels(newChannels)
+	go connectionHandler.handleRequests(requests)
+
+	return connectionHandler, meta, nil
 }
 
 func (s *networkConnectionHandler) createBackendSSHConnection(username string) (
 	ssh.Conn,
 	<-chan ssh.NewChannel,
 	<-chan *ssh.Request,
-	*ssh.Client,
 	error,
 ) {
 	s.backendRequestsMetric.Increment()
 	target := fmt.Sprintf("%s:%d", s.config.Server, s.config.Port)
 	tcpConn, err := s.createBackendTCPConnection(username, target)
 	if err != nil {
-		return nil, nil, nil, nil, err
+		return nil, nil, nil, err
 	}
 	s.tcpConn = tcpConn
 
@@ -123,7 +123,7 @@ func (s *networkConnectionHandler) createBackendSSHConnection(username string) (
 	sshConn, newChannels, requests, err := ssh.NewClientConn(s.tcpConn, target, sshClientConfig)
 	if err != nil {
 		s.backendFailuresMetric.Increment(metrics.Label("failure", "handshake"))
-		return nil, nil, nil, nil, message.WrapUser(
+		return nil, nil, nil, message.WrapUser(
 			err,
 			message.ESSHProxyBackendHandshakeFailed,
 			"SSH service is currently unavailable.",
@@ -131,8 +131,7 @@ func (s *networkConnectionHandler) createBackendSSHConnection(username string) (
 		).Label("backend", target)
 	}
 
-	cli := ssh.NewClient(sshConn, newChannels, requests)
-	return sshConn, newChannels, requests, cli, nil
+	return sshConn, newChannels, requests, nil
 }
 
 func (s *networkConnectionHandler) createClientConfig(username string) *ssh.ClientConfig {

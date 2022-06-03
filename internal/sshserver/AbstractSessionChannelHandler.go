@@ -136,3 +136,24 @@ func (a *AbstractSessionChannelHandler) OnWindow(
 ) error {
 	return fmt.Errorf("not supported")
 }
+
+// OnX11Request is called when the client requests the forwarding of X11 connections from the container to the client.
+// This method may be called after a program is started. The implementation can return an error to reject the request.
+//
+// requestid is an incrementing number uniquely identifying the request within the channel.
+// singleConnection is a flag determining whether only one or multiple connections should be forwarded
+// protocol is the authentication protocol for the X11 connections
+// cookie is the authentication cookie for the X11 connections
+// screen is the X11 screen number
+// reverseHandler is a callback interface to signal when new connections are made
+func (s *AbstractSessionChannelHandler) OnX11Request(
+
+	requestID uint64,
+	singleConnection bool,
+	protocol string,
+	cookie string,
+	screen uint32,
+	reverseHandler ReverseForward,
+) error {
+	return fmt.Errorf("not supported")
+}

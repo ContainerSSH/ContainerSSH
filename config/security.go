@@ -26,6 +26,9 @@ type SecurityConfig struct {
 	// Subsystem controls whether to allow or block subsystem requests via SSH.
 	Subsystem SubsystemConfig `json:"subsystem" yaml:"subsystem"`
 
+	// Forwarding controls whether to allow or block connection, port or socket forwarding
+	Forwarding ForwardingConfig `json:"forwarding" yaml:"forwarding"`
+
 	// TTY controls how to treat TTY/PTY requests by clients.
 	TTY SecurityTTYConfig `json:"tty" yaml:"tty"`
 
@@ -132,6 +135,42 @@ type SubsystemConfig struct {
 func (s SubsystemConfig) Validate() error {
 	if err := s.Mode.Validate(); err != nil {
 		return wrap(err, "mode")
+	}
+	return nil
+}
+
+type ForwardingConfig struct {
+	// ReverseForwardingMode configures how to treat reverse port forwarding requests from the container to the client.
+	ReverseForwardingMode SecurityExecutionPolicy `json:"reverseForwardingMode" yaml:"reverseForwardingMode" default:"disable"`
+
+	// ForwardingMode configures how to treat port forwarding requests from the client to the container. Enabling this setting also allows using ContainerSSH as a SOCKs proxy.
+	ForwardingMode SecurityExecutionPolicy `json:"forwardingMode" yaml:"forwardingMode" default:"disable"`
+
+	// SocketForwardingMode configures how to treat connection requests from the client to a unix socket in the container.
+	SocketForwardingMode SecurityExecutionPolicy `json:"socketForwardingMode" yaml:"socketForwardingMode" default:"disable"`
+
+	// SocketListenMode configures how to treat requests to listen for connections to a unix socket in the container.
+	SocketListenMode SecurityExecutionPolicy `json:"socketListenMode" yaml:"socketListenMode" default:"disable"`
+
+	// X11forwardingMode configures how to treat X11 forwarding requests from the container to the client
+	X11ForwardingMode SecurityExecutionPolicy `json:"x11ForwardingMode" yaml:"x11ForwardingMode" default:"disable"`
+}
+
+func (f ForwardingConfig) Validate() error {
+	if err := f.ReverseForwardingMode.Validate(); err != nil {
+		return fmt.Errorf("invalid mode (%w)", err)
+	}
+	if err := f.ForwardingMode.Validate(); err != nil {
+		return fmt.Errorf("invalid mode (%w)", err)
+	}
+	if err := f.SocketForwardingMode.Validate(); err != nil {
+		return fmt.Errorf("invalid mode (%w)", err)
+	}
+	if err := f.SocketListenMode.Validate(); err != nil {
+		return fmt.Errorf("invalid mode (%w)", err)
+	}
+	if err := f.X11ForwardingMode.Validate(); err != nil {
+		return fmt.Errorf("invalid mode (%w)", err)
 	}
 	return nil
 }

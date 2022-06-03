@@ -8,9 +8,10 @@ import (
 )
 
 type sessionChannelHandler struct {
-	backend sshserver.SessionChannelHandler
-	audit   auditlog.Channel
-	session sshserver.SessionChannel
+	backend           sshserver.SessionChannelHandler
+	connectionHandler *sshConnectionHandler
+	audit             auditlog.Channel
+	session           sshserver.SessionChannel
 }
 
 func (s *sessionChannelHandler) OnClose() {
@@ -122,4 +123,28 @@ func (s *sessionChannelHandler) OnWindow(
 		return err
 	}
 	return nil
+}
+
+func (s *sessionChannelHandler) OnX11Request(
+	requestID uint64,
+	singleConnection bool,
+	protocol string,
+	cookie string,
+	screen uint32,
+	reverseHandler sshserver.ReverseForward,
+) error {
+	s.audit.OnRequestX11(requestID, singleConnection, protocol, cookie, screen)
+
+	return s.backend.OnX11Request(
+		requestID,
+		singleConnection,
+		protocol,
+		cookie,
+		screen,
+		&reverseHandlerProxy{
+			backend: reverseHandler,
+			connectionHandler: s.connectionHandler,
+			channelType: sshserver.ChannelTypeX11,
+		},
+	)
 }

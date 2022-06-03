@@ -10,6 +10,7 @@ import (
 	auth2 "github.com/containerssh/libcontainerssh/auth"
 	"github.com/containerssh/libcontainerssh/config"
 	"github.com/containerssh/libcontainerssh/internal/sshserver"
+	"github.com/containerssh/libcontainerssh/internal/agentforward"
 	"github.com/containerssh/libcontainerssh/log"
 	"github.com/containerssh/libcontainerssh/message"
 	"github.com/containerssh/libcontainerssh/metadata"
@@ -112,6 +113,7 @@ func (n *networkHandler) OnHandshakeSuccess(meta metadata.ConnectionAuthenticate
 		networkHandler: n,
 		username:       meta.Username,
 		env:            env,
+		agentForward:   agentforward.NewAgentForward(n.logger),
 	}, meta, nil
 }
 

@@ -7,21 +7,23 @@ import (
 	"sync"
 
 	"github.com/containerssh/libcontainerssh/internal/sshserver"
+	ssh2 "github.com/containerssh/libcontainerssh/internal/ssh"
 	"github.com/containerssh/libcontainerssh/log"
 	"github.com/containerssh/libcontainerssh/message"
 	"golang.org/x/crypto/ssh"
 )
 
 type sshChannelHandler struct {
-	lock           *sync.Mutex
-	backingChannel ssh.Channel
-	requests       <-chan *ssh.Request
-	session        sshserver.SessionChannel
-	started        bool
-	logger         log.Logger
-	done           chan struct{}
-	exited         bool
-	ssh            *sshConnectionHandler
+	lock              *sync.Mutex
+	backingChannel     ssh.Channel
+	connectionHandler *sshConnectionHandler
+	requests           <-chan *ssh.Request
+	session            sshserver.SessionChannel
+	started            bool
+	logger             log.Logger
+	done               chan struct{}
+	exited             bool
+	ssh               *sshConnectionHandler
 }
 
 func (s *sshChannelHandler) handleBackendClientRequests(
@@ -355,6 +357,35 @@ func (s *sshChannelHandler) OnWindow(_ uint64, columns uint32, rows uint32, widt
 			message.ESSHProxyWindowChangeFailed,
 			"Cannot change window size.",
 			"ContainerSSH cannot change the window size because of an error on the backend connection.",
+		)
+		s.logger.Debug(err)
+		return err
+	}
+	return nil
+}
+
+func (s *sshChannelHandler) OnX11Request(
+	requestID uint64,
+	singleConnection bool,
+	protocol string,
+	cookie string,
+	screen uint32,
+	reverseHandler sshserver.ReverseForward,
+) error {
+	s.lock.Lock()
+	defer s.lock.Unlock()
+	payload := ssh2.X11RequestPayload{
+		SingleConnection: singleConnection,
+		Protocol: protocol,
+		Cookie: cookie,
+		Screen: screen,
+	}
+	if err := s.sendRequest("x11-req", payload); err != nil {
+		err := message.WrapUser(
+			err,
+			message.ESSHProxyX11RequestFailed,
+			"Error requesting X11 forwarding",
+			"ContanerSSH cannot enable X11 forwarding because of an error on the backend connection",
 		)
 		s.logger.Debug(err)
 		return err
