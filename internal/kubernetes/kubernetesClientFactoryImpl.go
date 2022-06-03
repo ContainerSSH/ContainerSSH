@@ -3,10 +3,10 @@ package kubernetes
 import (
 	"context"
 
-	"github.com/containerssh/libcontainerssh/config"
-	"github.com/containerssh/libcontainerssh/internal/metrics"
-	"github.com/containerssh/libcontainerssh/log"
-	"github.com/containerssh/libcontainerssh/message"
+    "go.containerssh.io/libcontainerssh/config"
+    "go.containerssh.io/libcontainerssh/internal/metrics"
+    "go.containerssh.io/libcontainerssh/log"
+    "go.containerssh.io/libcontainerssh/message"
 	core "k8s.io/api/core/v1"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/kubernetes/scheme"

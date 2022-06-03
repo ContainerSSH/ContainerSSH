@@ -5,9 +5,9 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/containerssh/libcontainerssh/log"
-	"github.com/containerssh/libcontainerssh/message"
-	"github.com/containerssh/libcontainerssh/metadata"
+    "go.containerssh.io/libcontainerssh/log"
+    "go.containerssh.io/libcontainerssh/message"
+    "go.containerssh.io/libcontainerssh/metadata"
 )
 
 type oauth2Client struct {

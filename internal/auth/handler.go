@@ -1,8 +1,8 @@
 package auth
 
 import (
-	auth2 "github.com/containerssh/libcontainerssh/auth"
-	"github.com/containerssh/libcontainerssh/metadata"
+	auth2 "go.containerssh.io/libcontainerssh/auth"
+	"go.containerssh.io/libcontainerssh/metadata"
 )
 
 type Handler interface {

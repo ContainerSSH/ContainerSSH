@@ -4,9 +4,9 @@ import (
 	"context"
 	"fmt"
 
-	publicAuth "github.com/containerssh/libcontainerssh/auth"
-	"github.com/containerssh/libcontainerssh/internal/auth"
-	"github.com/containerssh/libcontainerssh/metadata"
+    publicAuth "go.containerssh.io/libcontainerssh/auth"
+    "go.containerssh.io/libcontainerssh/internal/auth"
+    "go.containerssh.io/libcontainerssh/metadata"
 )
 
 // AbstractNetworkConnectionHandler is an empty implementation for the NetworkConnectionHandler interface.

@@ -6,8 +6,8 @@ import (
 	"sync"
 	"time"
 
-	log "github.com/containerssh/libcontainerssh/log"
-	message "github.com/containerssh/libcontainerssh/message"
+    log "go.containerssh.io/libcontainerssh/log"
+    message "go.containerssh.io/libcontainerssh/message"
 	"github.com/fxamacker/cbor/v2"
 )
 

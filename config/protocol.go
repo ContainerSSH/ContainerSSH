@@ -1,6 +1,6 @@
 package config
 
-import "github.com/containerssh/libcontainerssh/metadata"
+import "go.containerssh.io/libcontainerssh/metadata"
 
 // Request is the request object passed from the client to the config server.
 //

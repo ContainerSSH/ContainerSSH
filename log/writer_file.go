@@ -4,8 +4,8 @@ import (
 	"os"
 	"sync"
 
-	"github.com/containerssh/libcontainerssh/config"
-	"github.com/containerssh/libcontainerssh/message"
+    "go.containerssh.io/libcontainerssh/config"
+    "go.containerssh.io/libcontainerssh/message"
 )
 
 func newFileWriter(filename string, format config.LogFormat) (Writer, error) {

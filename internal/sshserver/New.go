@@ -3,8 +3,8 @@ package sshserver
 import (
 	"sync"
 
-	"github.com/containerssh/libcontainerssh/config"
-	"github.com/containerssh/libcontainerssh/log"
+    "go.containerssh.io/libcontainerssh/config"
+    "go.containerssh.io/libcontainerssh/log"
 )
 
 // New creates a new SSH server ready to be run. It may return an error if the configuration is invalid.

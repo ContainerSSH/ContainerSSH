@@ -6,10 +6,10 @@ import (
 	goHttp "net/http"
 	"strings"
 
-	"github.com/containerssh/libcontainerssh/auth"
-	"github.com/containerssh/libcontainerssh/http"
-	"github.com/containerssh/libcontainerssh/log"
-	"github.com/containerssh/libcontainerssh/message"
+	"go.containerssh.io/libcontainerssh/auth"
+	"go.containerssh.io/libcontainerssh/http"
+	"go.containerssh.io/libcontainerssh/log"
+	"go.containerssh.io/libcontainerssh/message"
 )
 
 type handler struct {

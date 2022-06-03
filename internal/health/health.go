@@ -3,11 +3,11 @@ package health
 import (
 	"fmt"
 
-	"github.com/containerssh/libcontainerssh/config"
-	http2 "github.com/containerssh/libcontainerssh/http"
-	"github.com/containerssh/libcontainerssh/log"
-	"github.com/containerssh/libcontainerssh/message"
-	"github.com/containerssh/libcontainerssh/service"
+    "go.containerssh.io/libcontainerssh/config"
+    http2 "go.containerssh.io/libcontainerssh/http"
+    "go.containerssh.io/libcontainerssh/log"
+    "go.containerssh.io/libcontainerssh/message"
+    "go.containerssh.io/libcontainerssh/service"
 )
 
 // New creates a new HTTP health service on port 23074

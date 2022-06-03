@@ -8,16 +8,16 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
-	auth3 "github.com/containerssh/libcontainerssh/auth"
-	"github.com/containerssh/libcontainerssh/config"
-	"github.com/containerssh/libcontainerssh/internal/auth"
-	"github.com/containerssh/libcontainerssh/internal/geoip/dummy"
-	"github.com/containerssh/libcontainerssh/internal/metrics"
-	"github.com/containerssh/libcontainerssh/internal/test"
-	"github.com/containerssh/libcontainerssh/log"
-	"github.com/containerssh/libcontainerssh/message"
-	"github.com/containerssh/libcontainerssh/metadata"
-	"github.com/containerssh/libcontainerssh/service"
+    auth3 "go.containerssh.io/libcontainerssh/auth"
+    "go.containerssh.io/libcontainerssh/config"
+    "go.containerssh.io/libcontainerssh/internal/auth"
+    "go.containerssh.io/libcontainerssh/internal/geoip/dummy"
+    "go.containerssh.io/libcontainerssh/internal/metrics"
+    "go.containerssh.io/libcontainerssh/internal/test"
+    "go.containerssh.io/libcontainerssh/log"
+    "go.containerssh.io/libcontainerssh/message"
+    "go.containerssh.io/libcontainerssh/metadata"
+    "go.containerssh.io/libcontainerssh/service"
 )
 
 type handler struct {

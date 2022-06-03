@@ -3,12 +3,12 @@ package auditlogintegration
 import (
 	"context"
 
-	"github.com/containerssh/libcontainerssh/auditlog/message"
-	publicAuth "github.com/containerssh/libcontainerssh/auth"
-	"github.com/containerssh/libcontainerssh/internal/auditlog"
-	internalAuth "github.com/containerssh/libcontainerssh/internal/auth"
-	"github.com/containerssh/libcontainerssh/internal/sshserver"
-	"github.com/containerssh/libcontainerssh/metadata"
+    "go.containerssh.io/libcontainerssh/auditlog/message"
+    publicAuth "go.containerssh.io/libcontainerssh/auth"
+    "go.containerssh.io/libcontainerssh/internal/auditlog"
+    internalAuth "go.containerssh.io/libcontainerssh/internal/auth"
+    "go.containerssh.io/libcontainerssh/internal/sshserver"
+    "go.containerssh.io/libcontainerssh/metadata"
 )
 
 type networkConnectionHandler struct {

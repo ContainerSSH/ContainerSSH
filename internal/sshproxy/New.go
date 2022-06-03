@@ -4,10 +4,10 @@ import (
 	"net"
 	"sync"
 
-	"github.com/containerssh/libcontainerssh/config"
-	"github.com/containerssh/libcontainerssh/internal/metrics"
-	"github.com/containerssh/libcontainerssh/internal/sshserver"
-	"github.com/containerssh/libcontainerssh/log"
+    "go.containerssh.io/libcontainerssh/config"
+    "go.containerssh.io/libcontainerssh/internal/metrics"
+    "go.containerssh.io/libcontainerssh/internal/sshserver"
+    "go.containerssh.io/libcontainerssh/log"
 )
 
 func New(

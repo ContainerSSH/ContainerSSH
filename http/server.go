@@ -1,7 +1,7 @@
 package http
 
 import (
-	"github.com/containerssh/libcontainerssh/service"
+    "go.containerssh.io/libcontainerssh/service"
 )
 
 // Server is an interface that specifies the minimum requirements for the server.

@@ -9,13 +9,13 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/containerssh/libcontainerssh/config"
-	"github.com/containerssh/libcontainerssh/internal/test"
-	"github.com/containerssh/libcontainerssh/log"
-	"github.com/containerssh/libcontainerssh/service"
+    "go.containerssh.io/libcontainerssh/config"
+    "go.containerssh.io/libcontainerssh/internal/test"
+    "go.containerssh.io/libcontainerssh/log"
+    "go.containerssh.io/libcontainerssh/service"
 	"github.com/stretchr/testify/assert"
 
-	"github.com/containerssh/libcontainerssh/internal/metrics"
+    "go.containerssh.io/libcontainerssh/internal/metrics"
 )
 
 func TestFetchMetrics(t *testing.T) {

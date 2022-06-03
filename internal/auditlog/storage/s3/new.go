@@ -12,10 +12,10 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/credentials"
 	"github.com/aws/aws-sdk-go/aws/session"
-	"github.com/containerssh/libcontainerssh/config"
-	"github.com/containerssh/libcontainerssh/log"
+    "go.containerssh.io/libcontainerssh/config"
+    "go.containerssh.io/libcontainerssh/log"
 
-	"github.com/containerssh/libcontainerssh/internal/auditlog/storage"
+    "go.containerssh.io/libcontainerssh/internal/auditlog/storage"
 )
 
 // NewStorage Creates a storage driver for an S3-compatible object storage.

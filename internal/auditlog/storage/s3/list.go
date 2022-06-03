@@ -6,7 +6,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	awsS3 "github.com/aws/aws-sdk-go/service/s3"
 
-	"github.com/containerssh/libcontainerssh/internal/auditlog/storage"
+    "go.containerssh.io/libcontainerssh/internal/auditlog/storage"
 )
 
 func (q *uploadQueue) List() (<-chan storage.Entry, <-chan error) {

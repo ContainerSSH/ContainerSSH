@@ -3,7 +3,7 @@ package test_test
 import (
 	"testing"
 
-	"github.com/containerssh/libcontainerssh/internal/test"
+    "go.containerssh.io/libcontainerssh/internal/test"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
 )

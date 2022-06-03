@@ -3,8 +3,8 @@ package config
 import (
 	goHttp "net/http"
 
-	"github.com/containerssh/libcontainerssh/http"
-	"github.com/containerssh/libcontainerssh/log"
+    "go.containerssh.io/libcontainerssh/http"
+    "go.containerssh.io/libcontainerssh/log"
 )
 
 // NewHandler creates a HTTP handler that forwards calls to the provided h config request handler.

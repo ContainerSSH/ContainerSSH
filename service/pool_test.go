@@ -5,8 +5,8 @@ import (
 	"sync"
 	"testing"
 
-	"github.com/containerssh/libcontainerssh/log"
-	"github.com/containerssh/libcontainerssh/service"
+    "go.containerssh.io/libcontainerssh/log"
+    "go.containerssh.io/libcontainerssh/service"
 	"github.com/stretchr/testify/assert"
 )
 

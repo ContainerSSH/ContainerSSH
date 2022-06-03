@@ -1,10 +1,10 @@
 package config
 
 import (
-	"github.com/containerssh/libcontainerssh/config"
-	http2 "github.com/containerssh/libcontainerssh/http"
-	"github.com/containerssh/libcontainerssh/internal/metrics"
-	"github.com/containerssh/libcontainerssh/log"
+    "go.containerssh.io/libcontainerssh/config"
+    http2 "go.containerssh.io/libcontainerssh/http"
+    "go.containerssh.io/libcontainerssh/internal/metrics"
+    "go.containerssh.io/libcontainerssh/log"
 )
 
 // MetricNameConfigBackendRequests is the number of requests to the config server

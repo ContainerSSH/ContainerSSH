@@ -6,10 +6,10 @@ import (
 	"io"
 	"sync"
 
-	"github.com/containerssh/libcontainerssh/internal/sshserver"
-	ssh2 "github.com/containerssh/libcontainerssh/internal/ssh"
-	"github.com/containerssh/libcontainerssh/log"
-	"github.com/containerssh/libcontainerssh/message"
+    "go.containerssh.io/libcontainerssh/internal/sshserver"
+    ssh2 "go.containerssh.io/libcontainerssh/internal/ssh"
+    "go.containerssh.io/libcontainerssh/log"
+    "go.containerssh.io/libcontainerssh/message"
 	"golang.org/x/crypto/ssh"
 )
 

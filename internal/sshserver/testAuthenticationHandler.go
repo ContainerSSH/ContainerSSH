@@ -3,7 +3,7 @@ package sshserver
 import (
 	"context"
 
-	"github.com/containerssh/libcontainerssh/metadata"
+    "go.containerssh.io/libcontainerssh/metadata"
 )
 
 // testAuthenticationHandler is a conformanceTestHandler that authenticates and passes authentication to the configured backend.

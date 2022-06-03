@@ -1,7 +1,7 @@
 package webhook
 
 import (
-	"github.com/containerssh/libcontainerssh/internal/config"
+    "go.containerssh.io/libcontainerssh/internal/config"
 )
 
 // ConfigRequestHandler is a generic interface for simplified configuration request handling.

@@ -10,14 +10,14 @@ import (
 	"github.com/docker/docker/api/types/container"
 	"github.com/stretchr/testify/assert"
 
-	configuration "github.com/containerssh/libcontainerssh/config"
-	"github.com/containerssh/libcontainerssh/internal/config"
-	"github.com/containerssh/libcontainerssh/internal/geoip"
-	"github.com/containerssh/libcontainerssh/internal/metrics"
-	"github.com/containerssh/libcontainerssh/internal/test"
-	"github.com/containerssh/libcontainerssh/log"
-	"github.com/containerssh/libcontainerssh/metadata"
-	service2 "github.com/containerssh/libcontainerssh/service"
+    configuration "go.containerssh.io/libcontainerssh/config"
+    "go.containerssh.io/libcontainerssh/internal/config"
+    "go.containerssh.io/libcontainerssh/internal/geoip"
+    "go.containerssh.io/libcontainerssh/internal/metrics"
+    "go.containerssh.io/libcontainerssh/internal/test"
+    "go.containerssh.io/libcontainerssh/log"
+    "go.containerssh.io/libcontainerssh/metadata"
+    service2 "go.containerssh.io/libcontainerssh/service"
 )
 
 func TestHTTP(t *testing.T) {

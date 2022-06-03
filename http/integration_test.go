@@ -15,12 +15,12 @@ import (
 	"testing"
 	"time"
 
-	"github.com/containerssh/libcontainerssh/config"
-	http2 "github.com/containerssh/libcontainerssh/http"
-	"github.com/containerssh/libcontainerssh/internal/structutils"
-	"github.com/containerssh/libcontainerssh/internal/test"
-	"github.com/containerssh/libcontainerssh/log"
-	"github.com/containerssh/libcontainerssh/service"
+    "go.containerssh.io/libcontainerssh/config"
+    http2 "go.containerssh.io/libcontainerssh/http"
+    "go.containerssh.io/libcontainerssh/internal/structutils"
+    "go.containerssh.io/libcontainerssh/internal/test"
+    "go.containerssh.io/libcontainerssh/log"
+    "go.containerssh.io/libcontainerssh/service"
 	"github.com/stretchr/testify/assert"
 )
 

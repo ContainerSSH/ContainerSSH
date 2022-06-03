@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"net"
 
-	"github.com/containerssh/libcontainerssh/log"
-	messageCodes "github.com/containerssh/libcontainerssh/message"
+    "go.containerssh.io/libcontainerssh/log"
+    messageCodes "go.containerssh.io/libcontainerssh/message"
 	"golang.org/x/crypto/ssh"
 )
 

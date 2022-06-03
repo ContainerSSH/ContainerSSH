@@ -4,8 +4,8 @@ import (
 	"context"
 	"sync"
 
-	"github.com/containerssh/libcontainerssh/log"
-	"github.com/containerssh/libcontainerssh/message"
+    "go.containerssh.io/libcontainerssh/log"
+    "go.containerssh.io/libcontainerssh/message"
 )
 
 type pool struct {

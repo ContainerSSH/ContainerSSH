@@ -3,8 +3,8 @@ package config
 import (
 	"context"
 
-	"github.com/containerssh/libcontainerssh/config"
-	"github.com/containerssh/libcontainerssh/metadata"
+    "go.containerssh.io/libcontainerssh/config"
+    "go.containerssh.io/libcontainerssh/metadata"
 )
 
 // Loader is a utility to load and update an existing configuration structure.

@@ -5,10 +5,10 @@ import (
 	"fmt"
 	"io"
 
-	"github.com/containerssh/libcontainerssh/auth"
-	auth2 "github.com/containerssh/libcontainerssh/internal/auth"
-	message2 "github.com/containerssh/libcontainerssh/message"
-	"github.com/containerssh/libcontainerssh/metadata"
+    "go.containerssh.io/libcontainerssh/auth"
+    auth2 "go.containerssh.io/libcontainerssh/internal/auth"
+    message2 "go.containerssh.io/libcontainerssh/message"
+    "go.containerssh.io/libcontainerssh/metadata"
 
 	"golang.org/x/crypto/ssh"
 )

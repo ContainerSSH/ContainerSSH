@@ -4,11 +4,11 @@ import (
 	"context"
 	"net"
 
-	auth2 "github.com/containerssh/libcontainerssh/auth"
-	"github.com/containerssh/libcontainerssh/internal/auth"
-	"github.com/containerssh/libcontainerssh/internal/sshserver"
-	"github.com/containerssh/libcontainerssh/message"
-	"github.com/containerssh/libcontainerssh/metadata"
+    auth2 "go.containerssh.io/libcontainerssh/auth"
+    "go.containerssh.io/libcontainerssh/internal/auth"
+    "go.containerssh.io/libcontainerssh/internal/sshserver"
+    "go.containerssh.io/libcontainerssh/message"
+    "go.containerssh.io/libcontainerssh/metadata"
 )
 
 // Behavior dictates how when the authentication requests are passed to the backends.

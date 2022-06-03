@@ -1,7 +1,7 @@
 package dummy
 
 import (
-	"github.com/containerssh/libcontainerssh/internal/geoip/geoipprovider"
+    "go.containerssh.io/libcontainerssh/internal/geoip/geoipprovider"
 )
 
 // New creates a dummy provider that always responds with "XX"

@@ -7,12 +7,12 @@ import (
 	"sync"
 	"time"
 
-	"github.com/containerssh/libcontainerssh/auditlog/message"
-	"github.com/containerssh/libcontainerssh/config"
-	"github.com/containerssh/libcontainerssh/internal/auditlog/codec"
-	"github.com/containerssh/libcontainerssh/internal/auditlog/storage"
-	"github.com/containerssh/libcontainerssh/internal/geoip/geoipprovider"
-	"github.com/containerssh/libcontainerssh/log"
+    "go.containerssh.io/libcontainerssh/auditlog/message"
+    "go.containerssh.io/libcontainerssh/config"
+    "go.containerssh.io/libcontainerssh/internal/auditlog/codec"
+    "go.containerssh.io/libcontainerssh/internal/auditlog/storage"
+    "go.containerssh.io/libcontainerssh/internal/geoip/geoipprovider"
+    "go.containerssh.io/libcontainerssh/log"
 )
 
 type loggerImplementation struct {

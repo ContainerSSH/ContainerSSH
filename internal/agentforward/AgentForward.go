@@ -3,8 +3,8 @@ package agentforward
 import (
 	"io"
 
-	"github.com/containerssh/libcontainerssh/internal/sshserver"
-	"github.com/containerssh/libcontainerssh/log"
+    "go.containerssh.io/libcontainerssh/internal/sshserver"
+    "go.containerssh.io/libcontainerssh/log"
 )
 
 // AgentForward is a network connection forwarding interface that uses the ContainerSSH Agent protocol

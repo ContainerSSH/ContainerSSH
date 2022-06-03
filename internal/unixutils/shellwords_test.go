@@ -3,7 +3,7 @@ package unixutils_test
 import (
 	"testing"
 
-	"github.com/containerssh/libcontainerssh/internal/unixutils"
+    "go.containerssh.io/libcontainerssh/internal/unixutils"
 	"github.com/stretchr/testify/assert"
 )
 

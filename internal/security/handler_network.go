@@ -4,12 +4,12 @@ import (
 	"context"
 	"sync"
 
-	auth2 "github.com/containerssh/libcontainerssh/auth"
-	config2 "github.com/containerssh/libcontainerssh/config"
-	"github.com/containerssh/libcontainerssh/internal/auth"
-	"github.com/containerssh/libcontainerssh/internal/sshserver"
-	"github.com/containerssh/libcontainerssh/log"
-	"github.com/containerssh/libcontainerssh/metadata"
+    auth2 "go.containerssh.io/libcontainerssh/auth"
+    config2 "go.containerssh.io/libcontainerssh/config"
+    "go.containerssh.io/libcontainerssh/internal/auth"
+    "go.containerssh.io/libcontainerssh/internal/sshserver"
+    "go.containerssh.io/libcontainerssh/log"
+    "go.containerssh.io/libcontainerssh/metadata"
 )
 
 type networkHandler struct {

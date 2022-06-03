@@ -1,10 +1,10 @@
 package auth
 
 import (
-	"github.com/containerssh/libcontainerssh/config"
-	"github.com/containerssh/libcontainerssh/http"
-	"github.com/containerssh/libcontainerssh/internal/metrics"
-	"github.com/containerssh/libcontainerssh/log"
+    "go.containerssh.io/libcontainerssh/config"
+    "go.containerssh.io/libcontainerssh/http"
+    "go.containerssh.io/libcontainerssh/internal/metrics"
+    "go.containerssh.io/libcontainerssh/log"
 )
 
 // NewWebhookClient creates a new HTTP authentication client.

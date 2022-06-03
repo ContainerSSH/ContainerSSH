@@ -24,14 +24,14 @@ import (
 	"os/signal"
 	"syscall"
 
-	publicAuth "github.com/containerssh/libcontainerssh/auth"
-	"github.com/containerssh/libcontainerssh/config"
-	configWebhook "github.com/containerssh/libcontainerssh/config/webhook"
-	"github.com/containerssh/libcontainerssh/http"
-	"github.com/containerssh/libcontainerssh/internal/auth"
-	"github.com/containerssh/libcontainerssh/log"
-	"github.com/containerssh/libcontainerssh/metadata"
-	"github.com/containerssh/libcontainerssh/service"
+    publicAuth "go.containerssh.io/libcontainerssh/auth"
+    "go.containerssh.io/libcontainerssh/config"
+    configWebhook "go.containerssh.io/libcontainerssh/config/webhook"
+    "go.containerssh.io/libcontainerssh/http"
+    "go.containerssh.io/libcontainerssh/internal/auth"
+    "go.containerssh.io/libcontainerssh/log"
+    "go.containerssh.io/libcontainerssh/metadata"
+    "go.containerssh.io/libcontainerssh/service"
 	"github.com/docker/docker/api/types/container"
 )
 

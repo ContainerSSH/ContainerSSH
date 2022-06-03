@@ -1,10 +1,10 @@
 package webhook
 
 import (
-	"github.com/containerssh/libcontainerssh/config"
-	"github.com/containerssh/libcontainerssh/http"
-	"github.com/containerssh/libcontainerssh/internal/auth"
-	"github.com/containerssh/libcontainerssh/log"
+    "go.containerssh.io/libcontainerssh/config"
+    "go.containerssh.io/libcontainerssh/http"
+    "go.containerssh.io/libcontainerssh/internal/auth"
+    "go.containerssh.io/libcontainerssh/log"
 )
 
 // NewServer returns a complete HTTP server that responds to the authentication requests.

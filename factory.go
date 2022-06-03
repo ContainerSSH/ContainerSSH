@@ -3,19 +3,19 @@ package libcontainerssh
 import (
 	"context"
 
-	"github.com/containerssh/libcontainerssh/config"
-	"github.com/containerssh/libcontainerssh/internal/auditlogintegration"
-	"github.com/containerssh/libcontainerssh/internal/authintegration"
-	"github.com/containerssh/libcontainerssh/internal/backend"
-	"github.com/containerssh/libcontainerssh/internal/geoip"
-	"github.com/containerssh/libcontainerssh/internal/geoip/geoipprovider"
-	"github.com/containerssh/libcontainerssh/internal/health"
-	"github.com/containerssh/libcontainerssh/internal/metrics"
-	"github.com/containerssh/libcontainerssh/internal/metricsintegration"
-	"github.com/containerssh/libcontainerssh/internal/sshserver"
-	"github.com/containerssh/libcontainerssh/log"
-	"github.com/containerssh/libcontainerssh/message"
-	"github.com/containerssh/libcontainerssh/service"
+	"go.containerssh.io/libcontainerssh/config"
+	"go.containerssh.io/libcontainerssh/internal/auditlogintegration"
+	"go.containerssh.io/libcontainerssh/internal/authintegration"
+	"go.containerssh.io/libcontainerssh/internal/backend"
+	"go.containerssh.io/libcontainerssh/internal/geoip"
+	"go.containerssh.io/libcontainerssh/internal/geoip/geoipprovider"
+	"go.containerssh.io/libcontainerssh/internal/health"
+	"go.containerssh.io/libcontainerssh/internal/metrics"
+	"go.containerssh.io/libcontainerssh/internal/metricsintegration"
+	"go.containerssh.io/libcontainerssh/internal/sshserver"
+	"go.containerssh.io/libcontainerssh/log"
+	"go.containerssh.io/libcontainerssh/message"
+	"go.containerssh.io/libcontainerssh/service"
 )
 
 // New creates a new instance of ContainerSSH.

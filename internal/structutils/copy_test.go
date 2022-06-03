@@ -3,7 +3,7 @@ package structutils_test
 import (
 	"testing"
 
-	"github.com/containerssh/libcontainerssh/internal/structutils"
+    "go.containerssh.io/libcontainerssh/internal/structutils"
 	"github.com/stretchr/testify/assert"
 )
 

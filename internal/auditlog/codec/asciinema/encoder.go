@@ -6,11 +6,11 @@ import (
 	"io"
 	"net"
 
-	"github.com/containerssh/libcontainerssh/auditlog/message"
-	"github.com/containerssh/libcontainerssh/internal/auditlog/storage"
-	"github.com/containerssh/libcontainerssh/internal/geoip/geoipprovider"
-	"github.com/containerssh/libcontainerssh/log"
-	messageCodes "github.com/containerssh/libcontainerssh/message"
+    "go.containerssh.io/libcontainerssh/auditlog/message"
+    "go.containerssh.io/libcontainerssh/internal/auditlog/storage"
+    "go.containerssh.io/libcontainerssh/internal/geoip/geoipprovider"
+    "go.containerssh.io/libcontainerssh/log"
+    messageCodes "go.containerssh.io/libcontainerssh/message"
 )
 
 type encoder struct {

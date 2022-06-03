@@ -8,10 +8,10 @@ import (
 	"testing"
 	"time"
 
-	"github.com/containerssh/libcontainerssh/auditlog/message"
-	asciinema2 "github.com/containerssh/libcontainerssh/internal/auditlog/codec/asciinema"
-	"github.com/containerssh/libcontainerssh/internal/geoip/dummy"
-	"github.com/containerssh/libcontainerssh/log"
+    "go.containerssh.io/libcontainerssh/auditlog/message"
+    asciinema2 "go.containerssh.io/libcontainerssh/internal/auditlog/codec/asciinema"
+    "go.containerssh.io/libcontainerssh/internal/geoip/dummy"
+    "go.containerssh.io/libcontainerssh/log"
 	"github.com/stretchr/testify/assert"
 )
 

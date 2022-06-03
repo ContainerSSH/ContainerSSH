@@ -3,7 +3,7 @@ package metrics
 import (
 	"sync"
 
-	"github.com/containerssh/libcontainerssh/internal/geoip/geoipprovider"
+    "go.containerssh.io/libcontainerssh/internal/geoip/geoipprovider"
 )
 
 // New creates the metric collector.

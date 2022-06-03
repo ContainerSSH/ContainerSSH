@@ -7,10 +7,10 @@ import (
 	"io"
 	"strings"
 
-	"github.com/containerssh/libcontainerssh/config"
-	"github.com/containerssh/libcontainerssh/internal/sshserver"
-	"github.com/containerssh/libcontainerssh/internal/unixutils"
-	"github.com/containerssh/libcontainerssh/message"
+    "go.containerssh.io/libcontainerssh/config"
+    "go.containerssh.io/libcontainerssh/internal/sshserver"
+    "go.containerssh.io/libcontainerssh/internal/unixutils"
+    "go.containerssh.io/libcontainerssh/message"
 )
 
 type channelHandler struct {

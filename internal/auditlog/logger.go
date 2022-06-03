@@ -5,7 +5,7 @@ import (
 	"io"
 	"net"
 
-	"github.com/containerssh/libcontainerssh/auditlog/message"
+    "go.containerssh.io/libcontainerssh/auditlog/message"
 )
 
 // Logger is a top level audit logger.

@@ -4,7 +4,7 @@ import (
 	"context"
 	"net"
 
-	"github.com/containerssh/libcontainerssh/metadata"
+    "go.containerssh.io/libcontainerssh/metadata"
 )
 
 type testNetworkHandlerImpl struct {

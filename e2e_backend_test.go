@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/containerssh/libcontainerssh/config"
+    "go.containerssh.io/libcontainerssh/config"
 )
 
 // TestBackends tests all possible backends for basic functionality.

@@ -6,11 +6,11 @@ import (
 	"os"
 	"testing"
 
-	configuration "github.com/containerssh/libcontainerssh/config"
-	"github.com/containerssh/libcontainerssh/internal/config"
-	"github.com/containerssh/libcontainerssh/internal/structutils"
-	"github.com/containerssh/libcontainerssh/log"
-	"github.com/containerssh/libcontainerssh/message"
+    configuration "go.containerssh.io/libcontainerssh/config"
+    "go.containerssh.io/libcontainerssh/internal/config"
+    "go.containerssh.io/libcontainerssh/internal/structutils"
+    "go.containerssh.io/libcontainerssh/log"
+    "go.containerssh.io/libcontainerssh/message"
 	"github.com/stretchr/testify/assert"
 )
 

@@ -1,11 +1,11 @@
 package webhook
 
 import (
-	"github.com/containerssh/libcontainerssh/config"
-	internalConfig "github.com/containerssh/libcontainerssh/internal/config"
-	"github.com/containerssh/libcontainerssh/internal/geoip/dummy"
-	"github.com/containerssh/libcontainerssh/internal/metrics"
-	"github.com/containerssh/libcontainerssh/log"
+    "go.containerssh.io/libcontainerssh/config"
+    internalConfig "go.containerssh.io/libcontainerssh/internal/config"
+    "go.containerssh.io/libcontainerssh/internal/geoip/dummy"
+    "go.containerssh.io/libcontainerssh/internal/metrics"
+    "go.containerssh.io/libcontainerssh/log"
 )
 
 // NewTestClient creates a configuration client, primarily for testing purposes.

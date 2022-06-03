@@ -3,8 +3,8 @@ package webhook
 import (
 	"net/http"
 
-	"github.com/containerssh/libcontainerssh/internal/config"
-	"github.com/containerssh/libcontainerssh/log"
+    "go.containerssh.io/libcontainerssh/internal/config"
+    "go.containerssh.io/libcontainerssh/log"
 )
 
 // NewHandler creates a HTTP handler that forwards calls to the provided h config request handler.

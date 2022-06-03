@@ -14,12 +14,12 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/containerssh/libcontainerssh/config"
-	internalConfig "github.com/containerssh/libcontainerssh/internal/config"
-	"github.com/containerssh/libcontainerssh/internal/health"
-	"github.com/containerssh/libcontainerssh/log"
-	"github.com/containerssh/libcontainerssh/message"
-	"github.com/containerssh/libcontainerssh/service"
+    "go.containerssh.io/libcontainerssh/config"
+    internalConfig "go.containerssh.io/libcontainerssh/internal/config"
+    "go.containerssh.io/libcontainerssh/internal/health"
+    "go.containerssh.io/libcontainerssh/log"
+    "go.containerssh.io/libcontainerssh/message"
+    "go.containerssh.io/libcontainerssh/service"
 )
 
 // Main is a helper function to start a standard ContainerSSH instance. It should be used as the outer-most function

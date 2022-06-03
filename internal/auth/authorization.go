@@ -3,7 +3,7 @@
 package auth
 
 import (
-	"github.com/containerssh/libcontainerssh/metadata"
+    "go.containerssh.io/libcontainerssh/metadata"
 )
 
 // AuthzProvider provides a method to verify the authenticated username against the username provided by the user.

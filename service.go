@@ -1,7 +1,7 @@
 package libcontainerssh
 
 import (
-	"github.com/containerssh/libcontainerssh/service"
+    "go.containerssh.io/libcontainerssh/service"
 )
 
 // Service is the core ContainerSSH service.

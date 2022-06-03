@@ -5,8 +5,8 @@ import (
 	"text/tabwriter"
 	"text/template"
 
-	"github.com/containerssh/libcontainerssh/auditlog/message"
-	"github.com/containerssh/libcontainerssh/internal/auditlog/codec/binary"
+    "go.containerssh.io/libcontainerssh/auditlog/message"
+    "go.containerssh.io/libcontainerssh/internal/auditlog/codec/binary"
 )
 
 type context struct {

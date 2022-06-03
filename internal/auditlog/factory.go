@@ -4,18 +4,18 @@ import (
 	"fmt"
 	"sync"
 
-	"github.com/containerssh/libcontainerssh/config"
-	"github.com/containerssh/libcontainerssh/internal/auditlog/codec"
-	"github.com/containerssh/libcontainerssh/internal/auditlog/codec/asciinema"
-	"github.com/containerssh/libcontainerssh/internal/auditlog/codec/binary"
-	noneCodec "github.com/containerssh/libcontainerssh/internal/auditlog/codec/none"
-	"github.com/containerssh/libcontainerssh/internal/auditlog/storage"
-	"github.com/containerssh/libcontainerssh/internal/auditlog/storage/file"
-	noneStorage "github.com/containerssh/libcontainerssh/internal/auditlog/storage/none"
-	"github.com/containerssh/libcontainerssh/internal/auditlog/storage/s3"
+    "go.containerssh.io/libcontainerssh/config"
+    "go.containerssh.io/libcontainerssh/internal/auditlog/codec"
+    "go.containerssh.io/libcontainerssh/internal/auditlog/codec/asciinema"
+    "go.containerssh.io/libcontainerssh/internal/auditlog/codec/binary"
+    noneCodec "go.containerssh.io/libcontainerssh/internal/auditlog/codec/none"
+    "go.containerssh.io/libcontainerssh/internal/auditlog/storage"
+    "go.containerssh.io/libcontainerssh/internal/auditlog/storage/file"
+    noneStorage "go.containerssh.io/libcontainerssh/internal/auditlog/storage/none"
+    "go.containerssh.io/libcontainerssh/internal/auditlog/storage/s3"
 
-	"github.com/containerssh/libcontainerssh/internal/geoip/geoipprovider"
-	"github.com/containerssh/libcontainerssh/log"
+    "go.containerssh.io/libcontainerssh/internal/geoip/geoipprovider"
+    "go.containerssh.io/libcontainerssh/log"
 )
 
 // New Creates a new audit logging pipeline based on the provided configuration.

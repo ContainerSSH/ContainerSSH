@@ -5,8 +5,8 @@ import (
 	goHttp "net/http"
 	"sync"
 
-	"github.com/containerssh/libcontainerssh/config"
-	"github.com/containerssh/libcontainerssh/log"
+    "go.containerssh.io/libcontainerssh/config"
+    "go.containerssh.io/libcontainerssh/log"
 )
 
 // NewServer creates a new HTTP server with the given configuration and calling the provided handler.

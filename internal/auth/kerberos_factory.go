@@ -7,10 +7,10 @@ import (
 	"github.com/containerssh/gokrb5/v8/iana/nametype"
 	"github.com/containerssh/gokrb5/v8/keytab"
 	"github.com/containerssh/gokrb5/v8/types"
-	"github.com/containerssh/libcontainerssh/config"
-	"github.com/containerssh/libcontainerssh/internal/metrics"
-	"github.com/containerssh/libcontainerssh/log"
-	"github.com/containerssh/libcontainerssh/message"
+    "go.containerssh.io/libcontainerssh/config"
+    "go.containerssh.io/libcontainerssh/internal/metrics"
+    "go.containerssh.io/libcontainerssh/log"
+    "go.containerssh.io/libcontainerssh/message"
 )
 
 func NewKerberosClient(

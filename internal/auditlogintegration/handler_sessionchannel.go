@@ -3,8 +3,8 @@ package auditlogintegration
 import (
 	"context"
 
-	"github.com/containerssh/libcontainerssh/internal/auditlog"
-	"github.com/containerssh/libcontainerssh/internal/sshserver"
+    "go.containerssh.io/libcontainerssh/internal/auditlog"
+    "go.containerssh.io/libcontainerssh/internal/sshserver"
 )
 
 type sessionChannelHandler struct {

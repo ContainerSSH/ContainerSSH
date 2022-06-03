@@ -9,7 +9,7 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/containerssh/libcontainerssh/internal/auditlog/storage"
+    "go.containerssh.io/libcontainerssh/internal/auditlog/storage"
 )
 
 type fileStorage struct {

@@ -3,11 +3,11 @@ package backend
 import (
 	"sync"
 
-	"github.com/containerssh/libcontainerssh/config"
-	internalConfig "github.com/containerssh/libcontainerssh/internal/config"
-	"github.com/containerssh/libcontainerssh/internal/metrics"
-	"github.com/containerssh/libcontainerssh/internal/sshserver"
-	"github.com/containerssh/libcontainerssh/log"
+    "go.containerssh.io/libcontainerssh/config"
+    internalConfig "go.containerssh.io/libcontainerssh/internal/config"
+    "go.containerssh.io/libcontainerssh/internal/metrics"
+    "go.containerssh.io/libcontainerssh/internal/sshserver"
+    "go.containerssh.io/libcontainerssh/log"
 )
 
 // New creates a new backend handler.

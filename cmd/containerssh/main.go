@@ -1,7 +1,7 @@
 package main
 
 import (
-	"github.com/containerssh/libcontainerssh"
+    "go.containerssh.io/libcontainerssh"
 )
 
 func main() {

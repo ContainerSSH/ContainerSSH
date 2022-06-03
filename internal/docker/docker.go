@@ -4,8 +4,8 @@ import (
 	"context"
 	"io"
 
-	"github.com/containerssh/libcontainerssh/config"
-	"github.com/containerssh/libcontainerssh/log"
+    "go.containerssh.io/libcontainerssh/config"
+    "go.containerssh.io/libcontainerssh/log"
 )
 
 // dockerClientFactory creates a dockerClient based on a configuration

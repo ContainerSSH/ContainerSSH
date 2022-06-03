@@ -1,7 +1,7 @@
 package sshserver
 
 import (
-	"github.com/containerssh/libcontainerssh/log"
+    "go.containerssh.io/libcontainerssh/log"
 	"golang.org/x/crypto/ssh"
 )
 

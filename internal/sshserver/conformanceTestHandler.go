@@ -1,7 +1,7 @@
 package sshserver
 
 import (
-	"github.com/containerssh/libcontainerssh/metadata"
+    "go.containerssh.io/libcontainerssh/metadata"
 )
 
 type conformanceTestHandler struct {

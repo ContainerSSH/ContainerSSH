@@ -3,7 +3,7 @@ package agentprotocol
 import (
 	"io"
 
-	log "github.com/containerssh/libcontainerssh/log"
+    log "go.containerssh.io/libcontainerssh/log"
 )
 
 func NewForwardCtx(fromBackend io.Reader, toBackend io.Writer, logger log.Logger) *ForwardCtx {

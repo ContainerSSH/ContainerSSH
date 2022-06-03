@@ -3,7 +3,7 @@ package http
 import (
 	goHttp "net/http"
 
-	"github.com/containerssh/libcontainerssh/log"
+    "go.containerssh.io/libcontainerssh/log"
 )
 
 // NewServerHandler creates a new simplified HTTP handler that decodes JSON requests and encodes JSON responses.

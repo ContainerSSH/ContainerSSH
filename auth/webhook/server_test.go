@@ -5,12 +5,12 @@ import (
 	"os"
 	"time"
 
-	auth2 "github.com/containerssh/libcontainerssh/auth"
-	"github.com/containerssh/libcontainerssh/auth/webhook"
-	"github.com/containerssh/libcontainerssh/config"
-	"github.com/containerssh/libcontainerssh/log"
-	"github.com/containerssh/libcontainerssh/metadata"
-	"github.com/containerssh/libcontainerssh/service"
+    auth2 "go.containerssh.io/libcontainerssh/auth"
+    "go.containerssh.io/libcontainerssh/auth/webhook"
+    "go.containerssh.io/libcontainerssh/config"
+    "go.containerssh.io/libcontainerssh/log"
+    "go.containerssh.io/libcontainerssh/metadata"
+    "go.containerssh.io/libcontainerssh/service"
 )
 
 // myAuthReqHandler is your handler for authentication requests.

@@ -15,12 +15,12 @@ import (
 	krb5svc "github.com/containerssh/gokrb5/v8/service"
 	"github.com/containerssh/gokrb5/v8/spnego"
 	"github.com/containerssh/gokrb5/v8/types"
-	"github.com/containerssh/libcontainerssh/config"
-	"github.com/containerssh/libcontainerssh/internal/ssh"
-	internalSsh "github.com/containerssh/libcontainerssh/internal/ssh"
-	"github.com/containerssh/libcontainerssh/log"
-	"github.com/containerssh/libcontainerssh/message"
-	"github.com/containerssh/libcontainerssh/metadata"
+    "go.containerssh.io/libcontainerssh/config"
+    "go.containerssh.io/libcontainerssh/internal/ssh"
+    internalSsh "go.containerssh.io/libcontainerssh/internal/ssh"
+    "go.containerssh.io/libcontainerssh/log"
+    "go.containerssh.io/libcontainerssh/message"
+    "go.containerssh.io/libcontainerssh/metadata"
 	"gopkg.in/jcmturner/goidentity.v3"
 )
 

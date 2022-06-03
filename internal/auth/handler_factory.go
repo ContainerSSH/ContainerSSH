@@ -3,8 +3,8 @@ package auth
 import (
 	goHttp "net/http"
 
-	"github.com/containerssh/libcontainerssh/http"
-	"github.com/containerssh/libcontainerssh/log"
+	"go.containerssh.io/libcontainerssh/http"
+	"go.containerssh.io/libcontainerssh/log"
 )
 
 // NewHandler creates a handler that is compatible with the Go HTTP server.

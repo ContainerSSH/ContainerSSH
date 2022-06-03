@@ -9,8 +9,8 @@ import (
 	"sync"
 	"time"
 
-	"github.com/containerssh/libcontainerssh/config"
-	"github.com/containerssh/libcontainerssh/message"
+    "go.containerssh.io/libcontainerssh/config"
+    "go.containerssh.io/libcontainerssh/message"
 )
 
 func newSyslogWriter(config config.SyslogConfig, format config.LogFormat) (Writer, error) {

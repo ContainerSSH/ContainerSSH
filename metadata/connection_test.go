@@ -5,7 +5,7 @@ import (
 	"net"
 	"testing"
 
-	"github.com/containerssh/libcontainerssh/metadata"
+    "go.containerssh.io/libcontainerssh/metadata"
 )
 
 func TestMarshalRemoteAddress(t *testing.T) {

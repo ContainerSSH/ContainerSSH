@@ -4,8 +4,8 @@ import (
 	"io"
 	"os"
 
-	"github.com/containerssh/libcontainerssh/config"
-	"github.com/containerssh/libcontainerssh/message"
+    "go.containerssh.io/libcontainerssh/config"
+    "go.containerssh.io/libcontainerssh/message"
 )
 
 // NewLogger creates a standard logger pipeline.

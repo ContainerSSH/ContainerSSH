@@ -1,9 +1,9 @@
 package none
 
 import (
-	"github.com/containerssh/libcontainerssh/auditlog/message"
-	"github.com/containerssh/libcontainerssh/internal/auditlog/codec"
-	"github.com/containerssh/libcontainerssh/internal/auditlog/storage"
+    "go.containerssh.io/libcontainerssh/auditlog/message"
+    "go.containerssh.io/libcontainerssh/internal/auditlog/codec"
+    "go.containerssh.io/libcontainerssh/internal/auditlog/storage"
 )
 
 // NewEncoder creates an encoder that swallows everything. This can be used as a dummy encoder to not consume CPU.

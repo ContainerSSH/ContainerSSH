@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"io"
 
-	"github.com/containerssh/libcontainerssh/auditlog/message"
-	"github.com/containerssh/libcontainerssh/internal/auditlog/codec"
+    "go.containerssh.io/libcontainerssh/auditlog/message"
+    "go.containerssh.io/libcontainerssh/internal/auditlog/codec"
 	"github.com/fxamacker/cbor"
 	"github.com/mitchellh/mapstructure"
 )

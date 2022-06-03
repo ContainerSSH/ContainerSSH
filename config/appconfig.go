@@ -3,8 +3,8 @@ package config
 import (
 	"fmt"
 
-	"github.com/containerssh/libcontainerssh/internal/structutils"
-	"github.com/containerssh/libcontainerssh/message"
+    "go.containerssh.io/libcontainerssh/internal/structutils"
+    "go.containerssh.io/libcontainerssh/message"
 )
 
 // AppConfig is the root configuration object of ContainerSSH.

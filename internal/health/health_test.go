@@ -1,10 +1,10 @@
 package health_test
 
 import (
-	"github.com/containerssh/libcontainerssh/config"
-	"github.com/containerssh/libcontainerssh/internal/health"
-	"github.com/containerssh/libcontainerssh/log"
-	service2 "github.com/containerssh/libcontainerssh/service"
+    "go.containerssh.io/libcontainerssh/config"
+    "go.containerssh.io/libcontainerssh/internal/health"
+    "go.containerssh.io/libcontainerssh/log"
+    service2 "go.containerssh.io/libcontainerssh/service"
 
 	"testing"
 	"time"

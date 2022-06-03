@@ -4,9 +4,9 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/containerssh/libcontainerssh/metadata"
+    "go.containerssh.io/libcontainerssh/metadata"
 
-	message2 "github.com/containerssh/libcontainerssh/message"
+    message2 "go.containerssh.io/libcontainerssh/message"
 	"golang.org/x/crypto/ssh"
 )
 

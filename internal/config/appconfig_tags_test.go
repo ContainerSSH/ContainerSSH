@@ -5,7 +5,7 @@ import (
 	"strings"
 	"testing"
 
-	configuration "github.com/containerssh/libcontainerssh/config"
+    configuration "go.containerssh.io/libcontainerssh/config"
 )
 
 // TestOperatorCompatibility is a test that tries to create compatibility with the Kubernetes operator

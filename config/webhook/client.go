@@ -1,7 +1,7 @@
 package webhook
 
 import (
-	"github.com/containerssh/libcontainerssh/internal/config"
+	"go.containerssh.io/libcontainerssh/internal/config"
 )
 
 // Client is the interface to fetch a user-specific configuration.

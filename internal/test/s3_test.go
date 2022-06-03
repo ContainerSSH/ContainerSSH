@@ -9,7 +9,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws/credentials"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/s3"
-	"github.com/containerssh/libcontainerssh/internal/test"
+    "go.containerssh.io/libcontainerssh/internal/test"
 )
 
 func TestS3(t *testing.T) {
