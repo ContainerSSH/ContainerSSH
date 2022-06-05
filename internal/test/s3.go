@@ -2,9 +2,13 @@ package test
 
 import (
 	"fmt"
-	"net"
 	"testing"
 	"time"
+
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/credentials"
+	"github.com/aws/aws-sdk-go/aws/session"
+	"github.com/aws/aws-sdk-go/service/s3"
 )
 
 // s3Lock is used to start a maximum of 5 Minio instances for testing.
@@ -33,7 +37,7 @@ func S3(t *testing.T) S3Helper {
 		cnt: containerFromPull(
 			t,
 			"docker.io/minio/minio",
-			[]string{"server", "/testdata"},
+			[]string{"server", "/data", "--console-address", ":9001"},
 			env,
 			map[string]string{
 				"9000/tcp": "",
@@ -99,14 +103,31 @@ func (m *minio) wait() {
 		if tries > 30 {
 			m.t.Fatalf("Minio failed to come up in %d seconds.", sleepTime*30)
 		}
-		sock, err := net.Dial("tcp", fmt.Sprintf("127.0.0.1:%d", m.cnt.port("9000/tcp")))
-		time.Sleep(time.Duration(sleepTime) * time.Second)
-		if err != nil {
-			tries++
-		} else {
-			_ = sock.Close()
-
-			return
+		awsConfig := &aws.Config{
+			Credentials: credentials.NewCredentials(
+				&credentials.StaticProvider{
+					Value: credentials.Value{
+						AccessKeyID:     m.accessKey,
+						SecretAccessKey: m.secretKey,
+					},
+				},
+			),
+			Endpoint:         aws.String(m.URL()),
+			Region:           aws.String(m.Region()),
+			S3ForcePathStyle: aws.Bool(m.PathStyle()),
 		}
+		sess, err := session.NewSession(awsConfig)
+		if err == nil {
+			s3Connection := s3.New(sess)
+			_, err := s3Connection.ListBuckets(&s3.ListBucketsInput{})
+			if err == nil {
+				return
+			}
+			m.t.Logf("S3 is not up yet, failed to list buckets (%v)", err)
+		} else {
+			m.t.Logf("S3 is not up yet, failed to create S3 session (%v)", err)
+		}
+		time.Sleep(time.Duration(sleepTime) * time.Second)
+		tries++
 	}
 }
