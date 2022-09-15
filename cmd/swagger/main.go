@@ -2,7 +2,7 @@ package main
 
 import (
 	"encoding/json"
-	"io/ioutil"
+	"io"
 	"log"
 	"net/http"
 	"os"
@@ -32,7 +32,7 @@ func main() {
 
 	binaryData := downloadGoSwaggerBinary(url, client)
 
-	err := ioutil.WriteFile(fullPath, binaryData, 0755)
+	err := os.WriteFile(fullPath, binaryData, 0755)
 	if err != nil {
 		log.Fatalf("failed to write executable binary (%v)", err)
 	}
@@ -56,7 +56,7 @@ func main() {
 	}
 }
 
-func getLatestGoSwaggerURL(client *http.Client, file string) (string) {
+func getLatestGoSwaggerURL(client *http.Client, file string) string {
 	url := "https://api.github.com/repos/go-swagger/go-swagger/releases/latest"
 
 	jsonRequest, err := http.NewRequest("GET", url, nil)
@@ -114,7 +114,7 @@ func downloadGoSwaggerBinary(url string, client *http.Client) []byte {
 		_ = binaryResponse.Body.Close()
 	}()
 
-	binaryData, err := ioutil.ReadAll(binaryResponse.Body)
+	binaryData, err := io.ReadAll(binaryResponse.Body)
 	if err != nil {
 		log.Fatalf("failed to read downloaded file (%v)", err)
 	}
