@@ -3,18 +3,11 @@ module github.com/containerssh/containerssh
 go 1.18
 
 require (
-	github.com/containerssh/auditlog v1.0.0
-	github.com/containerssh/auth v1.0.1
-	github.com/containerssh/configuration/v2 v2.1.0
-	github.com/containerssh/docker/v2 v2.0.1
-	github.com/containerssh/http v1.2.0
-	github.com/containerssh/libcontainerssh v0.0.0-20220522235954-7ae1eac13366
-	github.com/containerssh/log v1.1.6
-	github.com/containerssh/service v1.0.0
 	github.com/docker/docker v20.10.13+incompatible
 	github.com/go-enry/go-license-detector/v4 v4.1.0
 	github.com/mitchellh/golicense v0.2.0
 	github.com/rsc/goversion v1.2.0
+	go.containerssh.io/libcontainerssh v0.0.0-20220603181946-e8a303b04b01
 )
 
 require (
@@ -23,16 +16,7 @@ require (
 	github.com/alessio/shellescape v1.4.1 // indirect
 	github.com/aws/aws-sdk-go v1.43.17 // indirect
 	github.com/containerd/containerd v1.5.8 // indirect
-	github.com/containerssh/geoip v1.0.0 // indirect
 	github.com/containerssh/gokrb5/v8 v8.4.3-0.20211214150832-4bf8b91123af // indirect
-	github.com/containerssh/health v1.1.0 // indirect
-	github.com/containerssh/kubernetes/v2 v2.0.1 // indirect
-	github.com/containerssh/metrics v1.0.0 // indirect
-	github.com/containerssh/security v1.0.0 // indirect
-	github.com/containerssh/sshproxy v1.0.0 // indirect
-	github.com/containerssh/sshserver v1.0.0 // indirect
-	github.com/containerssh/structutils v1.1.0 // indirect
-	github.com/containerssh/unixutils v1.0.0 // indirect
 	github.com/creasty/defaults v1.5.2 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/dgryski/go-minhash v0.0.0-20170608043002-7fe510aff544 // indirect
@@ -74,6 +58,7 @@ require (
 	github.com/mitchellh/go-homedir v1.1.0 // indirect
 	github.com/mitchellh/mapstructure v1.4.3 // indirect
 	github.com/moby/spdystream v0.2.0 // indirect
+	github.com/moby/term v0.0.0-20201216013528-df9cb8a40635 // indirect
 	github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd // indirect
 	github.com/modern-go/reflect2 v1.0.2 // indirect
 	github.com/montanaflynn/stats v0.0.0-20180911141734-db72e6cae808 // indirect
@@ -87,13 +72,11 @@ require (
 	github.com/russross/blackfriday/v2 v2.1.0 // indirect
 	github.com/sergi/go-diff v1.1.0 // indirect
 	github.com/shogo82148/go-shuffle v0.0.0-20180218125048-27e6095f230d // indirect
-	github.com/shurcooL/sanitized_anchor_name v1.0.0 // indirect
 	github.com/sirupsen/logrus v1.8.1 // indirect
 	github.com/spf13/cobra v1.3.0 // indirect
 	github.com/spf13/pflag v1.0.5 // indirect
 	github.com/x448/float16 v0.8.4 // indirect
 	github.com/xanzy/ssh-agent v0.2.1 // indirect
-	go.containerssh.io/libcontainerssh v0.0.0-20220603181946-e8a303b04b01 // indirect
 	golang.org/x/crypto v0.0.0-20220112180741-5e0467b6c7ce // indirect
 	golang.org/x/exp v0.0.0-20200224162631-6cc2880d07d6 // indirect
 	golang.org/x/net v0.0.0-20220127200216-cd36cc0744dd // indirect
