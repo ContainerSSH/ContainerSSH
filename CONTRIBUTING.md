@@ -2,7 +2,7 @@
 
 Welcome - and a big thank you for wanting to contribute!
 
-Let's get you started. This project is licensed under the [MIT-0 license](LICENSE). This means that the code you submit will be usable for anyone for any purpose free of charge. You should only submit code that you personally own or have permission to submit under this license - and only if you are ok with that.
+Let's get you started. This project is licensed under the [Apache 2.0 license](LICENSE). This means that the code you submit will be usable for anyone for any purpose free of charge. You should only submit code that you personally own or have permission to submit under this license - and only if you are ok with that.
 
 For the coding aspects, we recommend reading the [development guide](https://containerssh.io/development/). You can also [join our Slack channel](https://join.slack.com/t/containerssh/shared_invite/zt-w2ulatkm-hjGHk8OaxQCBX79XKJHAQQ) to communicate with our community members directly.
 
