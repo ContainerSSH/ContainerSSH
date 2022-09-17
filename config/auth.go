@@ -304,7 +304,7 @@ func (m PublicKeyAuthMethod) Validate() error {
 // PubKeyAuthMethodDisabled disables public key authentication.
 const PubKeyAuthMethodDisabled PublicKeyAuthMethod = PublicKeyAuthMethod(AuthMethodDisabled)
 
-// PubKeyAuthMethodWebhook authenticates using a HTTP webhook.
+// PubKeyAuthMethodWebhook authenticates using an HTTP webhook.
 const PubKeyAuthMethodWebhook PublicKeyAuthMethod = PublicKeyAuthMethod(AuthMethodWebhook)
 
 // endregion

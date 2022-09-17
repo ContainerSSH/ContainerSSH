@@ -16,7 +16,7 @@ import (
 type DockerConfig struct {
 	// Connection configures how to connect to dockerd
 	Connection DockerConnectionConfig `json:"connection" yaml:"connection"`
-	// Execution drives how the container and the workload is executed
+	// Execution drives how the container and the workload are executed
 	Execution DockerExecutionConfig `json:"execution" yaml:"execution"`
 	// Timeouts configures the various timeouts when interacting with dockerd.
 	Timeouts DockerTimeoutConfig `json:"timeouts" yaml:"timeouts"`
@@ -90,6 +90,7 @@ func (e DockerExecutionMode) Validate() error {
 }
 
 // DockerExecutionConfig contains the configuration of what container to run in Docker.
+//
 //goland:noinspection GoVetStructTag
 type DockerExecutionConfig struct {
 	// DockerLaunchConfig contains the Docker-specific launch configuration.
@@ -239,11 +240,11 @@ func (c DockerExecutionConfig) Validate() error {
 // DockerImagePullPolicy drives how and when images are pulled. The values are closely aligned with the Kubernetes image pull
 // policy.
 //
-// - ImagePullPolicyAlways means that the container image will be pulled on every connection.
-// - ImagePullPolicyIfNotPresent means the image will be pulled if the image is not present locally, an empty tag, or
-//	 the "latest" tag was specified.
-// - ImagePullPolicyNever means that the image will be never pulled, and if the image is not available locally the
-//	 connection will fail.
+//   - ImagePullPolicyAlways means that the container image will be pulled on every connection.
+//   - ImagePullPolicyIfNotPresent means the image will be pulled if the image is not present locally, an empty tag, or
+//     the "latest" tag was specified.
+//   - ImagePullPolicyNever means that the image will never be pulled, and if the image is not available locally the
+//     connection will fail.
 type DockerImagePullPolicy string
 
 const (
@@ -252,7 +253,7 @@ const (
 	// ImagePullPolicyIfNotPresent means the image will be pulled if the image is not present locally, an empty tag, or
 	// the "latest" tag was specified.
 	ImagePullPolicyIfNotPresent DockerImagePullPolicy = "IfNotPresent"
-	// ImagePullPolicyNever means that the image will be never pulled, and if the image is not available locally the
+	// ImagePullPolicyNever means that the image will never be pulled, and if the image is not available locally the
 	// connection will fail.
 	ImagePullPolicyNever DockerImagePullPolicy = "Never"
 )

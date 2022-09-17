@@ -3,8 +3,8 @@ package agentforward
 import (
 	"io"
 
-    "go.containerssh.io/libcontainerssh/internal/sshserver"
-    "go.containerssh.io/libcontainerssh/log"
+	"go.containerssh.io/libcontainerssh/internal/sshserver"
+	"go.containerssh.io/libcontainerssh/log"
 )
 
 // AgentForward is a network connection forwarding interface that uses the ContainerSSH Agent protocol
@@ -43,7 +43,7 @@ type AgentForward interface {
 		reverseHandler sshserver.ReverseForward,
 	) error
 
-	// NewTCPReverseForwarding initializes the socket reverse forwarding mode of the agent
+	// NewUnixReverseForwarding initializes the socket reverse forwarding mode of the agent
 	//
 	// setupAgentCallback is a function that should start the agent on the desired target if it's called. It should return an interface to the stdin and stdout of a new instance of the agent.
 	// logger is the logging interface to be used
@@ -92,7 +92,7 @@ type AgentForward interface {
 		originatorPort uint32,
 	) (sshserver.ForwardChannel, error)
 
-	// NewForwardTCP start a new unix forwarding connection (from the client to the agent)
+	// NewForwardUnix start a new unix forwarding connection (from the client to the agent)
 	//
 	// setupAgentCallback is a function that should start the agent on the desired target if it's called. It should return an interface to the stdin and stdout of a new instance of the agent.
 	// logger is the logging interface to be used

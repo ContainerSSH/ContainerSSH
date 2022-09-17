@@ -19,7 +19,7 @@ clientConfig := http.ClientConfiguration{
     Timeout:    2 * time.Second,
     // You can add TLS configuration here:
     CaCert:     "Add expected CA certificate(s) here.",
-                // CaCert is is required for https:// URLs on Windows due to golang#16736
+                // CaCert is required for https:// URLs on Windows due to golang#16736
     // Optionally, for client authentication:
     ClientCert: "Client certificate in PEM format or file name",
     ClientKey:  "Client key in PEM format or file name",
@@ -153,7 +153,7 @@ func (c *myController) OnRequest(request http.ServerRequest, response http.Serve
 }
 ```
 
-In other words, the `ServerRequest` object gives you the ability to decode the request into a struct of your choice. The `ServerResponse`, conversely, encodes a struct into the the response body and provides the ability to enter a status code.
+In other words, the `ServerRequest` object gives you the ability to decode the request into a struct of your choice. The `ServerResponse`, conversely, encodes a struct into the response body and provides the ability to enter a status code.
 
 ## Content negotiation
 

@@ -3,11 +3,11 @@ package sshserver
 import (
 	"fmt"
 
-    message2 "go.containerssh.io/libcontainerssh/message"
+	message2 "go.containerssh.io/libcontainerssh/message"
 	"golang.org/x/crypto/ssh"
 )
 
-//region Factories
+// region Factories
 
 // NewChannelRejection constructs a Message that rejects a channel.
 //
@@ -37,9 +37,9 @@ func NewChannelRejection(
 	}
 }
 
-//endregion
+// endregion
 
-//region Message implementation
+// region Message implementation
 
 type message struct {
 	code        string
@@ -82,4 +82,4 @@ func (m *message) Error() string {
 	return m.explanation
 }
 
-//endregion
+// endregion

@@ -76,7 +76,7 @@ const MSSHGlobalRequestFailed = "SSH_GLOBAL_REQUEST_FAILED"
 
 const MSSHGlobalRequestSuccessful = "SSH_GLOBAL_REQUEST_SUCCESSFUL"
 
-// MSSHChannelRequest indicates that the user has send a new channel-specific request.
+// MSSHChannelRequest indicates that the user has sent a new channel-specific request.
 const MSSHChannelRequest = "SSH_CHANNEL_REQUEST"
 
 // MSSHChannelRequestFailed indicates that ContainerSSH couldn't fulfil the channel-specific request.

@@ -3,8 +3,8 @@
 package auth
 
 import (
-    "go.containerssh.io/libcontainerssh/auth"
-    "go.containerssh.io/libcontainerssh/metadata"
+	"go.containerssh.io/libcontainerssh/auth"
+	"go.containerssh.io/libcontainerssh/metadata"
 )
 
 // AuthenticationType is the root type for all authentication and authorization methods. This type is extended for each
@@ -17,7 +17,7 @@ const AuthenticationTypeAll AuthenticationType = ""
 // AuthenticationTypePassword indicates the authentication where the user submits the password from their client.
 const AuthenticationTypePassword AuthenticationType = "password"
 
-// AuthenticationTypePublicKey indnicates the authentication type where the client performs a public-private key
+// AuthenticationTypePublicKey indicates the authentication type where the client performs a public-private key
 // authentication.
 const AuthenticationTypePublicKey AuthenticationType = "pubkey"
 

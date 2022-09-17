@@ -119,7 +119,7 @@ sshclient := NewTestClient(
 )
 ```
 
-Note that you must pass the servers private key in PEM format which will be used to extract the the public key for validation. This makes the client unsuitable for purposes other than testing.
+Note that you must pass the servers private key in PEM format which will be used to extract the public key for validation. This makes the client unsuitable for purposes other than testing.
 
 The test client can then be used to interact with the server. The client is described in [test_client.go](test_client.go) and functions can be discovered using code completion in the IDE.
 

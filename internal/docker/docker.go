@@ -4,8 +4,8 @@ import (
 	"context"
 	"io"
 
-    "go.containerssh.io/libcontainerssh/config"
-    "go.containerssh.io/libcontainerssh/log"
+	"go.containerssh.io/libcontainerssh/config"
+	"go.containerssh.io/libcontainerssh/log"
 )
 
 // dockerClientFactory creates a dockerClient based on a configuration
@@ -21,7 +21,7 @@ type dockerClient interface {
 	// getImageName returns the configured image name
 	getImageName() string
 
-	// hasImage checks if the the configured image exists on the Docker daemon. Returns true if yes, false if no, and an
+	// hasImage checks if the configured image exists on the Docker daemon. Returns true if yes, false if no, and an
 	// error if an error happened while querying the Docker daemon.
 	hasImage(ctx context.Context) (bool, error)
 

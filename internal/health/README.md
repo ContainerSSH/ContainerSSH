@@ -11,7 +11,7 @@ This is a health check service returning "ok" if all required ContainerSSH servi
 
 ## Using this service 
 
-This library uses ContainerSSH' own [HTTP](https://github.com/containerssh/http) implementation to create an HTTP server that returns "ok" when all services are up.
+This library uses ContainerSSH's own [HTTP](https://github.com/containerssh/http) implementation to create an HTTP server that returns "ok" when all services are up.
 
 You can instantiate this service as described in the [service library](https://github.com/containerssh/service) as follows:
 

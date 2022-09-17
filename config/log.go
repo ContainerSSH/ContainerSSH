@@ -217,6 +217,7 @@ func (level LogLevelString) ToLevel() (LogLevel, error) {
 // region LogFormat
 
 // LogFormat is the logging format to use.
+//
 //swagger:enum
 type LogFormat string
 
@@ -243,6 +244,7 @@ func (format LogFormat) Validate() error {
 // region LogDestination
 
 // LogDestination is the output to write to.
+//
 //swagger:enum
 type LogDestination string
 
@@ -321,7 +323,7 @@ const (
 	LogFacilityLocal3 LogFacility = 19
 	// LogFacilityLocal4 are locally administered messages.
 	LogFacilityLocal4 LogFacility = 20
-	// Log are locally administered messages.
+	// LogFacilityLocal5 are locally administered messages.
 	LogFacilityLocal5 LogFacility = 21
 	// LogFacilityLocal6 are locally administered messages.
 	LogFacilityLocal6 LogFacility = 22
@@ -491,6 +493,7 @@ var nameToFacility = map[LogFacilityString]LogFacility{
 }
 
 // SyslogConfig is the configuration for syslog logging.
+//
 //goland:noinspection GoVetStructTag
 type SyslogConfig struct {
 	// Destination is the socket to send logs to. Can be a local path to unix sockets as well as UDP destinations.

@@ -5,7 +5,7 @@ import (
 	"io"
 	"net"
 
-    "go.containerssh.io/libcontainerssh/auditlog/message"
+	"go.containerssh.io/libcontainerssh/auditlog/message"
 )
 
 // Logger is a top level audit logger.
@@ -79,7 +79,7 @@ type Connection interface {
 	//                     channel-specific audit logger.
 	OnNewChannelSuccess(channelID message.ChannelID, channelType string) Channel
 
-	// OnRequestTCPReverseForward creates an audit log message for requesting the server to listen 
+	// OnRequestTCPReverseForward creates an audit log message for requesting the server to listen
 	// on a host and port for incoming connections.
 	OnRequestTCPReverseForward(bindHost string, bindPort uint32)
 
@@ -93,7 +93,7 @@ type Connection interface {
 	OnReverseForwardChannel(channelID message.ChannelID, connectedHost string, connectedPort uint32, originatorHost string, originatorPort uint32)
 
 	// OnReverseStreamLocalChannel creates an audit log message for requesting to open a reverse forwarding channel after a connection is received on a listening unix socket.
-	OnReverseStreamLocalChannel(channeldID message.ChannelID, path string)
+	OnReverseStreamLocalChannel(channelID message.ChannelID, path string)
 
 	// OnReverseX11ForwardChannel creates an audit log message for requesting to open a channel to forward an X11 connection to the client.
 	OnReverseX11ForwardChannel(channelID message.ChannelID, originatorHost string, originatorPort uint32)
@@ -108,7 +108,7 @@ type Connection interface {
 	OnRequestCancelStreamLocal(path string)
 }
 
-// Channel is an audit logger for one specific hannel
+// Channel is an audit logger for one specific channel
 type Channel interface {
 	// OnRequestUnknown creates an audit log message for a channel request that is not supported.
 	OnRequestUnknown(requestID uint64, requestType string, payload []byte)
@@ -124,23 +124,23 @@ type Channel interface {
 	OnRequestExec(requestID uint64, program string)
 	// OnRequestPty creates an audit log message for a channel request to create an interactive terminal.
 	OnRequestPty(requestID uint64, term string, columns uint32, rows uint32, width uint32, height uint32, modeList []byte)
-	// OnX11Request create an audit log message for a channel request to start X11 forwarding
+	// OnRequestX11 create an audit log message for a channel request to start X11 forwarding
 	OnRequestX11(requestID uint64, singleConnection bool, protocol string, cookie string, screen uint32)
-	// OnRequestExec creates an audit log message for a channel request to execute a shell.
+	// OnRequestShell creates an audit log message for a channel request to execute a shell.
 	OnRequestShell(requestID uint64)
-	// OnRequestExec creates an audit log message for a channel request to send a signal to the currently running
+	// OnRequestSignal creates an audit log message for a channel request to send a signal to the currently running
 	//               program.
 	OnRequestSignal(requestID uint64, signal string)
-	// OnRequestExec creates an audit log message for a channel request to execute a well-known subsystem (e.g. SFTP)
+	// OnRequestSubsystem creates an audit log message for a channel request to execute a well-known subsystem (e.g. SFTP)
 	OnRequestSubsystem(requestID uint64, subsystem string)
 	// OnRequestWindow creates an audit log message for a channel request to resize the current window.
 	OnRequestWindow(requestID uint64, columns uint32, rows uint32, width uint32, height uint32)
 
 	// GetStdinProxy creates an intercepting audit log reader proxy for the standard input.
 	GetStdinProxy(stdin io.Reader) io.Reader
-	// GetStdinProxy creates an intercepting audit log writer proxy for the standard output.
+	// GetStdoutProxy creates an intercepting audit log writer proxy for the standard output.
 	GetStdoutProxy(stdout io.Writer) io.Writer
-	// GetStdinProxy creates an intercepting audit log writer proxy for the standard error.
+	// GetStderrProxy creates an intercepting audit log writer proxy for the standard error.
 	GetStderrProxy(stderr io.Writer) io.Writer
 	// GetForwardingProxy creates an intercepting audit log writer proxy for forwarding channels.
 	GetForwardingProxy(forward io.ReadWriteCloser) io.ReadWriteCloser

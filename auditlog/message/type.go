@@ -37,7 +37,7 @@ const (
 	TypeNewChannelSuccessful         Type = 301 // TypeNewChannelSuccessful describes a message when the new channel request was successful.
 	TypeNewChannelFailed             Type = 302 // TypeNewChannelFailed describes a message when the channel request failed for the reason indicated.
 	TypeNewForwardChannel            Type = 303 // TypeNewForwardChannel describes a message when the client requests to open a connection to a specific host/port for connection forwarding
-	TypeNewReverseForwardChannel     Type = 304 // TypeNewReverseForwardChannel describes a message when the server opens a new channel due to an incoming connection on a forwareded port
+	TypeNewReverseForwardChannel     Type = 304 // TypeNewReverseForwardChannel describes a message when the server opens a new channel due to an incoming connection on a forwarded port
 	TypeNewReverseX11ForwardChannel  Type = 305 // TypeNewReverseX11ForwardChannel describes a message when the server opens a new channel due to an incoming connection on the forwarded X11 port
 	TypeNewForwardStreamLocalChannel Type = 306 // TypeDirectStreamLocalChannel describes a message when the client requests to open a new channel due to an incoming connection towards a forwarded port
 	TypeNewReverseStreamLocalChannel Type = 307 // TypeNewReverseStreamLocalChannel describes a message when the server opens a new channel due to an incoming connection on a forwarded unix socket

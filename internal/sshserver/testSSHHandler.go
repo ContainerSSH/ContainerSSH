@@ -4,9 +4,9 @@ import (
 	"context"
 	"fmt"
 
-    "go.containerssh.io/libcontainerssh/metadata"
+	"go.containerssh.io/libcontainerssh/metadata"
 
-    message2 "go.containerssh.io/libcontainerssh/message"
+	message2 "go.containerssh.io/libcontainerssh/message"
 	"golang.org/x/crypto/ssh"
 )
 
@@ -36,7 +36,7 @@ func (s *testSSHHandler) OnTCPForwardChannel(
 	originatorHost string,
 	originatorPort uint32,
 ) (channel ForwardChannel, failureReason ChannelRejection) {
-	return nil, NewChannelRejection(ssh.Prohibited, message2.ESSHNotImplemented, "Forwading channel unimplemented in docker backend", "Forwading channel unimplemented in docker backend")
+	return nil, NewChannelRejection(ssh.Prohibited, message2.ESSHNotImplemented, "Forwarding channel unimplemented in docker backend", "Forwarding channel unimplemented in docker backend")
 }
 
 func (s *testSSHHandler) OnRequestTCPReverseForward(
@@ -58,7 +58,7 @@ func (s *testSSHHandler) OnDirectStreamLocal(
 	channelID uint64,
 	path string,
 ) (channel ForwardChannel, failureReason ChannelRejection) {
-	return nil, NewChannelRejection(ssh.Prohibited, message2.ESSHNotImplemented, "Forwading channel unimplemented in docker backend", "Forwading channel unimplemented in docker backend")
+	return nil, NewChannelRejection(ssh.Prohibited, message2.ESSHNotImplemented, "Forwarding channel unimplemented in docker backend", "Forwarding channel unimplemented in docker backend")
 }
 
 func (s *testSSHHandler) OnRequestStreamLocal(

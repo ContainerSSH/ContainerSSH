@@ -3,8 +3,8 @@ package config
 import (
 	"context"
 
-    "go.containerssh.io/libcontainerssh/config"
-    "go.containerssh.io/libcontainerssh/metadata"
+	"go.containerssh.io/libcontainerssh/config"
+	"go.containerssh.io/libcontainerssh/metadata"
 )
 
 // Loader is a utility to load and update an existing configuration structure.
@@ -21,7 +21,7 @@ type Loader interface {
 	// LoadConnection loads the configuration for a specific connection source.
 	//
 	// - ctx is the deadline for loading the configuration.
-	// - meta is the metadata for the currenct connection
+	// - meta is the metadata for the current connection
 	// - config is the configuration struct to be loaded into.
 	LoadConnection(
 		ctx context.Context,

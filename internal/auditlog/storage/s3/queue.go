@@ -59,7 +59,7 @@ type queueEntry struct {
 	lock          *sync.Mutex
 }
 
-// This method marks the the part as available if it has not been marked yet. This unfreezes the upload loop waiting in
+// This method marks the part as available if it has not been marked yet. This unfreezes the upload loop waiting in
 // waitPartAvailable()
 func (e *queueEntry) markPartAvailable() {
 	select {

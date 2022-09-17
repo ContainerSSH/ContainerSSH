@@ -30,6 +30,6 @@ This method accepts the following parameters:
 : This is a logger factory used by the backend to create a logger for the instantiated backends after fetching the connection-specific configuration.
 
 `authBehavior`
-: This variable can contain one of `sshserver.AuthResponseSuccess`, `sshserver.AuthResponseFailure`, or `sshserver.AuthResponseUnavailable` to indicate how the backend should react to authenticatio requests. Normally, this can be set to `sshserver.AuthResponseUnavailable` since the [auth integration library](https://github.com/containerssh/authintegration) will take care of the authentication.
+: This variable can contain one of `sshserver.AuthResponseSuccess`, `sshserver.AuthResponseFailure`, or `sshserver.AuthResponseUnavailable` to indicate how the backend should react to authentication requests. Normally, this can be set to `sshserver.AuthResponseUnavailable` since the [auth integration library](https://github.com/containerssh/authintegration) will take care of the authentication.
 
 The handler can be passed to the [sshserver](https://github.com/containerssh/sshserver) or to another overlay as a backend, for example [auth integration](https://github.com/containerssh/authintegration).

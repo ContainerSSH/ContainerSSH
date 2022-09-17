@@ -77,7 +77,7 @@ func main() {
 
 ## Creating a client
 
-This library also provides a HTTP client for authentication servers. This library can be used as follows:
+This library also provides an HTTP client for authentication servers. This library can be used as follows:
 
 ```go
 client := auth.NewHttpAuthClient(

@@ -15,12 +15,12 @@ import (
 	krb5svc "github.com/containerssh/gokrb5/v8/service"
 	"github.com/containerssh/gokrb5/v8/spnego"
 	"github.com/containerssh/gokrb5/v8/types"
-    "go.containerssh.io/libcontainerssh/config"
-    "go.containerssh.io/libcontainerssh/internal/ssh"
-    internalSsh "go.containerssh.io/libcontainerssh/internal/ssh"
-    "go.containerssh.io/libcontainerssh/log"
-    "go.containerssh.io/libcontainerssh/message"
-    "go.containerssh.io/libcontainerssh/metadata"
+	"go.containerssh.io/libcontainerssh/config"
+	"go.containerssh.io/libcontainerssh/internal/ssh"
+	internalSsh "go.containerssh.io/libcontainerssh/internal/ssh"
+	"go.containerssh.io/libcontainerssh/log"
+	"go.containerssh.io/libcontainerssh/message"
+	"go.containerssh.io/libcontainerssh/metadata"
 	"gopkg.in/jcmturner/goidentity.v3"
 )
 
@@ -188,7 +188,7 @@ func (k *kerberosAuthContext) AcceptSecContext(token []byte) (outputToken []byte
 		return nil, "", false, message.Wrap(
 			err,
 			message.EAuthKerberosVerificationFailed,
-			"Failed to unmarshal the intial KRB token",
+			"Failed to unmarshal the initial KRB token",
 		)
 	}
 	st.Settings = krb5svc.NewSettings(

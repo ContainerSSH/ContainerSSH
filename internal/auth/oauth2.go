@@ -4,7 +4,7 @@ import (
 	"context"
 	"time"
 
-    "go.containerssh.io/libcontainerssh/metadata"
+	"go.containerssh.io/libcontainerssh/metadata"
 )
 
 // OAuth2Client is the client supporting OAuth2-based authentication. It only supports keyboard-interactive
@@ -40,7 +40,7 @@ type OAuth2Flow interface {
 type OAuth2AuthorizationCodeFlow interface {
 	OAuth2Flow
 
-	// GetAuthorizationURL returns the authorization URL a user should be redirected to to begin the login process.
+	// GetAuthorizationURL returns the authorization URL a user should be redirected to begin the login process.
 	GetAuthorizationURL(ctx context.Context) (string, error)
 
 	// Verify verifies the authorizationCode with the OAuth2 server and obtains an access token. It may also return

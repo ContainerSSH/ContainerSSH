@@ -331,7 +331,7 @@ func (s *backendHandler) OnTCPForwardChannel(
 	originatorHost string,
 	originatorPort uint32,
 ) (channel sshserver.ForwardChannel, failureReason sshserver.ChannelRejection) {
-	return nil, sshserver.NewChannelRejection(ssh.Prohibited, message2.ESSHNotImplemented, "Forwading channel unimplemented", "Forwading channel unimplemented")
+	return nil, sshserver.NewChannelRejection(ssh.Prohibited, message2.ESSHNotImplemented, "Forwarding channel unimplemented", "Forwarding channel unimplemented")
 }
 
 func (s *backendHandler) OnRequestTCPReverseForward(
@@ -353,7 +353,7 @@ func (s *backendHandler) OnDirectStreamLocal(
 	channelID uint64,
 	path string,
 ) (channel sshserver.ForwardChannel, failureReason sshserver.ChannelRejection) {
-	return nil, sshserver.NewChannelRejection(ssh.Prohibited, message2.ESSHNotImplemented, "Streamlocal Forwading unimplemented", "Streamlocal Forwading unimplemented")
+	return nil, sshserver.NewChannelRejection(ssh.Prohibited, message2.ESSHNotImplemented, "Streamlocal Forwarding unimplemented", "Streamlocal Forwarding unimplemented")
 }
 
 func (s *backendHandler) OnRequestStreamLocal(

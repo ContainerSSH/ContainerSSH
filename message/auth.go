@@ -81,7 +81,7 @@ const EAuthGitHubDeleteAccessTokenFailed = "GITHUB_DELETE_ACCESS_TOKEN_FAILED" /
 // authentication flow.
 const EAuthGitHubDeviceCodeRequestFailed = "GITHUB_DEVICE_CODE_REQUEST_FAILED"
 
-// EAuthGitHubHTTPClientCreateFailed indicates that ContainerSSH failed to create a HTTP client for communicating with
+// EAuthGitHubHTTPClientCreateFailed indicates that ContainerSSH failed to create an HTTP client for communicating with
 // GitHub. This is likely a bug, please report it.
 const EAuthGitHubHTTPClientCreateFailed = "GITHUB_HTTP_CLIENT_CREATE_FAILED"
 

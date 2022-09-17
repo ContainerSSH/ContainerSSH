@@ -13,14 +13,14 @@ const EHTTPFailureConnectionFailed = "HTTP_CLIENT_CONNECTION_FAILED"
 // server.
 const EHTTPFailureDecodeFailed = "HTTP_CLIENT_DECODE_FAILED"
 
-// EHTTPClientRedirectsDisabled indicates that ContainerSSH is not following a HTTP redirect sent by the server. Use the
+// EHTTPClientRedirectsDisabled indicates that ContainerSSH is not following an HTTP redirect sent by the server. Use the
 // allowRedirects option to allow following HTTP redirects or enter the config URL directly.
 const EHTTPClientRedirectsDisabled = "HTTP_CLIENT_REDIRECTS_DISABLED"
 
 // MHTTPClientRequest indicates that an HTTP request is being sent from ContainerSSH.
 const MHTTPClientRequest = "HTTP_CLIENT_REQUEST"
 
-// MHTTPClientRedirect indicates that the server responded with a HTTP redirect.
+// MHTTPClientRedirect indicates that the server responded with an HTTP redirect.
 const MHTTPClientRedirect = "HTTP_CLIENT_REDIRECT"
 
 // MHTTPClientResponse indicates that ContainerSSH received an HTTP response from a server.

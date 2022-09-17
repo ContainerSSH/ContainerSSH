@@ -11,8 +11,9 @@ type AbstractSessionChannelHandler struct {
 }
 
 // OnShutdown is called when a shutdown of the SSH server is desired. The shutdownContext is passed as a deadline
-//            for the shutdown, after which the server should abort all running connections and return as fast as
-//            possible.
+//
+//	for the shutdown, after which the server should abort all running connections and return as fast as
+//	possible.
 func (a *AbstractSessionChannelHandler) OnShutdown(_ context.Context) {}
 
 // OnClose is called when the channel is closed.
@@ -31,7 +32,8 @@ func (a *AbstractSessionChannelHandler) OnUnsupportedChannelRequest(
 }
 
 // OnFailedDecodeChannelRequest is called when a supported channel request was received, but the payload could not
-//                              be decoded.
+//
+//	be decoded.
 //
 // requestID is an incrementing number uniquely identifying this request within the channel.
 // RequestType contains the SSH request type.
@@ -46,7 +48,8 @@ func (a *AbstractSessionChannelHandler) OnFailedDecodeChannelRequest(
 }
 
 // OnEnvRequest is called when the client requests an environment variable to be set. The implementation can return
-//              an error to reject the request.
+//
+//	an error to reject the request.
 func (a *AbstractSessionChannelHandler) OnEnvRequest(
 	_ uint64,
 	_ string,
@@ -56,7 +59,8 @@ func (a *AbstractSessionChannelHandler) OnEnvRequest(
 }
 
 // OnPtyRequest is called when the client requests an interactive terminal to be allocated. The implementation can
-//              return an error to reject the request.
+//
+//	return an error to reject the request.
 //
 // requestID is an incrementing number uniquely identifying this request within the channel.
 // Term is the terminal Name. This is usually set in the TERM environment variable.
@@ -78,7 +82,8 @@ func (a *AbstractSessionChannelHandler) OnPtyRequest(
 }
 
 // OnExecRequest is called when the client request a program to be executed. The implementation can return an error
-//               to reject the request. This method MUST NOT block beyond initializing the program.
+//
+//	to reject the request. This method MUST NOT block beyond initializing the program.
 func (a *AbstractSessionChannelHandler) OnExecRequest(
 	_ uint64,
 	_ string,
@@ -87,8 +92,9 @@ func (a *AbstractSessionChannelHandler) OnExecRequest(
 }
 
 // OnShell is called when the client requests a shell to be started. The implementation can return an error to
-//         reject the request. The implementation should send the IO handling into background. It should also
-//         respect the shutdown context on the Handler. This method MUST NOT block beyond initializing the shell.
+//
+//	reject the request. The implementation should send the IO handling into background. It should also
+//	respect the shutdown context on the Handler. This method MUST NOT block beyond initializing the shell.
 func (a *AbstractSessionChannelHandler) OnShell(
 	_ uint64,
 ) error {
@@ -96,9 +102,10 @@ func (a *AbstractSessionChannelHandler) OnShell(
 }
 
 // OnSubsystem is called when the client calls a well-known Subsystem (e.g. sftp). The implementation can return an
-//             error to reject the request. The implementation should send the IO handling into background. It
-//             should also respect the shutdown context on the Handler. This method MUST NOT block beyond
-//             initializing the subsystem.
+//
+//	error to reject the request. The implementation should send the IO handling into background. It
+//	should also respect the shutdown context on the Handler. This method MUST NOT block beyond
+//	initializing the subsystem.
 func (a *AbstractSessionChannelHandler) OnSubsystem(
 	_ uint64,
 	_ string,
@@ -106,12 +113,13 @@ func (a *AbstractSessionChannelHandler) OnSubsystem(
 	return fmt.Errorf("not supported")
 }
 
-//endregion
+// endregion
 
-//region Requests during program execution
+// region Requests during program execution
 
 // OnSignal is called when the client requests a Signal to be sent to the running process. The implementation can
-//          return an error to reject the request.
+//
+//	return an error to reject the request.
 func (a *AbstractSessionChannelHandler) OnSignal(
 	_ uint64,
 	_ string,
@@ -119,8 +127,9 @@ func (a *AbstractSessionChannelHandler) OnSignal(
 	return fmt.Errorf("not supported")
 }
 
-// OnWindow is called when the client requests requests the window size to be changed. This method may be called
-//          after a program is started. The implementation can return an error to reject the request.
+// OnWindow is called when the client requests the window size to be changed. This method may be called
+//
+//	after a program is started. The implementation can return an error to reject the request.
 //
 // requestID is an incrementing number uniquely identifying this request within the channel.
 // Columns is the number of Columns in the terminal.
@@ -140,7 +149,7 @@ func (a *AbstractSessionChannelHandler) OnWindow(
 // OnX11Request is called when the client requests the forwarding of X11 connections from the container to the client.
 // This method may be called after a program is started. The implementation can return an error to reject the request.
 //
-// requestid is an incrementing number uniquely identifying the request within the channel.
+// requestID is an incrementing number uniquely identifying the request within the channel.
 // singleConnection is a flag determining whether only one or multiple connections should be forwarded
 // protocol is the authentication protocol for the X11 connections
 // cookie is the authentication cookie for the X11 connections

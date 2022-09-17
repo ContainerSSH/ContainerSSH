@@ -5,16 +5,17 @@ import (
 	"fmt"
 	"io"
 
-    "go.containerssh.io/libcontainerssh/auth"
-    auth2 "go.containerssh.io/libcontainerssh/internal/auth"
-    message2 "go.containerssh.io/libcontainerssh/message"
-    "go.containerssh.io/libcontainerssh/metadata"
+	"go.containerssh.io/libcontainerssh/auth"
+	auth2 "go.containerssh.io/libcontainerssh/internal/auth"
+	message2 "go.containerssh.io/libcontainerssh/message"
+	"go.containerssh.io/libcontainerssh/metadata"
 
 	"golang.org/x/crypto/ssh"
 )
 
 // Handler is the basic conformanceTestHandler for SSH connections. It contains several methods to handle startup and operations of the
-//         server
+//
+//	server
 type Handler interface {
 	// OnReady is called when the server is ready to receive connections. It has an opportunity to return an error to
 	//         abort the startup.
@@ -187,7 +188,7 @@ const (
 type ReverseForward interface {
 	// NewChannelTCP requests the opening of a reverse forwarding TCP channel
 	//
-	// connectedAddres is the address that was connected to
+	// connectedAddress is the address that was connected to
 	// connectedPort is the port that was connected to
 	// originatorAddress is the address of the initiator of the connection
 	// originatorPort is the port of the initiator of the connection
@@ -197,7 +198,7 @@ type ReverseForward interface {
 	// path is the container-based path to the unix socket that is being forwarded
 	NewChannelUnix(path string) (ForwardChannel, uint64, error)
 	// NewChannelX11 requests the opening of an X11 channel
-	// 
+	//
 	// originatorAddress is the address that initiated the X11 request
 	// originatorPort is the port that originated the X11 request
 	NewChannelX11(originatorAddress string, originatorPort uint32) (ForwardChannel, uint64, error)
@@ -223,7 +224,7 @@ type SSHConnectionHandler interface {
 
 	// OnFailedDecodeGlobalRequest is called when a global request was received but the payload could not be decoded
 	//
-	// requestID is a ID uniquely identifying the request within the scope of the connection. The same ID may appear within a channel
+	// requestID is an ID uniquely identifying the request within the scope of the connection. The same ID may appear within a channel
 	OnFailedDecodeGlobalRequest(requestID uint64, requestType string, payload []byte, reason error)
 
 	// OnUnsupportedChannel is called when a new channel is requested of an unsupported type. This gives the implementer
@@ -274,12 +275,12 @@ type SSHConnectionHandler interface {
 	// OnRequestCancelTCPReverseForward is called when a request to cancel an existing tcp port forwarding is received
 	//
 	// bindHost is the interface of the forwarding to be cancelled
-	// bindPort is the port of the forwarding to be cancelled 
+	// bindPort is the port of the forwarding to be cancelled
 	OnRequestCancelTCPReverseForward(bindHost string, bindPort uint32) error
 
 	// OnDirectStreamLocal is called when a new forwarding channel is opened to connect and forward data to a unix socket within a container
 	//
-	// channelID is the channelID of the channel that was openned
+	// channelID is the channelID of the channel that was opened
 	// path is the path to the unix socket to be used
 	OnDirectStreamLocal(
 		channelID uint64,
@@ -295,7 +296,7 @@ type SSHConnectionHandler interface {
 		reverseHandler ReverseForward,
 	) error
 
-	// OnRequestCancelTCPReverseForward is called when a request to cancel an existing tcp port forwarding is received
+	// OnRequestCancelStreamLocal is called when a request to cancel an existing tcp port forwarding is received
 	//
 	// bindHost is the interface of the forwarding to be cancelled
 	// bindPort is the port of the forwarding to be cancelled
@@ -315,7 +316,7 @@ type ExitStatus uint32
 
 // SessionChannelHandler is a channel of the "session" type used for interactive and non-interactive sessions
 type SessionChannelHandler interface {
-	//region Channel request initialization
+	// region Channel request initialization
 
 	// OnUnsupportedChannelRequest captures channel requests of unsupported types.
 	//
@@ -342,9 +343,9 @@ type SessionChannelHandler interface {
 		reason error,
 	)
 
-	//endregion
+	// endregion
 
-	//region Requests before program execution
+	// region Requests before program execution
 
 	// OnEnvRequest is called when the client requests an environment variable to be set. The implementation can return
 	//              an error to reject the request.
@@ -377,7 +378,7 @@ type SessionChannelHandler interface {
 	// OnX11Request is called when the client requests the forwarding of X11 connections from the container to the client.
 	// This method may be called after a program is started. The implementation can return an error to reject the request.
 	//
-	// requestid is an incrementing number uniquely identifying the request within the channel.
+	// requestID is an incrementing number uniquely identifying the request within the channel.
 	// singleConnection is a flag determining whether only one or multiple connections should be forwarded
 	// protocol is the authentication protocol for the X11 connections
 	// cookie is the authentication cookie for the X11 connections
@@ -392,9 +393,9 @@ type SessionChannelHandler interface {
 		reverseHandler ReverseForward,
 	) error
 
-	//endregion
+	// endregion
 
-	//region Program execution
+	// region Program execution
 
 	// OnExecRequest is called when the client request a program to be executed. The implementation can return an error
 	//               to reject the request. This method MUST NOT block beyond initializing the program.
@@ -432,9 +433,9 @@ type SessionChannelHandler interface {
 		subsystem string,
 	) error
 
-	//endregion
+	// endregion
 
-	//region Requests during program execution
+	// region Requests during program execution
 
 	// OnSignal is called when the client requests a Signal to be sent to the running process. The implementation can
 	//          return an error to reject the request.
@@ -443,7 +444,7 @@ type SessionChannelHandler interface {
 		signal string,
 	) error
 
-	// OnWindow is called when the client requests requests the window size to be changed. This method may be called
+	// OnWindow is called when the client requests the window size to be changed. This method may be called
 	//          after a program is started. The implementation can return an error to reject the request.
 	//
 	// requestID is an incrementing number uniquely identifying this request within the channel.
@@ -459,9 +460,9 @@ type SessionChannelHandler interface {
 		height uint32,
 	) error
 
-	//endregion
+	// endregion
 
-	//region closing the channel
+	// region closing the channel
 
 	// OnClose is called when the channel is closed.
 	OnClose()
@@ -471,5 +472,5 @@ type SessionChannelHandler interface {
 	//            possible.
 	OnShutdown(shutdownContext context.Context)
 
-	//endregion
+	// endregion
 }

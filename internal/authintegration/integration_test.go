@@ -6,20 +6,20 @@ import (
 	"testing"
 	"time"
 
-    publicAuth "go.containerssh.io/libcontainerssh/auth"
-    "go.containerssh.io/libcontainerssh/config"
-    "go.containerssh.io/libcontainerssh/internal/auth"
-    "go.containerssh.io/libcontainerssh/internal/authintegration"
-    "go.containerssh.io/libcontainerssh/internal/geoip/dummy"
-    "go.containerssh.io/libcontainerssh/internal/metrics"
-    "go.containerssh.io/libcontainerssh/internal/sshserver"
-    "go.containerssh.io/libcontainerssh/internal/structutils"
-    "go.containerssh.io/libcontainerssh/internal/test"
-    "go.containerssh.io/libcontainerssh/log"
-    "go.containerssh.io/libcontainerssh/message"
-    "go.containerssh.io/libcontainerssh/metadata"
-    "go.containerssh.io/libcontainerssh/service"
 	"github.com/stretchr/testify/assert"
+	publicAuth "go.containerssh.io/libcontainerssh/auth"
+	"go.containerssh.io/libcontainerssh/config"
+	"go.containerssh.io/libcontainerssh/internal/auth"
+	"go.containerssh.io/libcontainerssh/internal/authintegration"
+	"go.containerssh.io/libcontainerssh/internal/geoip/dummy"
+	"go.containerssh.io/libcontainerssh/internal/metrics"
+	"go.containerssh.io/libcontainerssh/internal/sshserver"
+	"go.containerssh.io/libcontainerssh/internal/structutils"
+	"go.containerssh.io/libcontainerssh/internal/test"
+	"go.containerssh.io/libcontainerssh/log"
+	"go.containerssh.io/libcontainerssh/message"
+	"go.containerssh.io/libcontainerssh/metadata"
+	"go.containerssh.io/libcontainerssh/service"
 	"golang.org/x/crypto/ssh"
 )
 
@@ -156,7 +156,7 @@ func (s *testBackend) OnTCPForwardChannel(
 	originatorHost string,
 	originatorPort uint32,
 ) (channel sshserver.ForwardChannel, failureReason sshserver.ChannelRejection) {
-	return nil, sshserver.NewChannelRejection(ssh.Prohibited, message.ESSHNotImplemented, "Forwading channel unimplemented in docker backend", "Forwading channel unimplemented in docker backend")
+	return nil, sshserver.NewChannelRejection(ssh.Prohibited, message.ESSHNotImplemented, "Forwarding channel unimplemented in docker backend", "Forwarding channel unimplemented in docker backend")
 }
 
 func (s *testBackend) OnRequestTCPReverseForward(
@@ -178,7 +178,7 @@ func (s *testBackend) OnDirectStreamLocal(
 	channelID uint64,
 	path string,
 ) (channel sshserver.ForwardChannel, failureReason sshserver.ChannelRejection) {
-	return nil, sshserver.NewChannelRejection(ssh.Prohibited, message.ESSHNotImplemented, "Forwading channel unimplemented in docker backend", "Forwading channel unimplemented in docker backend")
+	return nil, sshserver.NewChannelRejection(ssh.Prohibited, message.ESSHNotImplemented, "Forwarding channel unimplemented in docker backend", "Forwarding channel unimplemented in docker backend")
 }
 
 func (s *testBackend) OnRequestStreamLocal(

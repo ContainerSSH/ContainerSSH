@@ -143,7 +143,8 @@ func (metricValue MetricValue) String() string {
 var MetricAlreadyExists = errors.New("the specified metric already exists")
 
 // CounterCannotBeIncrementedByNegative is an error returned by counters when they are incremented with a negative
-//                                      number.
+//
+//	number.
 var CounterCannotBeIncrementedByNegative = errors.New("a counter cannot be incremented by a negative number")
 
 // Collector is the main interface for interacting with the metrics collector.
@@ -212,7 +213,8 @@ type Counter interface {
 }
 
 // SimpleGeoCounter is a simple counter that can only be incremented and is labeled with the country from a GeoIP
-//                  lookup.
+//
+//	lookup.
 type SimpleGeoCounter interface {
 	// Increment increments the counter for the country from the specified ip by 1.
 	//
@@ -252,7 +254,7 @@ type SimpleGauge interface {
 	// - labels is a set of labels to apply. Can be created using the Label function.
 	Decrement(labels ...MetricLabel)
 
-	// Decrement decreases the metric by the specified value.
+	// DecrementBy decreases the metric by the specified value.
 	//
 	// - labels is a set of labels to apply. Can be created using the Label function.
 	DecrementBy(by float64, labels ...MetricLabel)

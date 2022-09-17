@@ -110,7 +110,7 @@ const EKubeRunRemoved = "KUBERNETES_KUBERUN_REMOVED"
 // EKubernetesForwardingFailed indicates that the ContainerSSH Kubernetes backend failed to initialize the forwarding backend
 const EKubernetesForwardingFailed = "KUBERNETES_FORWARDING_FAILED"
 
-// EKubernetesAgentFailed indicates that the ContainerSSH Kubernetes backend failed to start the ContianerSSH agent or the agent exitted unexpectedly
+// EKubernetesAgentFailed indicates that the ContainerSSH Kubernetes backend failed to start the ContainerSSH agent or the agent exited unexpectedly
 const EKubernetesAgentFailed = "KUBERNETES_AGENT_FAILED"
 
 // MKubernetesAgentLog indicates a log message from the ContainerSSH agent running within a user container.

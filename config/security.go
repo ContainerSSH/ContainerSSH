@@ -220,7 +220,7 @@ const (
 	ExecutionPolicyEnable SecurityExecutionPolicy = "enable"
 
 	// ExecutionPolicyFilter filters the execution against a specified allow list. If the allow list is empty or not
-	// supported this ootion behaves like "disable".
+	// supported this option behaves like "disable".
 	ExecutionPolicyFilter SecurityExecutionPolicy = "filter"
 
 	// ExecutionPolicyDisable disables the specified method and does not take the allow or deny lists into account.

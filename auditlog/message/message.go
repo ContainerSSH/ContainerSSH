@@ -16,7 +16,7 @@ type Message struct {
 	Timestamp    int64        `json:"timestamp" yaml:"timestamp"`       // Timestamp is a nanosecond timestamp when the message was created.
 	MessageType  Type         `json:"type" yaml:"type"`                 // Type of the Payload object.
 	Payload      Payload      `json:"payload" yaml:"payload"`           // Payload is always a pointer to a payload object.
-	ChannelID    ChannelID    `json:"channelId" yaml:"channelId"`       // ChannelID is a identifier for an SSH channel, if applicable. -1 otherwise.
+	ChannelID    ChannelID    `json:"channelId" yaml:"channelId"`       // ChannelID is an identifier for an SSH channel, if applicable. -1 otherwise.
 }
 
 // GetExtendedMessage returns a message with the added human-readable typeName field.

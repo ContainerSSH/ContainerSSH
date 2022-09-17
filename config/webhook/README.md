@@ -195,7 +195,7 @@ err := loader.LoadConnection(
 )
 ```
 
-As you can see these loaders are designed to be chained together. For example, you could add a HTTP loader after the file loader:
+As you can see these loaders are designed to be chained together. For example, you could add an HTTP loader after the file loader:
 
 ```go
 httpLoader, err := configuration.NewHTTPLoader(clientConfig, logger)

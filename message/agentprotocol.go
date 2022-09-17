@@ -9,7 +9,7 @@ const EAgentConnectionInvalidState = "AGENTPROTO_INVALID_STATE"
 // EAgentWriteFailed indicates an error in the communication channel
 const EAgentWriteFailed = "AGENTPROTO_WRITE_FAILED"
 
-// EAgentUknownPacket indicates that the ContainerSSH Agent integration received an unknown packet
+// EAgentUnknownPacket indicates that the ContainerSSH Agent integration received an unknown packet
 const EAgentUnknownPacket = "AGENTPROTO_PACKET_UNKNOWN"
 
 // EAgentPacketInvalid indicates that the ContainerSSH Agent integration received a packet that it wasn't expecting
