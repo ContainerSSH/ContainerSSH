@@ -10,14 +10,14 @@ import (
 	"sync"
 	"time"
 
-    protocol "go.containerssh.io/libcontainerssh/agentprotocol"
-    "go.containerssh.io/libcontainerssh/auth"
-    "go.containerssh.io/libcontainerssh/config"
-    ssh2 "go.containerssh.io/libcontainerssh/internal/ssh"
-    "go.containerssh.io/libcontainerssh/log"
-    messageCodes "go.containerssh.io/libcontainerssh/message"
-    "go.containerssh.io/libcontainerssh/metadata"
-    "go.containerssh.io/libcontainerssh/service"
+	protocol "go.containerssh.io/libcontainerssh/agentprotocol"
+	"go.containerssh.io/libcontainerssh/auth"
+	"go.containerssh.io/libcontainerssh/config"
+	ssh2 "go.containerssh.io/libcontainerssh/internal/ssh"
+	"go.containerssh.io/libcontainerssh/log"
+	messageCodes "go.containerssh.io/libcontainerssh/message"
+	"go.containerssh.io/libcontainerssh/metadata"
+	"go.containerssh.io/libcontainerssh/service"
 	"golang.org/x/crypto/ssh"
 )
 

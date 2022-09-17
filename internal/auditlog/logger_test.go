@@ -188,7 +188,7 @@ func (c *testCase) getAuditLog(name string) ([]message.Message, error) {
 func TestConnect(t *testing.T) {
 	testCase, err := newTestCase(t)
 	if err != nil {
-		//Already handled
+		// Already handled
 		return
 	}
 	defer testCase.tearDown()
@@ -231,7 +231,7 @@ func TestConnect(t *testing.T) {
 func TestAuth(t *testing.T) {
 	testCase, err := newTestCase(t)
 	if err != nil {
-		//Already handled
+		// Already handled
 		return
 	}
 	defer testCase.tearDown()

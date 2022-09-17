@@ -21,7 +21,6 @@ import (
 	"go.containerssh.io/libcontainerssh/log"
 	message2 "go.containerssh.io/libcontainerssh/message"
 	"go.containerssh.io/libcontainerssh/metadata"
-
 	"golang.org/x/crypto/ssh"
 )
 

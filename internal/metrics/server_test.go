@@ -11,11 +11,10 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"go.containerssh.io/libcontainerssh/config"
+	"go.containerssh.io/libcontainerssh/internal/metrics"
 	"go.containerssh.io/libcontainerssh/internal/test"
 	"go.containerssh.io/libcontainerssh/log"
 	"go.containerssh.io/libcontainerssh/service"
-
-	"go.containerssh.io/libcontainerssh/internal/metrics"
 )
 
 func TestFetchMetrics(t *testing.T) {
@@ -77,8 +76,8 @@ func TestFetchMetrics(t *testing.T) {
 func callServer(t *testing.T, port int) []string {
 	metricsResult, err := goHttp.Get(fmt.Sprintf("http://127.0.0.1:%d/metrics", port))
 	assert.Nil(t, err)
-    bodyBytes, err := io.ReadAll(metricsResult.Body)
-    assert.Nil(t, err)
+	bodyBytes, err := io.ReadAll(metricsResult.Body)
+	assert.Nil(t, err)
 	assert.Nil(t, metricsResult.Body.Close())
 	bodyLines := strings.Split(string(bodyBytes), "\n")
 	return bodyLines

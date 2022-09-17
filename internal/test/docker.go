@@ -1,21 +1,21 @@
 package test
 
 import (
-    "archive/tar"
-    "compress/gzip"
-    "context"
-    "embed"
-    "fmt"
-    "io"
-    "strconv"
-    "strings"
-    "testing"
-    "time"
+	"archive/tar"
+	"compress/gzip"
+	"context"
+	"embed"
+	"fmt"
+	"io"
+	"strconv"
+	"strings"
+	"testing"
+	"time"
 
-    "github.com/docker/docker/api/types"
-    containerType "github.com/docker/docker/api/types/container"
-    "github.com/docker/docker/client"
-    "github.com/docker/go-connections/nat"
+	"github.com/docker/docker/api/types"
+	containerType "github.com/docker/docker/api/types/container"
+	"github.com/docker/docker/client"
+	"github.com/docker/go-connections/nat"
 )
 
 func dockerClient(t *testing.T) *client.Client {
@@ -30,12 +30,12 @@ func dockerClient(t *testing.T) *client.Client {
 
 // containerFromBuild starts a container from a local image build.
 //
-// - imageTag specifies the name the built image should be tagged as.
-// - files specifies the list of local files to send as part of the build context.
-// - cmd specifies the command line in execv format if any.
-// - env specifies the environment variables in the VAR=VALUE format.
-// - ports specifies the port mappings. The key is the container port, the value is the host port.
-//   If the host port is left empty it is automatically mapped and can be retrieved later.
+//   - imageTag specifies the name the built image should be tagged as.
+//   - files specifies the list of local files to send as part of the build context.
+//   - cmd specifies the command line in execv format if any.
+//   - env specifies the environment variables in the VAR=VALUE format.
+//   - ports specifies the port mappings. The key is the container port, the value is the host port.
+//     If the host port is left empty it is automatically mapped and can be retrieved later.
 func containerFromBuild(
 	t *testing.T,
 	imageTag string,
@@ -68,11 +68,11 @@ func containerFromBuild(
 
 // containerFromBuild starts a container from an image pulled from a registry
 //
-// - image specifies the image tag to pull.
-// - cmd specifies the command line in execv format if any.
-// - env specifies the environment variables in the VAR=VALUE format.
-// - ports specifies the port mappings. The key is the container port, the value is the host port.
-//   If the host port is left empty it is automatically mapped and can be retrieved later.
+//   - image specifies the image tag to pull.
+//   - cmd specifies the command line in execv format if any.
+//   - env specifies the environment variables in the VAR=VALUE format.
+//   - ports specifies the port mappings. The key is the container port, the value is the host port.
+//     If the host port is left empty it is automatically mapped and can be retrieved later.
 func containerFromPull(
 	t *testing.T,
 	image string,

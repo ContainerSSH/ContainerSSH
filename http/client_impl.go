@@ -168,7 +168,7 @@ func (c *client) createRequest(method string, path string, requestBody interface
 	case config.RequestEncodingJSON:
 		err := json.NewEncoder(buffer).Encode(requestBody)
 		if err != nil {
-			//This is a bug
+			// This is a bug
 			err := message.Wrap(err, message.EHTTPFailureEncodeFailed, "BUG: HTTP request encoding failed")
 			logger.Critical(err)
 			return nil, err

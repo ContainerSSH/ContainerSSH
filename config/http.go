@@ -284,7 +284,8 @@ func (c CipherSuite) getCipher() uint16 {
 
 // HTTPClientConfiguration is the configuration structure for HTTP clients
 //
-//We are adding the JSON and YAML tags to conform to the Operator SDK requirements to tag all fields.
+// We are adding the JSON and YAML tags to conform to the Operator SDK requirements to tag all fields.
+//
 //goland:noinspection GoVetStructTag
 type HTTPClientConfiguration struct {
 	// URL is the base URL for requests.
@@ -418,6 +419,7 @@ func (c *HTTPClientConfiguration) validateCACert(certs *HTTPClientCerts) (err er
 }
 
 // HTTPServerConfiguration is a structure to configure the simple HTTP server by.
+//
 //goland:noinspection GoVetStructTag
 type HTTPServerConfiguration struct {
 	// Listen contains the IP and port to listen on.

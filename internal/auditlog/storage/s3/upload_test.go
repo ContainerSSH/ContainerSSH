@@ -345,7 +345,7 @@ func TestSmallUpload(t *testing.T) {
 		assert.Fail(t, "failed to open reader for recently stored object", err)
 		return
 	}
-    d, err := io.ReadAll(r)
+	d, err := io.ReadAll(r)
 	if err != nil {
 		assert.Fail(t, "failed to open read from S3", err)
 		return
@@ -401,7 +401,7 @@ func TestLargeUpload(t *testing.T) {
 		assert.Fail(t, "failed to open reader for recently stored object", err)
 		return
 	}
-    d, err := io.ReadAll(r)
+	d, err := io.ReadAll(r)
 	if err != nil {
 		assert.Fail(t, "failed to open read from S3", err)
 		return
