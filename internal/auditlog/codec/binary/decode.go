@@ -2,6 +2,7 @@ package binary
 
 import (
 	"compress/gzip"
+	"errors"
 	"fmt"
 	"io"
 
@@ -21,51 +22,73 @@ type decoder struct {
 
 func (d *decoder) Decode(reader io.Reader) (<-chan message.Message, <-chan error) {
 	result := make(chan message.Message)
-	errors := make(chan error)
+	errs := make(chan error)
 
-	if err := readHeader(reader, CurrentVersion); err != nil {
+	version, err := readHeader(reader, CurrentVersion)
+	if err != nil {
 		go func() {
-			errors <- err
+			errs <- err
 			close(result)
-			close(errors)
+			close(errs)
 		}()
-		return result, errors
+		return result, errs
 	}
 
 	gzipReader, err := gzip.NewReader(reader)
 	if err != nil {
 		go func() {
-			errors <- fmt.Errorf("failed to open gzip stream (%w)", err)
+			errs <- fmt.Errorf("failed to open gzip stream (%w)", err)
 			close(result)
-			close(errors)
+			close(errs)
 		}()
-		return result, errors
+		return result, errs
 	}
 
 	cborReader := cbor.NewDecoder(gzipReader)
 
-	var messages []decodedMessage
-
 	go func() {
-		if err = cborReader.Decode(&messages); err != nil {
-			errors <- fmt.Errorf("failed to decode messages (%w)", err)
-			close(result)
-			close(errors)
-			return
-		}
-
-		for _, v := range messages {
-			decodedMessage, err := decodeMessage(v)
-			if err != nil {
-				errors <- err
-			} else {
-				result <- *decodedMessage
+		switch version {
+		case 1:
+			var messages []decodedMessage
+			if err = cborReader.Decode(&messages); err != nil {
+				errs <- fmt.Errorf("failed to decode messages (%w)", err)
+				close(result)
+				close(errs)
+				return
+			}
+			for _, v := range messages {
+				decodedMessage, err := decodeMessage(v)
+				if err != nil {
+					errs <- err
+				} else {
+					result <- *decodedMessage
+				}
+			}
+		case 2:
+			for {
+				var msg decodedMessage
+				if err = cborReader.Decode(&msg); err != nil {
+					if !errors.Is(err, io.ErrUnexpectedEOF) {
+						errs <- fmt.Errorf("failed to decode messages (%w)", err)
+					}
+					close(result)
+					close(errs)
+					return
+				}
+				decodedMessage, err := decodeMessage(msg)
+				if err != nil {
+					errs <- err
+					break
+				} else {
+					result <- *decodedMessage
+				}
 			}
 		}
+
 		close(result)
-		close(errors)
+		close(errs)
 	}()
-	return result, errors
+	return result, errs
 }
 
 type decodedMessage struct {

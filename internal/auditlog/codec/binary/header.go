@@ -14,7 +14,7 @@ const FileFormatMagic string = "ContainerSSH-Auditlog"
 const FileFormatLength = 32
 
 // CurrentVersion describes the current binary log version number
-const CurrentVersion = uint64(1)
+const CurrentVersion = uint64(2)
 
 var fileFormatBytes []byte
 
@@ -44,21 +44,21 @@ func newHeader(version uint64) Header {
 	}
 }
 
-func readHeader(reader io.Reader, maxVersion uint64) error {
+func readHeader(reader io.Reader, maxVersion uint64) (uint64, error) {
 	headerBytes := make([]byte, FileFormatLength+8)
 
 	_, err := io.ReadAtLeast(reader, headerBytes, FileFormatLength+8)
 	if err != nil {
-		return err
+		return 0, err
 	}
 	if !bytes.Equal(headerBytes[:FileFormatLength], fileFormatBytes) {
-		return fmt.Errorf("invalid file format header: %v", headerBytes[:FileFormatLength])
+		return 0, fmt.Errorf("invalid file format header: %v", headerBytes[:FileFormatLength])
 	}
 	version := binary.LittleEndian.Uint64(headerBytes[FileFormatLength:])
 	if version > maxVersion {
-		return fmt.Errorf("file format version is higher than supported: %d", version)
+		return 0, fmt.Errorf("file format version is higher than supported: %d", version)
 	}
-	return nil
+	return version, nil
 }
 
 func init() {
