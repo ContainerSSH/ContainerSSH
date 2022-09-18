@@ -4,14 +4,14 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"io/ioutil"
+	"io"
 	goHttp "net/http"
 	"sort"
 	"strconv"
 	"strings"
 
-    log2 "go.containerssh.io/libcontainerssh/log"
-    "go.containerssh.io/libcontainerssh/message"
+	log2 "go.containerssh.io/libcontainerssh/log"
+	"go.containerssh.io/libcontainerssh/message"
 )
 
 type serverResponse struct {
@@ -135,7 +135,7 @@ type internalRequest struct {
 }
 
 func (i *internalRequest) Decode(target interface{}) error {
-	bytes, err := ioutil.ReadAll(i.request.Body)
+	bytes, err := io.ReadAll(i.request.Body)
 	if err != nil {
 		return &badRequestResponse
 	}

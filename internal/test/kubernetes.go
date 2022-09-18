@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/base64"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -375,7 +374,7 @@ type kubeConfigUser struct {
 
 func readKubeConfig(file string) (config kubeConfig, err error) {
 	// We intend to include this file, no gosec issue.
-	yamlFile, err := ioutil.ReadFile(file) //nolint:gosec
+	yamlFile, err := os.ReadFile(file) //nolint:gosec
 	if err != nil {
 		return config, err
 	}

@@ -7,7 +7,7 @@ import (
 	"crypto/x509"
 	"encoding/pem"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"os"
 	"regexp"
 	"strings"
@@ -76,7 +76,7 @@ func (cfg *SSHConfig) LoadHostKeys() ([]ssh.Signer, error) {
 			if err != nil {
 				return nil, fmt.Errorf("failed to load host key %s (%w)", hostKey, err)
 			}
-			hostKeyData, err := ioutil.ReadAll(fh)
+			hostKeyData, err := io.ReadAll(fh)
 			if err != nil {
 				_ = fh.Close()
 				return nil, fmt.Errorf("failed to load host key %s (%w)", hostKey, err)

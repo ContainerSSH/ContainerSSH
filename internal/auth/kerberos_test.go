@@ -2,20 +2,19 @@ package auth_test
 
 import (
 	"fmt"
-	"io/ioutil"
 	"net"
 	"os"
 	"testing"
 
-    configuration "go.containerssh.io/libcontainerssh/config"
-    "go.containerssh.io/libcontainerssh/internal/auth"
-    "go.containerssh.io/libcontainerssh/internal/geoip/dummy"
-    "go.containerssh.io/libcontainerssh/internal/metrics"
-    "go.containerssh.io/libcontainerssh/internal/structutils"
-    "go.containerssh.io/libcontainerssh/internal/test"
-    "go.containerssh.io/libcontainerssh/log"
-    "go.containerssh.io/libcontainerssh/metadata"
 	"github.com/stretchr/testify/assert"
+	configuration "go.containerssh.io/libcontainerssh/config"
+	"go.containerssh.io/libcontainerssh/internal/auth"
+	"go.containerssh.io/libcontainerssh/internal/geoip/dummy"
+	"go.containerssh.io/libcontainerssh/internal/metrics"
+	"go.containerssh.io/libcontainerssh/internal/structutils"
+	"go.containerssh.io/libcontainerssh/internal/test"
+	"go.containerssh.io/libcontainerssh/log"
+	"go.containerssh.io/libcontainerssh/metadata"
 
 	"golang.org/x/crypto/ssh"
 
@@ -30,7 +29,7 @@ import (
 )
 
 func tempFile(t *testing.T) *os.File {
-	file, err := ioutil.TempFile(t.TempDir(), "krb5.keytab-*")
+	file, err := os.CreateTemp(t.TempDir(), "krb5.keytab-*")
 	if err != nil {
 		panic(err)
 	}

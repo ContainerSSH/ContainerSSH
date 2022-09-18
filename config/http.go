@@ -5,9 +5,9 @@ import (
 	"crypto/x509"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"net"
 	"net/url"
+	"os"
 	"strings"
 	"time"
 )
@@ -541,7 +541,7 @@ func (r RequestEncoding) Validate() error {
 func loadPEM(spec string) ([]byte, error) {
 	if !strings.HasPrefix(strings.TrimSpace(spec), "-----") {
 		// We are deliberately reading a file here.
-		return ioutil.ReadFile(spec) //nolint:gosec
+		return os.ReadFile(spec) //nolint:gosec
 	}
 	return []byte(spec), nil
 }

@@ -2,7 +2,7 @@ package config
 
 import (
 	"fmt"
-	"io/ioutil"
+	"io"
 	"os"
 	"regexp"
 	"strings"
@@ -89,7 +89,7 @@ func (c SSHProxyConfig) LoadPrivateKey() (ssh.Signer, error) {
 		if err != nil {
 			return nil, fmt.Errorf("failed load private key %s (%w)", privateKey, err)
 		}
-		privateKeyData, err := ioutil.ReadAll(fh)
+		privateKeyData, err := io.ReadAll(fh)
 		if err != nil {
 			_ = fh.Close()
 			return nil, fmt.Errorf("failed to load private key %s (%w)", privateKey, err)

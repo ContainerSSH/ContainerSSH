@@ -108,7 +108,8 @@ func (s *serverImpl) RunWithLifecycle(lifecycle service.Lifecycle) error {
 	s.wg.Wait()
 	close(allClientsExited)
 	<-shutdownHandlerExited
-	return nil
+	// This is an expected nil return
+	return nil //nolint:nilerr
 }
 
 func (s *serverImpl) handleListenSocketOnShutdown(lifecycle service.Lifecycle) {

@@ -2,14 +2,13 @@ package test_test
 
 import (
 	"io"
-	"io/ioutil"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/credentials"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/s3"
-    "go.containerssh.io/libcontainerssh/internal/test"
+	"go.containerssh.io/libcontainerssh/internal/test"
 )
 
 func TestS3(t *testing.T) {
@@ -77,7 +76,7 @@ func s3ReadAndCheckTestObject(t *testing.T, s3Connection *s3.S3) {
 	defer func() {
 		_ = getObjectResponse.Body.Close()
 	}()
-	data, err := ioutil.ReadAll(getObjectResponse.Body)
+	data, err := io.ReadAll(getObjectResponse.Body)
 	if err != nil {
 		t.Fatalf("failed to read get object response body (%v)", err)
 	}

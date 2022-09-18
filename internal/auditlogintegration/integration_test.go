@@ -4,24 +4,23 @@ import (
 	"context"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"os"
 	"testing"
 	"time"
 
-    "go.containerssh.io/libcontainerssh/auditlog/message"
-    auth2 "go.containerssh.io/libcontainerssh/auth"
-    "go.containerssh.io/libcontainerssh/config"
-    "go.containerssh.io/libcontainerssh/internal/auditlog/codec/binary"
-    "go.containerssh.io/libcontainerssh/internal/auditlog/storage/file"
-    "go.containerssh.io/libcontainerssh/internal/auditlogintegration"
-    "go.containerssh.io/libcontainerssh/internal/auth"
-    "go.containerssh.io/libcontainerssh/internal/geoip"
-    "go.containerssh.io/libcontainerssh/internal/sshserver"
-    "go.containerssh.io/libcontainerssh/log"
-    "go.containerssh.io/libcontainerssh/metadata"
-    message2 "go.containerssh.io/libcontainerssh/message"
 	"github.com/stretchr/testify/assert"
+	"go.containerssh.io/libcontainerssh/auditlog/message"
+	auth2 "go.containerssh.io/libcontainerssh/auth"
+	"go.containerssh.io/libcontainerssh/config"
+	"go.containerssh.io/libcontainerssh/internal/auditlog/codec/binary"
+	"go.containerssh.io/libcontainerssh/internal/auditlog/storage/file"
+	"go.containerssh.io/libcontainerssh/internal/auditlogintegration"
+	"go.containerssh.io/libcontainerssh/internal/auth"
+	"go.containerssh.io/libcontainerssh/internal/geoip"
+	"go.containerssh.io/libcontainerssh/internal/sshserver"
+	"go.containerssh.io/libcontainerssh/log"
+	message2 "go.containerssh.io/libcontainerssh/message"
+	"go.containerssh.io/libcontainerssh/metadata"
 
 	"golang.org/x/crypto/ssh"
 )
@@ -29,7 +28,7 @@ import (
 func TestKeyboardInteractiveAuthentication(t *testing.T) {
 	logger := log.NewTestLogger(t)
 
-	dir, err := ioutil.TempDir("temp", "testcase")
+	dir, err := os.MkdirTemp("temp", "testcase")
 	assert.NoError(t, err)
 	defer func() {
 		_ = os.RemoveAll(dir)
@@ -82,7 +81,7 @@ func TestKeyboardInteractiveAuthentication(t *testing.T) {
 func TestConnectMessages(t *testing.T) {
 	logger := log.NewTestLogger(t)
 
-	dir, err := ioutil.TempDir("temp", "testcase")
+	dir, err := os.MkdirTemp("temp", "testcase")
 	assert.NoError(t, err)
 	defer func() {
 		_ = os.RemoveAll(dir)
@@ -216,7 +215,7 @@ func (b *backendHandler) OnAuthKeyboardInteractive(
 	answers, err := challenge(
 		"Test",
 		sshserver.KeyboardInteractiveQuestions{
-			{
+			sshserver.KeyboardInteractiveQuestion{
 				Question:     "Challenge",
 				EchoResponse: true,
 			},
@@ -274,7 +273,7 @@ func (b *backendHandler) OnShell(
 	_ uint64,
 ) error {
 	go func() {
-		_, _ = ioutil.ReadAll(b.session.Stdin())
+		_, _ = io.ReadAll(b.session.Stdin())
 		_, _ = b.session.Stdout().Write([]byte("Hello world!"))
 		b.session.ExitStatus(0)
 	}()

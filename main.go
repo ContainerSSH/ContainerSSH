@@ -6,7 +6,6 @@ import (
 	"flag"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"os"
 	"os/signal"
 	"path/filepath"
@@ -14,12 +13,12 @@ import (
 	"syscall"
 	"time"
 
-    "go.containerssh.io/libcontainerssh/config"
-    internalConfig "go.containerssh.io/libcontainerssh/internal/config"
-    "go.containerssh.io/libcontainerssh/internal/health"
-    "go.containerssh.io/libcontainerssh/log"
-    "go.containerssh.io/libcontainerssh/message"
-    "go.containerssh.io/libcontainerssh/service"
+	"go.containerssh.io/libcontainerssh/config"
+	internalConfig "go.containerssh.io/libcontainerssh/internal/config"
+	"go.containerssh.io/libcontainerssh/internal/health"
+	"go.containerssh.io/libcontainerssh/log"
+	"go.containerssh.io/libcontainerssh/message"
+	"go.containerssh.io/libcontainerssh/service"
 )
 
 // Main is a helper function to start a standard ContainerSSH instance. It should be used as the outer-most function
@@ -310,13 +309,13 @@ func printLicenses(writer io.Writer) error {
 	var buffer bytes.Buffer
 
 	buffer.WriteString("# The ContainerSSH license\n\n")
-	licenseData, err := ioutil.ReadFile("LICENSE.md")
+	licenseData, err := os.ReadFile("LICENSE.md")
 	if err != nil {
 		return fmt.Errorf("failed to read LICENSE.md (%w)", err)
 	}
 	buffer.Write(licenseData)
 	buffer.WriteString("\n")
-	noticeData, err := ioutil.ReadFile("NOTICE.md")
+	noticeData, err := os.ReadFile("NOTICE.md")
 	if err != nil {
 		return fmt.Errorf("failed to read NOTICE.md (%w)", err)
 	}

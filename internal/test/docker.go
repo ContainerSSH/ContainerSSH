@@ -1,22 +1,21 @@
 package test
 
 import (
-	"archive/tar"
-	"compress/gzip"
-	"context"
-	"embed"
-	"fmt"
-	"io"
-	"io/ioutil"
-	"strconv"
-	"strings"
-	"testing"
-	"time"
+    "archive/tar"
+    "compress/gzip"
+    "context"
+    "embed"
+    "fmt"
+    "io"
+    "strconv"
+    "strings"
+    "testing"
+    "time"
 
-	"github.com/docker/docker/api/types"
-	containerType "github.com/docker/docker/api/types/container"
-	"github.com/docker/docker/client"
-	"github.com/docker/go-connections/nat"
+    "github.com/docker/docker/api/types"
+    containerType "github.com/docker/docker/api/types/container"
+    "github.com/docker/docker/client"
+    "github.com/docker/go-connections/nat"
 )
 
 func dockerClient(t *testing.T) *client.Client {
@@ -137,7 +136,7 @@ func (d *dockerContainer) extractFile(fileName string) []byte {
 		d.t.Fatalf("failed to get next file in TAR archive from container (%v)", err)
 	}
 
-	data, err := ioutil.ReadAll(tarReader)
+	data, err := io.ReadAll(tarReader)
 	if err != nil {
 		d.t.Fatalf("failed to parse TAR archive from container (%v)", err)
 	}

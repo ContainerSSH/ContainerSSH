@@ -7,20 +7,19 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"strconv"
 	"sync"
 	"time"
 
-    "go.containerssh.io/libcontainerssh/config"
-    "go.containerssh.io/libcontainerssh/internal/metrics"
-    "go.containerssh.io/libcontainerssh/internal/structutils"
-    "go.containerssh.io/libcontainerssh/log"
-    "go.containerssh.io/libcontainerssh/message"
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/client"
 	"github.com/docker/docker/pkg/stdcopy"
+	"go.containerssh.io/libcontainerssh/config"
+	"go.containerssh.io/libcontainerssh/internal/metrics"
+	"go.containerssh.io/libcontainerssh/internal/structutils"
+	"go.containerssh.io/libcontainerssh/log"
+	"go.containerssh.io/libcontainerssh/message"
 )
 
 type dockerV20ClientFactory struct {
@@ -123,7 +122,7 @@ loop:
 		d.backendRequestsMetric.Increment()
 		pullReader, lastError = d.dockerClient.ImagePull(ctx, image, types.ImagePullOptions{})
 		if lastError == nil {
-			_, lastError = ioutil.ReadAll(pullReader)
+			_, lastError = io.ReadAll(pullReader)
 			if lastError == nil {
 				lastError = pullReader.Close()
 				if lastError == nil {

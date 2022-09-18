@@ -4,16 +4,16 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"os"
 	"path"
 	"sync"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
-    "go.containerssh.io/libcontainerssh/internal/auditlog/storage"
-    "go.containerssh.io/libcontainerssh/log"
-    "go.containerssh.io/libcontainerssh/message"
+	"go.containerssh.io/libcontainerssh/internal/auditlog/storage"
+	"go.containerssh.io/libcontainerssh/log"
+	"go.containerssh.io/libcontainerssh/message"
 )
 
 var minPartSize = uint(5 * 1024 * 1024)
@@ -347,7 +347,7 @@ func (q *uploadQueue) recover(name string) error {
 func (q *uploadQueue) readMetadataFile(name string, file string, metadata *queueEntryMetadata) {
 	metadataHandle, err := os.Open(fmt.Sprintf("%s.metadata.json", file))
 	if err == nil {
-		readBytes, err := ioutil.ReadAll(metadataHandle)
+		readBytes, err := io.ReadAll(metadataHandle)
 		if err != nil {
 			q.logger.Error(
 				message.Wrap(

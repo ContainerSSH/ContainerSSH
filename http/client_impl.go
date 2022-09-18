@@ -6,14 +6,14 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"net/url"
 
-    "go.containerssh.io/libcontainerssh/config"
-    "go.containerssh.io/libcontainerssh/log"
-    "go.containerssh.io/libcontainerssh/message"
 	"github.com/gorilla/schema"
+	"go.containerssh.io/libcontainerssh/config"
+	"go.containerssh.io/libcontainerssh/log"
+	"go.containerssh.io/libcontainerssh/message"
 )
 
 type client struct {
@@ -134,7 +134,7 @@ func (c *client) request(
 			resp.StatusCode,
 		).Label("statusCode", resp.StatusCode))
 
-	body, err := ioutil.ReadAll(resp.Body)
+	body, err := io.ReadAll(resp.Body)
 	if err != nil {
 		err = message.Wrap(err,
 			message.EHTTPFailureConnectionFailed, "HTTP %s request to %s%s failed", method, c.config.URL, path)

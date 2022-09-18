@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"io"
-	"io/ioutil"
 	goLog "log"
 	"net"
 	"os"
@@ -15,15 +14,15 @@ import (
 	"github.com/aws/aws-sdk-go/aws/credentials"
 	"github.com/aws/aws-sdk-go/aws/session"
 	awsS3 "github.com/aws/aws-sdk-go/service/s3"
-    "go.containerssh.io/libcontainerssh/config"
-    auditLogStorage "go.containerssh.io/libcontainerssh/internal/auditlog/storage"
-    "go.containerssh.io/libcontainerssh/internal/auditlog/storage/s3"
-    "go.containerssh.io/libcontainerssh/log"
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/client"
 	"github.com/docker/go-connections/nat"
 	"github.com/stretchr/testify/assert"
+	"go.containerssh.io/libcontainerssh/config"
+	auditLogStorage "go.containerssh.io/libcontainerssh/internal/auditlog/storage"
+	"go.containerssh.io/libcontainerssh/internal/auditlog/storage/s3"
+	"go.containerssh.io/libcontainerssh/log"
 )
 
 type minio struct {
@@ -68,7 +67,7 @@ func (m *minio) Start(
 		return nil, err
 	}
 
-	m.dir, err = ioutil.TempDir(os.TempDir(), "containerssh-s3-upload-test")
+	m.dir, err = os.MkdirTemp(os.TempDir(), "containerssh-s3-upload-test")
 	if err != nil {
 		assert.Fail(t, "failed to create temporary directory (%v)", err)
 		return nil, err
@@ -346,7 +345,7 @@ func TestSmallUpload(t *testing.T) {
 		assert.Fail(t, "failed to open reader for recently stored object", err)
 		return
 	}
-	d, err := ioutil.ReadAll(r)
+    d, err := io.ReadAll(r)
 	if err != nil {
 		assert.Fail(t, "failed to open read from S3", err)
 		return
@@ -402,7 +401,7 @@ func TestLargeUpload(t *testing.T) {
 		assert.Fail(t, "failed to open reader for recently stored object", err)
 		return
 	}
-	d, err := ioutil.ReadAll(r)
+    d, err := io.ReadAll(r)
 	if err != nil {
 		assert.Fail(t, "failed to open read from S3", err)
 		return

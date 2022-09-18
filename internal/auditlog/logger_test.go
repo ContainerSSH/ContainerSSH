@@ -4,22 +4,21 @@ import (
 	"context"
 	"encoding/hex"
 	"fmt"
-	"io/ioutil"
 	"math/rand"
 	"net"
 	"os"
 	"testing"
 	"time"
 
-    "go.containerssh.io/libcontainerssh/auditlog/message"
-    "go.containerssh.io/libcontainerssh/config"
-    "go.containerssh.io/libcontainerssh/internal/auditlog"
-    "go.containerssh.io/libcontainerssh/internal/auditlog/codec/binary"
-    "go.containerssh.io/libcontainerssh/internal/auditlog/storage"
-    "go.containerssh.io/libcontainerssh/internal/auditlog/storage/file"
-    "go.containerssh.io/libcontainerssh/internal/geoip/dummy"
-    "go.containerssh.io/libcontainerssh/log"
 	"github.com/stretchr/testify/assert"
+	"go.containerssh.io/libcontainerssh/auditlog/message"
+	"go.containerssh.io/libcontainerssh/config"
+	"go.containerssh.io/libcontainerssh/internal/auditlog"
+	"go.containerssh.io/libcontainerssh/internal/auditlog/codec/binary"
+	"go.containerssh.io/libcontainerssh/internal/auditlog/storage"
+	"go.containerssh.io/libcontainerssh/internal/auditlog/storage/file"
+	"go.containerssh.io/libcontainerssh/internal/geoip/dummy"
+	"go.containerssh.io/libcontainerssh/log"
 )
 
 func newConnectionID() message.ConnectionID {
@@ -35,7 +34,7 @@ func newConnectionID() message.ConnectionID {
 
 func newTestCase(t *testing.T) (*testCase, error) {
 	var err error
-	dir, err := ioutil.TempDir(os.TempDir(), "containerssh-auditlog-test")
+	dir, err := os.MkdirTemp(os.TempDir(), "containerssh-auditlog-test")
 	if err != nil {
 		assert.Fail(t, "failed to create temporary directory (%v)", err)
 		return nil, err

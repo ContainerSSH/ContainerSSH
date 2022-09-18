@@ -62,7 +62,7 @@ func (f *fileWriter) Close() error {
 
 func openLogFile(filename string) (*os.File, error) {
 	// We actually want to open a file here.
-	fh, err := os.OpenFile(filename, os.O_RDWR|os.O_CREATE|os.O_APPEND, 0644) // nolint:gosec
+	fh, err := os.OpenFile(filename, os.O_RDWR|os.O_CREATE|os.O_APPEND, 0644) //nolint:gosec
 	if err != nil {
 		return nil, message.Wrap(err, message.ELogFileOpenFailed, "failed to open log file %s", filename)
 	}
