@@ -79,7 +79,7 @@ func TestHTTP(t *testing.T) {
 		},
 	)
 	assert.NoError(t, err)
-	assert.Equal(t, "yourcompany/yourimage", cfg.Docker.Execution.Launch.ContainerConfig.Image)
+	assert.Equal(t, "yourcompany/yourimage", cfg.Docker.Execution.DockerLaunchConfig.ContainerConfig.Image)
 
 	lifecycle.Stop(context.Background())
 	err = lifecycle.Wait()
@@ -101,9 +101,9 @@ func (m *myConfigReqHandler) OnConfig(
 	request configuration.Request,
 ) (config configuration.AppConfig, err error) {
 	config.Backend = "docker"
-	config.Docker.Execution.Launch.ContainerConfig = &container.Config{}
+	config.Docker.Execution.DockerLaunchConfig.ContainerConfig = &container.Config{}
 	if request.Username == "foo" {
-		config.Docker.Execution.Launch.ContainerConfig.Image = "yourcompany/yourimage"
+		config.Docker.Execution.DockerLaunchConfig.ContainerConfig.Image = "yourcompany/yourimage"
 	}
 	return config, err
 }

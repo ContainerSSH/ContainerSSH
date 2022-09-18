@@ -46,7 +46,7 @@ func (f *dockerV20ClientFactory) getDockerClient(ctx context.Context, config con
 }
 
 func (f *dockerV20ClientFactory) get(ctx context.Context, config config.DockerConfig, logger log.Logger) (dockerClient, error) {
-	if config.Execution.Launch.ContainerConfig == nil || config.Execution.Launch.ContainerConfig.Image == "" {
+	if config.Execution.DockerLaunchConfig.ContainerConfig == nil || config.Execution.DockerLaunchConfig.ContainerConfig.Image == "" {
 		return nil, message.NewMessage(message.EDockerConfigError, "no image name specified")
 	}
 
@@ -77,11 +77,11 @@ type dockerV20Client struct {
 }
 
 func (d *dockerV20Client) getImageName() string {
-	return d.config.Execution.Launch.ContainerConfig.Image
+	return d.config.Execution.DockerLaunchConfig.ContainerConfig.Image
 }
 
 func (d *dockerV20Client) hasImage(ctx context.Context) (bool, error) {
-	image := d.config.Execution.Launch.ContainerConfig.Image
+	image := d.config.Execution.DockerLaunchConfig.ContainerConfig.Image
 	d.logger.Debug(message.NewMessage(message.MDockerImageList, "Checking if image %s exists locally...", image))
 	var lastError error
 loop:
@@ -109,7 +109,7 @@ loop:
 }
 
 func (d *dockerV20Client) pullImage(ctx context.Context) error {
-	image, err := getCanonicalImageName(d.config.Execution.Launch.ContainerConfig.Image)
+	image, err := getCanonicalImageName(d.config.Execution.DockerLaunchConfig.ContainerConfig.Image)
 	if err != nil {
 		return err
 	}
@@ -170,7 +170,7 @@ func (d *dockerV20Client) createContainer(
 ) (dockerContainer, error) {
 	logger := d.logger
 	logger.Debug(message.NewMessage(message.MDockerContainerCreate, "Creating container..."))
-	containerConfig := d.config.Execution.Launch.ContainerConfig
+	containerConfig := d.config.Execution.DockerLaunchConfig.ContainerConfig
 	newConfig, err := d.createConfig(containerConfig, labels, env, tty, cmd)
 	if err != nil {
 		return nil, err
@@ -184,10 +184,10 @@ loop:
 		body, lastError = d.dockerClient.ContainerCreate(
 			ctx,
 			newConfig,
-			d.config.Execution.Launch.HostConfig,
-			d.config.Execution.Launch.NetworkConfig,
-			d.config.Execution.Launch.Platform,
-			d.config.Execution.Launch.ContainerName,
+			d.config.Execution.DockerLaunchConfig.HostConfig,
+			d.config.Execution.DockerLaunchConfig.NetworkConfig,
+			d.config.Execution.DockerLaunchConfig.Platform,
+			d.config.Execution.DockerLaunchConfig.ContainerName,
 		)
 		if lastError == nil {
 			return &dockerV20Container{

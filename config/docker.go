@@ -92,8 +92,8 @@ func (e DockerExecutionMode) Validate() error {
 // DockerExecutionConfig contains the configuration of what container to run in Docker.
 //goland:noinspection GoVetStructTag
 type DockerExecutionConfig struct {
-	// Launch contains the Docker-specific launch configuration.
-	Launch DockerLaunchConfig `json:",inline" yaml:",inline"`
+	// DockerLaunchConfig contains the Docker-specific launch configuration.
+	DockerLaunchConfig `json:",inline" yaml:",inline"`
 	// Mode influences how commands are executed.
 	//
 	// - If DockerExecutionModeConnection is chosen (default) a new container is launched per connection. In this mode
@@ -125,6 +125,84 @@ type DockerExecutionConfig struct {
 	ExposeAuthMetadataAsEnv bool `json:"exposeAuthMetadataAsEnv" yaml:"exposeAuthMetadataAsEnv"`
 }
 
+type tmpDockerExecutionConfig struct {
+	ContainerConfig         interface{}           `json:"container" yaml:"container"`
+	HostConfig              interface{}           `json:"host" yaml:"host"`
+	NetworkConfig           interface{}           `json:"network" yaml:"network"`
+	Platform                interface{}           `json:"platform" yaml:"platform"`
+	ContainerName           interface{}           `json:"containername" yaml:"containername"`
+	Mode                    DockerExecutionMode   `json:"mode" yaml:"mode" default:"connection"`
+	IdleCommand             []string              `json:"idleCommand" yaml:"idleCommand" comment:"Run this command to wait for container exit" default:"[\"/usr/bin/containerssh-agent\", \"wait-signal\", \"--signal\", \"INT\", \"--signal\", \"TERM\"]"`
+	ShellCommand            []string              `json:"shellCommand" yaml:"shellCommand" comment:"Run this command as a default shell." default:"[\"/bin/bash\"]"`
+	AgentPath               string                `json:"agentPath" yaml:"agentPath" default:"/usr/bin/containerssh-agent"`
+	DisableAgent            bool                  `json:"disableAgent" yaml:"disableAgent"`
+	Subsystems              map[string]string     `json:"subsystems" yaml:"subsystems" comment:"Subsystem names and binaries map." default:"{\"sftp\":\"/usr/lib/openssh/sftp-server\"}"`
+	ImagePullPolicy         DockerImagePullPolicy `json:"imagePullPolicy" yaml:"imagePullPolicy" comment:"Image pull policy" default:"IfNotPresent"`
+	ExposeAuthMetadataAsEnv bool                  `json:"exposeAuthMetadataAsEnv" yaml:"exposeAuthMetadataAsEnv"`
+}
+
+// UnmarshalJSON implements the special unmarshalling of the DockerExecutionConfig that allows embedding the
+// DockerLaunchConfig.
+func (d *DockerExecutionConfig) UnmarshalJSON(b []byte) error {
+	decoder := json.NewDecoder(bytes.NewReader(b))
+	decoder.DisallowUnknownFields()
+	tmp := &tmpDockerExecutionConfig{}
+	if err := decoder.Decode(tmp); err != nil {
+		return err
+	}
+
+	launch := &DockerLaunchConfig{}
+	if err := launch.UnmarshalJSON(b); err != nil {
+		return err
+	}
+
+	d.DockerLaunchConfig = *launch
+	d.Mode = tmp.Mode
+	d.IdleCommand = tmp.IdleCommand
+	d.ShellCommand = tmp.ShellCommand
+	d.AgentPath = tmp.AgentPath
+	d.DisableAgent = tmp.DisableAgent
+	d.Subsystems = tmp.Subsystems
+	d.ImagePullPolicy = tmp.ImagePullPolicy
+	d.ExposeAuthMetadataAsEnv = tmp.ExposeAuthMetadataAsEnv
+	return nil
+}
+
+// UnmarshalYAML implements the special unmarshalling of the DockerExecutionConfig that allows embedding the
+// DockerLaunchConfig.
+func (d *DockerExecutionConfig) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	lc := &map[string]interface{}{}
+	if err := unmarshal(lc); err != nil {
+		return err
+	}
+	marshalled, err := yaml.Marshal(lc)
+	if err != nil {
+		return err
+	}
+	launch := &DockerLaunchConfig{}
+	if err = yaml.Unmarshal(marshalled, launch); err != nil {
+		return err
+	}
+
+	decoder := yaml.NewDecoder(bytes.NewReader(marshalled))
+	decoder.KnownFields(true)
+	tmp := &tmpDockerExecutionConfig{}
+	if err := decoder.Decode(tmp); err != nil {
+		return err
+	}
+
+	d.DockerLaunchConfig = *launch
+	d.Mode = tmp.Mode
+	d.IdleCommand = tmp.IdleCommand
+	d.ShellCommand = tmp.ShellCommand
+	d.AgentPath = tmp.AgentPath
+	d.DisableAgent = tmp.DisableAgent
+	d.Subsystems = tmp.Subsystems
+	d.ImagePullPolicy = tmp.ImagePullPolicy
+	d.ExposeAuthMetadataAsEnv = tmp.ExposeAuthMetadataAsEnv
+	return nil
+}
+
 // Validate validates the docker config structure.
 func (c DockerExecutionConfig) Validate() error {
 	if c.Mode == DockerExecutionModeConnection && len(c.IdleCommand) == 0 {
@@ -135,12 +213,12 @@ func (c DockerExecutionConfig) Validate() error {
 	}
 	switch c.Mode {
 	case DockerExecutionModeSession:
-		if c.Launch.HostConfig != nil && !c.Launch.HostConfig.RestartPolicy.IsNone() {
+		if c.DockerLaunchConfig.HostConfig != nil && !c.DockerLaunchConfig.HostConfig.RestartPolicy.IsNone() {
 			return wrap(
 				newError(
 					"restartPolicy",
 					"unsupported restart policy for execution mode \"session\": %s (session containers may not restart)",
-					c.Launch.HostConfig.RestartPolicy.Name,
+					c.DockerLaunchConfig.HostConfig.RestartPolicy.Name,
 				),
 				"hostConfig",
 			)
@@ -149,7 +227,7 @@ func (c DockerExecutionConfig) Validate() error {
 	if err := c.ImagePullPolicy.Validate(); err != nil {
 		return wrap(err, "imagePullPolicy")
 	}
-	if err := c.Launch.Validate(); err != nil {
+	if err := c.DockerLaunchConfig.Validate(); err != nil {
 		return err
 	}
 	if err := c.Mode.Validate(); err != nil {

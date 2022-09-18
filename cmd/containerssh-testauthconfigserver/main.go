@@ -24,15 +24,15 @@ import (
 	"os/signal"
 	"syscall"
 
-    publicAuth "go.containerssh.io/libcontainerssh/auth"
-    "go.containerssh.io/libcontainerssh/config"
-    configWebhook "go.containerssh.io/libcontainerssh/config/webhook"
-    "go.containerssh.io/libcontainerssh/http"
-    "go.containerssh.io/libcontainerssh/internal/auth"
-    "go.containerssh.io/libcontainerssh/log"
-    "go.containerssh.io/libcontainerssh/metadata"
-    "go.containerssh.io/libcontainerssh/service"
 	"github.com/docker/docker/api/types/container"
+	publicAuth "go.containerssh.io/libcontainerssh/auth"
+	"go.containerssh.io/libcontainerssh/config"
+	configWebhook "go.containerssh.io/libcontainerssh/config/webhook"
+	"go.containerssh.io/libcontainerssh/http"
+	"go.containerssh.io/libcontainerssh/internal/auth"
+	"go.containerssh.io/libcontainerssh/log"
+	"go.containerssh.io/libcontainerssh/metadata"
+	"go.containerssh.io/libcontainerssh/service"
 )
 
 type authHandler struct {
@@ -139,8 +139,8 @@ func (c *configHandler) OnConfig(request config.Request) (config.AppConfig, erro
 	cfg := config.AppConfig{}
 
 	if request.Username == "busybox" {
-		cfg.Docker.Execution.Launch.ContainerConfig = &container.Config{}
-		cfg.Docker.Execution.Launch.ContainerConfig.Image = "busybox"
+		cfg.Docker.Execution.DockerLaunchConfig.ContainerConfig = &container.Config{}
+		cfg.Docker.Execution.DockerLaunchConfig.ContainerConfig.Image = "busybox"
 		cfg.Docker.Execution.DisableAgent = true
 		cfg.Docker.Execution.Mode = config.DockerExecutionModeSession
 		cfg.Docker.Execution.ShellCommand = []string{"/bin/sh"}
