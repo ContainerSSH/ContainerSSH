@@ -3,11 +3,14 @@ package docker
 import (
 	"bytes"
 	"context"
+	"encoding/base64"
 	"encoding/binary"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
 	"strconv"
+	"strings"
 	"sync"
 	"time"
 
@@ -114,13 +117,23 @@ func (d *dockerV20Client) pullImage(ctx context.Context) error {
 		return err
 	}
 
+	options := types.ImagePullOptions{}
+	if d.config.Execution.Auth != nil {
+		jsonEncodedCredentials, err := json.Marshal(d.config.Execution.Auth)
+		if err != nil {
+			// This should never happen
+			return fmt.Errorf("BUG: could not marshal auth structure")
+		}
+		options.RegistryAuth = base64.StdEncoding.EncodeToString(jsonEncodedCredentials)
+	}
+
 	d.logger.Debug(message.NewMessage(message.MDockerImagePull, "Pulling image %s...", image))
 	var lastError error
 loop:
 	for {
 		var pullReader io.ReadCloser
 		d.backendRequestsMetric.Increment()
-		pullReader, lastError = d.dockerClient.ImagePull(ctx, image, types.ImagePullOptions{})
+		pullReader, lastError = d.dockerClient.ImagePull(ctx, image, options)
 		if lastError == nil {
 			_, lastError = io.ReadAll(pullReader)
 			if lastError == nil {
@@ -133,6 +146,19 @@ loop:
 		d.backendFailuresMetric.Increment()
 		if pullReader != nil {
 			_ = pullReader.Close()
+		}
+		if client.IsErrUnauthorized(lastError) ||
+			client.IsErrNotFound(lastError) ||
+			strings.Contains(lastError.Error(), "no basic auth credential") {
+			err = message.WrapUser(
+				lastError,
+				message.EDockerFailedImagePull,
+				UserMessageInitializeSSHSession,
+				"failed to pull image %s, giving up",
+				image,
+			)
+			d.logger.Debug(err)
+			return err
 		}
 		d.logger.Notice(
 			message.Wrap(
@@ -154,7 +180,7 @@ loop:
 		lastError,
 		message.EDockerFailedImagePull,
 		UserMessageInitializeSSHSession,
-		"failed to pull image %s, retrying in 10 seconds",
+		"failed to pull image %s, giving up",
 		image,
 	)
 	d.logger.Debug(err)

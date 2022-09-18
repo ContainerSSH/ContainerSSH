@@ -25,6 +25,12 @@ jobs:
     if: ${{ github.event_name != 'schedule' }}
     runs-on: ubuntu-latest
     steps:
+      - name: Reconfigure Docker daemon
+        run: |
+          echo '{
+            "insecure-registries" : ["http://localhost:5000"]
+          }' | sudo tee /etc/docker/daemon.json
+          sudo service docker restart
       - name: Checkout
         uses: actions/checkout@v3
         with:
