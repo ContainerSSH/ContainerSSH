@@ -59,3 +59,7 @@ Study SSH attack patterns up close. Drop attackers safely into network-isolated 
 ![](https://containerssh.io/images/ssh-in-action.gif)
 
 [🚀 Get started »](https://containerssh.io/quickstart/)
+
+## Contributing
+
+If you would like to contribute, please check out our [Code of Conduct](https://github.com/ContainerSSH/community/blob/main/CODE_OF_CONDUCT.md) as well as our [contribution documentation](https://containerssh.io/development/).
