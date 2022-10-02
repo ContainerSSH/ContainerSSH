@@ -137,8 +137,8 @@ func (c *configHandler) OnConfig(request config.Request) (config.AppConfig, erro
     cfg := config.AppConfig{}
 
     if request.Username == "busybox" {
-        cfg.Docker.Execution.Launch.ContainerConfig = &container.Config{}
-        cfg.Docker.Execution.Launch.ContainerConfig.Image = "busybox"
+        cfg.Docker.Execution.DockerLaunchConfig.ContainerConfig = &container.Config{}
+        cfg.Docker.Execution.DockerLaunchConfig.ContainerConfig.Image = "busybox"
         cfg.Docker.Execution.DisableAgent = true
         cfg.Docker.Execution.Mode = config.DockerExecutionModeSession
         cfg.Docker.Execution.ShellCommand = []string{"/bin/sh"}
