@@ -47,7 +47,7 @@ archives:
       - goos: windows
         format: zip
     files:
-      - LICENSE.md
+      - LICENSE
       - NOTICE.md
       - config.example.yaml
 nfpms:
@@ -71,8 +71,8 @@ nfpms:
       - src: config.example.yaml
         dst: /etc/containerssh/config.yaml
         type: config
-      - src: LICENSE.md
-        dst: /usr/share/doc/containerssh/LICENSE.md
+      - src: LICENSE
+        dst: /usr/share/doc/containerssh/LICENSE
       - src: NOTICE.md
         dst: /usr/share/doc/containerssh/NOTICE.md
       - dst: /etc/containerssh
@@ -94,6 +94,6 @@ release:
     name: containerssh
   prerelease: auto
   extra_files:
-    - glob: LICENSE.md
+    - glob: LICENSE
     - glob: NOTICE.md
     - glob: containerssh-authconfig-openapi.json

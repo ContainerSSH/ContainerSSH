@@ -9,7 +9,7 @@
 [![Docker Image Size (latest by date)](https://img.shields.io/docker/image-size/containerssh/containerssh?style=for-the-badge)](http://hub.docker.com/r/containerssh/containerssh)
 [![Go Report Card](https://goreportcard.com/badge/github.com/containerssh/containerssh?style=for-the-badge)](https://goreportcard.com/report/github.com/containerssh/containerssh)
 [![LGTM Alerts](https://img.shields.io/lgtm/alerts/github/ContainerSSH/ContainerSSH?style=for-the-badge)](https://lgtm.com/projects/g/ContainerSSH/ContainerSSH/)
-[![License: MIT-0](https://img.shields.io/badge/license-MIT--0-green?style=for-the-badge)](LICENSE.md)
+[![License: Apache 2.0](https://img.shields.io/github/license/ContainerSSH/ContainerSSH?style=for-the-badge)](LICENSE.md)
 
 ## ContainerSSH in One Minute
 
