@@ -3,7 +3,7 @@ module github.com/containerssh/containerssh
 go 1.18
 
 require (
-	github.com/docker/docker v20.10.18+incompatible
+	github.com/docker/docker v20.10.19+incompatible
 	github.com/go-enry/go-license-detector/v4 v4.1.0
 	github.com/mitchellh/golicense v0.2.0
 	github.com/rsc/goversion v1.2.0
@@ -61,7 +61,6 @@ require (
 	github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd // indirect
 	github.com/modern-go/reflect2 v1.0.2 // indirect
 	github.com/montanaflynn/stats v0.0.0-20180911141734-db72e6cae808 // indirect
-	github.com/onsi/gomega v1.10.3 // indirect
 	github.com/opencontainers/go-digest v1.0.0 // indirect
 	github.com/opencontainers/image-spec v1.0.2 // indirect
 	github.com/oschwald/geoip2-golang v1.5.0 // indirect
@@ -95,7 +94,6 @@ require (
 	gopkg.in/warnings.v0 v0.1.2 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
-	gotest.tools/v3 v3.0.3 // indirect
 	k8s.io/api v0.23.0 // indirect
 	k8s.io/apimachinery v0.23.0 // indirect
 	k8s.io/client-go v0.23.0 // indirect
