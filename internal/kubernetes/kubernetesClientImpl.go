@@ -150,13 +150,13 @@ func (k *kubernetesClientImpl) getPodConfig(
 		podConfig.Spec.Containers[k.config.Pod.ConsoleContainerNumber].Command = k.config.Pod.IdleCommand
 	}
 
-	k.addLabelsToPodConfig(podConfig, labels)
-	k.addAnnotationsToPodConfig(podConfig, annotations)
-	k.addEnvToPodConfig(env, podConfig)
+	k.addLabelsToPodConfig(&podConfig, labels)
+	k.addAnnotationsToPodConfig(&podConfig, annotations)
+	k.addEnvToPodConfig(env, &podConfig)
 	return podConfig, nil
 }
 
-func (k *kubernetesClientImpl) addLabelsToPodConfig(podConfig containerSSHConfig.KubernetesPodConfig, labels map[string]string) {
+func (k *kubernetesClientImpl) addLabelsToPodConfig(podConfig *containerSSHConfig.KubernetesPodConfig, labels map[string]string) {
 	if podConfig.Metadata.Labels == nil {
 		podConfig.Metadata.Labels = map[string]string{}
 	}
@@ -165,7 +165,7 @@ func (k *kubernetesClientImpl) addLabelsToPodConfig(podConfig containerSSHConfig
 	}
 }
 
-func (k *kubernetesClientImpl) addAnnotationsToPodConfig(podConfig containerSSHConfig.KubernetesPodConfig, annotations map[string]string) {
+func (k *kubernetesClientImpl) addAnnotationsToPodConfig(podConfig *containerSSHConfig.KubernetesPodConfig, annotations map[string]string) {
 	if podConfig.Metadata.Annotations == nil {
 		podConfig.Metadata.Annotations = map[string]string{}
 	}
@@ -174,7 +174,7 @@ func (k *kubernetesClientImpl) addAnnotationsToPodConfig(podConfig containerSSHC
 	}
 }
 
-func (k *kubernetesClientImpl) addEnvToPodConfig(env map[string]string, podConfig containerSSHConfig.KubernetesPodConfig) {
+func (k *kubernetesClientImpl) addEnvToPodConfig(env map[string]string, podConfig *containerSSHConfig.KubernetesPodConfig) {
 	for key, value := range env {
 		podConfig.Spec.Containers[k.config.Pod.ConsoleContainerNumber].Env = append(
 			podConfig.Spec.Containers[k.config.Pod.ConsoleContainerNumber].Env,
