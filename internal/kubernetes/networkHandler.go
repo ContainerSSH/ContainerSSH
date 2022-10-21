@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"net"
+	"regexp"
 	"strings"
 	"sync"
 
@@ -76,9 +77,13 @@ func (n *networkHandler) OnHandshakeSuccess(meta metadata.ConnectionAuthenticate
 	}
 
 	spec.Containers[n.config.Pod.ConsoleContainerNumber].Command = n.config.Pod.IdleCommand
+	r, err := regexp.Compile("[^[:alnum:]|\\.]")
+	if err != nil {
+		return nil, meta, fmt.Errorf("fail to compile regexp")
+	}
 	n.labels = map[string]string{
 		"containerssh_connection_id": n.connectionID,
-		"containerssh_username":      meta.Username,
+		"containerssh_username":      r.ReplaceAllString(meta.Username, "-"),
 	}
 	for authMetadataName, labelName := range n.config.Pod.ExposeAuthMetadataAsLabels {
 		if value, ok := meta.GetMetadata()[authMetadataName]; ok {
