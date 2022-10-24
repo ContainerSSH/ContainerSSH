@@ -77,7 +77,9 @@ func (n *networkHandler) OnHandshakeSuccess(meta metadata.ConnectionAuthenticate
 	}
 
 	spec.Containers[n.config.Pod.ConsoleContainerNumber].Command = n.config.Pod.IdleCommand
-	r, err := regexp.Compile("[^[:alnum:]|\\.]")
+	var r *regexp.Regexp
+	var err error
+	r, err = regexp.Compile(`[^[:alnum:]|\.]`)
 	if err != nil {
 		return nil, meta, fmt.Errorf("fail to compile regexp")
 	}
@@ -100,7 +102,6 @@ func (n *networkHandler) OnHandshakeSuccess(meta metadata.ConnectionAuthenticate
 		}
 	}
 
-	var err error
 	if n.config.Pod.Mode == publicConfig.KubernetesExecutionModeConnection {
 		if n.pod, err = n.cli.createPod(ctx, n.labels, n.annotations, env, nil, nil); err != nil {
 			return nil, meta, err
