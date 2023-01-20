@@ -3,7 +3,7 @@ module github.com/containerssh/containerssh
 go 1.18
 
 require (
-	github.com/docker/docker v20.10.19+incompatible
+	github.com/docker/docker v20.10.23+incompatible
 	github.com/go-enry/go-license-detector/v4 v4.1.0
 	github.com/mitchellh/golicense v0.2.0
 	github.com/rsc/goversion v1.2.0
