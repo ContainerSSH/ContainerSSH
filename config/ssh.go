@@ -398,7 +398,8 @@ func (c SSHCipherList) StringList() []string {
 	return ciphers
 }
 
-var serverVersionRegexp = regexp.MustCompile(`^SSH-2.0-[a-zA-Z0-9]+(| [a-zA-Z0-9- _.]+)$`)
+var serverVersionRegexp = regexp.MustCompile(`^SSH-2.0-[!-,.-~]+( [a-zA-Z0-9- _.]+)?$`)
+var serverVersionMaxLen = 253
 
 // SSHServerVersion is a string that is issued to the client when connecting.
 type SSHServerVersion string
@@ -406,7 +407,7 @@ type SSHServerVersion string
 // Validate checks if the server version conforms to RFC 4253 section 4.2.
 // See https://tools.ietf.org/html/rfc4253#page-4
 func (s SSHServerVersion) Validate() error {
-	if !serverVersionRegexp.MatchString(string(s)) {
+	if len(s) > serverVersionMaxLen || !serverVersionRegexp.MatchString(string(s)) {
 		return fmt.Errorf("invalid server version string (%s), see https://tools.ietf.org/html/rfc4253#page-4 section 4.2. for details", s)
 	}
 	return nil
