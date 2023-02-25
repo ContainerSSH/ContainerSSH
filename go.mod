@@ -22,7 +22,7 @@ require (
 	github.com/qdm12/reprint v0.0.0-20200326205758-722754a53494
 	github.com/stretchr/testify v1.7.0
 	golang.org/x/crypto v0.0.0-20220112180741-5e0467b6c7ce
-	golang.org/x/sys v0.0.0-20220114195835-da31bd327af9
+	golang.org/x/sys v0.1.0
 	gopkg.in/jcmturner/goidentity.v3 v3.0.0
 	gopkg.in/yaml.v3 v3.0.1
 	k8s.io/api v0.23.0
