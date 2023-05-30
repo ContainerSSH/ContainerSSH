@@ -7,10 +7,8 @@ import (
 	"crypto/x509"
 	"encoding/pem"
 	"fmt"
-	"math/rand"
-	"strings"
-	"time"
 
+	"go.containerssh.io/libcontainerssh/internal/test"
 	"golang.org/x/crypto/ssh"
 )
 
@@ -57,17 +55,7 @@ func (u *TestUser) KeyboardInteractiveChallengeResponse() (questions KeyboardInt
 
 // RandomPassword generates a random password for this user.
 func (u *TestUser) RandomPassword() {
-	// We are only using this user for testing purposes, so no security is required.
-	random := rand.New(rand.NewSource(time.Now().UnixNano())) //nolint:gosec
-	length := 16
-	runes := []rune("ABCDEFGHIJKLMNOPQRSTUVWXYZ" +
-		"abcdefghijklmnopqrstuvwxyz" +
-		"0123456789!%$#-_=+")
-	var passwordBuilder strings.Builder
-	for i := 0; i < length; i++ {
-		passwordBuilder.WriteRune(runes[random.Intn(len(runes))])
-	}
-	u.password = passwordBuilder.String()
+	u.password = test.RandomString(16)
 }
 
 // GenerateKey generates a public and private key pair that can be used to authenticate with this user.

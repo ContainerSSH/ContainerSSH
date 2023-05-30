@@ -7,7 +7,7 @@ import (
 	"go.containerssh.io/libcontainerssh/metadata"
 )
 
-// OAuth2Client is the client supporting OAuth2-based authentication. It only supports keyboard-interactive
+// OAuth2Client is the urlEncodedClient supporting OAuth2-based authentication. It only supports keyboard-interactive
 // authentication as that is the only method to output the login-link to the user.
 type OAuth2Client interface {
 	KeyboardInteractiveAuthenticator
@@ -17,19 +17,16 @@ type OAuth2Client interface {
 type OAuth2Provider interface {
 	// SupportsDeviceFlow returns true if the provider supports authenticating via the device flow.
 	SupportsDeviceFlow() bool
-	// GetDeviceFlow returns the OAuth2DeviceFlow for a single client used for performing a device flow
+	// GetDeviceFlow returns the OAuth2DeviceFlow for a single urlEncodedClient used for performing a device flow
 	// authorization with the OAuth2 server. The method must panic if the device flow is not supported.
-	GetDeviceFlow(connectionMetadata metadata.ConnectionAuthPendingMetadata) (OAuth2DeviceFlow, error)
+	GetDeviceFlow(ctx context.Context, connectionMetadata metadata.ConnectionAuthPendingMetadata) (OAuth2DeviceFlow, error)
 
 	// SupportsAuthorizationCodeFlow returns true if the provider supports the authorization code flow.
 	SupportsAuthorizationCodeFlow() bool
-	// GetAuthorizationCodeFlow returns the OAuth2AuthorizationCodeFlow for a single client used for performing
+	// GetAuthorizationCodeFlow returns the OAuth2AuthorizationCodeFlow for a single urlEncodedClient used for performing
 	// authorization code flow authorization with the OAuth2 server. The method must panic if the device flow is not
 	// supported.
-	GetAuthorizationCodeFlow(connectionMetadata metadata.ConnectionAuthPendingMetadata) (
-		OAuth2AuthorizationCodeFlow,
-		error,
-	)
+	GetAuthorizationCodeFlow(ctx context.Context, connectionMetadata metadata.ConnectionAuthPendingMetadata) (OAuth2AuthorizationCodeFlow, error)
 }
 
 type OAuth2Flow interface {
@@ -67,7 +64,7 @@ type OAuth2DeviceFlow interface {
 	)
 
 	// Verify starts polling the OAuth2 server if the authorization has been completed. The ctx parameter contains a
-	// context that will be canceled when the client disconnects.
+	// context that will be canceled when the urlEncodedClient disconnects.
 	//
 	// This method should return the access token, and additionally may also return a key-value map of parameters
 	// to be passed to the configuration server.

@@ -94,7 +94,7 @@ func (c *kerberosAuthClient) Password(
 		return &kerberosAuthContext{
 			meta:    meta.AuthFailed(),
 			success: false,
-			err:     fmt.Errorf("authentication client not configured for password authentication"),
+			err:     fmt.Errorf("authentication urlEncodedClient not configured for password authentication"),
 		}
 	}
 
@@ -171,7 +171,7 @@ func (c *kerberosAuthClient) GSSAPI(meta metadata.ConnectionMetadata) GSSAPIServ
 			connectionId: meta.ConnectionID,
 			remoteAddr:   meta.RemoteAddress.IP,
 			success:      false,
-			err:          fmt.Errorf("authentication client not configured for GSSAPI authentication"),
+			err:          fmt.Errorf("authentication urlEncodedClient not configured for GSSAPI authentication"),
 		}
 	}
 	return &kerberosAuthContext{

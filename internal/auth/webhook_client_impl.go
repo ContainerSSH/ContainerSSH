@@ -8,12 +8,12 @@ import (
 	"strings"
 	"time"
 
-    "go.containerssh.io/libcontainerssh/auth"
-    "go.containerssh.io/libcontainerssh/http"
-    "go.containerssh.io/libcontainerssh/internal/metrics"
-    "go.containerssh.io/libcontainerssh/log"
-    "go.containerssh.io/libcontainerssh/message"
-    "go.containerssh.io/libcontainerssh/metadata"
+	"go.containerssh.io/libcontainerssh/auth"
+	"go.containerssh.io/libcontainerssh/http"
+	"go.containerssh.io/libcontainerssh/internal/metrics"
+	"go.containerssh.io/libcontainerssh/log"
+	"go.containerssh.io/libcontainerssh/message"
+	"go.containerssh.io/libcontainerssh/metadata"
 )
 
 type webhookClient struct {

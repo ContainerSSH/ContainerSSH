@@ -1,10 +1,10 @@
 package auth
 
 import (
-    "go.containerssh.io/libcontainerssh/config"
-    "go.containerssh.io/libcontainerssh/http"
-    "go.containerssh.io/libcontainerssh/log"
-    "go.containerssh.io/libcontainerssh/message"
+	"go.containerssh.io/libcontainerssh/config"
+	"go.containerssh.io/libcontainerssh/http"
+	"go.containerssh.io/libcontainerssh/log"
+	"go.containerssh.io/libcontainerssh/message"
 )
 
 // NewServer returns a complete HTTP server that responds to the authentication requests.

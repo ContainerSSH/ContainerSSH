@@ -3,10 +3,10 @@ package auth
 import (
 	"fmt"
 
-    "go.containerssh.io/libcontainerssh/config"
-    "go.containerssh.io/libcontainerssh/internal/metrics"
-    "go.containerssh.io/libcontainerssh/log"
-    "go.containerssh.io/libcontainerssh/service"
+	"go.containerssh.io/libcontainerssh/config"
+	"go.containerssh.io/libcontainerssh/internal/metrics"
+	"go.containerssh.io/libcontainerssh/log"
+	"go.containerssh.io/libcontainerssh/service"
 )
 
 // NewPasswordAuthenticator returns a password authenticator as configured, and if needed a backing service that needs

@@ -2,47 +2,46 @@ package auth
 
 import (
 	"context"
+	"encoding/base64"
 	"time"
 
-    "go.containerssh.io/libcontainerssh/config"
-    http2 "go.containerssh.io/libcontainerssh/http"
-    "go.containerssh.io/libcontainerssh/log"
-    "go.containerssh.io/libcontainerssh/message"
-    "go.containerssh.io/libcontainerssh/metadata"
+	"go.containerssh.io/libcontainerssh/config"
+	"go.containerssh.io/libcontainerssh/http"
+	"go.containerssh.io/libcontainerssh/log"
+	"go.containerssh.io/libcontainerssh/message"
+	"go.containerssh.io/libcontainerssh/metadata"
 )
 
-//region Config
-
-// AuthOIDCConfig is the configuration for OpenID Connect authentication.
-
-//endregion
-
-//region GeoIPProvider
-
-func newOIDCProvider(config config.AuthOIDCConfig, logger log.Logger) (OAuth2Provider, error) {
+func newOIDCProvider(config config.AuthOAuth2ClientConfig, logger log.Logger) (OAuth2Provider, error) {
 	return &oidcProvider{
-		config: config,
-		logger: logger,
+		clientID:     config.ClientID,
+		clientSecret: config.ClientSecret,
+		config:       config.OIDC,
+		logger:       logger,
 	}, nil
 }
 
 type oidcProvider struct {
-	config config.AuthOIDCConfig
-	logger log.Logger
+	clientID     string
+	clientSecret string
+	config       config.AuthOIDCConfig
+	logger       log.Logger
 }
 
 func (o *oidcProvider) SupportsDeviceFlow() bool {
 	return o.config.DeviceFlow
 }
 
-func (o *oidcProvider) GetDeviceFlow(meta metadata.ConnectionAuthPendingMetadata) (OAuth2DeviceFlow, error) {
-	flow, err := o.createFlow(meta)
+func (o *oidcProvider) GetDeviceFlow(ctx context.Context, meta metadata.ConnectionAuthPendingMetadata) (OAuth2DeviceFlow, error) {
+	flow, err := o.createFlow(ctx, meta)
 	if err != nil {
 		return nil, err
 	}
 
 	return &oidcDeviceFlow{
 		flow,
+		10 * time.Second,
+		"",
 		meta,
 	}, nil
 }
@@ -51,11 +50,8 @@ func (o *oidcProvider) SupportsAuthorizationCodeFlow() bool {
 	return o.config.AuthorizationCodeFlow
 }
 
-func (o *oidcProvider) GetAuthorizationCodeFlow(meta metadata.ConnectionAuthPendingMetadata) (
-	OAuth2AuthorizationCodeFlow,
-	error,
-) {
-	flow, err := o.createFlow(meta)
+func (o *oidcProvider) GetAuthorizationCodeFlow(ctx context.Context, meta metadata.ConnectionAuthPendingMetadata) (OAuth2AuthorizationCodeFlow, error) {
+	flow, err := o.createFlow(ctx, meta)
 	if err != nil {
 		return nil, err
 	}
@@ -66,88 +62,46 @@ func (o *oidcProvider) GetAuthorizationCodeFlow(meta metadata.ConnectionAuthPend
 	}, nil
 }
 
-func (o *oidcProvider) createFlow(meta metadata.ConnectionAuthPendingMetadata) (oidcFlow, error) {
-	logger := o.logger.WithLabel("connectionID", meta.ConnectionID).WithLabel("username", meta.Username)
+func (o *oidcProvider) createFlow(ctx context.Context, meta metadata.ConnectionAuthPendingMetadata) (oidcFlow, error) {
+	logger := o.logger.
+		WithLabel("connectionID", meta.ConnectionID).
+		WithLabel("username", meta.Username)
 
-	client, err := http2.NewClient(o.config.HTTPClientConfiguration, logger)
+	cfg := o.config.HTTPClientConfiguration
+	cfg.RequestEncoding = config.RequestEncodingWWWURLEncoded
+	urlEncodedClient, err := http.NewClientWithHeaders(
+		cfg,
+		logger,
+		map[string][]string{
+			"authorization": {
+				"Basic " + base64.StdEncoding.EncodeToString([]byte(o.clientID+":"+o.clientSecret)),
+			},
+		},
+		true,
+	)
 	if err != nil {
 		return oidcFlow{}, message.WrapUser(
 			err,
-			message.EAuthGitHubHTTPClientCreateFailed,
+			message.EAuthOIDCHTTPClientCreateFailed,
 			"Authentication currently unavailable.",
-			"Cannot create GitHub device flow authenticator because the HTTP client configuration failed.",
+			"Cannot create OIDC device flow authenticator because the HTTP urlEncodedClient configuration failed.",
 		)
 	}
 
+	discovery := newOIDCDiscovery(o.logger)
+	discoveryResponse, err := discovery.Discover(ctx, urlEncodedClient)
+	if err != nil {
+		return oidcFlow{}, err
+	}
+
 	flow := oidcFlow{
-		meta:         meta,
-		provider:     o,
-		connectionID: meta.ConnectionID,
-		username:     meta.Username,
-		logger:       logger,
-		client:       client,
+		meta:              meta,
+		provider:          o,
+		connectionID:      meta.ConnectionID,
+		username:          meta.Username,
+		logger:            logger,
+		urlEncodedClient:  urlEncodedClient,
+		discoveryResponse: discoveryResponse,
 	}
 	return flow, nil
 }
-
-//endregion
-
-//region Flow
-
-type oidcFlow struct {
-	provider     *oidcProvider
-	connectionID string
-	username     string
-	logger       log.Logger
-	client       http2.Client
-	meta         metadata.ConnectionAuthPendingMetadata
-}
-
-func (o *oidcFlow) Deauthorize(ctx context.Context) {
-	panic("implement me")
-}
-
-//endregion
-
-//region Device flow
-
-type oidcDeviceFlow struct {
-	oidcFlow
-	meta metadata.ConnectionAuthPendingMetadata
-}
-
-func (o *oidcDeviceFlow) GetAuthorizationURL(ctx context.Context) (
-	verificationLink string,
-	userCode string,
-	expiration time.Duration,
-	err error,
-) {
-	panic("implement me")
-}
-
-func (o *oidcDeviceFlow) Verify(ctx context.Context) (string, metadata.ConnectionAuthenticatedMetadata, error) {
-	panic("implement me")
-}
-
-//endregion
-
-//region Authorization code flow
-
-type oidcAuthorizationCodeFlow struct {
-	oidcFlow
-	meta metadata.ConnectionAuthPendingMetadata
-}
-
-func (o *oidcAuthorizationCodeFlow) GetAuthorizationURL(ctx context.Context) (string, error) {
-	panic("implement me")
-}
-
-func (o *oidcAuthorizationCodeFlow) Verify(
-	ctx context.Context,
-	state string,
-	authorizationCode string,
-) (string, metadata.ConnectionAuthenticatedMetadata, error) {
-	panic("implement me")
-}
-
-//endregion

@@ -176,12 +176,23 @@ func (k *kubernetesClientImpl) addAnnotationsToPodConfig(podConfig *containerSSH
 
 func (k *kubernetesClientImpl) addEnvToPodConfig(env map[string]string, podConfig *containerSSHConfig.KubernetesPodConfig) {
 	for key, value := range env {
-		podConfig.Spec.Containers[k.config.Pod.ConsoleContainerNumber].Env = append(
-			podConfig.Spec.Containers[k.config.Pod.ConsoleContainerNumber].Env,
-			core.EnvVar{
-				Name:  key,
-				Value: value,
-			},
-		)
+		for containerNo := range podConfig.Spec.Containers {
+			podConfig.Spec.Containers[containerNo].Env = append(
+				podConfig.Spec.Containers[containerNo].Env,
+				core.EnvVar{
+					Name:  key,
+					Value: value,
+				},
+			)
+		}
+		for containerNo := range podConfig.Spec.InitContainers {
+			podConfig.Spec.InitContainers[containerNo].Env = append(
+				podConfig.Spec.InitContainers[containerNo].Env,
+				core.EnvVar{
+					Name:  key,
+					Value: value,
+				},
+			)
+		}
 	}
 }

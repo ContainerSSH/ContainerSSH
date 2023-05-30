@@ -4,10 +4,11 @@ import (
 	"context"
 	"fmt"
 	"strings"
+	"time"
 
-    "go.containerssh.io/libcontainerssh/log"
-    "go.containerssh.io/libcontainerssh/message"
-    "go.containerssh.io/libcontainerssh/metadata"
+	"go.containerssh.io/libcontainerssh/log"
+	"go.containerssh.io/libcontainerssh/message"
+	"go.containerssh.io/libcontainerssh/metadata"
 )
 
 type oauth2Client struct {
@@ -36,7 +37,10 @@ func (o *oauth2Context) Metadata() metadata.ConnectionAuthenticatedMetadata {
 
 func (o *oauth2Context) OnDisconnect() {
 	if o.flow != nil {
-		o.flow.Deauthorize(context.TODO())
+		// TODO proper timeout handling
+		ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+		defer cancel()
+		o.flow.Deauthorize(ctx)
 	}
 }
 
@@ -53,7 +57,7 @@ func (o *oauth2Client) KeyboardInteractive(
 	ctx := context.TODO()
 	var err error
 	if o.provider.SupportsDeviceFlow() {
-		deviceFlow, err := o.provider.GetDeviceFlow(meta)
+		deviceFlow, err := o.provider.GetDeviceFlow(ctx, meta)
 		if err == nil {
 			authorizationURL, userCode, expiration, err := deviceFlow.GetAuthorizationURL(ctx)
 			if err == nil {
@@ -82,7 +86,7 @@ func (o *oauth2Client) KeyboardInteractive(
 		}
 	}
 	if o.provider.SupportsAuthorizationCodeFlow() {
-		authCodeFlow, err := o.provider.GetAuthorizationCodeFlow(meta)
+		authCodeFlow, err := o.provider.GetAuthorizationCodeFlow(ctx, meta)
 		if err == nil {
 			link, err := authCodeFlow.GetAuthorizationURL(ctx)
 			if err == nil {

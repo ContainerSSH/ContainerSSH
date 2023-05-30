@@ -6,7 +6,7 @@ import (
     "time"
 )
 
-func generateRandomString(length int) string {
+func RandomString(length int) string {
     // We are only using this user for testing purposes, so no security is required.
     random := rand.New(rand.NewSource(time.Now().UnixNano())) //nolint:gosec
     runes := []rune("ABCDEFGHIJKLMNOPQRSTUVWXYZ" +

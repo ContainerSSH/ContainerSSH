@@ -63,10 +63,19 @@ func (c *client) Delete(
 	)
 }
 
-func (c *client) Request(Method string, path string, requestBody interface{}, responseBody interface{}) (statusCode int, err error) {
+func (c *client) Request(method string, path string, requestBody interface{}, responseBody interface{}) (statusCode int, err error) {
 	return c.request(
-		Method,
+		method,
 		path,
+		requestBody,
+		responseBody,
+	)
+}
+
+func (c *client) RequestURL(method string, url string, requestBody interface{}, responseBody interface{}) (statusCode int, err error) {
+	return c.requestURL(
+		method,
+		url,
 		requestBody,
 		responseBody,
 	)
@@ -97,22 +106,31 @@ func (c *client) Post(
 	)
 }
 
-func (c *client) request(
+func (c *client) requestURL(
 	method string,
-	path string,
+	u string,
 	requestBody interface{},
 	responseBody interface{},
 ) (int, error) {
-	logger := c.logger.WithLabel("method", method).WithLabel("path", path)
+	return c.requestURLWithLogger(method, u, requestBody, responseBody, c.logger)
+}
+
+func (c *client) requestURLWithLogger(
+	method string,
+	u string,
+	requestBody interface{},
+	responseBody interface{},
+	logger log.Logger,
+) (int, error) {
+	logger = logger.WithLabel("method", method).WithLabel("url", u)
 
 	httpClient := c.createHTTPClient(logger)
-
-	req, err := c.createRequest(method, path, requestBody, logger)
+	req, err := c.createRequestForURL(method, u, requestBody, logger)
 	if err != nil {
 		return 0, err
 	}
 
-	logger.Debug(message.NewMessage(message.MHTTPClientRequest, "HTTP %s request to %s%s", method, c.config.URL, path))
+	logger.Debug(message.NewMessage(message.MHTTPClientRequest, "HTTP %s request to %s", method, u))
 
 	resp, err := httpClient.Do(req)
 	if err != nil {
@@ -121,7 +139,7 @@ func (c *client) request(
 			return 0, err
 		}
 		err = message.Wrap(err,
-			message.EHTTPFailureConnectionFailed, "HTTP %s request to %s%s failed", method, c.config.URL, path)
+			message.EHTTPFailureConnectionFailed, "HTTP %s request to %s failed", method, u)
 		logger.Debug(err)
 		return 0, err
 	}
@@ -137,7 +155,7 @@ func (c *client) request(
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
 		err = message.Wrap(err,
-			message.EHTTPFailureConnectionFailed, "HTTP %s request to %s%s failed", method, c.config.URL, path)
+			message.EHTTPFailureConnectionFailed, "HTTP %s request to %s failed", method, u)
 		logger.Debug(err)
 		return 0, err
 	}
@@ -157,37 +175,57 @@ func (c *client) request(
 	return resp.StatusCode, nil
 }
 
+func (c *client) request(
+	method string,
+	path string,
+	requestBody interface{},
+	responseBody interface{},
+) (int, error) {
+	logger := c.logger.WithLabel("path", path)
+	u := c.config.URL + path
+	return c.requestURLWithLogger(method, u, requestBody, responseBody, logger)
+}
+
 func (c *client) createRequest(method string, path string, requestBody interface{}, logger log.Logger) (
 	*http.Request,
 	error,
 ) {
+	return c.createRequestForURL(method, fmt.Sprintf("%s%s", c.config.URL, path), requestBody, logger)
+}
+
+func (c *client) createRequestForURL(method string, u string, requestBody interface{}, logger log.Logger) (
+	*http.Request,
+	error,
+) {
 	buffer := &bytes.Buffer{}
-	switch c.config.RequestEncoding {
-	case config.RequestEncodingDefault:
-		fallthrough
-	case config.RequestEncodingJSON:
-		err := json.NewEncoder(buffer).Encode(requestBody)
-		if err != nil {
-			// This is a bug
-			err := message.Wrap(err, message.EHTTPFailureEncodeFailed, "BUG: HTTP request encoding failed")
-			logger.Critical(err)
-			return nil, err
+	if requestBody != nil {
+		switch c.config.RequestEncoding {
+		case config.RequestEncodingDefault:
+			fallthrough
+		case config.RequestEncodingJSON:
+			err := json.NewEncoder(buffer).Encode(requestBody)
+			if err != nil {
+				// This is a bug
+				err := message.Wrap(err, message.EHTTPFailureEncodeFailed, "BUG: HTTP request encoding failed")
+				logger.Critical(err)
+				return nil, err
+			}
+		case config.RequestEncodingWWWURLEncoded:
+			encoder := schema.NewEncoder()
+			form := url.Values{}
+			if err := encoder.Encode(requestBody, form); err != nil {
+				err := message.Wrap(err, message.EHTTPFailureEncodeFailed, "BUG: HTTP request encoding failed")
+				logger.Critical(err)
+				return nil, err
+			}
+			buffer.WriteString(form.Encode())
+		default:
+			panic(fmt.Errorf("invalid request encoding: %s", c.config.RequestEncoding))
 		}
-	case config.RequestEncodingWWWURLEncoded:
-		encoder := schema.NewEncoder()
-		form := url.Values{}
-		if err := encoder.Encode(requestBody, form); err != nil {
-			err := message.Wrap(err, message.EHTTPFailureEncodeFailed, "BUG: HTTP request encoding failed")
-			logger.Critical(err)
-			return nil, err
-		}
-		buffer.WriteString(form.Encode())
-	default:
-		panic(fmt.Errorf("invalid request encoding: %s", c.config.RequestEncoding))
 	}
 	req, err := http.NewRequest(
 		method,
-		fmt.Sprintf("%s%s", c.config.URL, path),
+		u,
 		buffer,
 	)
 	if err != nil {

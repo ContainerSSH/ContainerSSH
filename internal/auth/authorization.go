@@ -3,7 +3,7 @@
 package auth
 
 import (
-    "go.containerssh.io/libcontainerssh/metadata"
+	"go.containerssh.io/libcontainerssh/metadata"
 )
 
 // AuthzProvider provides a method to verify the authenticated username against the username provided by the user.
@@ -30,7 +30,7 @@ type AuthorizationResponse interface {
 	// values have precedence. If a value is not returned in this field the value from the authentication process is
 	// taken.
 	Metadata() metadata.ConnectionAuthenticatedMetadata
-	// OnDisconnect is called when the client disconnects, or if the authorization fails due to a different reason.
+	// OnDisconnect is called when the urlEncodedClient disconnects, or if the authorization fails due to a different reason.
 	// This hook can be used to clean up issued temporary credentials.
 	OnDisconnect()
 }

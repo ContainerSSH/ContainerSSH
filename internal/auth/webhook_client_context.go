@@ -1,7 +1,7 @@
 package auth
 
 import (
-    "go.containerssh.io/libcontainerssh/metadata"
+	"go.containerssh.io/libcontainerssh/metadata"
 )
 
 type webhookClientContext struct {

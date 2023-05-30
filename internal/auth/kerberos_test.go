@@ -6,14 +6,6 @@ import (
 	"os"
 	"testing"
 
-	"github.com/containerssh/gokrb5/v8/client"
-	krb5cfg "github.com/containerssh/gokrb5/v8/config"
-	"github.com/containerssh/gokrb5/v8/crypto"
-	"github.com/containerssh/gokrb5/v8/gssapi"
-	"github.com/containerssh/gokrb5/v8/iana/flags"
-	"github.com/containerssh/gokrb5/v8/messages"
-	"github.com/containerssh/gokrb5/v8/spnego"
-	"github.com/containerssh/gokrb5/v8/types"
 	"github.com/stretchr/testify/assert"
 	configuration "go.containerssh.io/libcontainerssh/config"
 	"go.containerssh.io/libcontainerssh/internal/auth"
@@ -23,7 +15,17 @@ import (
 	"go.containerssh.io/libcontainerssh/internal/test"
 	"go.containerssh.io/libcontainerssh/log"
 	"go.containerssh.io/libcontainerssh/metadata"
+
 	"golang.org/x/crypto/ssh"
+
+	"github.com/containerssh/gokrb5/v8/client"
+	krb5cfg "github.com/containerssh/gokrb5/v8/config"
+	"github.com/containerssh/gokrb5/v8/crypto"
+	"github.com/containerssh/gokrb5/v8/gssapi"
+	"github.com/containerssh/gokrb5/v8/iana/flags"
+	"github.com/containerssh/gokrb5/v8/messages"
+	"github.com/containerssh/gokrb5/v8/spnego"
+	"github.com/containerssh/gokrb5/v8/types"
 )
 
 func tempFile(t *testing.T) *os.File {
@@ -318,7 +320,7 @@ func doGssAuth(
 	micField := buildMic(username)
 	mic, err := client.GetMIC(micField)
 	if err != nil {
-		return "", fmt.Errorf("Failed to get MIC from client (%w)", err)
+		return "", fmt.Errorf("Failed to get MIC from urlEncodedClient (%w)", err)
 	}
 
 	err = server.VerifyMIC(micField, mic)

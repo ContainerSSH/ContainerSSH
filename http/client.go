@@ -3,9 +3,18 @@ package http
 // Client is a simplified HTTP interface that ensures that a struct is transported to a remote endpoint
 // properly encoded, and the response is decoded into the response struct.
 type Client interface {
+	// Request queries the specified path on the configured endpoint with the specified method.
 	Request(
-		Method string,
+		method string,
 		path string,
+		requestBody interface{},
+		responseBody interface{},
+	) (statusCode int, err error)
+
+	// RequestURL requests a URL irrespective of the endpoint configured on the client.
+	RequestURL(
+		method string,
+		url string,
 		requestBody interface{},
 		responseBody interface{},
 	) (statusCode int, err error)

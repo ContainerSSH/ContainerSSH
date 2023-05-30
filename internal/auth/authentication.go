@@ -14,7 +14,7 @@ type AuthenticationType string
 // AuthenticationTypeAll indicates all authentication types are applicable.
 const AuthenticationTypeAll AuthenticationType = ""
 
-// AuthenticationTypePassword indicates the authentication where the user submits the password from their client.
+// AuthenticationTypePassword indicates the authentication where the user submits the password from their urlEncodedClient.
 const AuthenticationTypePassword AuthenticationType = "password"
 
 // AuthenticationTypePublicKey indicates the authentication type where the client performs a public-private key
@@ -25,7 +25,7 @@ const AuthenticationTypePublicKey AuthenticationType = "pubkey"
 // questions and must answer interactively.
 const AuthenticationTypeKeyboardInteractive AuthenticationType = "keyboard-interactive"
 
-// AuthenticationTypeGSSAPI indicates a cryptographic login method typically tied to the client computer, e.g.
+// AuthenticationTypeGSSAPI indicates a cryptographic login method typically tied to the urlEncodedClient computer, e.g.
 // Kerberos.
 const AuthenticationTypeGSSAPI AuthenticationType = "gssapi"
 
@@ -35,10 +35,10 @@ const AuthenticationTypeAuthz AuthenticationType = "authz"
 
 // PasswordAuthenticator validates the password of a user.
 type PasswordAuthenticator interface {
-	// Password authenticates with a password from the client. The returned AuthenticationContext contains the results
+	// Password authenticates with a password from the urlEncodedClient. The returned AuthenticationContext contains the results
 	// of the authentication process.
 	//
-	// - username is the username the user entered in their SSH session on the client side.
+	// - username is the username the user entered in their SSH session on the urlEncodedClient side.
 	// - password is the password the user entered when prompted for the password.
 	// - connectionID is the identifier for the metadata
 	Password(
@@ -49,7 +49,7 @@ type PasswordAuthenticator interface {
 
 // PublicKeyAuthenticator authenticates using an SSH public key.
 type PublicKeyAuthenticator interface {
-	// PubKey authenticates with a public key from the client. The returned AuthenticationContext contains the results
+	// PubKey authenticates with a public key from the urlEncodedClient. The returned AuthenticationContext contains the results
 	// of the authentication process.
 	PubKey(
 		metadata metadata.ConnectionAuthPendingMetadata,
@@ -57,7 +57,7 @@ type PublicKeyAuthenticator interface {
 	) AuthenticationContext
 }
 
-// KeyboardInteractiveAuthenticator is authenticates using a question-and-answer back and forth between the client
+// KeyboardInteractiveAuthenticator is authenticates using a question-and-answer back and forth between the urlEncodedClient
 // and the server.
 type KeyboardInteractiveAuthenticator interface {
 	// KeyboardInteractive is a method to post a series of questions to the user and receive answers.
@@ -86,7 +86,7 @@ type AuthenticationContext interface {
 	Error() error
 	// Metadata returns a set of metadata entries that have been obtained during the authentication.
 	Metadata() metadata.ConnectionAuthenticatedMetadata
-	// OnDisconnect is called when the client disconnects, or if the authentication fails due to a different reason.
+	// OnDisconnect is called when the urlEncodedClient disconnects, or if the authentication fails due to a different reason.
 	OnDisconnect()
 }
 

@@ -27,7 +27,7 @@ func Registry(t *testing.T, auth bool) RegistryHelper {
     var passwordPtr *string
     if auth {
         username := "test"
-        password := generateRandomString(16)
+        password := RandomString(16)
         hashedPassword, err := bcrypt.GenerateFromPassword([]byte(password), 0)
         if err != nil {
             t.Fatalf("Failed to generate password hash (%v)", err)

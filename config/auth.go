@@ -441,6 +441,9 @@ type AuthOAuth2ClientConfig struct {
 	// OIDC is the configuration for the OpenID Connect provider.
 	OIDC AuthOIDCConfig `json:"oidc" yaml:"oidc"`
 
+	// Generic is a generic OAuth2 authentication without OIDC userinfo. This method cannot verify the username.
+	Generic AuthGenericConfig `json:"generic" yaml:"generic"`
+
 	// QRCodeClients contains a list of strings that are used to identify SSH clients that can display an ASCII QR Code
 	// for the device authorization flow. Each string is compiled as regular expressions and are used to match against
 	// the client version string.
@@ -484,6 +487,10 @@ func (o *AuthOAuth2ClientConfig) Validate() error {
 		if err := o.OIDC.Validate(); err != nil {
 			return wrap(err, "oidc")
 		}
+	case AuthOAuth2GenericProvider:
+		if err := o.Generic.Validate(); err != nil {
+			return wrap(err, "generic")
+		}
 	}
 
 	return nil
@@ -497,6 +504,8 @@ const (
 	AuthOAuth2GitHubProvider OAuth2ProviderName = "github"
 	// AuthOAuth2OIDCProvider authenticates against a configured OIDC server.
 	AuthOAuth2OIDCProvider OAuth2ProviderName = "oidc"
+	// AuthOAuth2GenericProvider authenticates against a generic OAuth2 server.
+	AuthOAuth2GenericProvider OAuth2ProviderName = "generic"
 )
 
 func (o OAuth2ProviderName) Validate() error {
@@ -505,8 +514,10 @@ func (o OAuth2ProviderName) Validate() error {
 		return nil
 	case AuthOAuth2OIDCProvider:
 		return nil
+	case AuthOAuth2GenericProvider:
+		return nil
 	default:
-		return fmt.Errorf("invalid Oauth2 provider")
+		return fmt.Errorf("invalid oAuth2 provider")
 	}
 }
 
@@ -516,7 +527,7 @@ type OAuth2RedirectConfig struct {
 	HTTPServerConfiguration `json:",inline" yaml:",inline"`
 
 	// Webroot is a directory which contains all files that should be served as part of the return page
-	// the user lands on when completing the OAuth2 authentication process. The webroot must contain an
+	// the user lands on when completing the oAuth2 authentication process. The webroot must contain an
 	// index.html file, which will be served on the root URL. The files are read for each request and are not cached. If
 	// the webroot is left empty the default ContainerSSH return page is presented.
 	Webroot string `json:"webroot" yaml:"webroot"`
@@ -608,16 +619,49 @@ type AuthOIDCConfig struct {
 	HTTPClientConfiguration `json:",inline" yaml:",inline"`
 
 	// DeviceFlow enables or disables using the OIDC device flow.
-	DeviceFlow bool `json:"deviceFlow" yaml:"deviceFlow" default:"true"`
+	DeviceFlow bool `json:"deviceFlow" yaml:"deviceFlow"`
 	// AuthorizationCodeFlow enables or disables the OIDC authorization code flow.
-	AuthorizationCodeFlow bool `json:"authorizationCodeFlow" yaml:"authorizationCodeFlow" default:"true"`
+	AuthorizationCodeFlow bool `json:"authorizationCodeFlow" yaml:"authorizationCodeFlow"`
+
+	// UsernameField indicates the userinfo field that should be taken as the username.
+	UsernameField string `json:"usernameField" yaml:"usernameField" default:"sub"`
+
+	// RedirectURI is the URI the client is returned to. This URL should be configured to the redirect server endpoint.
+	RedirectURI string `json:"redirectURI" yaml:"redirectURI"`
 }
 
 func (o *AuthOIDCConfig) Validate() error {
 	if !o.DeviceFlow && !o.AuthorizationCodeFlow {
 		return fmt.Errorf("at least one of deviceFlow or authorizationCodeFlow must be enabled")
 	}
+	if o.AuthorizationCodeFlow && o.RedirectURI == "" {
+		return wrap(fmt.Errorf("redirectURI is required if the authorization code flow is enabled"), "redirectURI")
+	}
 	return o.HTTPClientConfiguration.Validate()
+}
+
+type AuthGenericConfig struct {
+	// AuthorizeEndpointURL is the endpoint configuration for the OAuth2 authorization
+	AuthorizeEndpointURL string `json:"authorizeEndpointURL" yaml:"authorizeEndpointURL"`
+	// TokenEndpoint is the endpoint configuration for the OAuth2 authorization
+	TokenEndpoint HTTPClientConfiguration `json:"tokenEndpoint" yaml:"tokenEndpoint"`
+	// RedirectURI is the URI the client is returned to. This URL should be configured to the redirect server endpoint.
+	RedirectURI string `json:"redirectURI" yaml:"redirectURI"`
+}
+
+func (o *AuthGenericConfig) Validate() error {
+	if _, err := url.ParseRequestURI(o.AuthorizeEndpointURL); err != nil {
+		return newError("authorizeEndpointURL", "invalid URL: %s", o.AuthorizeEndpointURL)
+	}
+
+	if _, err := url.ParseRequestURI(o.RedirectURI); err != nil {
+		return newError("redirectURI", "invalid URL: %s", o.RedirectURI)
+	}
+
+	if err := o.TokenEndpoint.Validate(); err != nil {
+		return wrap(err, "tokenEndpoint")
+	}
+	return nil
 }
 
 // endregion

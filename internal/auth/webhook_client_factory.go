@@ -1,13 +1,14 @@
 package auth
 
 import (
-    "go.containerssh.io/libcontainerssh/config"
-    "go.containerssh.io/libcontainerssh/http"
-    "go.containerssh.io/libcontainerssh/internal/metrics"
-    "go.containerssh.io/libcontainerssh/log"
+	"go.containerssh.io/libcontainerssh/config"
+	"go.containerssh.io/libcontainerssh/http"
+	"go.containerssh.io/libcontainerssh/internal/metrics"
+	"go.containerssh.io/libcontainerssh/log"
 )
 
-// NewWebhookClient creates a new HTTP authentication client.
+// NewWebhookClient creates a new HTTP authentication urlEncodedClient.
+//
 //goland:noinspection GoUnusedExportedFunction
 func NewWebhookClient(
 	authType AuthenticationType,

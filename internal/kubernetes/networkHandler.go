@@ -8,13 +8,13 @@ import (
 	"strings"
 	"sync"
 
-    "go.containerssh.io/libcontainerssh/auth"
-    publicConfig "go.containerssh.io/libcontainerssh/config"
-    "go.containerssh.io/libcontainerssh/internal/sshserver"
-    "go.containerssh.io/libcontainerssh/log"
-    "go.containerssh.io/libcontainerssh/message"
-    "go.containerssh.io/libcontainerssh/metadata"
-    "go.containerssh.io/libcontainerssh/internal/agentforward"
+	"go.containerssh.io/libcontainerssh/auth"
+	publicConfig "go.containerssh.io/libcontainerssh/config"
+	"go.containerssh.io/libcontainerssh/internal/agentforward"
+	"go.containerssh.io/libcontainerssh/internal/sshserver"
+	"go.containerssh.io/libcontainerssh/log"
+	"go.containerssh.io/libcontainerssh/message"
+	"go.containerssh.io/libcontainerssh/metadata"
 )
 
 type networkHandler struct {
@@ -74,6 +74,11 @@ func (n *networkHandler) OnHandshakeSuccess(meta metadata.ConnectionAuthenticate
 	env := map[string]string{}
 	for k, v := range meta.GetEnvironment() {
 		env[k] = v.Value
+	}
+	for authMetadataName, labelName := range n.config.Pod.ExposeAuthMetadataAsEnv {
+		if value, ok := meta.GetMetadata()[authMetadataName]; ok {
+			env[labelName] = value.Value
+		}
 	}
 
 	spec.Containers[n.config.Pod.ConsoleContainerNumber].Command = n.config.Pod.IdleCommand
