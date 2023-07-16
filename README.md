@@ -19,7 +19,7 @@ In a hurry? This one-minute video explains everything you need to know about Con
 
 ## Need help?
 
-[Join the Slack channel »](https://join.slack.com/t/containerssh/shared_invite/zt-w2ulatkm-hjGHk8OaxQCBX79XKJHAQQ)
+[Join the #containerssh Slack channel on the CNCF Slack »](https://communityinviter.com/apps/cloud-native/cncf)
 
 ## Use cases
 
