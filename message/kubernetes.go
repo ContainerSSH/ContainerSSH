@@ -21,6 +21,10 @@ const MKubernetesPodCreate = "KUBERNETES_POD_CREATE"
 // MKubernetesPodWait indicates that the ContainerSSH Kubernetes module is waiting for the pod to come up.
 const MKubernetesPodWait = "KUBERNETES_POD_WAIT"
 
+// MKubernetesUsernameTooLong indicates that the users username is too long to be provided as a label in the k8s pod.
+// The containerssh_username label is unavailable on that users pod.
+const MKubernetesUsernameTooLong = "KUBERNETES_USERNAME_TOO_LONG"
+
 // MKubernetesPodWaitFailed indicates that the ContainerSSH Kubernetes module failed to wait for the pod to come up.
 // Check the error message for details.
 const MKubernetesPodWaitFailed = "KUBERNETES_POD_WAIT_FAILED"

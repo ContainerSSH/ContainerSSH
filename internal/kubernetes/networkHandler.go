@@ -90,7 +90,16 @@ func (n *networkHandler) OnHandshakeSuccess(meta metadata.ConnectionAuthenticate
 	}
 	n.labels = map[string]string{
 		"containerssh_connection_id": n.connectionID,
-		"containerssh_username":      r.ReplaceAllString(meta.Username, "-"),
+	}
+	if len(meta.AuthenticatedUsername) <= 63 {
+		n.labels["containerssh_username"] = r.ReplaceAllString(meta.AuthenticatedUsername, "-")
+	} else {
+		n.logger.Warning(message.NewMessage(
+			message.MKubernetesUsernameTooLong,
+			"The users username (%s) is longer than the 63 character limit of kubernetes labels. The containerssh_username label will be unavailable in the users pod",
+			meta.AuthenticatedUsername,
+		),
+		)
 	}
 	for authMetadataName, labelName := range n.config.Pod.ExposeAuthMetadataAsLabels {
 		if value, ok := meta.GetMetadata()[authMetadataName]; ok {
