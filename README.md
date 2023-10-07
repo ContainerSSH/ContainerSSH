@@ -11,6 +11,8 @@
 [![LGTM Alerts](https://img.shields.io/lgtm/alerts/github/ContainerSSH/ContainerSSH?style=for-the-badge)](https://lgtm.com/projects/g/ContainerSSH/ContainerSSH/)
 [![License: Apache 2.0](https://img.shields.io/github/license/ContainerSSH/ContainerSSH?style=for-the-badge)](LICENSE.md)
 
+[![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2FContainerSSH%2FContainerSSH.svg?type=shield&issueType=license)](https://app.fossa.com/projects/git%2Bgithub.com%2FContainerSSH%2FContainerSSH?ref=badge_shield&issueType=license)
+
 ## ContainerSSH in One Minute
 
 In a hurry? This one-minute video explains everything you need to know about ContainerSSH.
