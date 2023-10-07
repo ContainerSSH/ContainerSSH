@@ -70,6 +70,19 @@ func (h *handler) OnAuthorization(meta metadata.ConnectionAuthenticatedMetadata)
 	metadata.ConnectionAuthenticatedMetadata,
 	error,
 ) {
+	if meta.RemoteAddress.IP.String() != "127.0.0.1" {
+		return false, meta.AuthFailed(), fmt.Errorf("invalid IP: %s", meta.RemoteAddress.IP.String())
+	}
+	if meta.ConnectionID != "0123456789ABCDEF" {
+		return false, meta.AuthFailed(), fmt.Errorf("invalid connection ID: %s", meta.ConnectionID)
+	}
+	if meta.AuthenticatedUsername == "foo" {
+		return true, meta.AuthFailed(), nil
+	}
+	if meta.Username == "crash" {
+		// Simulate a database failure
+		return false, meta.AuthFailed(), fmt.Errorf("database error")
+	}
 	return false, meta.AuthFailed(), nil
 }
 
@@ -140,6 +153,24 @@ func TestAuth(t *testing.T) {
 					auth3.PublicKey{
 						PublicKey: "ssh-rsa asdx",
 					},
+				)
+				assert.NotEqual(t, nil, authenticationContext.Error())
+				assert.Equal(t, false, authenticationContext.Success())
+
+				authenticationContext = client.Authorize(
+					metadata.NewTestAuthenticatingMetadata("foo").Authenticated("foo"),
+				)
+				assert.Equal(t, nil, authenticationContext.Error())
+				assert.Equal(t, true, authenticationContext.Success())
+
+				authenticationContext = client.Authorize(
+					metadata.NewTestAuthenticatingMetadata("foo").Authenticated("foonoauthz"),
+				)
+				assert.Equal(t, nil, authenticationContext.Error())
+				assert.Equal(t, false, authenticationContext.Success())
+
+				authenticationContext = client.Authorize(
+					metadata.NewTestAuthenticatingMetadata("crash").Authenticated("crash"),
 				)
 				assert.NotEqual(t, nil, authenticationContext.Error())
 				assert.Equal(t, false, authenticationContext.Success())

@@ -87,7 +87,7 @@ jobs:
       - name: Run go test
         run: |
           set -euo pipefail
-          go test -json -p 1 -v ./... 2>&1 | tee /tmp/gotest.log
+          go test -coverprofile=coverage.txt -covermode=atomic -json -p 1 -v ./... 2>&1 | tee /tmp/gotest.log
       - name: Format log output
         if: always()
         run: |
@@ -100,3 +100,7 @@ jobs:
           name: test-log
           path: /tmp/gotest.log
           if-no-files-found: error
+      - name: Upload coverage reports to Codecov
+        uses: codecov/codecov-action@v3
+        env:
+          CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}

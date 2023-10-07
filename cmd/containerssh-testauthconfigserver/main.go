@@ -3,16 +3,16 @@
 // This OpenAPI document describes the API endpoints that are required for implementing an authentication
 // and configuration server for ContainerSSH. (See https://github.com/containerssh/libcontainerssh for details.)
 //
-//     Schemes: http, https
-//     Host: localhost
-//     BasePath: /
-//     Version: 0.5.0
+//	Schemes: http, https
+//	Host: localhost
+//	BasePath: /
+//	Version: 0.5.0
 //
-//     Consumes:
-//     - application/json
+//	Consumes:
+//	- application/json
 //
-//     Produces:
-//     - application/json
+//	Produces:
+//	- application/json
 //
 // swagger:meta
 package main
@@ -40,19 +40,21 @@ type authHandler struct {
 
 // swagger:operation POST /password Authentication authPassword
 //
-// Password authentication
+// # Password authentication
 //
 // ---
 // parameters:
-// - name: request
-//   in: body
-//   description: The authentication request
-//   required: true
-//   schema:
+//   - name: request
+//     in: body
+//     description: The authentication request
+//     required: true
+//     schema:
 //     "$ref": "#/definitions/PasswordAuthRequest"
+//
 // responses:
-//   "200":
-//     "$ref": "#/responses/AuthResponse"
+//
+//	"200":
+//	  "$ref": "#/responses/AuthResponse"
 func (a *authHandler) OnPassword(meta metadata.ConnectionAuthPendingMetadata, Password []byte) (
 	bool,
 	metadata.ConnectionAuthenticatedMetadata,
@@ -60,53 +62,57 @@ func (a *authHandler) OnPassword(meta metadata.ConnectionAuthPendingMetadata, Pa
 ) {
 	if os.Getenv("CONTAINERSSH_ALLOW_ALL") == "1" ||
 		meta.Username == "foo" ||
-		meta.Username == "busybox" {
-		return true, meta.Authenticated(meta.Username), nil
+		meta.Username == "busybox" || meta.Username == "foonoauthz" {
+		return string(Password) == "bar", meta.Authenticated(meta.Username), nil
 	}
 	return false, meta.AuthFailed(), nil
 }
 
 // swagger:operation POST /pubkey Authentication authPubKey
 //
-// Public key authentication
+// # Public key authentication
 //
 // ---
 // parameters:
-// - name: request
-//   in: body
-//   description: The authentication request
-//   required: true
-//   schema:
+//   - name: request
+//     in: body
+//     description: The authentication request
+//     required: true
+//     schema:
 //     "$ref": "#/definitions/PublicKeyAuthRequest"
+//
 // responses:
-//   "200":
-//     "$ref": "#/responses/AuthResponse"
+//
+//	"200":
+//	  "$ref": "#/responses/AuthResponse"
 func (a *authHandler) OnPubKey(meta metadata.ConnectionAuthPendingMetadata, publicKey publicAuth.PublicKey) (
 	bool,
 	metadata.ConnectionAuthenticatedMetadata,
 	error,
 ) {
-	if meta.Username == "foo" || meta.Username == "busybox" {
-		return true, meta.Authenticated(meta.Username), nil
+	if meta.Username == "foo" || meta.Username == "busybox" || meta.Username == "foonoauthz" {
+		return false, meta.Authenticated(meta.Username), nil
 	}
 	return false, meta.AuthFailed(), nil
 }
 
 // swagger:operation POST /authz Authentication authz
 //
-// Authorization
+// # Authorization
 //
 // ---
 // parameters:
-// - name: request
-//   in: body
-//   description: The authorization request
-//   required: true
-//   schema:
+//   - name: request
+//     in: body
+//     description: The authorization request
+//     required: true
+//     schema:
 //     "$ref": "#/definitions/AuthorizationRequest"
+//
 // responses:
-//   "200":
-//     "$ref": "#/responses/AuthResponse"
+//
+//	"200":
+//	  "$ref": "#/responses/AuthResponse"
 func (a *authHandler) OnAuthorization(meta metadata.ConnectionAuthenticatedMetadata) (
 	bool,
 	metadata.ConnectionAuthenticatedMetadata,
@@ -127,14 +133,16 @@ type configHandler struct {
 //
 // ---
 // parameters:
-// - name: request
-//   in: body
-//   description: The configuration request
-//   schema:
+//   - name: request
+//     in: body
+//     description: The configuration request
+//     schema:
 //     "$ref": "#/definitions/ConfigRequest"
+//
 // responses:
-//   "200":
-//     "$ref": "#/responses/ConfigResponse"
+//
+//	"200":
+//	  "$ref": "#/responses/ConfigResponse"
 func (c *configHandler) OnConfig(request config.Request) (config.AppConfig, error) {
 	cfg := config.AppConfig{}
 
@@ -156,6 +164,8 @@ type handler struct {
 
 func (h *handler) ServeHTTP(writer goHttp.ResponseWriter, request *goHttp.Request) {
 	switch request.URL.Path {
+	case "/authz":
+		fallthrough
 	case "/password":
 		fallthrough
 	case "/pubkey":

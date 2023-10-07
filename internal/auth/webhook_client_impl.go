@@ -43,7 +43,13 @@ func (client *webhookClient) Authorize(
 		client.logger.Debug(err)
 		return &webhookClientContext{meta.AuthFailed(), false, err}
 	}
-	return client.processAuthzWithRetry(meta)
+
+	url := client.endpoint + "/authz"
+	authzRequest := auth.AuthorizationRequest{
+		ConnectionAuthenticatedMetadata: meta,
+	}
+
+	return client.processAuthzWithRetry(meta, url, authzRequest)
 }
 
 func (client *webhookClient) Password(
@@ -268,10 +274,9 @@ func (client *webhookClient) authServerRequest(endpoint string, requestObject in
 
 func (client *webhookClient) processAuthzWithRetry(
 	meta metadata.ConnectionAuthenticatedMetadata,
+	url string,
+	authzRequest interface{},
 ) AuthenticationContext {
-	url := client.endpoint + "/authz"
-	authzRequest := auth.AuthorizationRequest{}
-
 	ctx, cancel := context.WithTimeout(context.Background(), client.timeout)
 	defer cancel()
 	var lastError error

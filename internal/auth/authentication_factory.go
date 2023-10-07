@@ -114,7 +114,7 @@ func NewAuthorizationProvider(
 	case config.AuthzMethodDisabled:
 		return nil, nil, nil
 	case config.AuthzMethodWebhook:
-		cli, err := NewWebhookClient(AuthenticationTypeAuthz, cfg.AuthWebhookClientConfig, logger, metrics)
+		cli, err := NewWebhookClient(AuthenticationTypeAuthz, cfg.Webhook, logger, metrics)
 		return cli, nil, err
 	default:
 		return nil, nil, fmt.Errorf("unsupported method: %s", cfg.Method)

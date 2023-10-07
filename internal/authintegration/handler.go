@@ -4,11 +4,11 @@ import (
 	"context"
 	"net"
 
-    auth2 "go.containerssh.io/libcontainerssh/auth"
-    "go.containerssh.io/libcontainerssh/internal/auth"
-    "go.containerssh.io/libcontainerssh/internal/sshserver"
-    "go.containerssh.io/libcontainerssh/message"
-    "go.containerssh.io/libcontainerssh/metadata"
+	auth2 "go.containerssh.io/libcontainerssh/auth"
+	"go.containerssh.io/libcontainerssh/internal/auth"
+	"go.containerssh.io/libcontainerssh/internal/sshserver"
+	"go.containerssh.io/libcontainerssh/message"
+	"go.containerssh.io/libcontainerssh/metadata"
 )
 
 // Behavior dictates how when the authentication requests are passed to the backends.
@@ -76,7 +76,8 @@ func (h *handler) OnNetworkConnection(meta metadata.ConnectionMetadata) (
 			return nil, meta, err
 		}
 	}
-	return &networkConnectionHandler{
+
+	authHandler := networkConnectionHandler{
 		connectionID:                     meta.ConnectionID,
 		ip:                               meta.RemoteAddress.IP,
 		backend:                          backend,
@@ -86,7 +87,20 @@ func (h *handler) OnNetworkConnection(meta metadata.ConnectionMetadata) (
 		gssapiAuthenticator:              h.gssapiAuthenticator,
 		keyboardInteractiveAuthenticator: h.keyboardInteractiveAuthenticator,
 		authorizationProvider:            h.authorizationProvider,
-	}, meta, nil
+	}
+
+	if h.authorizationProvider != nil {
+		// We inject the authz handler before the normal authentication handler in the chain as we need the authenticated metadata the handler returns.
+		// Authentications request will first hit the authz handler which will pass it through to the authHandler, once it returns we can perform authorization.
+		authzHandler := authzNetworkConnectionHandler{
+			connectionID:          meta.ConnectionID,
+			ip:                    meta.RemoteAddress.IP,
+			authorizationProvider: h.authorizationProvider,
+			backend:               &authHandler,
+		}
+		return &authzHandler, meta, nil
+	}
+	return &authHandler, meta, nil
 }
 
 type networkConnectionHandler struct {
@@ -262,4 +276,143 @@ func (h *networkConnectionHandler) OnDisconnect() {
 		h.authContext.OnDisconnect()
 	}
 	h.backend.OnDisconnect()
+}
+
+type authzNetworkConnectionHandler struct {
+	backend               sshserver.NetworkConnectionHandler
+	ip                    net.IP
+	connectionID          string
+	authorizationProvider auth.AuthzProvider
+}
+
+// genericAuthorization is a helper function that takes the response of an authentication call (e.g. OnAuthPassword) and performs authorization.
+func (a *authzNetworkConnectionHandler) genericAuthorization(
+	meta metadata.ConnectionAuthPendingMetadata,
+	authResponse sshserver.AuthResponse,
+	authenticatedMeta metadata.ConnectionAuthenticatedMetadata,
+	err error,
+) (sshserver.AuthResponse, metadata.ConnectionAuthenticatedMetadata, error) {
+	if authResponse != sshserver.AuthResponseSuccess {
+		return authResponse, authenticatedMeta, err
+	}
+
+	authzResponse := a.authorizationProvider.Authorize(authenticatedMeta)
+	if authzResponse.Success() {
+		return sshserver.AuthResponseSuccess, authzResponse.Metadata(), err
+	}
+	return sshserver.AuthResponseFailure, authzResponse.Metadata(), authzResponse.Error()
+}
+
+// OnAuthPassword is called when a user attempts a password authentication. The implementation must always supply
+// AuthResponse and may supply error as a reason description.
+func (a *authzNetworkConnectionHandler) OnAuthPassword(meta metadata.ConnectionAuthPendingMetadata, password []byte) (sshserver.AuthResponse, metadata.ConnectionAuthenticatedMetadata, error) {
+	authResponse, authenticatedMeta, err := a.backend.OnAuthPassword(meta, password)
+	return a.genericAuthorization(meta, authResponse, authenticatedMeta, err)
+}
+
+// OnAuthPubKey is called when a user attempts a pubkey authentication. The implementation must always supply
+// AuthResponse and may supply error as a reason description. The pubKey parameter is an SSH key in
+// the form of "ssh-rsa KEY HERE".
+func (a *authzNetworkConnectionHandler) OnAuthPubKey(meta metadata.ConnectionAuthPendingMetadata, pubKey auth2.PublicKey) (sshserver.AuthResponse, metadata.ConnectionAuthenticatedMetadata, error) {
+	authResponse, authenticatedMeta, err := a.backend.OnAuthPubKey(meta, pubKey)
+	return a.genericAuthorization(meta, authResponse, authenticatedMeta, err)
+}
+
+// OnAuthKeyboardInteractive is a callback for interactive authentication. The implementer will be passed a callback
+// function that can be used to issue challenges to the user. These challenges can, but do not have to contain
+// questions.
+func (a *authzNetworkConnectionHandler) OnAuthKeyboardInteractive(meta metadata.ConnectionAuthPendingMetadata, challenge func(
+	instruction string,
+	questions sshserver.KeyboardInteractiveQuestions) (answers sshserver.KeyboardInteractiveAnswers, err error)) (sshserver.AuthResponse, metadata.ConnectionAuthenticatedMetadata, error) {
+	authResponse, authenticatedMeta, err := a.backend.OnAuthKeyboardInteractive(meta, challenge)
+	return a.genericAuthorization(meta, authResponse, authenticatedMeta, err)
+}
+
+// OnAuthGSSAPI returns a GSSAPIServer which can perform a GSSAPI authentication.
+func (a *authzNetworkConnectionHandler) OnAuthGSSAPI(metadata metadata.ConnectionMetadata) auth.GSSAPIServer {
+	gssApiServer := a.backend.OnAuthGSSAPI(metadata)
+	authzGssApiServer := authzGssApiServer{
+		backend: gssApiServer,
+	}
+	return &authzGssApiServer
+}
+
+// OnHandshakeFailed is called when the SSH handshake failed. This method is also called after an authentication
+// failure. After this method is the connection will be closed and the OnDisconnect method will be
+// called.
+func (a *authzNetworkConnectionHandler) OnHandshakeFailed(metadata metadata.ConnectionMetadata, reason error) {
+	a.backend.OnHandshakeFailed(metadata, reason)
+}
+
+// OnHandshakeSuccess is called when the SSH handshake was successful. It returns metadata to process
+// requests, or failureReason to indicate that a backend error has happened. In this case, the
+// metadata will be closed and OnDisconnect will be called.
+func (a *authzNetworkConnectionHandler) OnHandshakeSuccess(metadata metadata.ConnectionAuthenticatedMetadata) (connection sshserver.SSHConnectionHandler, meta metadata.ConnectionAuthenticatedMetadata, failureReason error) {
+	return a.backend.OnHandshakeSuccess(metadata)
+}
+
+// OnDisconnect is called when the network connection is closed.
+func (a *authzNetworkConnectionHandler) OnDisconnect() {
+	a.backend.OnDisconnect()
+}
+
+// OnShutdown is called when a shutdown of the SSH server is desired. The shutdownContext is passed as a deadline
+// for the shutdown, after which the server should abort all running connections and return as fast as
+// possible.
+func (a *authzNetworkConnectionHandler) OnShutdown(shutdownContext context.Context) {
+	a.backend.OnShutdown(shutdownContext)
+}
+
+type authzGssApiServer struct {
+	backend               auth.GSSAPIServer
+	authorizationProvider auth.AuthzProvider
+	authzResponse         auth.AuthorizationResponse
+}
+
+// Success must return true or false of the authentication was successful / unsuccessful.
+func (g *authzGssApiServer) Success() bool {
+	backendResponse := g.backend.Success()
+	if !backendResponse || g.authzResponse == nil {
+		return false
+	}
+	return g.authzResponse.Success()
+}
+
+// Error returns the error that happened during the authentication.
+func (g *authzGssApiServer) Error() error {
+	backendErr := g.backend.Error()
+	if backendErr != nil || g.authzResponse == nil {
+		return backendErr
+	}
+	return g.authzResponse.Error()
+}
+
+// AcceptSecContext is the GSSAPI function to verify the tokens.
+func (g *authzGssApiServer) AcceptSecContext(token []byte) (outputToken []byte, srcName string, needContinue bool, err error) {
+	return g.backend.AcceptSecContext(token)
+}
+
+// VerifyMIC is the GSSAPI function to verify the MIC (Message Integrity Code).
+func (g *authzGssApiServer) VerifyMIC(micField []byte, micToken []byte) error {
+	return g.backend.VerifyMIC(micField, micToken)
+}
+
+// DeleteSecContext is the GSSAPI function to free all resources bound as part of an authentication attempt.
+func (g *authzGssApiServer) DeleteSecContext() error {
+	return g.backend.DeleteSecContext()
+}
+
+// AllowLogin is the authorization function. The username parameter
+// specifies the user that the authenticated user is trying to log in
+// as. Note! This is different from the gossh AllowLogin function in
+// which the username field is the authenticated username.
+func (g *authzGssApiServer) AllowLogin(username string, meta metadata.ConnectionAuthPendingMetadata) (metadata.ConnectionAuthenticatedMetadata, error) {
+	authenticatedMetadata, err := g.backend.AllowLogin(username, meta)
+	if err != nil {
+		return authenticatedMetadata, err
+	}
+
+	authzResponse := g.authorizationProvider.Authorize(authenticatedMetadata)
+	g.authzResponse = authzResponse
+	return authzResponse.Metadata(), authzResponse.Error()
 }

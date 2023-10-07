@@ -672,7 +672,7 @@ func (o *AuthGenericConfig) Validate() error {
 type AuthzConfig struct {
 	Method AuthzMethod `json:"method" yaml:"method" default:""`
 
-	AuthWebhookClientConfig `json:",inline" yaml:",inline"`
+	Webhook AuthWebhookClientConfig `json:"webhook" yaml:"webhook"`
 }
 
 // Validate validates the authorization configuration.
@@ -684,7 +684,7 @@ func (k *AuthzConfig) Validate() error {
 	case AuthzMethodDisabled:
 		return nil
 	case AuthzMethodWebhook:
-		return wrap(k.AuthWebhookClientConfig.Validate(), "webhook")
+		return wrap(k.Webhook.Validate(), "webhook")
 	default:
 		return newError("method", "BUG: invalid value for method for authorization: %s", k.Method)
 	}

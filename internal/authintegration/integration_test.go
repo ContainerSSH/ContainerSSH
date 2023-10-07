@@ -34,8 +34,11 @@ func TestAuthentication(t *testing.T) {
 	sshServerConfig, lifecycle := startSSHServer(t, logger, authServerPort)
 	defer lifecycle.Stop(context.Background())
 
-	testConnection(t, ssh.Password("bar"), sshServerConfig, true)
-	testConnection(t, ssh.Password("baz"), sshServerConfig, false)
+	testConnection(t, "foo", ssh.Password("bar"), sshServerConfig, true)
+	testConnection(t, "foo", ssh.Password("baz"), sshServerConfig, false)
+
+	testConnection(t, "foonoauthz", ssh.Password("bar"), sshServerConfig, false)
+	testConnection(t, "foonoauthz", ssh.Password("baz"), sshServerConfig, false)
 }
 
 func startAuthServer(t *testing.T, logger log.Logger, authServerPort int) service.Lifecycle {
@@ -66,17 +69,22 @@ func startAuthServer(t *testing.T, logger log.Logger, authServerPort int) servic
 func startSSHServer(t *testing.T, logger log.Logger, authServerPort int) (config.SSHConfig, service.Lifecycle) {
 	backend := &testBackend{}
 	collector := metrics.New(dummy.New())
+	webhookConfig := config.AuthWebhookClientConfig{
+		HTTPClientConfiguration: config.HTTPClientConfiguration{
+			URL:     fmt.Sprintf("http://127.0.0.1:%d", authServerPort),
+			Timeout: 10 * time.Second,
+		},
+		AuthTimeout: 30 * time.Second,
+	}
 	handler, _, err := authintegration.New(
 		config.AuthConfig{
 			PasswordAuth: config.PasswordAuthConfig{
-				Method: config.PasswordAuthMethodWebhook,
-				Webhook: config.AuthWebhookClientConfig{
-					HTTPClientConfiguration: config.HTTPClientConfiguration{
-						URL:     fmt.Sprintf("http://127.0.0.1:%d", authServerPort),
-						Timeout: 10 * time.Second,
-					},
-					AuthTimeout: 30 * time.Second,
-				},
+				Method:  config.PasswordAuthMethodWebhook,
+				Webhook: webhookConfig,
+			},
+			Authz: config.AuthzConfig{
+				Method:  config.AuthzMethodWebhook,
+				Webhook: webhookConfig,
 			},
 		},
 		backend,
@@ -112,10 +120,10 @@ func startSSHServer(t *testing.T, logger log.Logger, authServerPort int) (config
 	return sshServerConfig, lifecycle
 }
 
-func testConnection(t *testing.T, authMethod ssh.AuthMethod, sshServerConfig config.SSHConfig, success bool) {
+func testConnection(t *testing.T, username string, authMethod ssh.AuthMethod, sshServerConfig config.SSHConfig, success bool) {
 	clientConfig := ssh.ClientConfig{
 		Config: ssh.Config{},
-		User:   "foo",
+		User:   username,
 		Auth:   []ssh.AuthMethod{authMethod},
 		// We don't care about host key verification for this test.
 		HostKeyCallback: ssh.InsecureIgnoreHostKey(), //nolint:gosec
@@ -234,7 +242,7 @@ func (h *authHandler) OnPassword(
 	meta metadata.ConnectionAuthPendingMetadata,
 	Password []byte,
 ) (bool, metadata.ConnectionAuthenticatedMetadata, error) {
-	if meta.Username == "foo" && string(Password) == "bar" {
+	if (meta.Username == "foo" || meta.Username == "foonoauthz") && string(Password) == "bar" {
 		return true, meta.Authenticated(meta.Username), nil
 	}
 	if meta.Username == "crash" {
@@ -254,6 +262,9 @@ func (h *authHandler) OnPubKey(
 func (h *authHandler) OnAuthorization(
 	meta metadata.ConnectionAuthenticatedMetadata,
 ) (bool, metadata.ConnectionAuthenticatedMetadata, error) {
+	if meta.AuthenticatedUsername == "foo" {
+		return true, meta, nil
+	}
 	return false, meta.AuthFailed(), nil
 }
 
