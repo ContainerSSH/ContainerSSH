@@ -3,6 +3,8 @@
 <!--suppress HtmlDeprecatedAttribute -->
 <h1 align="center">libcontainerssh</h1>
 
+[![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2FContainerSSH%2Flibcontainerssh.svg?type=shield&issueType=license)](https://app.fossa.com/projects/git%2Bgithub.com%2FContainerSSH%2Flibcontainerssh?ref=badge_shield&issueType=license)
+
 This library is the core library of ContainerSSH and simultaneously serves as a library to integrate with ContainerSSH. This readme outlines the basics of using this library, for more detailed documentation please head to [containerssh.io](https://containerssh.io).
 
 ## Embedding ContainerSSH
