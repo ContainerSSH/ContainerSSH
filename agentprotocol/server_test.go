@@ -95,6 +95,6 @@ func TestConnectionSetup(t *testing.T) {
 		t.Fatalf("Expected to read 'Message to server' instead got %s", string(buf[:nBytes]))
 	}
 	_ = testConClient.Close()
-	close(closeChan)
 	clientCtx.Kill()
+	close(closeChan)
 }
