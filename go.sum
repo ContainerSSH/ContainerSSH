@@ -145,8 +145,8 @@ github.com/dgryski/go-minhash v0.0.0-20170608043002-7fe510aff544/go.mod h1:VBi0X
 github.com/dgryski/go-sip13 v0.0.0-20181026042036-e10d5fee7954/go.mod h1:vAd38F8PWV+bWy6jNmig1y/TA+kYO4g3RSRF0IAv0no=
 github.com/dgryski/go-spooky v0.0.0-20170606183049-ed3d087f40e2 h1:lx1ZQgST/imDhmLpYDma1O3Cx9L+4Ie4E8S2RjFPQ30=
 github.com/dgryski/go-spooky v0.0.0-20170606183049-ed3d087f40e2/go.mod h1:hgHYKsoIw7S/hlWtP7wD1wZ7SX1jPTtKko5X9jrOgPQ=
-github.com/docker/distribution v2.8.1+incompatible h1:Q50tZOPR6T/hjNsyc9g8/syEs6bk8XXApsHjKukMl68=
-github.com/docker/distribution v2.8.1+incompatible/go.mod h1:J2gT2udsDAN96Uj4KfcMRqY0/ypR+oyYUYmja8H+y+w=
+github.com/docker/distribution v2.8.2+incompatible h1:T3de5rq0dB1j30rp0sA2rER+m322EBzniBPB6ZIzuh8=
+github.com/docker/distribution v2.8.2+incompatible/go.mod h1:J2gT2udsDAN96Uj4KfcMRqY0/ypR+oyYUYmja8H+y+w=
 github.com/docker/docker v20.10.19+incompatible h1:lzEmjivyNHFHMNAFLXORMBXyGIhw/UP4DvJwvyKYq64=
 github.com/docker/docker v20.10.19+incompatible/go.mod h1:eEKB0N0r5NX/I1kEveEz05bcu8tLC/8azJZsviup8Sk=
 github.com/docker/go-connections v0.4.0 h1:El9xVISelRB7BuFusrZozjnkIM5YnzCViNKohAFqRJQ=
