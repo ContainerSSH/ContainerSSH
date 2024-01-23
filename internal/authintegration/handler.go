@@ -89,6 +89,16 @@ func (h *handler) OnNetworkConnection(meta metadata.ConnectionMetadata) (
 		authorizationProvider:            h.authorizationProvider,
 	}
 
+	if h.passwordAuthenticator != nil {
+		meta.AuthenticationMethods[metadata.AuthMethodPassword] = true
+	}
+	if h.publicKeyAuthenticator != nil {
+		meta.AuthenticationMethods[metadata.AuthMethodPubKey] = true
+	}
+	if h.keyboardInteractiveAuthenticator != nil {
+		meta.AuthenticationMethods[metadata.AuthMethodKeyboardInteractive] = true
+	}
+
 	if h.authorizationProvider != nil {
 		// We inject the authz handler before the normal authentication handler in the chain as we need the authenticated metadata the handler returns.
 		// Authentications request will first hit the authz handler which will pass it through to the authHandler, once it returns we can perform authorization.

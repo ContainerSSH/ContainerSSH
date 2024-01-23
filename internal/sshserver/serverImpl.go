@@ -432,6 +432,11 @@ func (s *serverImpl) createKeyboardInteractiveCallback(
 	handlerNetworkConnection *networkConnectionWrapper,
 	logger log.Logger,
 ) func(conn ssh.ConnMetadata, challenge ssh.KeyboardInteractiveChallenge) (*ssh.Permissions, error) {
+	ok, val := connectionMetadata.AuthenticationMethods[metadata.AuthMethodKeyboardInteractive]
+	if !ok || !val {
+		return nil
+	}
+
 	keyboardInteractiveHandler := s.createKeyboardInteractiveHandler(
 		connectionMetadata,
 		handlerNetworkConnection,
@@ -464,6 +469,11 @@ func (s *serverImpl) createPubKeyCallback(
 	handlerNetworkConnection *networkConnectionWrapper,
 	logger log.Logger,
 ) func(conn ssh.ConnMetadata, key ssh.PublicKey) (*ssh.Permissions, error) {
+	ok, val := meta.AuthenticationMethods[metadata.AuthMethodPubKey]
+	if !ok || !val {
+		return nil
+	}
+
 	pubKeyHandler := s.createPubKeyAuthenticator(meta, handlerNetworkConnection, logger)
 	pubkeyCallback := func(conn ssh.ConnMetadata, key ssh.PublicKey) (*ssh.Permissions, error) {
 		_, authenticatedMetadata, err := pubKeyHandler(conn, key)
@@ -489,6 +499,11 @@ func (s *serverImpl) createPasswordCallback(
 	handlerNetworkConnection *networkConnectionWrapper,
 	logger log.Logger,
 ) func(conn ssh.ConnMetadata, password []byte) (*ssh.Permissions, error) {
+	ok, val := meta.AuthenticationMethods[metadata.AuthMethodPassword]
+	if !ok || !val {
+		return nil
+	}
+
 	passwordHandler := s.createPasswordAuthenticator(meta, handlerNetworkConnection, logger)
 	passwordCallback := func(conn ssh.ConnMetadata, password []byte) (*ssh.Permissions, error) {
 		_, authenticatedMetadata, err := passwordHandler(conn, password)
@@ -515,11 +530,12 @@ func (s *serverImpl) handleConnection(conn net.Conn) {
 		WithLabel("remoteAddr", addr.IP.String()).
 		WithLabel("connectionId", connectionID)
 	connectionMeta := metadata.ConnectionMetadata{
-		RemoteAddress: metadata.RemoteAddress(*addr),
-		ConnectionID:  connectionID,
-		Metadata:      map[string]metadata.Value{},
-		Environment:   map[string]metadata.Value{},
-		Files:         map[string]metadata.BinaryValue{},
+		RemoteAddress:         metadata.RemoteAddress(*addr),
+		ConnectionID:          connectionID,
+		AuthenticationMethods: map[metadata.AuthMethod]bool{},
+		Metadata:              map[string]metadata.Value{},
+		Environment:           map[string]metadata.Value{},
+		Files:                 map[string]metadata.BinaryValue{},
 	}
 
 	handlerNetworkConnection, connectionMeta, err := s.handler.OnNetworkConnection(connectionMeta)

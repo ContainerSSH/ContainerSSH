@@ -79,6 +79,14 @@ func (r *RemoteAddress) UnmarshalText(input []byte) error {
 	return nil
 }
 
+type AuthMethod string
+
+const (
+	AuthMethodPassword AuthMethod = "password"
+	AuthMethodPubKey AuthMethod = "publickey"
+	AuthMethodKeyboardInteractive AuthMethod = "keyboard-interactive"
+)
+
 // ConnectionMetadata holds a metadata structure passed around with a metadata. Its main purpose is to allow an
 // authentication or authorization module to configure data exposed to the configuration server or the backend.
 //
@@ -95,6 +103,10 @@ type ConnectionMetadata struct {
 	// required: true
 	// in: body
 	ConnectionID string `json:"connectionId"`
+
+	// AuthenticationMethods are the authentication methods that can be
+	// used to authenticate this connection
+	AuthenticationMethods map[AuthMethod]bool `json:"-"`
 
 	// Metadata is a set of key-value pairs that carry additional information from the authentication and configuration
 	// system to the backends. Backends can expose this information as container labels, environment variables, or
