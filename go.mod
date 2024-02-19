@@ -12,7 +12,7 @@ require (
 	github.com/fxamacker/cbor v1.5.1
 	github.com/fxamacker/cbor/v2 v2.5.0
 	github.com/google/go-cmp v0.5.6
-	github.com/google/uuid v1.3.0
+	github.com/google/uuid v1.6.0
 	github.com/gorilla/schema v1.2.0
 	github.com/imdario/mergo v0.3.13
 	github.com/mattn/go-shellwords v1.0.12
