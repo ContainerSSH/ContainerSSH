@@ -13,13 +13,13 @@ jobs:
     if: ${{ github.event_name != 'schedule' }}
     steps:
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
       - name: Set up Go
         uses: actions/setup-go@v3
         with:
-          go-version: 1.18
+          go-version: 1.21
       - name: Run golangci-lint
-        uses: golangci/golangci-lint-action@v3
+        uses: golangci/golangci-lint-action@v4
   test:
     name: go test
     if: ${{ github.event_name != 'schedule' }}
@@ -32,13 +32,13 @@ jobs:
           }' | sudo tee /etc/docker/daemon.json
           sudo service docker restart
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           submodules: true
       - name: Set up Go
         uses: actions/setup-go@v3
         with:
-          go-version: 1.18
+          go-version: 1.21
       - name: Install KinD
         run: |
           sudo curl -Lo /usr/local/bin/kind https://kind.sigs.k8s.io/dl/v0.11.1/kind-linux-amd64
@@ -94,7 +94,7 @@ jobs:
           set -euo pipefail
           cat /tmp/gotest.log | gotestfmt
       - name: Upload test log
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         if: always()
         with:
           name: test-log

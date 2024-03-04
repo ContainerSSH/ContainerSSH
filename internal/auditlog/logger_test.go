@@ -2,9 +2,9 @@ package auditlog_test
 
 import (
 	"context"
+	"crypto/rand"
 	"encoding/hex"
 	"fmt"
-	"math/rand"
 	"net"
 	"os"
 	"testing"

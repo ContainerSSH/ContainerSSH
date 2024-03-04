@@ -3,7 +3,7 @@ package auth
 import (
 	"fmt"
 	"html/template"
-	"io/ioutil"
+	"io"
 	goHttp "net/http"
 
 	"go.containerssh.io/libcontainerssh/config"
@@ -37,7 +37,7 @@ func (o oauthEndpointHandler) ServeHTTP(writer goHttp.ResponseWriter, request *g
 	defer func() {
 		_ = index.Close()
 	}()
-	data, err := ioutil.ReadAll(index)
+	data, err := io.ReadAll(index)
 	if err != nil {
 		writer.WriteHeader(500)
 		panic(err)

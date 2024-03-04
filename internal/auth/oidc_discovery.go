@@ -28,8 +28,8 @@ type oidcDiscoveryResponse struct {
 }
 
 type oidcDiscoverImpl struct {
-	httpClient http.Client
-	logger     log.Logger
+	//httpClient http.Client
+	logger log.Logger
 }
 
 func (o oidcDiscoverImpl) Discover(ctx context.Context, httpClient http.Client) (oidcDiscoveryResponse, error) {

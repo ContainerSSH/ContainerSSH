@@ -8,7 +8,7 @@ import (
     "encoding/json"
     "fmt"
     "html/template"
-    "io/ioutil"
+    "io"
     goHttp "net/http"
     "net/url"
     "strings"
@@ -240,7 +240,7 @@ func (o *oidcHandler) authorization(writer goHttp.ResponseWriter, request *goHtt
     }
 
     if request.Method == "POST" {
-        body, err := ioutil.ReadAll(request.Body)
+        body, err := io.ReadAll(request.Body)
         if err != nil {
             panic(err)
         }
@@ -288,7 +288,7 @@ func (o *oidcHandler) sendError(writer goHttp.ResponseWriter, err string) {
 }
 
 func (o *oidcHandler) token(writer goHttp.ResponseWriter, request *goHttp.Request) {
-    body, err := ioutil.ReadAll(request.Body)
+    body, err := io.ReadAll(request.Body)
     if err != nil {
         panic(err)
     }

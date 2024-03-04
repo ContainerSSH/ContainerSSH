@@ -17,7 +17,6 @@ import (
 	"github.com/containerssh/gokrb5/v8/types"
 	"go.containerssh.io/libcontainerssh/config"
 	"go.containerssh.io/libcontainerssh/internal/ssh"
-	internalSsh "go.containerssh.io/libcontainerssh/internal/ssh"
 	"go.containerssh.io/libcontainerssh/log"
 	"go.containerssh.io/libcontainerssh/message"
 	"go.containerssh.io/libcontainerssh/metadata"
@@ -288,7 +287,7 @@ func (k *kerberosAuthContext) AcceptSecContext(token []byte) (outputToken []byte
 		return mar2, k.principalUsername, false, nil
 	}
 
-	return nil, "", false, fmt.Errorf("Invalid token")
+	return nil, "", false, fmt.Errorf("invalid token")
 }
 
 // GSSAPIMicField is described in RFC4462 Section 3.5
@@ -340,7 +339,7 @@ func (k *kerberosAuthContext) VerifyMIC(micField []byte, micToken []byte) error 
 		return err
 	}
 
-	if field.Request != internalSsh.SSH_MSG_USERAUTH_REQUEST || field.Service != "ssh-connection" || field.Method != "gssapi-with-mic" {
+	if field.Request != ssh.SSH_MSG_USERAUTH_REQUEST || field.Service != "ssh-connection" || field.Method != "gssapi-with-mic" {
 		return message.NewMessage(
 			message.EAuthKerberosVerificationFailed,
 			"Received MIC packet with unexpected values",
