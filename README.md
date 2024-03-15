@@ -62,6 +62,27 @@ Study SSH attack patterns up close. Drop attackers safely into network-isolated 
 
 [🚀 Get started »](https://containerssh.io/quickstart/)
 
+## Verify provenance
+
+Each of the releases come with a SLSA provenance data file `multiple.intoto.jsonl`. This file can be used to verify the source and provenance of the produced artifacts with [`slsa-verifier`](https://github.com/slsa-framework/slsa-verifier).
+
+
+This aims to ensure the users that the artifacts are coming from containerssh.
+
+An example of verification :
+```sh
+slsa-verifier verify-artifact <artifact-to-verify> \
+--provenance-path <path-to-your-provenance> \
+--source-uri github.com/containerssh/containerssh
+```
+
+If the verification is successful, the process should produce the following output :
+```
+Verifying artifact <artifact-to-verify>: PASSED
+PASSED: Verified SLSA provenance
+```
+
+
 ## Contributing
 
 If you would like to contribute, please check out our [Code of Conduct](https://github.com/ContainerSSH/community/blob/main/CODE_OF_CONDUCT.md) as well as our [contribution documentation](https://containerssh.io/development/).
