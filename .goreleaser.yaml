@@ -92,9 +92,9 @@ source:
   name_template: '{{ .ProjectName }}-{{ .Version }}-source'
 dist: build
 release:
-  #github:
-    #owner: containerssh
-    #name: containerssh
+  github:
+    owner: containerssh
+    name: containerssh
   prerelease: auto
   extra_files:
     - glob: LICENSE
