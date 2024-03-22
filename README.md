@@ -3,13 +3,12 @@
 <!--suppress HtmlDeprecatedAttribute -->
 <h1 align="center">An SSH Server that Launches Containers in Kubernetes and Docker</h1>
 
-[![Documentation: available](https://img.shields.io/badge/documentation-available-green?style=for-the-badge)](https://containerssh.io/)
-[![GitHub Workflow Status](https://img.shields.io/github/actions/workflow/status/ContainerSSH/ContainerSSH/main.yml?style=for-the-badge&branch=main)](https://github.com/containerssh/containerssh/actions)
-[![GitHub release (latest SemVer)](https://img.shields.io/github/v/release/containerssh/containerssh?sort=semver&style=for-the-badge)](https://github.com/containerssh/containerssh/releases)
-[![Docker Image Size (latest by date)](https://img.shields.io/docker/image-size/containerssh/containerssh?style=for-the-badge)](http://hub.docker.com/r/containerssh/containerssh)
-[![Go Report Card](https://goreportcard.com/badge/github.com/containerssh/containerssh?style=for-the-badge)](https://goreportcard.com/report/github.com/containerssh/containerssh)
-[![License: Apache 2.0](https://img.shields.io/github/license/ContainerSSH/ContainerSSH?style=for-the-badge)](LICENSE.md)
-
+[![Documentation: available](https://img.shields.io/badge/documentation-available-green)](https://containerssh.io/)
+[![GitHub Workflow Status](https://img.shields.io/github/actions/workflow/status/ContainerSSH/ContainerSSH/main.yml?&branch=main)](https://github.com/containerssh/containerssh/actions)
+[![GitHub release (latest SemVer)](https://img.shields.io/github/v/release/containerssh/containerssh?sort=semver)](https://github.com/containerssh/containerssh/releases)
+[![Docker Image Size (latest by date)](https://img.shields.io/docker/image-size/containerssh/containerssh)](http://hub.docker.com/r/containerssh/containerssh)
+[![Go Report Card](https://goreportcard.com/badge/github.com/containerssh/containerssh)](https://goreportcard.com/report/github.com/containerssh/containerssh)
+[![License: Apache 2.0](https://img.shields.io/github/license/ContainerSSH/ContainerSSH)](LICENSE.md)
 [![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2FContainerSSH%2FContainerSSH.svg?type=shield&issueType=license)](https://app.fossa.com/projects/git%2Bgithub.com%2FContainerSSH%2FContainerSSH?ref=badge_shield&issueType=license)
 
 ## ContainerSSH in One Minute
