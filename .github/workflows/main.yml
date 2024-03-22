@@ -6,41 +6,79 @@ on:
       - '*'
     tags:
       - '*'
+
 jobs:
-  build:
-    name: Build
+  snapshot:
+    name: Snapshot build
     runs-on: ubuntu-latest
+    if: ${{ ! startsWith(github.ref, 'refs/tags/') }}
     steps:
-      - name: Checkout
-        uses: actions/checkout@v2
+      - name: Checkout the repository
+        uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 #v4.1.1
       - name: Set up Go
-        uses: actions/setup-go@v2
+        uses: actions/setup-go@0c52d547c9bc32b1aa3301fd7a9cb496313a4491 #v5.0.0
         with:
-          go-version: 1.18
+          go-version: 1.21
       - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v1
-      - name: Import signing key
-        if: ${{ startsWith(github.ref, 'refs/tags/') }}
-        run: |
-          echo "${GPG_KEY}" | base64 -d | gpg --batch --import && echo "${GPG_KEY}" | base64 -d >/tmp/signing.gpg
-        env:
-          GPG_KEY: "${{ secrets.GPG_KEY }}"
+        uses: docker/setup-buildx-action@0d103c3126aa41d772a8362f6aa67afac040f80c #v3
       - name: Run GoReleaser (snapshot)
-        if: ${{ ! startsWith(github.ref, 'refs/tags/') }}
-        uses: goreleaser/goreleaser-action@v2
+        uses: goreleaser/goreleaser-action@7ec5c2b0c6cdda6e8bbb49444bc797dd33d74dd8 #v5.0.0
         with:
           version: latest
-          args: build --snapshot --rm-dist
-      - name: Run GoReleaser (release)
-        if: ${{ startsWith(github.ref, 'refs/tags/') }}
-        uses: goreleaser/goreleaser-action@v2
-        with:
-          version: latest
-          args: release --rm-dist
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      - uses: actions/upload-artifact@v3
+          args: build --snapshot --clean
+      - name: Upload artifacts
+        uses: actions/upload-artifact@5d5d22a31266ced268874388b861e4b58bb5c2f3 #v4.3.1
         with:
           name: build-results
           path: build
           if-no-files-found: error
+
+  release:
+    name: Release build
+    runs-on: ubuntu-latest
+    outputs:
+      hashes: ${{ steps.hash.outputs.hashes }}
+      tag_name: ${{ steps.tag.outputs.tag_name }}
+    if: ${{ startsWith(github.ref, 'refs/tags/') }}
+    steps:
+      - name: Checkout the repository
+        uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 #v4.1.1
+      - name: Set up Go
+        uses: actions/setup-go@0c52d547c9bc32b1aa3301fd7a9cb496313a4491 #v5.0.0
+        with:
+          go-version: 1.21
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@0d103c3126aa41d772a8362f6aa67afac040f80c #v3
+      - name: Import GPG key
+        run: |
+          echo "${GPG_KEY}" | base64 -d | gpg --batch --import && echo "${GPG_KEY}" | base64 -d >/tmp/signing.gpg
+        env:
+          GPG_KEY: "${{ secrets.GPG_KEY }}"
+      - name: Run GoReleaser (release)
+        id: goreleaser-task
+        uses: goreleaser/goreleaser-action@7ec5c2b0c6cdda6e8bbb49444bc797dd33d74dd8 #v5.0.0
+        with:
+          version: latest
+          args: release --clean
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Generate subject (checksum)
+        id: hash
+        env:
+          ARTIFACTS: "${{ steps.goreleaser-task.outputs.artifacts }}"
+        run: |
+          set -euo pipefail
+          checksum_file=$(echo "$ARTIFACTS" | jq -r '.[] | select (.type=="Checksum") | .path')
+          echo "hashes=$(cat $checksum_file | base64 -w0)" >> "$GITHUB_OUTPUT"
+
+  provenance:
+    needs: [release]
+    permissions:
+      actions: read # To read the workflow path.
+      id-token: write # To sign the provenance.
+      contents: write # To add assets to a release.
+    uses: slsa-framework/slsa-github-generator/.github/workflows/generator_generic_slsa3.yml@v1.10.0
+    with:
+      base64-subjects: "${{ needs.release.outputs.hashes }}"
+      upload-assets: true
+      draft-release: true

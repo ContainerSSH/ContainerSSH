@@ -85,8 +85,8 @@ nfpms:
           group: root
           mode: 0755
 signs:
-  - id: sign-all
-    artifacts: all
+  - id: sign-checksums
+    artifacts: checksum
 source:
   enabled: true
   name_template: '{{ .ProjectName }}-{{ .Version }}-source'
