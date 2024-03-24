@@ -90,6 +90,13 @@ signs:
 source:
   enabled: true
   name_template: '{{ .ProjectName }}-{{ .Version }}-source'
+sboms:
+  - id: sbom-config
+    documents : 
+      - "containerssh.cdx.sbom"  
+    cmd : cyclonedx-gomod
+    args: [ "mod", "-licenses", "-json", "-output", "$document", "../"]
+    artifacts: source 
 dist: build
 release:
   github:

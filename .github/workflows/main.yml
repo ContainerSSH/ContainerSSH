@@ -54,6 +54,10 @@ jobs:
           echo "${GPG_KEY}" | base64 -d | gpg --batch --import && echo "${GPG_KEY}" | base64 -d >/tmp/signing.gpg
         env:
           GPG_KEY: "${{ secrets.GPG_KEY }}"
+      - name: Generate SBOM
+        uses: CycloneDX/gh-gomod-generate-sbom@efc74245d6802c8cefd925620515442756c70d8f # v2.0.0
+        with:
+          version: v1
       - name: Run GoReleaser (release)
         id: goreleaser-task
         uses: goreleaser/goreleaser-action@7ec5c2b0c6cdda6e8bbb49444bc797dd33d74dd8 #v5.0.0
