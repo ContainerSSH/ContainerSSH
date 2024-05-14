@@ -12,6 +12,7 @@ import (
 type oidcDeviceRequest struct {
 	ClientID  string `schema:"client_id"`
 	GrantType string `schema:"grant_type"`
+	Scope     string `schema:"scope"`
 }
 
 type oidcDeviceResponse struct {
@@ -43,6 +44,8 @@ func (o *oidcDeviceFlow) GetAuthorizationURL(ctx context.Context) (
 	req := &oidcDeviceRequest{
 		ClientID:  o.provider.clientID,
 		GrantType: "urn:ietf:params:oauth:grant-type:device_code",
+		// openid scope is required to access the userinfo endpoint
+		Scope: "openid",
 	}
 	var lastError error
 	var statusCode int
