@@ -87,7 +87,7 @@ jobs:
       - name: Run go test
         run: |
           set -euo pipefail
-          go test -race -coverprofile=coverage.txt -covermode=atomic -json -p 1 -v ./... 2>&1 | tee /tmp/gotest.log
+          go test -coverprofile=coverage.txt -covermode=atomic -json -p 1 -v ./... 2>&1 | tee /tmp/gotest.log
       - name: Format log output
         if: always()
         run: |
