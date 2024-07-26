@@ -13,7 +13,7 @@ require (
 	github.com/fxamacker/cbor/v2 v2.6.0
 	github.com/google/go-cmp v0.6.0
 	github.com/google/uuid v1.6.0
-	github.com/gorilla/schema v1.2.1
+	github.com/gorilla/schema v1.4.1
 	github.com/imdario/mergo v0.3.16
 	github.com/mattn/go-shellwords v1.0.12
 	github.com/mitchellh/mapstructure v1.5.0
