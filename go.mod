@@ -23,8 +23,8 @@ require (
 	github.com/oschwald/geoip2-golang v1.9.0
 	github.com/qdm12/reprint v0.0.0-20200326205758-722754a53494
 	github.com/stretchr/testify v1.9.0
-	golang.org/x/crypto v0.28.0
-	golang.org/x/sys v0.26.0
+	golang.org/x/crypto v0.31.0
+	golang.org/x/sys v0.28.0
 	gopkg.in/jcmturner/goidentity.v3 v3.0.0
 	gopkg.in/yaml.v3 v3.0.1
 	k8s.io/api v0.32.0
@@ -84,9 +84,9 @@ require (
 	golang.org/x/mod v0.21.0 // indirect
 	golang.org/x/net v0.30.0 // indirect
 	golang.org/x/oauth2 v0.23.0 // indirect
-	golang.org/x/sync v0.8.0 // indirect
-	golang.org/x/term v0.25.0 // indirect
-	golang.org/x/text v0.19.0 // indirect
+	golang.org/x/sync v0.10.0 // indirect
+	golang.org/x/term v0.27.0 // indirect
+	golang.org/x/text v0.21.0 // indirect
 	golang.org/x/time v0.7.0 // indirect
 	golang.org/x/tools v0.26.0 // indirect
 	google.golang.org/protobuf v1.35.1 // indirect
