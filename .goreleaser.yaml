@@ -1,3 +1,4 @@
+version: 2
 before:
   hooks:
     - go vet
@@ -66,12 +67,12 @@ nfpms:
       - deb
       - rpm
       - apk
-    empty_folders:
-      - /etc/containerssh
     bindir: /usr/sbin
     suggests:
       - docker
     contents:
+      - dst: /etc/containerssh
+        type: dir
       - src: config.example.yaml
         dst: /etc/containerssh/config.yaml
         type: config

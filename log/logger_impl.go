@@ -55,6 +55,7 @@ func (pipeline *logger) write(level config.LogLevel, message ...interface{}) {
 		if len(message) == 1 {
 			switch message[0].(type) {
 			case string:
+				//nolint:govet
 				msg = messageCodes.NewMessage(messageCodes.EUnknownError, message[0].(string))
 			default:
 				if m, ok := message[0].(messageCodes.Message); ok {

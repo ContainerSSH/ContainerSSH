@@ -51,9 +51,6 @@ func (c SSHProxyConfig) Validate() error {
 	if c.Server == "" {
 		return newError("server", "server cannot be empty")
 	}
-	if c.Port == 0 || c.Port > 65535 {
-		return newError("port", "invalid port number: %d", c.Port)
-	}
 	if c.Username == "" && !c.UsernamePassThrough {
 		return newError("username", "username cannot be empty when usernamePassThrough is not set")
 	}

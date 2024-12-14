@@ -8,7 +8,7 @@ linters:
     - asciicheck
     - bodyclose
     - dupl
-    - exportloopref
+    - copyloopvar
     - dogsled
     - importas
     - nilerr
