@@ -7,7 +7,7 @@ toolchain go1.23.4
 require (
 	github.com/aws/aws-sdk-go v1.51.32
 	github.com/containerssh/gokrb5/v8 v8.4.3-0.20211214150832-4bf8b91123af
-	github.com/creasty/defaults v1.7.0
+	github.com/creasty/defaults v1.8.0
 	github.com/docker/distribution v2.8.2+incompatible
 	github.com/docker/docker v20.10.18+incompatible
 	github.com/docker/go-connections v0.5.0
