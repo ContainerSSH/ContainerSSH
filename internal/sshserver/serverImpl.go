@@ -2,6 +2,7 @@ package sshserver
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
@@ -408,21 +409,16 @@ func (s *serverImpl) createGSSAPIConfig(
 				}
 				handlerNetworkConnection.authenticatedMetadata = authenticated
 				s.logAuthSuccessful(logger, authenticated, "GSSAPI")
-				sshConnectionHandler, _, err := handlerNetworkConnection.OnHandshakeSuccess(
-					authenticated,
-				)
+
+				marshaledMetadata, err := json.Marshal(authenticated)
 				if err != nil {
-					err = messageCodes.WrapUser(
-						err,
-						messageCodes.ESSHBackendRejected,
-						"Authentication currently unavailable, please try again later.",
-						"The backend has rejected the user after successful authentication.",
-					)
-					logger.Error(err)
 					return nil, err
 				}
-				handlerNetworkConnection.sshConnectionHandler = sshConnectionHandler
-				return &ssh.Permissions{}, nil
+				return &ssh.Permissions{
+					Extensions: map[string]string{
+						"containerssh-metadata": string(marshaledMetadata),
+					},
+				}, err
 			},
 			Server: gssServer,
 		}
@@ -444,27 +440,19 @@ func (s *serverImpl) createKeyboardInteractiveCallback(
 		conn ssh.ConnMetadata,
 		challenge ssh.KeyboardInteractiveChallenge,
 	) (*ssh.Permissions, error) {
-		permissions, authenticatedMetadata, err := keyboardInteractiveHandler(conn, challenge)
+		_, authenticatedMetadata, err := keyboardInteractiveHandler(conn, challenge)
 		if err != nil {
-			return permissions, err
+			return nil, err
 		}
-		// HACK: check HACKS.md "OnHandshakeSuccess conformanceTestHandler"
-		sshConnectionHandler, _, err := handlerNetworkConnection.OnHandshakeSuccess(
-			authenticatedMetadata,
-		)
+		marshaledMetadata, err := json.Marshal(authenticatedMetadata)
 		if err != nil {
-			err = messageCodes.WrapUser(
-				err,
-				messageCodes.ESSHBackendRejected,
-				"Authentication currently unavailable, please try again later.",
-				"The backend has rejected the user after successful authentication.",
-			)
-			logger.Error(err)
-			return permissions, err
+			return nil, err
 		}
-		handlerNetworkConnection.authenticatedMetadata = authenticatedMetadata
-		handlerNetworkConnection.sshConnectionHandler = sshConnectionHandler
-		return permissions, err
+		return &ssh.Permissions{
+			Extensions: map[string]string{
+				"containerssh-metadata": string(marshaledMetadata),
+			},
+		}, err
 	}
 	return keyboardInteractiveCallback
 }
@@ -476,27 +464,19 @@ func (s *serverImpl) createPubKeyCallback(
 ) func(conn ssh.ConnMetadata, key ssh.PublicKey) (*ssh.Permissions, error) {
 	pubKeyHandler := s.createPubKeyAuthenticator(meta, handlerNetworkConnection, logger)
 	pubkeyCallback := func(conn ssh.ConnMetadata, key ssh.PublicKey) (*ssh.Permissions, error) {
-		permissions, authenticatedMetadata, err := pubKeyHandler(conn, key)
+		_, authenticatedMetadata, err := pubKeyHandler(conn, key)
 		if err != nil {
-			return permissions, err
+			return nil, err
 		}
-		// HACK: check HACKS.md "OnHandshakeSuccess conformanceTestHandler"
-		sshConnectionHandler, _, err := handlerNetworkConnection.OnHandshakeSuccess(
-			authenticatedMetadata,
-		)
+		marshaledMetadata, err := json.Marshal(authenticatedMetadata)
 		if err != nil {
-			err = messageCodes.WrapUser(
-				err,
-				messageCodes.ESSHBackendRejected,
-				"Authentication currently unavailable, please try again later.",
-				"The backend has rejected the user after successful authentication.",
-			)
-			logger.Error(err)
-			return permissions, err
+			return nil, err
 		}
-		handlerNetworkConnection.authenticatedMetadata = authenticatedMetadata
-		handlerNetworkConnection.sshConnectionHandler = sshConnectionHandler
-		return permissions, err
+		return &ssh.Permissions{
+			Extensions: map[string]string{
+				"containerssh-metadata": string(marshaledMetadata),
+			},
+		}, err
 	}
 	return pubkeyCallback
 }
@@ -508,27 +488,19 @@ func (s *serverImpl) createPasswordCallback(
 ) func(conn ssh.ConnMetadata, password []byte) (*ssh.Permissions, error) {
 	passwordHandler := s.createPasswordAuthenticator(meta, handlerNetworkConnection, logger)
 	passwordCallback := func(conn ssh.ConnMetadata, password []byte) (*ssh.Permissions, error) {
-		permissions, authenticatedMetadata, err := passwordHandler(conn, password)
+		_, authenticatedMetadata, err := passwordHandler(conn, password)
 		if err != nil {
-			return permissions, err
+			return nil, err
 		}
-		// HACK: check HACKS.md "OnHandshakeSuccess conformanceTestHandler"
-		sshConnectionHandler, _, err := handlerNetworkConnection.OnHandshakeSuccess(
-			authenticatedMetadata,
-		)
+		marshaledMetadata, err := json.Marshal(authenticatedMetadata)
 		if err != nil {
-			err = messageCodes.WrapUser(
-				err,
-				messageCodes.ESSHBackendRejected,
-				"Authentication currently unavailable, please try again later.",
-				"The backend has rejected the user after successful authentication.",
-			)
-			logger.Error(err)
-			return permissions, err
+			return nil, err
 		}
-		handlerNetworkConnection.authenticatedMetadata = authenticatedMetadata
-		handlerNetworkConnection.sshConnectionHandler = sshConnectionHandler
-		return permissions, err
+		return &ssh.Permissions{
+			Extensions: map[string]string{
+				"containerssh-metadata": string(marshaledMetadata),
+			},
+		}, err
 	}
 	return passwordCallback
 }
@@ -572,7 +544,7 @@ func (s *serverImpl) handleConnection(conn net.Conn) {
 		conn,
 		s.createConfiguration(connectionMeta, &wrapper, logger),
 	)
-	if err != nil {
+	abortCleanup := func() {
 		logger.Info(messageCodes.Wrap(err, messageCodes.ESSHHandshakeFailed, "SSH handshake failed"))
 		handlerNetworkConnection.OnHandshakeFailed(connectionMeta, err)
 		s.shutdownHandlers.Unregister(shutdownHandlerID)
@@ -580,9 +552,39 @@ func (s *serverImpl) handleConnection(conn net.Conn) {
 		handlerNetworkConnection.OnDisconnect()
 		_ = conn.Close()
 		s.wg.Done()
+	}
+	if err != nil {
+		abortCleanup()
 		return
 	}
-	authenticatedMetadata := wrapper.authenticatedMetadata
+	var authenticatedMetadata metadata.ConnectionAuthenticatedMetadata
+	marshaledMetadata, ok := sshConn.Permissions.Extensions["containerssh-metadata"]
+	if !ok {
+		abortCleanup()
+		return
+	}
+	err = json.Unmarshal([]byte(marshaledMetadata), &authenticatedMetadata)
+	if err != nil {
+		abortCleanup()
+		return
+	}
+	sshConnectionHandler, _, err := handlerNetworkConnection.OnHandshakeSuccess(
+		authenticatedMetadata,
+	)
+	if err != nil {
+		err = messageCodes.WrapUser(
+			err,
+			messageCodes.ESSHBackendRejected,
+			"Authentication currently unavailable, please try again later.",
+			"The backend has rejected the user after successful authentication.",
+		)
+		logger.Error(err)
+		abortCleanup()
+		return
+	}
+	wrapper.authenticatedMetadata = authenticatedMetadata
+	wrapper.sshConnectionHandler = sshConnectionHandler
+
 	logger = logger.WithLabel("username", sshConn.User())
 	logger.Debug(messageCodes.NewMessage(messageCodes.MSSHHandshakeSuccessful, "SSH handshake successful"))
 	s.lock.Lock()
