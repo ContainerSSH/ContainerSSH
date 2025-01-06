@@ -16,7 +16,7 @@ require (
 	github.com/go-enry/go-license-detector/v4 v4.1.0
 	github.com/google/go-cmp v0.6.0
 	github.com/google/uuid v1.6.0
-	github.com/gorilla/schema v1.2.1
+	github.com/gorilla/schema v1.4.1
 	github.com/imdario/mergo v0.3.16
 	github.com/mattn/go-shellwords v1.0.12
 	github.com/mitchellh/golicense v0.2.0
