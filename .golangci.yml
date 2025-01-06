@@ -19,7 +19,6 @@ linters:
   disable:
     # TODO remove these
     - unused
-    - deadcode
 linters-settings:
   gomoddirectives:
     replace-allow-list:
