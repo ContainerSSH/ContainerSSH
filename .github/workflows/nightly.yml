@@ -17,7 +17,7 @@ jobs:
         uses: docker/setup-buildx-action@0d103c3126aa41d772a8362f6aa67afac040f80c #v3
       - name: Update libcontainerssh
         run: |
-          go get go.containerssh.io/libcontainerssh@main
+          go get go.containerssh.io/containerssh@main
           go mod tidy
       - name: Run GoReleaser (snapshot)
         uses: goreleaser/goreleaser-action@7ec5c2b0c6cdda6e8bbb49444bc797dd33d74dd8 #v5.0.0

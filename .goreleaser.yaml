@@ -1,3 +1,4 @@
+version: 2
 before:
   hooks:
     - go generate
@@ -71,6 +72,8 @@ nfpms:
     suggests:
       - docker
     contents:
+      - dst: /etc/containerssh
+        type: dir
       - src: config.example.yaml
         dst: /etc/containerssh/config.yaml
         type: config

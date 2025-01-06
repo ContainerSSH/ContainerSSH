@@ -1,0 +1,106 @@
+name: Build
+on:
+  push:
+    branches:
+      - '*'
+  pull_request:
+  schedule:
+    - cron: '0 17 * * 2'
+jobs:
+  golangci-lint:
+    name: golangci-lint
+    runs-on: ubuntu-latest
+    if: ${{ github.event_name != 'schedule' }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Set up Go
+        uses: actions/setup-go@v3
+        with:
+          go-version: 1.21
+      - name: Run golangci-lint
+        uses: golangci/golangci-lint-action@v4
+  test:
+    name: go test
+    if: ${{ github.event_name != 'schedule' }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Reconfigure Docker daemon
+        run: |
+          echo '{
+            "insecure-registries" : ["http://localhost:5000"]
+          }' | sudo tee /etc/docker/daemon.json
+          sudo service docker restart
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          submodules: true
+      - name: Set up Go
+        uses: actions/setup-go@v3
+        with:
+          go-version: 1.21
+      - name: Install KinD
+        run: |
+          sudo curl -Lo /usr/local/bin/kind https://kind.sigs.k8s.io/dl/v0.11.1/kind-linux-amd64
+          sudo curl -Lo /usr/local/bin/kubectl "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
+          sudo chmod +x /usr/local/bin/kind /usr/local/bin/kubectl
+      - name: Bring up KinD cluster
+        run: |
+          kind create cluster --wait 300s
+      - name: Wait for KinD
+        run: |
+          set -ex
+          UP=0
+          for i in $(seq 1 30); do
+            kubectl get nodes
+            NODECOUNT=$(kubectl get nodes | grep kind-control-plane | grep -v NotReady | wc -l)
+            if [ $NODECOUNT -eq "1" ]; then
+              UP=1
+              break
+            fi
+            sleep 5
+          done
+          if [ $UP -eq "0" ]; then
+            echo "KinD cluster failed to come up"
+            exit 1
+          fi
+          echo "KinD is ready for use."
+      - name: Set up gotestfmt
+        uses: GoTestTools/gotestfmt-action@v2
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+      - id: gopaths
+        name: Determine go cache paths
+        run: |
+          echo "build=$(go env GOCACHE)" >> $GITHUB_OUTPUT
+          echo "mod=$(go env GOMODCACHE)" >> $GITHUB_OUTPUT
+      - name: Set up go module cache
+        uses: actions/cache@v3
+        with:
+          path: ${{ steps.gopaths.outputs.mod }}
+          key: ${{ runner.os }}-go-mod-${{ hashFiles('**/go.sum') }}
+      - name: Set up go build cache
+        uses: actions/cache@v3
+        with:
+          path: ${{ steps.gopaths.outputs.build }}
+          key: ${{ runner.os }}-build-${{ hashFiles('**/go.sum') }}
+      - name: Run go test
+        run: |
+          set -euo pipefail
+          go test -coverprofile=coverage.txt -covermode=atomic -json -p 1 -v ./... 2>&1 | tee /tmp/gotest.log
+      - name: Format log output
+        if: always()
+        run: |
+          set -euo pipefail
+          cat /tmp/gotest.log | gotestfmt
+      - name: Upload test log
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: test-log
+          path: /tmp/gotest.log
+          if-no-files-found: error
+      - name: Upload coverage reports to Codecov
+        uses: codecov/codecov-action@v3
+        env:
+          CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}

@@ -1,0 +1,14 @@
+version: 0.1
+log:
+  fields:
+    service: registry
+storage:
+  filesystem:
+    rootdirectory: /var/lib/registry
+    maxthreads: 100
+http:
+  addr: :5000
+  headers:
+    X-Content-Type-Options: [nosniff]
+proxy:
+  remoteurl: https://registry-1.docker.io

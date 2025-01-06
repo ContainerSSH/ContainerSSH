@@ -1,9 +1,9 @@
 package main
 
 import (
-    "go.containerssh.io/libcontainerssh"
+    "go.containerssh.io/containerssh"
 )
 
 func main() {
-    libcontainerssh.Main()
+    containerssh.Main()
 }

@@ -1,18 +1,18 @@
 // ContainerSSH Authentication and Configuration Server
 //
 // This OpenAPI document describes the API endpoints that are required for implementing an authentication
-// and configuration server for ContainerSSH. (See https://github.com/containerssh/containerssh for details.)
+// and configuration server for ContainerSSH. (See https://github.com/containerssh/libcontainerssh for details.)
 //
-//     Schemes: http, https
-//     Host: localhost
-//     BasePath: /
-//     Version: 0.5.0
+//	Schemes: http, https
+//	Host: localhost
+//	BasePath: /
+//	Version: 0.5.0
 //
-//     Consumes:
-//     - application/json
+//	Consumes:
+//	- application/json
 //
-//     Produces:
-//     - application/json
+//	Produces:
+//	- application/json
 //
 // swagger:meta
 package main
@@ -25,14 +25,14 @@ import (
     "syscall"
 
     "github.com/docker/docker/api/types/container"
-    "go.containerssh.io/libcontainerssh/auth"
-    authWebhook "go.containerssh.io/libcontainerssh/auth/webhook"
-    "go.containerssh.io/libcontainerssh/config"
-    configWebhook "go.containerssh.io/libcontainerssh/config/webhook"
-    "go.containerssh.io/libcontainerssh/http"
-    "go.containerssh.io/libcontainerssh/log"
-    "go.containerssh.io/libcontainerssh/metadata"
-    "go.containerssh.io/libcontainerssh/service"
+    "go.containerssh.io/containerssh/auth"
+    authWebhook "go.containerssh.io/containerssh/auth/webhook"
+    "go.containerssh.io/containerssh/config"
+    configWebhook "go.containerssh.io/containerssh/config/webhook"
+    "go.containerssh.io/containerssh/http"
+    "go.containerssh.io/containerssh/log"
+    "go.containerssh.io/containerssh/metadata"
+    "go.containerssh.io/containerssh/service"
 )
 
 type authHandler struct {
@@ -63,16 +63,17 @@ func (a *authHandler) OnAuthorization(meta metadata.ConnectionAuthenticatedMetad
 
 // swagger:operation POST /password Authentication authPassword
 //
-// Password authentication
+// # Password authentication
 //
 // ---
 // parameters:
-// - name: request
-//   in: body
-//   description: The authentication request
-//   required: true
-//   schema:
+//   - name: request
+//     in: body
+//     description: The authentication request
+//     required: true
+//     schema:
 //     "$ref": "#/definitions/PasswordAuthRequest"
+//
 // responses:
 //   "200":
 //     "$ref": "#/responses/AuthResponse"
@@ -91,16 +92,17 @@ func (a *authHandler) OnPassword(metadata metadata.ConnectionAuthPendingMetadata
 
 // swagger:operation POST /pubkey Authentication authPubKey
 //
-// Public key authentication
+// # Public key authentication
 //
 // ---
 // parameters:
-// - name: request
-//   in: body
-//   description: The authentication request
-//   required: true
-//   schema:
+//   - name: request
+//     in: body
+//     description: The authentication request
+//     required: true
+//     schema:
 //     "$ref": "#/definitions/PublicKeyAuthRequest"
+//
 // responses:
 //   "200":
 //     "$ref": "#/responses/AuthResponse"
@@ -124,11 +126,12 @@ type configHandler struct {
 //
 // ---
 // parameters:
-// - name: request
-//   in: body
-//   description: The configuration request
-//   schema:
+//   - name: request
+//     in: body
+//     description: The configuration request
+//     schema:
 //     "$ref": "#/definitions/ConfigRequest"
+//
 // responses:
 //   "200":
 //     "$ref": "#/responses/ConfigResponse"
@@ -193,7 +196,6 @@ func main() {
         },
         logger,
         func(s string) {
-
         },
     )
     if err != nil {

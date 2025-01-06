@@ -17,7 +17,7 @@ type GitHubReleaseAsset struct {
 	BrowserDownloadUrl string `json:"browser_download_url"`
 }
 
-type GithubReleaseResponse struct {
+type GitHubReleaseResponse struct {
 	Assets []GitHubReleaseAsset `json:"assets"`
 }
 
@@ -79,7 +79,7 @@ func getLatestGoSwaggerURL(client *http.Client, file string) string {
 		log.Fatalf("invalid HTTP response code for release query (%s)", jsonResponse.Status)
 	}
 
-	releaseResponse := &GithubReleaseResponse{}
+	releaseResponse := &GitHubReleaseResponse{}
 	err = json.NewDecoder(jsonResponse.Body).Decode(releaseResponse)
 	if err != nil {
 		log.Fatalf("failed to decode github release data (%v)", err)

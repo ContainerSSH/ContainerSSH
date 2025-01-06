@@ -7,7 +7,7 @@ import (
     "log"
     "os"
 
-    "go.containerssh.io/libcontainerssh/auditlog/codec"
+    "go.containerssh.io/containerssh/auditlog/codec"
 )
 
 func main() {

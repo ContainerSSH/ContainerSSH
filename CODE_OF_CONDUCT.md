@@ -1,12 +1,12 @@
-# Code of Conduct
+# ContainerSSH Code of Conduct
 
-ContainerSSH aims to be a welcoming community for everyone to talk about and develop this open source tool. We kindly ask you to follow these four simple rules:
+We care about our code *and* our community. With your contribution to this project, you agree to adhere to the ContainerSSH Code of Conduct and follow these four simple rules:
 
 1. Be nice to each other.
 2. Assume good intentions.
-3. Attack the idea not the person.
-4. Please take politics and off-topic discussions elsewhere.
+3. Attack the idea, not the person.
+4. Take politics and off-topic discussions elsewhere.
 
-It sometimes happens that our words don't read like we intend them to, especially online. However, we do not tolerate rude behavior of any kind on our platforms. In such a case our moderators will gently remind the person in question to be kind to each other. On repeated violations we will ask the person in question to leave our community.
+It can sometimes happen that our words are misunderstood. However, we do neither tolerate nor accept rude behavior of any kind in our community. ContainerSSH core maintainers have the right to remove or edit any contributions from this project should they find that they are violating our code of conduct. Repeat or severe offenders may also be permanently banned from having a space in the community.
 
-If you witness such behavior, or you are personally attacked please refrain from answering if possible and contact our staff at handshake@containerssh.io.
+If you witness unacceptable behavior, or are personally attacked, please refrain from answering if possible and contact our core maintainers at handshake@containerssh.io.
