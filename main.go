@@ -309,7 +309,7 @@ func printLicenses(writer io.Writer) error {
 	var buffer bytes.Buffer
 
 	buffer.WriteString("# The ContainerSSH license\n\n")
-	licenseData, err := os.ReadFile("LICENSE.md")
+	licenseData, err := os.ReadFile("LICENSE")
 	if err != nil {
 		return fmt.Errorf("failed to read LICENSE.md (%w)", err)
 	}
