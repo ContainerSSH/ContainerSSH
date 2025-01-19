@@ -5,7 +5,7 @@ This library provides centralized metrics collection across modules. It also pro
 
 ## Collecting metrics
 
-The core component of the metrics is the `metrics.Collector` interface. You can create a new instance of this interface by calling `metrics.New()` with a GeoIP lookup provider from the [geoip library](https://github.com/containerssh/geoip) as a parameter. You can then dynamically create metrics:
+The core component of the metrics is the `metrics.Collector` interface. You can create a new instance of this interface by calling `metrics.New()` with a GeoIP lookup provider from the [geoip library](https://github.com/containerssh/containerssh/tree/main/internal/geoip) as a parameter. You can then dynamically create metrics:
 
 ```go
 m := metrics.New(geoip)
@@ -57,7 +57,7 @@ The metrics also have a `WithLabels()` method that allow for creating a copy of 
 
 ## Using the metrics server
 
-The metrics server exposes the collected metrics on an HTTP webserver in the Prometheus / OpenMetrics format. It requires the [service library](https://github.com/containerssh/service) and a logger from the [log library](https://github.com/containerssh/libcontainerssh/log) to work properly:
+The metrics server exposes the collected metrics on an HTTP webserver in the Prometheus / OpenMetrics format. It requires the [service library](https://github.com/containerssh/containerssh/tree/main/service) and a logger from the [log library](https://github.com/containerssh/containerssh/tree/main/log) to work properly:
 
 ```go
 server := metrics.NewServer(

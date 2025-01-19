@@ -12,7 +12,7 @@ This is the SSH proxy backend for ContainerSSH, which forwards connections to a 
 
 ## Using this library
 
-This library implements a `NetworkConnectionHandler` from the [sshserver library](https://github.com/containerssh/sshserver). This can be embedded into a connection handler.
+This library implements a `NetworkConnectionHandler` from the [sshserver library](https://github.com/containerssh/containerssh/tree/main/internal/sshserver). This can be embedded into a connection handler.
 
 The network connection handler can be created with the `New()` method:
 
@@ -36,4 +36,4 @@ if err != nil {
 }
 ```
 
-The `logger` parameter is a logger from the [ContainerSSH logger library](https://github.com/containerssh/libcontainerssh/log).
+The `logger` parameter is a logger from the [ContainerSSH logger library](https://github.com/containerssh/containerssh/tree/main/log).

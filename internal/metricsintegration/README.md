@@ -5,7 +5,7 @@ This library integrates the [metrics service](https://github.com/containerssh/me
 
 ## Using this library
 
-This library is intended as an overlay/proxy for a handler for the [sshserver library](https://github.com/containerssh/sshserver) "handler". It can be injected transparently to collect the following metrics:
+This library is intended as an overlay/proxy for a handler for the [sshserver library](https://github.com/containerssh/containerssh/tree/main/internal/sshserver) "handler". It can be injected transparently to collect the following metrics:
 
 - `containerssh_ssh_connections`
 - `containerssh_ssh_handshake_successful`
@@ -25,6 +25,6 @@ handler, err := metricsintegration.New(
 )
 ```
 
-- `config` is a configuration structure from the [metrics library](https://github.com/containerssh/metrics). This is used to bypass the metrics integration backend if metrics are disabled.
-- `metricsCollector` is the metrics collector from the [metrics library](https://github.com/containerssh/metrics).
-- `backend` is an SSH server backend from the [sserver library](https://github.com/containerssh/sshserver).
+- `config` is a configuration structure from the [metrics library](https://github.com/containerssh/containerssh/tree/main/metrics). This is used to bypass the metrics integration backend if metrics are disabled.
+- `metricsCollector` is the metrics collector from the [metrics library](https://github.com/containerssh/containerssh/tree/main/metrics).
+- `backend` is an SSH server backend from the [sshserver library](https://github.com/containerssh/containerssh/tree/main/internal/sshserver).

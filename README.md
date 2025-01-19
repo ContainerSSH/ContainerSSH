@@ -137,7 +137,7 @@ The configuration webhook lets you dynamically configure ContainerSSH. This libr
 First, you need to fetch this library as a dependency using [go modules](https://blog.golang.org/using-go-modules):
 
 ```bash
-go get github.com/containerssh/libcontainerssh
+go get go.containerssh.io/containerssh
 ```
 
 Next, you will have to write an implementation for the following interface:
@@ -146,7 +146,7 @@ Next, you will have to write an implementation for the following interface:
 package main
 
 import (
-	"github.com/containerssh/libcontainerssh/config"
+    "go.containerssh.io/containerssh/config"
 )
 
 type ConfigRequestHandler interface {
@@ -185,10 +185,10 @@ package main
 import (
 	"signal"
 	
-	"github.com/containerssh/libcontainerssh/config"
-	"github.com/containerssh/libcontainerssh/config/webhook"
-	"github.com/containerssh/libcontainerssh/log"
-	"github.com/containerssh/libcontainerssh/service"
+	"go.containerssh.io/containerssh/config"
+	"go.containerssh.io/containerssh/config/webhook"
+	"go.containerssh.io/containerssh/log"
+	"go.containerssh.io/containerssh/service"
 )
 
 func main() {
@@ -279,7 +279,7 @@ client, err := configuration.NewClient(
 )
 ```
 
-The `logger` is a logger from the [log library](https://github.com/containerssh/libcontainerssh/log), the `metricsCollector` is supplied by the [metrics library](https://github.com/containerssh/metrics).
+The `logger` is a logger from the [log library](https://github.com/ContainerSSH/ContainerSSH/tree/main/log), the `metricsCollector` is supplied by the [metrics library](https://github.com/containerssh/tree/main/metrics).
 
 You can now use the `client` variable to fetch the configuration specific to a connecting client:
 
@@ -298,7 +298,7 @@ appConfig, err := client.Get(
 
 Now you have the client-specific configuration in `appConfig`.
 
-**Note:** We recommend securing client-server communication with certificates. The details about securing your HTTP requests are documented in the [HTTP library](https://github.com/containerssh/http).
+**Note:** We recommend securing client-server communication with certificates. The details about securing your HTTP requests are documented in the [HTTP library](https://github.com/containerssh/containerssh/tree/main/http).
 
 ## Loading the configuration from a file
 

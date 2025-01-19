@@ -38,7 +38,7 @@ func (m *myConfigReqHandler) OnConfig(
 }
 ```
 
-**Warning!** Your `OnConfig` method should *only* return an error if it can genuinely not serve the request. This should not be used as a means to reject users. This should be done using the [authentication server](https://github.com/containerssh/auth). If you return an error ContainerSSH will retry the request several times in an attempt to work around network failures.
+**Warning!** Your `OnConfig` method should *only* return an error if it can genuinely not serve the request. This should not be used as a means to reject users. This should be done using the [authentication server](https://github.com/containerssh/containerssh/tree/main/auth). If you return an error ContainerSSH will retry the request several times in an attempt to work around network failures.
 
 Once you have your handler implemented you must decide which method you want to use for integration.
 
@@ -56,9 +56,9 @@ srv, err := configuration.NewServer(
 )
 ```
 
-The `logger` parameter is a logger from the [ContainerSSH log library](https://github.com/containerssh/libcontainerssh/log).
+The `logger` parameter is a logger from the [ContainerSSH log library](https://github.com/containerssh/containerssh/tree/main/log).
 
-Once you have the server you can start it using the [service library](https://github.com/containerssh/service):
+Once you have the server you can start it using the [service library](https://github.com/containerssh/containerssh/tree/main/service):
 
 ```go
 lifecycle := service.NewLifecycle(srv)
@@ -118,7 +118,7 @@ if err != nil {
 os.Exit(0)
 ```
 
-**Note:** We recommend securing client-server communication with certificates. The details about securing your HTTP requests are documented in the [HTTP library](https://github.com/containerssh/http).
+**Note:** We recommend securing client-server communication with certificates. The details about securing your HTTP requests are documented in the [HTTP library](https://github.com/containerssh/containerssh/tree/main/http).
 
 ### Integrating with an existing HTTP server
 
@@ -146,7 +146,7 @@ client, err := configuration.NewClient(
 )
 ```
 
-The `logger` is a logger from the [log library](https://github.com/containerssh/libcontainerssh/log), the `metricsCollector` is supplied by the [metrics library](https://github.com/containerssh/metrics). 
+The `logger` is a logger from the [log library](https://github.com/containerssh/containerssh/tree/main/log), the `metricsCollector` is supplied by the [metrics library](https://github.com/containerssh/containerssh/tree/main/metrics). 
 
 You can now use the `client` variable to fetch the configuration specific to a connecting client:
 
@@ -165,7 +165,7 @@ appConfig, err := client.Get(
 
 Now you have the client-specific configuration in `appConfig`.
 
-**Note:** We recommend securing client-server communication with certificates. The details about securing your HTTP requests are documented in the [HTTP library](https://github.com/containerssh/http).
+**Note:** We recommend securing client-server communication with certificates. The details about securing your HTTP requests are documented in the [HTTP library](https://github.com/containerssh/containerssh/tree/main/http).
 
 ## Loading the configuration from a file
 

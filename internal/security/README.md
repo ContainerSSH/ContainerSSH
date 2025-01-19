@@ -6,7 +6,7 @@
 [![Go Report Card](https://goreportcard.com/badge/github.com/containerssh/security?style=for-the-badge)](https://goreportcard.com/report/github.com/containerssh/security)
 [![LGTM Alerts](https://img.shields.io/lgtm/alerts/github/ContainerSSH/security?style=for-the-badge)](https://lgtm.com/projects/g/ContainerSSH/security/)
 
-This library provides a security overlay for the [sshserver](https://github.com/containerssh/sshserver) library.
+This library provides a security overlay for the [sshserver](https://github.com/containerssh/containerssh/tree/main/internal/sshserver) library.
 
 <p align="center"><strong>⚠⚠⚠ Warning: This is a developer documentation. ⚠⚠⚠</strong><br />The user documentation for ContainerSSH is located at <a href="https://containerssh.io">containerssh.io</a>.</p>
 
@@ -21,4 +21,4 @@ security, err := security.New(
 )
 ```
 
-The `backend` should implement the `sshserver.NetworkConnectionHandler` interface from the [sshserver](https://github.com/containerssh/sshserver) library. For the details of the configuration structure please see [config.go](config.go).
+The `backend` should implement the `sshserver.NetworkConnectionHandler` interface from the [sshserver](https://github.com/containerssh/containerssh/tree/main/internal/sshserver) library. For the details of the configuration structure please see [config.go](config.go).

@@ -1,7 +1,7 @@
 // ContainerSSH Authentication and Configuration Server
 //
 // This OpenAPI document describes the API endpoints that are required for implementing an authentication
-// and configuration server for ContainerSSH. (See https://github.com/containerssh/libcontainerssh for details.)
+// and configuration server for ContainerSSH. (See https://github.com/containerssh/containerssh for details.)
 //
 //	Schemes: http, https
 //	Host: localhost

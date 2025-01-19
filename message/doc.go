@@ -2,4 +2,4 @@
 package message
 
 // Generate the CODES.md file with all message codes. The configuration for this process is located in docgen.yaml.
-//go:generate go run github.com/containerssh/libcontainerssh/cmd/generate-message-codes
+//go:generate go run go.containerssh.io/containerssh/cmd/generate-message-codes

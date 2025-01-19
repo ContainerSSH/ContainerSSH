@@ -7,7 +7,7 @@ This is an audit logging library for [ContainerSSH](https://containerssh.github.
 
 ## Setting up a logging pipeline
 
-This section will explain how to set up and use a logging pipeline. As a first step, you must create the logger. The easiest way to do that is to pass a config object. The `geoIPLookupProvider` is provided by the [GeoIP library](https://github.com/containerssh/geoip), while `logger` is a logger implementation from the [Log library](https://github.com/containerssh/libcontainerssh/log).
+This section will explain how to set up and use a logging pipeline. As a first step, you must create the logger. The easiest way to do that is to pass a config object. The `geoIPLookupProvider` is provided by the [GeoIP library](https://github.com/containerssh/geoip), while `logger` is a logger implementation from the [Log library](https://github.com/containerssh/containerssh/tree/main/log).
 
 ```go
 auditLogger, err := auditlog.New(cfg, geoIPLookupProvider, logger)
@@ -32,7 +32,7 @@ config := auditlog.Config{
 }
 ```
 
-The `logger` variable must be an instance of `github.com/containerssh/libcontainerssh/log/logger`. The easiest way to create the logger is as follows:
+The `logger` variable must be an instance of `go.containerssh.io/containerssh/log/logger`. The easiest way to create the logger is as follows:
 
 ```go
 logger := standard.New()

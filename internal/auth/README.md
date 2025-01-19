@@ -39,7 +39,7 @@ func (h *myHandler) OnPubKey(
 ```
 
 Then you can use this handler to create a simple web server using the
-[http library](https://github.com/containerssh/http). The server requires using the lifecycle facility from the [service library](https://github.com/containerssh/service). You can create the server as follows:
+[http library](https://github.com/containerssh/containerssh/tree/main/http). The server requires using the lifecycle facility from the [service library](https://github.com/containerssh/containerssh/tree/main/service). You can create the server as follows:
 
 ```go
 server := auth.NewServer(
@@ -62,7 +62,7 @@ go func() {
 lifecycle.Stop(context.Background())
 ```
 
-The `logger` is a logger from the [github.com/containerssh/libcontainerssh/log](http://github.com/containerssh/libcontainerssh/log) package. The server configuration optionally allows you to configure mutual TLS authentication. [See the documentation for details.](https://github.com/containerssh/http)
+The `logger` is a logger from the [go.containerssh.io/containerssh/log](http://github.com/containerssh/containerssh/tree/main/log) package. The server configuration optionally allows you to configure mutual TLS authentication. [See the documentation for details.](https://github.com/containerssh/containerssh/tree/main/http)
 
 You can also use the authentication handler with the native Go HTTP library:
 

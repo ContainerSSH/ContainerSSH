@@ -5,7 +5,7 @@ This library provides an overlay for the built-in go SSH server library that mak
 
 ## Using this library
 
-This library provides a friendlier way to handle SSH requests than with the built-in SSH library. the primary method of using this library is via the `Lifecycle` objects from the [service library](https://github.com/containerssh/service):
+This library provides a friendlier way to handle SSH requests than with the built-in SSH library. the primary method of using this library is via the `Lifecycle` objects from the [service library](https://github.com/containerssh/containerssh/tree/main/service):
 
 ```go
 // Create the server. See the description below for parameters.
@@ -45,7 +45,7 @@ The `cfg` variable will be a `Config` structure as described in [config.go](conf
 
 The `handler` variable must be an implementation of the [`Handler` interface described in handler.go](handler.go).
 
-The `logger` variable needs to be an instance of the `Logger` interface from [github.com/containerssh/libcontainerssh/log](https://github.com/containerssh/libcontainerssh/log).
+The `logger` variable needs to be an instance of the `Logger` interface from [go.containerssh.io/containerssh/log](https://github.com/containerssh/containerssh/tree/main/log).
 
 ## Implementing a handler
 
