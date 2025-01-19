@@ -81,12 +81,6 @@ nfpms:
         dst: /usr/share/doc/containerssh/LICENSE
       - src: NOTICE.md
         dst: /usr/share/doc/containerssh/NOTICE.md
-      - dst: /etc/containerssh
-        type: dir
-        file_info:
-          owner: root
-          group: root
-          mode: 0755
 signs:
   - id: sign-checksums
     artifacts: checksum
