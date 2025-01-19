@@ -57,9 +57,9 @@ archives:
 nfpms:
   - vendor: ContainerSSH
     homepage: https://containerssh.io
-    maintainer: Janos Pasztor <handshake@containerssh.io>
+    maintainer: Nikos Tsipinakis <handshake@containerssh.io>
     description: An SSH server that launches Docker containers and Kubernetes pods
-    license: MIT
+    license: Apache-2.0
     builds:
       - containerssh
       - containerssh-testauthconfigserver
