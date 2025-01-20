@@ -8,7 +8,7 @@ require (
 	github.com/aws/aws-sdk-go v1.51.32
 	github.com/containerssh/gokrb5/v8 v8.4.3-0.20211214150832-4bf8b91123af
 	github.com/creasty/defaults v1.7.0
-	github.com/docker/distribution v2.8.2+incompatible
+	github.com/docker/distribution v2.8.3+incompatible
 	github.com/docker/docker v20.10.19+incompatible
 	github.com/docker/go-connections v0.5.0
 	github.com/fxamacker/cbor v1.5.1
@@ -46,6 +46,7 @@ require (
 	github.com/cloudflare/circl v1.2.0 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/dgryski/go-minhash v0.0.0-20190315135803-ad340ca03076 // indirect
+	github.com/distribution/reference v0.6.0 // indirect
 	github.com/docker/go-units v0.5.0 // indirect
 	github.com/ekzhu/minhash-lsh v0.0.0-20190924033628-faac2c6342f8 // indirect
 	github.com/emicklei/go-restful/v3 v3.11.2 // indirect
