@@ -332,12 +332,36 @@ func (s *serverImpl) createKeyboardInteractiveHandler(
 	}
 }
 
+func (s *serverImpl) createNoneAuthHandler(
+	connectionMetadata metadata.ConnectionMetadata,
+	handlerNetworkConnection *networkConnectionWrapper,
+	logger log.Logger,
+) func(conn ssh.ConnMetadata) (*ssh.Permissions, metadata.ConnectionAuthenticatedMetadata, error) {
+	return func(conn ssh.ConnMetadata) (*ssh.Permissions, metadata.ConnectionAuthenticatedMetadata, error) {
+		authenticatingMetadata := connectionMetadata.StartAuthentication(string(conn.ClientVersion()), conn.User())
+		authResponse, authenticatedMetadata, err := handlerNetworkConnection.OnAuthNone(authenticatingMetadata)
+		//goland:noinspection GoNilness
+		switch authResponse {
+		case AuthResponseSuccess:
+			s.logAuthSuccessful(logger, authenticatedMetadata, "None")
+			return &ssh.Permissions{}, authenticatedMetadata, nil
+		case AuthResponseFailure:
+			err = s.wrapAndLogAuthFailure(logger, authenticatingMetadata, "None", err)
+			return nil, authenticatedMetadata, err
+		case AuthResponseUnavailable:
+			err = s.wrapAndLogAuthUnavailable(logger, authenticatingMetadata, "None", err)
+			return nil, authenticatedMetadata, err
+		}
+		return nil, authenticatedMetadata, fmt.Errorf("authentication currently unavailable")
+	}
+}
+
 func (s *serverImpl) createConfiguration(
 	meta metadata.ConnectionMetadata,
 	handlerNetworkConnection *networkConnectionWrapper,
 	logger log.Logger,
 ) *ssh.ServerConfig {
-	passwordCallback, pubkeyCallback, keyboardInteractiveCallback, gssConfig := s.createAuthenticators(
+	passwordCallback, pubkeyCallback, keyboardInteractiveCallback, noClientAuthCallback, gssConfig := s.createAuthenticators(
 		meta,
 		handlerNetworkConnection,
 		logger,
@@ -349,7 +373,8 @@ func (s *serverImpl) createConfiguration(
 			Ciphers:      s.cfg.Ciphers.StringList(),
 			MACs:         s.cfg.MACs.StringList(),
 		},
-		NoClientAuth:                false,
+		NoClientAuth:                true,
+		NoClientAuthCallback:        noClientAuthCallback,
 		MaxAuthTries:                6,
 		PasswordCallback:            passwordCallback,
 		PublicKeyCallback:           pubkeyCallback,
@@ -372,13 +397,38 @@ func (s *serverImpl) createAuthenticators(
 	func(conn ssh.ConnMetadata, password []byte) (*ssh.Permissions, error),
 	func(conn ssh.ConnMetadata, key ssh.PublicKey) (*ssh.Permissions, error),
 	func(conn ssh.ConnMetadata, challenge ssh.KeyboardInteractiveChallenge) (*ssh.Permissions, error),
+	func(conn ssh.ConnMetadata) (*ssh.Permissions, error),
 	*ssh.GSSAPIWithMICConfig,
 ) {
 	passwordCallback := s.createPasswordCallback(meta, handlerNetworkConnection, logger)
 	pubkeyCallback := s.createPubKeyCallback(meta, handlerNetworkConnection, logger)
 	keyboardInteractiveCallback := s.createKeyboardInteractiveCallback(meta, handlerNetworkConnection, logger)
+	noClientAuthCallback := s.createNoClientAuthCallback(meta, handlerNetworkConnection, logger)
 	gssConfig := s.createGSSAPIConfig(meta, handlerNetworkConnection, logger)
-	return passwordCallback, pubkeyCallback, keyboardInteractiveCallback, gssConfig
+	return passwordCallback, pubkeyCallback, keyboardInteractiveCallback, noClientAuthCallback, gssConfig
+}
+
+func (s *serverImpl) createNoClientAuthCallback(
+	connectionMetadata metadata.ConnectionMetadata,
+	handlerNetworkConnection *networkConnectionWrapper,
+	logger log.Logger,
+) func(conn ssh.ConnMetadata) (*ssh.Permissions, error) {
+	noAuthHandler := s.createNoneAuthHandler(connectionMetadata, handlerNetworkConnection, logger)
+	return func(conn ssh.ConnMetadata) (*ssh.Permissions, error) {
+		_, authenticatedMetadata, err := noAuthHandler(conn)
+		if err != nil {
+			return nil, err
+		}
+		marshaledMetadata, err := json.Marshal(authenticatedMetadata)
+		if err != nil {
+			return nil, err
+		}
+		return &ssh.Permissions{
+			Extensions: map[string]string{
+				"containerssh-metadata": string(marshaledMetadata),
+			},
+		}, err
+	}
 }
 
 func (s *serverImpl) createGSSAPIConfig(

@@ -45,6 +45,14 @@ func (a *AbstractNetworkConnectionHandler) OnAuthKeyboardInteractive(
 	return AuthResponseUnavailable, pendingMeta.AuthFailed(), nil
 }
 
+func (a *AbstractNetworkConnectionHandler) OnAuthNone(pendingMeta metadata.ConnectionAuthPendingMetadata) (
+	response AuthResponse,
+	meta metadata.ConnectionAuthenticatedMetadata,
+	reason error,
+) {
+	return AuthResponseUnavailable, pendingMeta.AuthFailed(), nil
+}
+
 func (a *AbstractNetworkConnectionHandler) OnAuthGSSAPI(_ metadata.ConnectionMetadata) auth.GSSAPIServer {
 	return nil
 }

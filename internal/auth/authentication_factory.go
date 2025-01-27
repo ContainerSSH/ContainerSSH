@@ -77,6 +77,21 @@ func NewKeyboardInteractiveAuthenticator(
 	}
 }
 
+// NewNoneAuthenticator returns a none authenticator as configured. If none authentication is disabled it returns
+// a noneAuthenticator that always returns failure. If the configuration is invalid an error is returned.
+func NewNoneAuthenticator(
+	cfg config.NoneAuthConfig,
+	logger log.Logger,
+	metrics metrics.Collector,
+) (NoneAuthenticator, error) {
+	if err := cfg.Validate(); err != nil {
+		return nil, err
+	}
+	return &noneAuthenticator{
+		enabled: cfg.Enabled,
+	}, nil
+}
+
 // NewGSSAPIAuthenticator returns a GSSAPI authenticator as configured, and if needed a backing service that needs to
 // run for the authentication to work. If GSSAPI authentication is disabled it returns nil. If the configuration is
 // invalid an error is returned.

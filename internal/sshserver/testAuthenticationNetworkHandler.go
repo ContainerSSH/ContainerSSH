@@ -96,6 +96,14 @@ func (t *testAuthenticationNetworkHandler) OnAuthPubKey(
 	return AuthResponseFailure, metadata.ConnectionAuthenticatedMetadata{}, ErrAuthenticationFailed
 }
 
+func (t *testAuthenticationNetworkHandler) OnAuthNone(meta metadata.ConnectionAuthPendingMetadata) (
+	response AuthResponse,
+	authenticatedMetadata metadata.ConnectionAuthenticatedMetadata,
+	reason error,
+) {
+	return t.backend.OnAuthNone(meta)
+}
+
 // NOTE: This is a dummy implementation to test the plumbing, by no means how
 // GSSAPI is supposed to work :)
 type gssApiServer struct {

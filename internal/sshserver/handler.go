@@ -123,6 +123,12 @@ type NetworkConnectionHandler interface {
 		) (answers KeyboardInteractiveAnswers, err error),
 	) (AuthResponse, metadata.ConnectionAuthenticatedMetadata, error)
 
+	OnAuthNone(meta metadata.ConnectionAuthPendingMetadata) (
+		AuthResponse,
+		metadata.ConnectionAuthenticatedMetadata,
+		error,
+	)
+
 	// OnAuthGSSAPI returns a GSSAPIServer which can perform a GSSAPI authentication.
 	OnAuthGSSAPI(metadata metadata.ConnectionMetadata) auth2.GSSAPIServer
 

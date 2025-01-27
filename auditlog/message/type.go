@@ -24,6 +24,11 @@ const (
 	TypeAuthKeyboardInteractiveFailed       Type = 110 // TypeAuthKeyboardInteractiveFailed indicates that a keyboard-interactive authentication process has failed.
 	TypeAuthKeyboardInteractiveBackendError Type = 111 // TypeAuthKeyboardInteractiveBackendError indicates an error in the authentication backend during a keyboard-interactive authentication.
 
+	TypeAuthNone Type = 112 // TypeAuthNone indicates that no authentication was performed.
+	TypeAuthNoneSuccessful Type = 113 // TypeAuthNoneSuccessful indicates that authentication was successful without any authentication method.
+	TypeAuthNoneFailed	 Type = 114 // TypeAuthNoneFailed indicates that authentication failed without any authentication method.
+	TypeAuthNoneBackendError Type = 115 // TypeAuthNoneError indicates that an error occurred in the authentication backend during a none authentication.
+
 	TypeHandshakeFailed             Type = 198 // TypeHandshakeFailed indicates that the handshake has failed.
 	TypeHandshakeSuccessful         Type = 199 // TypeHandshakeSuccessful indicates that the handshake and authentication was successful.
 	TypeGlobalRequestUnknown        Type = 200 // TypeGlobalRequestUnknown describes a message when a global (non-channel) request was sent that was not recognized.

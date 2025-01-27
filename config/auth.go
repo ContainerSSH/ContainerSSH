@@ -27,6 +27,10 @@ type AuthConfig struct {
 	// GSSAPI authentication is disabled.
 	GSSAPIAuth GSSAPIAuthConfig `json:"gssapi" yaml:"gssapi"`
 
+	// None allows any user to login without asking for a password. If this is provided, no other authentication
+	// method should be enabled.
+	NoneAuth NoneAuthConfig `json:"none" yaml:"none"`
+
 	// Authz is the authorization configuration. The authorization server will receive a webhook after successful user
 	// authentication to determine whether the specified user has access to the service. If not set authorization is
 	// disabled. It is strongly recommended you configure AuthZ in case of oAuth2 and GSSAPI methods as these methods
@@ -79,6 +83,7 @@ type newAuthConfig struct {
 	PublicKeyAuth           PublicKeyAuthConfig           `json:"publicKey" yaml:"publicKey"`
 	KeyboardInteractiveAuth KeyboardInteractiveAuthConfig `json:"keyboardInteractive" yaml:"keyboardInteractive"`
 	GSSAPIAuth              GSSAPIAuthConfig              `json:"gssapi" yaml:"gssapi"`
+	NoneAuth                NoneAuthConfig                `json:"none" yaml:"none"`
 	Authz                   AuthzConfig                   `json:"authz" yaml:"authz"`
 
 	HTTPClientConfiguration `json:",inline" yaml:",inline"`
@@ -92,6 +97,7 @@ func (n *newAuthConfig) Set(c *AuthConfig) {
 	c.PublicKeyAuth = n.PublicKeyAuth
 	c.KeyboardInteractiveAuth = n.KeyboardInteractiveAuth
 	c.GSSAPIAuth = n.GSSAPIAuth
+	c.NoneAuth = n.NoneAuth
 	c.Authz = n.Authz
 	c.HTTPClientConfiguration = n.HTTPClientConfiguration
 	c.Password = n.Password
@@ -126,14 +132,18 @@ func (c *AuthConfig) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	return nil
 }
 
-// Validate checks if the authentication configuration is valid.
-func (c *AuthConfig) Validate() error {
-	if //goland:noinspection GoDeprecation
-	c.PasswordAuth.Method == PasswordAuthMethodDisabled &&
+func (c *AuthConfig) noAuthMethodsEnabled() bool {
+	//goland:noinspection GoDeprecation
+	return c.PasswordAuth.Method == PasswordAuthMethodDisabled &&
 		c.PublicKeyAuth.Method == PubKeyAuthMethodDisabled &&
 		c.KeyboardInteractiveAuth.Method == KeyboardInteractiveAuthMethodDisabled &&
 		c.GSSAPIAuth.Method == GSSAPIAuthMethodDisabled &&
-		(((c.Password == nil || !*c.Password) && (c.PubKey == nil || !*c.PubKey)) && c.URL == "") {
+		(((c.Password == nil || !*c.Password) && (c.PubKey == nil || !*c.PubKey)) && c.URL == "")
+}
+
+// Validate checks if the authentication configuration is valid.
+func (c *AuthConfig) Validate() error {
+	if c.noAuthMethodsEnabled() && !c.NoneAuth.Enabled {
 		return fmt.Errorf("no authentication method configured, please configure at least one")
 	}
 	if c.PasswordAuth.Method != PasswordAuthMethodDisabled {
@@ -174,6 +184,11 @@ func (c *AuthConfig) Validate() error {
 		if err := c.Authz.Validate(); err != nil {
 			return wrap(err, "authz")
 		}
+	}
+	// enabling none authentication can bypass other authentication providers, so do not allow it
+	// as the only authentication method.
+	if c.NoneAuth.Enabled && c.noAuthMethodsEnabled() {
+		return newError("none", "none authentication method is enabled, no other authentication provider should be enabled")
 	}
 	//goland:noinspection GoDeprecation
 	if ((c.Password != nil && *c.Password) || (c.PubKey != nil && *c.PubKey)) && c.URL != "" {
@@ -350,6 +365,25 @@ const KeyboardInteractiveAuthMethodDisabled KeyboardInteractiveAuthMethod = Keyb
 
 // KeyboardInteractiveAuthMethodOAuth2 authenticates using oAuth2/OIDC.
 const KeyboardInteractiveAuthMethodOAuth2 KeyboardInteractiveAuthMethod = KeyboardInteractiveAuthMethod(AuthMethodOAuth2)
+
+// endregion
+
+// region None
+
+// NoneAuthConfig is the configuration for the none authentication method.
+type NoneAuthConfig struct {
+	// Enabled is a flag to enable the none authentication method.
+	// Enabling the none authentication method requires that no other authentication method is enabled.
+	Enabled bool `json:"enabled" yaml:"enabled" default:"false"`
+}
+
+// Validate checks if the none authentication configuration is valid.
+func (c NoneAuthConfig) Validate() error {
+	if !c.Enabled {
+		return nil
+	}
+	return nil
+}
 
 // endregion
 
