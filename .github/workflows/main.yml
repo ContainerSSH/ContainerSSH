@@ -1,4 +1,4 @@
-name: Build
+name: Goreleaser Build
 on:
   pull_request:
   push:
