@@ -426,7 +426,6 @@ func (s *serverImpl) createGSSAPIConfig(
 	return gssConfig
 }
 
-//nolint:dupl
 func (s *serverImpl) createKeyboardInteractiveCallback(
 	connectionMetadata metadata.ConnectionMetadata,
 	handlerNetworkConnection *networkConnectionWrapper,
@@ -458,7 +457,6 @@ func (s *serverImpl) createKeyboardInteractiveCallback(
 	return keyboardInteractiveCallback
 }
 
-//nolint:dupl
 func (s *serverImpl) createPubKeyCallback(
 	meta metadata.ConnectionMetadata,
 	handlerNetworkConnection *networkConnectionWrapper,
@@ -483,7 +481,6 @@ func (s *serverImpl) createPubKeyCallback(
 	return pubkeyCallback
 }
 
-//nolint:dupl
 func (s *serverImpl) createPasswordCallback(
 	meta metadata.ConnectionMetadata,
 	handlerNetworkConnection *networkConnectionWrapper,
