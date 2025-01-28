@@ -132,40 +132,42 @@ func (c *AuthConfig) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	return nil
 }
 
-func (c *AuthConfig) noAuthMethodsEnabled() bool {
-	//goland:noinspection GoDeprecation
+
+func (c *AuthConfig) NoAuthMethodsEnabled() bool {
 	return c.PasswordAuth.Method == PasswordAuthMethodDisabled &&
 		c.PublicKeyAuth.Method == PubKeyAuthMethodDisabled &&
 		c.KeyboardInteractiveAuth.Method == KeyboardInteractiveAuthMethodDisabled &&
-		c.GSSAPIAuth.Method == GSSAPIAuthMethodDisabled &&
-		(((c.Password == nil || !*c.Password) && (c.PubKey == nil || !*c.PubKey)) && c.URL == "")
+		c.GSSAPIAuth.Method == GSSAPIAuthMethodDisabled
+}
+
+func (c* AuthConfig) enabledAuthMethods() []string {
+	var methods []string
+	if c.PasswordAuth.Method != PasswordAuthMethodDisabled {
+		methods = append(methods, "password")
+	}
+	if c.PublicKeyAuth.Method != PubKeyAuthMethodDisabled {
+		methods = append(methods, "publicKey")
+	}
+	if c.KeyboardInteractiveAuth.Method != KeyboardInteractiveAuthMethodDisabled {
+		methods = append(methods, "keyboardInteractive")
+	}
+	if c.GSSAPIAuth.Method != GSSAPIAuthMethodDisabled {
+		methods = append(methods, "GSSAPI")
+	}
+	return methods
 }
 
 // Validate checks if the authentication configuration is valid.
 func (c *AuthConfig) Validate() error {
-	if c.noAuthMethodsEnabled() && !c.NoneAuth.Enabled {
+	if c.NoAuthMethodsEnabled() && !c.NoneAuth.Enabled {
 		return fmt.Errorf("no authentication method configured, please configure at least one")
 	}
 	if c.PasswordAuth.Method != PasswordAuthMethodDisabled {
-		//goland:noinspection GoDeprecation
-		if c.URL != "" && c.Password != nil && *c.Password {
-			return newError(
-				"url",
-				"both the password authentication and the legacy url have been provided, please use the new configuration format",
-			)
-		}
 		if err := c.PasswordAuth.Validate(); err != nil {
 			return wrap(err, "password")
 		}
 	}
 	if c.PublicKeyAuth.Method != PubKeyAuthMethodDisabled {
-		//goland:noinspection GoDeprecation
-		if c.URL != "" && c.PubKey != nil && *c.PubKey {
-			return newError(
-				"url",
-				"both the pubkey authentication and the legacy url have been provided, please use the new configuration format",
-			)
-		}
 		if err := c.PublicKeyAuth.Validate(); err != nil {
 			return wrap(err, "publicKey")
 		}
@@ -187,15 +189,10 @@ func (c *AuthConfig) Validate() error {
 	}
 	// enabling none authentication can bypass other authentication providers, so do not allow it
 	// as the only authentication method.
-	if c.NoneAuth.Enabled && c.noAuthMethodsEnabled() {
-		return newError("none", "none authentication method is enabled, no other authentication provider should be enabled")
+	if c.NoneAuth.Enabled && !c.NoAuthMethodsEnabled() {
+		methods := c.enabledAuthMethods()
+		return newError("none", "none authentication cannot be enabled if other authentication methods are enabled. Enabled methods: %s", methods)
 	}
-	//goland:noinspection GoDeprecation
-	if ((c.Password != nil && *c.Password) || (c.PubKey != nil && *c.PubKey)) && c.URL != "" {
-		//goland:noinspection GoDeprecation
-		return c.HTTPClientConfiguration.Validate()
-	}
-
 	return nil
 }
 
@@ -375,14 +372,6 @@ type NoneAuthConfig struct {
 	// Enabled is a flag to enable the none authentication method.
 	// Enabling the none authentication method requires that no other authentication method is enabled.
 	Enabled bool `json:"enabled" yaml:"enabled" default:"false"`
-}
-
-// Validate checks if the none authentication configuration is valid.
-func (c NoneAuthConfig) Validate() error {
-	if !c.Enabled {
-		return nil
-	}
-	return nil
 }
 
 // endregion

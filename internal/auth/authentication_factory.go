@@ -6,6 +6,7 @@ import (
 	"go.containerssh.io/containerssh/config"
 	"go.containerssh.io/containerssh/internal/metrics"
 	"go.containerssh.io/containerssh/log"
+	"go.containerssh.io/containerssh/message"
 	"go.containerssh.io/containerssh/service"
 )
 
@@ -84,8 +85,11 @@ func NewNoneAuthenticator(
 	logger log.Logger,
 	metrics metrics.Collector,
 ) (NoneAuthenticator, error) {
-	if err := cfg.Validate(); err != nil {
-		return nil, err
+	if cfg.Enabled {
+		logger.Warning(message.NewMessage(
+			message.WNoneAuthEnabled,
+			"None authentication is enabled. This allows any user to log in without a password. This is insecure and should only be used in secure environments.",
+		))
 	}
 	return &noneAuthenticator{
 		enabled: cfg.Enabled,

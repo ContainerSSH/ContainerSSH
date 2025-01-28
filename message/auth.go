@@ -161,3 +161,6 @@ const EAuthKerberosBackendError = "KRB_BACKEND_ERROR"
 
 // EAuthzFailed indicates that the authorization server rejected the user
 const EAuthzFailed = "AUTHZ_FAILED"
+
+// WNoneAuthEnabled indicates that the none authentication method is enabled.
+const WNoneAuthEnabled = "NONE_AUTH_ENABLED"
