@@ -113,6 +113,29 @@ func (n *networkConnectionHandler) OnAuthPubKey(
 	return response, authMeta, reason
 }
 
+func (n *networkConnectionHandler) OnAuthNone(meta metadata.ConnectionAuthPendingMetadata) (
+	response sshserver.AuthResponse,
+	metadata metadata.ConnectionAuthenticatedMetadata,
+	reason error,
+) {
+	// TODO add authenticated username
+	n.audit.OnAuthNone(meta.Username)
+	response, authMeta, reason := n.backend.OnAuthNone(meta)
+	switch response {
+	case sshserver.AuthResponseSuccess:
+		n.audit.OnAuthNoneSuccess(authMeta.Username)
+	case sshserver.AuthResponseFailure:
+		n.audit.OnAuthNoneFailed(authMeta.Username)
+	case sshserver.AuthResponseUnavailable:
+		if reason != nil {
+			n.audit.OnAuthNoneBackendError(authMeta.Username, reason.Error())
+		} else {
+			n.audit.OnAuthNoneBackendError(authMeta.Username, "")
+		}
+	}
+	return response, authMeta, reason
+}
+
 func (n *networkConnectionHandler) OnAuthGSSAPI(meta metadata.ConnectionMetadata) internalAuth.GSSAPIServer {
 	// TODO add audit logging
 	return n.backend.OnAuthGSSAPI(meta)

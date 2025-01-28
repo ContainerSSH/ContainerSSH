@@ -57,6 +57,15 @@ func New(
 		services = append(services, svc)
 	}
 
+	noneAuthenticator, err := auth.NewNoneAuthenticator(
+		config.NoneAuth,
+		logger,
+		metricsCollector,
+	)
+	if err != nil {
+		return nil, nil, err
+	}
+
 	gssapiAuthenticator, svc, err := auth.NewGSSAPIAuthenticator(
 		config.GSSAPIAuth,
 		logger,
@@ -81,6 +90,7 @@ func New(
 		passwordAuthenticator:            passwordAuthenticator,
 		publicKeyAuthenticator:           publicKeyAuthenticator,
 		keyboardInteractiveAuthenticator: keyboardInteractiveAuthenticator,
+		noneAuthenticator:                noneAuthenticator,
 		gssapiAuthenticator:              gssapiAuthenticator,
 		authorizationProvider:            authorizationProvider,
 		backend:                          backend,

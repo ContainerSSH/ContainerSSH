@@ -87,6 +87,14 @@ func (e *empty) OnAuthPubKeyFailed(_ string, _ string) {}
 
 func (e *empty) OnAuthPubKeyBackendError(_ string, _ string, _ string) {}
 
+func (e *empty) OnAuthNone(_ string) {}
+
+func (e *empty) OnAuthNoneSuccess(_ string) {}
+
+func (e *empty) OnAuthNoneFailed(_ string) {}
+
+func (e *empty) OnAuthNoneBackendError(_ string, _ string) {}
+
 func (e *empty) OnHandshakeFailed(_ string) {}
 
 func (e *empty) OnHandshakeSuccessful(_ string) {}

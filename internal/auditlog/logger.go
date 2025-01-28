@@ -60,6 +60,16 @@ type Connection interface {
 	// OnAuthKeyboardInteractiveBackendError records a backend failure during the keyboard-interactive authentication.
 	OnAuthKeyboardInteractiveBackendError(username string, reason string)
 
+	// OnAuthNone creates an audit log message for an authentication attempt with the none method.
+	OnAuthNone(username string)
+	// OnAuthNoneSuccess creates an audit log message for a successful none authentication.
+	OnAuthNoneSuccess(username string)
+	// OnAuthNoneFailed creates an audit log message for a failed none authentication.
+	OnAuthNoneFailed(username string)
+	// OnAuthNoneBackendError creates an audit log message for a failure while talking to the auth server (backend)
+	// during none authentication.
+	OnAuthNoneBackendError(username string, reason string)
+
 	// OnHandshakeFailed creates an entry that indicates a handshake failure.
 	OnHandshakeFailed(reason string)
 	// OnHandshakeSuccessful creates an entry that indicates a successful SSH handshake.

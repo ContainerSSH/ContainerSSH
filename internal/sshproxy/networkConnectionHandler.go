@@ -67,6 +67,16 @@ func (s *networkConnectionHandler) OnAuthKeyboardInteractive(
 	)
 }
 
+func (s *networkConnectionHandler) OnAuthNone(meta metadata.ConnectionAuthPendingMetadata) (
+	sshserver.AuthResponse,
+	metadata.ConnectionAuthenticatedMetadata,
+	error,
+) {
+	return sshserver.AuthResponseUnavailable, meta.AuthFailed(), fmt.Errorf(
+		"ssh proxy does not support authentication",
+	)
+}
+
 func (s *networkConnectionHandler) OnAuthGSSAPI(_ metadata.ConnectionMetadata) auth.GSSAPIServer {
 	return nil
 }

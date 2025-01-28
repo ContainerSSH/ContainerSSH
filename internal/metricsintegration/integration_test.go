@@ -199,6 +199,19 @@ func (d *dummyBackendHandler) OnAuthKeyboardInteractive(
 	}
 }
 
+func (d *dummyBackendHandler) OnAuthNone(meta metadata.ConnectionAuthPendingMetadata) (
+	response sshserver.AuthResponse,
+	metadata metadata.ConnectionAuthenticatedMetadata,
+	reason error,
+) {
+	switch d.authResponse {
+	case sshserver.AuthResponseSuccess:
+		return d.authResponse, meta.Authenticated(meta.Username), nil
+	default:
+		return d.authResponse, meta.AuthFailed(), nil
+	}
+}
+
 func (d *dummyBackendHandler) OnAuthGSSAPI(_ metadata.ConnectionMetadata) auth.GSSAPIServer {
 	return nil
 }
