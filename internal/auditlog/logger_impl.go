@@ -277,43 +277,6 @@ func (l *loggerConnection) OnAuthNone(username string) {
 	})
 }
 
-func (l *loggerConnection) OnAuthNoneSuccess(username string) {
-	l.log(message.Message{
-		ConnectionID: l.connectionID,
-		Timestamp:    time.Now().UnixNano(),
-		MessageType:  message.TypeAuthNoneSuccessful,
-		Payload: message.PayloadAuthNone{
-			Username: username,
-		},
-		ChannelID: nil,
-	})
-}
-
-func (l *loggerConnection) OnAuthNoneFailed(username string) {
-	l.log(message.Message{
-		ConnectionID: l.connectionID,
-		Timestamp:    time.Now().UnixNano(),
-		MessageType:  message.TypeAuthNoneFailed,
-		Payload: message.PayloadAuthNone{
-			Username: username,
-		},
-		ChannelID: nil,
-	})
-}
-
-func (l *loggerConnection) OnAuthNoneBackendError(username string, reason string) {
-	l.log(message.Message{
-		ConnectionID: l.connectionID,
-		Timestamp:    time.Now().UnixNano(),
-		MessageType:  message.TypeAuthNoneBackendError,
-		Payload: message.PayloadAuthNoneBackendError{
-			Username: username,
-			Reason:   reason,
-		},
-		ChannelID: nil,
-	})
-}
-
 func (l *loggerConnection) OnHandshakeFailed(reason string) {
 	l.log(message.Message{
 		ConnectionID: l.connectionID,

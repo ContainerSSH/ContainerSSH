@@ -6,7 +6,6 @@ import (
 	"go.containerssh.io/containerssh/config"
 	"go.containerssh.io/containerssh/internal/metrics"
 	"go.containerssh.io/containerssh/log"
-	"go.containerssh.io/containerssh/message"
 	"go.containerssh.io/containerssh/service"
 )
 
@@ -76,24 +75,6 @@ func NewKeyboardInteractiveAuthenticator(
 	default:
 		return nil, nil, fmt.Errorf("unsupported method: %s", cfg.Method)
 	}
-}
-
-// NewNoneAuthenticator returns a none authenticator as configured. If none authentication is disabled it returns
-// a noneAuthenticator that always returns failure. If the configuration is invalid an error is returned.
-func NewNoneAuthenticator(
-	cfg config.NoneAuthConfig,
-	logger log.Logger,
-	metrics metrics.Collector,
-) (NoneAuthenticator, error) {
-	if cfg.Enabled {
-		logger.Warning(message.NewMessage(
-			message.WNoneAuthEnabled,
-			"None authentication is enabled. This allows any user to log in without a password. This is insecure and should only be used in secure environments.",
-		))
-	}
-	return &noneAuthenticator{
-		enabled: cfg.Enabled,
-	}, nil
 }
 
 // NewGSSAPIAuthenticator returns a GSSAPI authenticator as configured, and if needed a backing service that needs to

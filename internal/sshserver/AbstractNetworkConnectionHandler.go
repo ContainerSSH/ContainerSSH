@@ -45,6 +45,13 @@ func (a *AbstractNetworkConnectionHandler) OnAuthKeyboardInteractive(
 	return AuthResponseUnavailable, pendingMeta.AuthFailed(), nil
 }
 
+// Whether or not the server has been configured to allow unauthenticated connections.
+func (a *AbstractNetworkConnectionHandler) NoneAuthEnabled() bool {
+	return false
+}
+
+// OnAuthNone is called when a user attempts an unauthenticated connection and the server has been configured to allow
+// unauthenticated connections. This always returns AuthResponseSuccess if called.
 func (a *AbstractNetworkConnectionHandler) OnAuthNone(pendingMeta metadata.ConnectionAuthPendingMetadata) (
 	response AuthResponse,
 	meta metadata.ConnectionAuthenticatedMetadata,

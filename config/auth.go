@@ -29,7 +29,7 @@ type AuthConfig struct {
 
 	// None allows any user to login without asking for a password. If this is provided, no other authentication
 	// method should be enabled.
-	NoneAuth NoneAuthConfig `json:"none" yaml:"none"`
+	NoneAuth bool `json:"none" yaml:"none" default:"false"`
 
 	// Authz is the authorization configuration. The authorization server will receive a webhook after successful user
 	// authentication to determine whether the specified user has access to the service. If not set authorization is
@@ -83,7 +83,7 @@ type newAuthConfig struct {
 	PublicKeyAuth           PublicKeyAuthConfig           `json:"publicKey" yaml:"publicKey"`
 	KeyboardInteractiveAuth KeyboardInteractiveAuthConfig `json:"keyboardInteractive" yaml:"keyboardInteractive"`
 	GSSAPIAuth              GSSAPIAuthConfig              `json:"gssapi" yaml:"gssapi"`
-	NoneAuth                NoneAuthConfig                `json:"none" yaml:"none"`
+	NoneAuth                bool                          `json:"none" yaml:"none"`
 	Authz                   AuthzConfig                   `json:"authz" yaml:"authz"`
 
 	HTTPClientConfiguration `json:",inline" yaml:",inline"`
@@ -133,7 +133,7 @@ func (c *AuthConfig) UnmarshalYAML(unmarshal func(interface{}) error) error {
 }
 
 
-func (c *AuthConfig) NoAuthMethodsEnabled() bool {
+func (c *AuthConfig) noAuthMethodsEnabled() bool {
 	return c.PasswordAuth.Method == PasswordAuthMethodDisabled &&
 		c.PublicKeyAuth.Method == PubKeyAuthMethodDisabled &&
 		c.KeyboardInteractiveAuth.Method == KeyboardInteractiveAuthMethodDisabled &&
@@ -159,7 +159,7 @@ func (c* AuthConfig) enabledAuthMethods() []string {
 
 // Validate checks if the authentication configuration is valid.
 func (c *AuthConfig) Validate() error {
-	if c.NoAuthMethodsEnabled() && !c.NoneAuth.Enabled {
+	if c.noAuthMethodsEnabled() && !c.NoneAuth {
 		return fmt.Errorf("no authentication method configured, please configure at least one")
 	}
 	if c.PasswordAuth.Method != PasswordAuthMethodDisabled {
@@ -189,7 +189,7 @@ func (c *AuthConfig) Validate() error {
 	}
 	// enabling none authentication can bypass other authentication providers, so do not allow it
 	// as the only authentication method.
-	if c.NoneAuth.Enabled && !c.NoAuthMethodsEnabled() {
+	if c.NoneAuth && !c.noAuthMethodsEnabled() {
 		methods := c.enabledAuthMethods()
 		return newError("none", "none authentication cannot be enabled if other authentication methods are enabled. Enabled methods: %s", methods)
 	}
@@ -362,17 +362,6 @@ const KeyboardInteractiveAuthMethodDisabled KeyboardInteractiveAuthMethod = Keyb
 
 // KeyboardInteractiveAuthMethodOAuth2 authenticates using oAuth2/OIDC.
 const KeyboardInteractiveAuthMethodOAuth2 KeyboardInteractiveAuthMethod = KeyboardInteractiveAuthMethod(AuthMethodOAuth2)
-
-// endregion
-
-// region None
-
-// NoneAuthConfig is the configuration for the none authentication method.
-type NoneAuthConfig struct {
-	// Enabled is a flag to enable the none authentication method.
-	// Enabling the none authentication method requires that no other authentication method is enabled.
-	Enabled bool `json:"enabled" yaml:"enabled" default:"false"`
-}
 
 // endregion
 

@@ -46,8 +46,8 @@ type handler struct {
 	publicKeyAuthenticator           auth.PublicKeyAuthenticator
 	gssapiAuthenticator              auth.GSSAPIAuthenticator
 	keyboardInteractiveAuthenticator auth.KeyboardInteractiveAuthenticator
-	noneAuthenticator                auth.NoneAuthenticator
 	authorizationProvider            auth.AuthzProvider
+	noneAuthEnabled                  bool
 	behavior                         Behavior
 }
 
@@ -87,7 +87,7 @@ func (h *handler) OnNetworkConnection(meta metadata.ConnectionMetadata) (
 		publicKeyAuthenticator:           h.publicKeyAuthenticator,
 		gssapiAuthenticator:              h.gssapiAuthenticator,
 		keyboardInteractiveAuthenticator: h.keyboardInteractiveAuthenticator,
-		noneAuthenticator:                h.noneAuthenticator,
+		noneAuthEnabled:                  h.noneAuthEnabled,
 		authorizationProvider:            h.authorizationProvider,
 	}
 
@@ -115,7 +115,7 @@ type networkConnectionHandler struct {
 	publicKeyAuthenticator           auth.PublicKeyAuthenticator
 	gssapiAuthenticator              auth.GSSAPIAuthenticator
 	keyboardInteractiveAuthenticator auth.KeyboardInteractiveAuthenticator
-	noneAuthenticator                auth.NoneAuthenticator
+	noneAuthEnabled                  bool
 	authorizationProvider            auth.AuthzProvider
 }
 
@@ -255,39 +255,19 @@ func (h *networkConnectionHandler) OnAuthKeyboardInteractive(
 	return sshserver.AuthResponseSuccess, authContext.Metadata(), authContext.Error()
 }
 
+func (h *networkConnectionHandler) NoneAuthEnabled() bool {
+	return h.noneAuthEnabled
+}
+
 func (h *networkConnectionHandler) OnAuthNone(meta metadata.ConnectionAuthPendingMetadata) (
 	sshserver.AuthResponse,
 	metadata.ConnectionAuthenticatedMetadata,
 	error,
 ) {
-	if h.authContext != nil {
-		h.authContext.OnDisconnect()
-	}
-	if h.noneAuthenticator == nil {
-		return sshserver.AuthResponseUnavailable, meta.AuthFailed(), message.UserMessage(
-			message.ESSHAuthUnavailable,
-			"This authentication method is currently unavailable.",
-			"None authentication is disabled.",
-		)
-	}
-	authContext := h.noneAuthenticator.Context(meta)
-	h.authContext = authContext
-	if !authContext.Success() {
-		if authContext.Error() != nil {
-			if h.behavior == BehaviorPassthroughOnUnavailable {
-				return h.backend.OnAuthNone(meta)
-			}
-			return sshserver.AuthResponseUnavailable, authContext.Metadata(), authContext.Error()
-		}
-		if h.behavior == BehaviorPassthroughOnFailure {
-			return h.backend.OnAuthNone(meta)
-		}
-		return sshserver.AuthResponseFailure, authContext.Metadata(), authContext.Error()
-	}
-	if h.behavior == BehaviorPassthroughOnSuccess {
-		return h.backend.OnAuthNone(meta)
-	}
-	return sshserver.AuthResponseSuccess, authContext.Metadata(), authContext.Error()
+	return sshserver.AuthResponseSuccess,
+		metadata.ConnectionAuthenticatedMetadata{
+			ConnectionAuthPendingMetadata: meta,
+		}, nil
 }
 
 func (h *networkConnectionHandler) OnAuthGSSAPI(meta metadata.ConnectionMetadata) auth.GSSAPIServer {
@@ -364,6 +344,11 @@ func (a *authzNetworkConnectionHandler) OnAuthKeyboardInteractive(meta metadata.
 	questions sshserver.KeyboardInteractiveQuestions) (answers sshserver.KeyboardInteractiveAnswers, err error)) (sshserver.AuthResponse, metadata.ConnectionAuthenticatedMetadata, error) {
 	authResponse, authenticatedMeta, err := a.backend.OnAuthKeyboardInteractive(meta, challenge)
 	return a.genericAuthorization(meta, authResponse, authenticatedMeta, err)
+}
+
+// Whether or not the server is configured to allow authentication without credentials.
+func (a *authzNetworkConnectionHandler) NoneAuthEnabled() bool {
+	return a.backend.NoneAuthEnabled()
 }
 
 // OnAuthNone is called when a user attempts a none authentication.

@@ -338,6 +338,10 @@ func (s *serverImpl) createNoneAuthHandler(
 	logger log.Logger,
 ) func(conn ssh.ConnMetadata) (*ssh.Permissions, metadata.ConnectionAuthenticatedMetadata, error) {
 	return func(conn ssh.ConnMetadata) (*ssh.Permissions, metadata.ConnectionAuthenticatedMetadata, error) {
+		logger.Warning(messageCodes.NewMessage(
+			messageCodes.WNoneAuthEnabled,
+			"None authentication is enabled. This allows any user to log in without a password. This is insecure and should only be used in secure environments.",
+		))
 		authenticatingMetadata := connectionMetadata.StartAuthentication(string(conn.ClientVersion()), conn.User())
 		authResponse, authenticatedMetadata, err := handlerNetworkConnection.OnAuthNone(authenticatingMetadata)
 		//goland:noinspection GoNilness
@@ -373,7 +377,7 @@ func (s *serverImpl) createConfiguration(
 			Ciphers:      s.cfg.Ciphers.StringList(),
 			MACs:         s.cfg.MACs.StringList(),
 		},
-		NoClientAuth:                true,
+		NoClientAuth:                noClientAuthCallback != nil,
 		NoClientAuthCallback:        noClientAuthCallback,
 		MaxAuthTries:                6,
 		PasswordCallback:            passwordCallback,
@@ -413,6 +417,9 @@ func (s *serverImpl) createNoClientAuthCallback(
 	handlerNetworkConnection *networkConnectionWrapper,
 	logger log.Logger,
 ) func(conn ssh.ConnMetadata) (*ssh.Permissions, error) {
+	if !handlerNetworkConnection.NoneAuthEnabled() {
+		return nil
+	}
 	noAuthHandler := s.createNoneAuthHandler(connectionMetadata, handlerNetworkConnection, logger)
 	return func(conn ssh.ConnMetadata) (*ssh.Permissions, error) {
 		_, authenticatedMetadata, err := noAuthHandler(conn)

@@ -199,6 +199,10 @@ func (d *dummyBackendHandler) OnAuthKeyboardInteractive(
 	}
 }
 
+func (d *dummyBackendHandler) NoneAuthEnabled() bool {
+	return d.authResponse == sshserver.AuthResponseSuccess
+}
+
 func (d *dummyBackendHandler) OnAuthNone(meta metadata.ConnectionAuthPendingMetadata) (
 	response sshserver.AuthResponse,
 	metadata metadata.ConnectionAuthenticatedMetadata,

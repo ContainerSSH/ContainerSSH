@@ -96,6 +96,10 @@ func (t *testAuthenticationNetworkHandler) OnAuthPubKey(
 	return AuthResponseFailure, metadata.ConnectionAuthenticatedMetadata{}, ErrAuthenticationFailed
 }
 
+func (t *testAuthenticationNetworkHandler) NoneAuthEnabled() bool {
+	return t.backend.NoneAuthEnabled()
+}
+
 func (t *testAuthenticationNetworkHandler) OnAuthNone(meta metadata.ConnectionAuthPendingMetadata) (
 	response AuthResponse,
 	authenticatedMetadata metadata.ConnectionAuthenticatedMetadata,

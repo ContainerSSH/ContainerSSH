@@ -70,14 +70,6 @@ type KeyboardInteractiveAuthenticator interface {
 	) AuthenticationContext
 }
 
-// NoneAuthenticator is a no-op authenticator that always returns success if none authentication is enabled.
-type NoneAuthenticator interface {
-	// None is a method to generate and retrieve a NoneAuthenticator interface for none authentication.
-	Context(
-		metadata metadata.ConnectionAuthPendingMetadata,
-	) AuthenticationContext
-}
-
 // GSSAPIAuthenticator authenticates using the GSSAPI method typically used for Kerberos authentication.
 type GSSAPIAuthenticator interface {
 	// GSSAPI is a method to generate and retrieve a GSSAPIServer interface for GSSAPI authentication.

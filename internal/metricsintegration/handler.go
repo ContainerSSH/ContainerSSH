@@ -88,6 +88,10 @@ func (m *metricsNetworkHandler) OnAuthKeyboardInteractive(
 	return m.backend.OnAuthKeyboardInteractive(meta, challenge)
 }
 
+func (m *metricsNetworkHandler) NoneAuthEnabled() bool {
+	return m.backend.NoneAuthEnabled()
+}
+
 func (m *metricsNetworkHandler) OnAuthNone(meta metadata.ConnectionAuthPendingMetadata) (
 	response sshserver.AuthResponse,
 	metadata metadata.ConnectionAuthenticatedMetadata,

@@ -123,6 +123,11 @@ type NetworkConnectionHandler interface {
 		) (answers KeyboardInteractiveAnswers, err error),
 	) (AuthResponse, metadata.ConnectionAuthenticatedMetadata, error)
 
+	// Whether or not this handler has been configured to allow authentication without credentials
+	NoneAuthEnabled() bool
+
+	// OnAuthNone is called when a user attempts an authentication without credentials. The implementation must always
+	// succeeds with AuthResponseSuccess
 	OnAuthNone(meta metadata.ConnectionAuthPendingMetadata) (
 		AuthResponse,
 		metadata.ConnectionAuthenticatedMetadata,

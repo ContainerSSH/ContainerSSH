@@ -67,6 +67,10 @@ func (s *networkConnectionHandler) OnAuthKeyboardInteractive(
 	)
 }
 
+func (s *networkConnectionHandler) NoneAuthEnabled() bool {
+	return false
+}
+
 func (s *networkConnectionHandler) OnAuthNone(meta metadata.ConnectionAuthPendingMetadata) (
 	sshserver.AuthResponse,
 	metadata.ConnectionAuthenticatedMetadata,

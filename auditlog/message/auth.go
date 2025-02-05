@@ -191,20 +191,6 @@ func (p PayloadAuthNone) Equals(other Payload) bool {
 	return p.Username == p2.Username
 }
 
-type PayloadAuthNoneBackendError struct {
-	Username string `json:"username" yaml:"username"`
-	Reason   string `json:"reason" yaml:"reason"`
-}
-
-// Equals compares two PayloadAuthNoneBackendError payloads.
-func (p PayloadAuthNoneBackendError) Equals(other Payload) bool {
-	p2, ok := other.(PayloadAuthNoneBackendError)
-	if !ok {
-		return false
-	}
-	return p.Username == p2.Username && p.Reason == p2.Reason
-}
-
 // PayloadHandshakeFailed is a payload for a failed handshake.
 type PayloadHandshakeFailed struct {
 	Reason string `json:"reason" yaml:"reason"`
