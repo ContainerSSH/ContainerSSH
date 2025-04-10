@@ -200,7 +200,6 @@ func (k *kerberosAuthContext) AcceptSecContext(token []byte) (outputToken []byte
 		ctx := st.Context()
 		id := ctx.Value(spnego.CtxCredentials).(goidentity.Identity)
 		k.principalUsername = id.UserName()
-
 		a := st.APReq
 
 		hostAddr := types.HostAddressFromNetIP(k.remoteAddr)
@@ -345,7 +344,7 @@ func (k *kerberosAuthContext) VerifyMIC(micField []byte, micToken []byte) error 
 			"Received MIC packet with unexpected values",
 		)
 	}
-
+	// k.client.logger.Debug("EnforceUsername", k.client.config.EnforceUsername)
 	if k.client.config.EnforceUsername && field.UserName != k.principalUsername {
 		return message.UserMessage(
 			message.EAuthKerberosVerificationFailed,
@@ -356,7 +355,7 @@ func (k *kerberosAuthContext) VerifyMIC(micField []byte, micToken []byte) error 
 		)
 	}
 
-	k.loginUsername = field.UserName
+	k.loginUsername = k.principalUsername
 	k.success = true
 
 	return nil
@@ -374,7 +373,7 @@ func (k *kerberosAuthContext) AllowLogin(
 		return meta.AuthFailed(), nil
 	}
 
-	if k.loginUsername != username {
+	if k.loginUsername != k.principalUsername {
 		return meta.AuthFailed(), nil
 	}
 
@@ -384,5 +383,5 @@ func (k *kerberosAuthContext) AllowLogin(
 		return meta.AuthFailed(), nil
 	}
 
-	return meta.Authenticated(username), nil
+	return meta.Authenticated(k.loginUsername), nil
 }
