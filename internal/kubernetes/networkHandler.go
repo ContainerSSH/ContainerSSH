@@ -147,6 +147,18 @@ func (n *networkHandler) OnHandshakeSuccess(meta metadata.ConnectionAuthenticate
 		}
 	}
 
+	if n.config.Pod.Mode == publicConfig.KubernetesExecutionModePersistent {
+		if n.pod, err = n.cli.findPod(ctx, n.config.Pod.Metadata.Name, n.config.Pod.Metadata.Namespace); err != nil {
+			if !n.config.Pod.CreateMissingPods {
+				return nil, meta, err
+			}
+
+			if n.pod, err = n.cli.createPod(ctx, n.labels, n.annotations, env, nil, nil); err != nil {
+				return nil, meta, err
+			}
+		}
+	}
+
 	files := map[string][]byte{}
 	for name, f := range meta.GetFiles() {
 		files[name] = f.Value

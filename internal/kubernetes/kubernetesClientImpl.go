@@ -2,14 +2,15 @@ package kubernetes
 
 import (
 	"context"
+	"fmt"
 	"sync"
 	"time"
 
-    containerSSHConfig "go.containerssh.io/containerssh/config"
-    "go.containerssh.io/containerssh/internal/metrics"
-    "go.containerssh.io/containerssh/internal/structutils"
-    "go.containerssh.io/containerssh/log"
-    "go.containerssh.io/containerssh/message"
+	containerSSHConfig "go.containerssh.io/containerssh/config"
+	"go.containerssh.io/containerssh/internal/metrics"
+	"go.containerssh.io/containerssh/internal/structutils"
+	"go.containerssh.io/containerssh/log"
+	"go.containerssh.io/containerssh/message"
 	core "k8s.io/api/core/v1"
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
@@ -61,6 +62,60 @@ loop:
 	)
 	logger.Error(err)
 	return nil, err
+}
+
+func (k *kubernetesClientImpl) getPodByName(
+	ctx context.Context,
+	podName string,
+	namespace string,
+) (*core.Pod, error) {
+
+	return k.client.CoreV1().Pods(namespace).Get(ctx, podName, meta.GetOptions{})
+}
+
+func (k *kubernetesClientImpl) k8sPodToPodImpl(pod core.Pod) kubernetesPodImpl {
+	tty := true
+	return kubernetesPodImpl{
+		pod:                   &pod,
+		client:                k.client,
+		restClient:            k.restClient,
+		config:                k.config,
+		logger:                k.logger.WithLabel("podName", pod.Name),
+		connectionConfig:      k.connectionConfig,
+		backendRequestsMetric: k.backendRequestsMetric,
+		backendFailuresMetric: k.backendFailuresMetric,
+		tty:                   &tty,
+		lock:                  &sync.Mutex{},
+		wg:                    &sync.WaitGroup{},
+		removeLock:            &sync.Mutex{},
+	}
+}
+
+func (k *kubernetesClientImpl) findPod(
+	ctx context.Context,
+	podName string,
+	namespace string,
+) (kubernetesPod, error) {
+	for tries := 0; tries < 3; tries++ {
+		pod, err := k.getPodByName(ctx, podName, namespace)
+		if err != nil {
+			k.logger.Debug("Error fetching pod: %v (retry %d)", err, tries+1)
+			time.Sleep(2 * time.Second)
+			continue
+		}
+		if pod == nil {
+			k.logger.Debug(message.EKubernetesPodNotFound, "Pod not found, retrying... (retry %d)", tries+1)
+			time.Sleep(2 * time.Second)
+			continue
+		}
+
+		podImpl := k.k8sPodToPodImpl(*pod)
+		return &podImpl, nil
+	}
+	notFoundErr := fmt.Errorf("failed to find pod %s in namespace %s after multiple retries",
+		podName, namespace)
+	k.logger.Debug(message.NewMessage(message.EKubernetesPodNotFound, notFoundErr.Error()))
+	return nil, notFoundErr
 }
 
 func (k *kubernetesClientImpl) attemptPodCreate(
