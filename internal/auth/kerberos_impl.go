@@ -344,7 +344,6 @@ func (k *kerberosAuthContext) VerifyMIC(micField []byte, micToken []byte) error 
 			"Received MIC packet with unexpected values",
 		)
 	}
-	// k.client.logger.Debug("EnforceUsername", k.client.config.EnforceUsername)
 	if k.client.config.EnforceUsername && field.UserName != k.principalUsername {
 		return message.UserMessage(
 			message.EAuthKerberosVerificationFailed,
@@ -383,5 +382,10 @@ func (k *kerberosAuthContext) AllowLogin(
 		return meta.AuthFailed(), nil
 	}
 
-	return meta.Authenticated(k.loginUsername), nil
+	krb5Metadata := k.Metadata()
+
+	authenticated := meta.Authenticated(k.loginUsername)
+	authenticated.Merge(krb5Metadata)
+
+	return authenticated, nil
 }

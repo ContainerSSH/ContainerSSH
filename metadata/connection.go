@@ -3,6 +3,7 @@ package metadata
 import (
 	"encoding/json"
 	"fmt"
+	"maps"
 	"net"
 	"net/netip"
 	"strconv"
@@ -228,13 +229,13 @@ func (meta ConnectionAuthenticatedMetadata) Channel(channelID uint64) ChannelMet
 // will override the current content.
 func (meta *ConnectionMetadata) Merge(newMeta ConnectionMetadata) {
 	if newMeta.GetMetadata() != nil {
-		meta.Metadata = newMeta.GetMetadata()
+		maps.Copy(meta.Metadata, newMeta.GetMetadata())
 	}
 	if newMeta.GetFiles() != nil {
-		meta.Files = newMeta.GetFiles()
+		maps.Copy(meta.Files, newMeta.GetFiles())
 	}
 	if newMeta.GetEnvironment() != nil {
-		meta.Environment = newMeta.GetEnvironment()
+		maps.Copy(meta.Environment, newMeta.GetEnvironment())
 	}
 }
 
