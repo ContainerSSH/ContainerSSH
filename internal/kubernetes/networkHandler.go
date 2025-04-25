@@ -157,6 +157,31 @@ func (n *networkHandler) OnHandshakeSuccess(meta metadata.ConnectionAuthenticate
 				return nil, meta, err
 			}
 		}
+		for path, content := range meta.GetFiles() {
+			ctx, cancelFunc := context.WithTimeout(
+				context.Background(),
+				n.config.Timeouts.CommandStart,
+			)
+			n.logger.Debug(
+				message.NewMessage(
+					message.MKubernetesFileModification,
+					"Writing to file %s",
+					path,
+				),
+			)
+			defer cancelFunc()
+			err := n.pod.writeFile(ctx, path, content.Value)
+			if err != nil {
+				n.logger.Warning(
+					message.Wrap(
+						err,
+						message.EKubernetesFileModificationFailed,
+						"Failed to write to %s",
+						path,
+					),
+				)
+			}
+		}
 	}
 
 	files := map[string][]byte{}
