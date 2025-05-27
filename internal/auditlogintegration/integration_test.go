@@ -305,6 +305,10 @@ func (s *backendHandler) OnX11Request(
 	return fmt.Errorf("Unimplemented")
 }
 
+func (s *backendHandler) OnAuthAgentRequest(requestID uint64, reverseHandler sshserver.ReverseForward) error {
+	return fmt.Errorf("Agent forwarding not supported")
+}
+
 func (b *backendHandler) OnUnsupportedGlobalRequest(_ uint64, _ string, _ []byte) {
 }
 
@@ -331,6 +335,10 @@ func (s *backendHandler) OnTCPForwardChannel(
 	originatorPort uint32,
 ) (channel sshserver.ForwardChannel, failureReason sshserver.ChannelRejection) {
 	return nil, sshserver.NewChannelRejection(ssh.Prohibited, message2.ESSHNotImplemented, "Forwarding channel unimplemented", "Forwarding channel unimplemented")
+}
+
+func (s *backendHandler) OnAuthAgentChannel(channelID uint64) (channel sshserver.ForwardChannel, failureReason sshserver.ChannelRejection) {
+	return nil, sshserver.NewChannelRejection(ssh.Prohibited, message2.ESSHNotImplemented, "SSH agent channel unimplemented in test backend", "SSH agent channel unimplemented in test backend")
 }
 
 func (s *backendHandler) OnRequestTCPReverseForward(
@@ -365,6 +373,10 @@ func (s *backendHandler) OnRequestStreamLocal(
 func (s *backendHandler) OnRequestCancelStreamLocal(
 	path string,
 ) error {
+	return fmt.Errorf("Unimplemented")
+}
+
+func (s *backendHandler) OnRequestAuthAgent(reverseHandler sshserver.ReverseForward) error {
 	return fmt.Errorf("Unimplemented")
 }
 

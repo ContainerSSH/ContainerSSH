@@ -182,6 +182,7 @@ const (
 	ChannelTypeX11                  string = "x11"
 	ChannelTypeDirectStreamLocal    string = "direct-streamlocal@openssh.com"
 	ChannelTypeForwardedStreamLocal string = "forwarded-streamlocal@openssh.com"
+	ChannelTypeAuthAgent            string = "auth-agent@openssh.com"
 )
 
 // ReverseForward contains a set of callbacks for backends to request the opening of a new channel
@@ -202,6 +203,8 @@ type ReverseForward interface {
 	// originatorAddress is the address that initiated the X11 request
 	// originatorPort is the port that originated the X11 request
 	NewChannelX11(originatorAddress string, originatorPort uint32) (ForwardChannel, uint64, error)
+	// NewChannelAuthAgent requests the opening of an SSH agent forwarding channel
+	NewChannelAuthAgent() (ForwardChannel, uint64, error)
 }
 
 // ForwardChannel represents a network forwarding channel
@@ -304,6 +307,18 @@ type SSHConnectionHandler interface {
 		path string,
 	) error
 
+	// OnAuthAgentChannel is called when a channel of the auth-agent@openssh.com type is requested. The implementer must either return
+	//                    the channel result if the channel was successful, or failureReason to state why the channel
+	//                    should be rejected.
+	//
+	// channelID is an ID uniquely identifying the channel within the connection.
+	OnAuthAgentChannel(channelID uint64) (channel ForwardChannel, failureReason ChannelRejection)
+
+	// OnRequestAuthAgent is called when the client requests SSH agent forwarding to be enabled.
+	//
+	// reverseHandler is a set of callbacks to signal new connections
+	OnRequestAuthAgent(reverseHandler ReverseForward) error
+
 	// OnShutdown is called when a shutdown of the SSH server is desired. The shutdownContext is passed as a deadline
 	//            for the shutdown, after which the server should abort all running connections and return as fast as
 	//            possible.
@@ -390,6 +405,16 @@ type SessionChannelHandler interface {
 		protocol string,
 		cookie string,
 		screen uint32,
+		reverseHandler ReverseForward,
+	) error
+
+	// OnAuthAgentRequest is called when the client requests SSH agent forwarding to be enabled.
+	// This method may be called after a program is started. The implementation can return an error to reject the request.
+	//
+	// requestID is an incrementing number uniquely identifying the request within the channel.
+	// reverseHandler is a set of callbacks to signal new connections
+	OnAuthAgentRequest(
+		requestID uint64,
 		reverseHandler ReverseForward,
 	) error
 

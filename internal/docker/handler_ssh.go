@@ -5,11 +5,11 @@ import (
 	"fmt"
 	"io"
 
-    "go.containerssh.io/containerssh/config"
-    "go.containerssh.io/containerssh/internal/agentforward"
-    "go.containerssh.io/containerssh/internal/sshserver"
-    "go.containerssh.io/containerssh/metadata"
-    "go.containerssh.io/containerssh/message"
+	"go.containerssh.io/containerssh/config"
+	"go.containerssh.io/containerssh/internal/agentforward"
+	"go.containerssh.io/containerssh/internal/sshserver"
+	"go.containerssh.io/containerssh/message"
+	"go.containerssh.io/containerssh/metadata"
 	"golang.org/x/crypto/ssh"
 )
 
@@ -84,6 +84,10 @@ func (s *sshConnectionHandler) OnRequestTCPReverseForward(
 	)
 }
 
+func (s *sshConnectionHandler) OnRequestAuthAgent(reverseHandler sshserver.ReverseForward) error {
+	return nil
+}
+
 func (s *sshConnectionHandler) OnRequestCancelTCPReverseForward(
 	bindHost string,
 	bindPort uint32,
@@ -122,6 +126,18 @@ func (s *sshConnectionHandler) OnRequestCancelStreamLocal(
 	path string,
 ) error {
 	return s.agentForward.CancelStreamLocalForwarding(path)
+}
+
+func (s *sshConnectionHandler) OnAuthAgentChannel(channelID uint64) (channel sshserver.ForwardChannel, failureReason sshserver.ChannelRejection) {
+	channel, err := s.agentForward.NewForwardUnix(
+		s.setupAgent,
+		s.networkHandler.logger,
+		"/tmp/ssh-agent.sock",
+	)
+	if err != nil {
+		return nil, sshserver.NewChannelRejection(ssh.ConnectionFailed, message.EDockerForwardingFailed, "Error setting up SSH agent forwarding", "Error setting up SSH agent forwarding")
+	}
+	return channel, nil
 }
 
 func (c *sshConnectionHandler) setupAgent() (io.Reader, io.Writer, error) {

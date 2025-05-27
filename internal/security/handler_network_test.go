@@ -8,12 +8,12 @@ import (
 	"sync"
 	"testing"
 
-    "go.containerssh.io/containerssh/config"
-    "go.containerssh.io/containerssh/internal/sshserver"
-    "go.containerssh.io/containerssh/log"
-    "go.containerssh.io/containerssh/metadata"
-    "go.containerssh.io/containerssh/message"
 	"github.com/stretchr/testify/assert"
+	"go.containerssh.io/containerssh/config"
+	"go.containerssh.io/containerssh/internal/sshserver"
+	"go.containerssh.io/containerssh/log"
+	"go.containerssh.io/containerssh/message"
+	"go.containerssh.io/containerssh/metadata"
 
 	"golang.org/x/crypto/ssh"
 )
@@ -174,4 +174,12 @@ func (s *dummySSHBackend) OnRequestCancelStreamLocal(
 	path string,
 ) error {
 	return fmt.Errorf("Unimplemented")
+}
+
+func (s *dummySSHBackend) OnRequestAuthAgent(reverseHandler sshserver.ReverseForward) error {
+	return fmt.Errorf("Unimplemented")
+}
+
+func (s *dummySSHBackend) OnAuthAgentChannel(channelID uint64) (channel sshserver.ForwardChannel, failureReason sshserver.ChannelRejection) {
+	return nil, sshserver.NewChannelRejection(ssh.Prohibited, message.ESSHNotImplemented, "SSH agent channel unimplemented in test backend", "SSH agent channel unimplemented in test backend")
 }
