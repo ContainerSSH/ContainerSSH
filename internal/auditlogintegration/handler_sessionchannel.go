@@ -3,8 +3,8 @@ package auditlogintegration
 import (
 	"context"
 
-    "go.containerssh.io/containerssh/internal/auditlog"
-    "go.containerssh.io/containerssh/internal/sshserver"
+	"go.containerssh.io/containerssh/internal/auditlog"
+	"go.containerssh.io/containerssh/internal/sshserver"
 )
 
 type sessionChannelHandler struct {
@@ -142,9 +142,18 @@ func (s *sessionChannelHandler) OnX11Request(
 		cookie,
 		screen,
 		&reverseHandlerProxy{
-			backend: reverseHandler,
+			backend:           reverseHandler,
 			connectionHandler: s.connectionHandler,
-			channelType: sshserver.ChannelTypeX11,
+			channelType:       sshserver.ChannelTypeX11,
 		},
 	)
+}
+
+func (s *sessionChannelHandler) OnAuthAgentRequest(requestID uint64, reverseHandler sshserver.ReverseForward) error {
+	s.audit.OnRequestAuthAgent(requestID)
+	if err := s.backend.OnAuthAgentRequest(requestID, reverseHandler); err != nil {
+		s.audit.OnRequestFailed(requestID, err)
+		return err
+	}
+	return nil
 }

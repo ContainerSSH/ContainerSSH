@@ -5,7 +5,7 @@ import (
 	"io"
 	"net"
 
-    "go.containerssh.io/containerssh/auditlog/message"
+	"go.containerssh.io/containerssh/auditlog/message"
 )
 
 type empty struct{}
@@ -36,6 +36,8 @@ func (e *empty) OnRequestExec(_ uint64, _ string) {}
 func (e *empty) OnRequestPty(_ uint64, _ string, _ uint32, _ uint32, _ uint32, _ uint32, _ []byte) {}
 
 func (e *empty) OnRequestX11(_ uint64, _ bool, _ string, _ string, _ uint32) {}
+
+func (e *empty) OnRequestAuthAgent(_ uint64) {}
 
 func (e *empty) OnRequestShell(_ uint64) {}
 
@@ -115,6 +117,8 @@ func (l *empty) OnReverseForwardChannel(_ message.ChannelID, _ string, _ uint32,
 func (l *empty) OnReverseStreamLocalChannel(_ message.ChannelID, _ string) {}
 
 func (l *empty) OnReverseX11ForwardChannel(_ message.ChannelID, _ string, _ uint32) {}
+
+func (l *empty) OnReverseAuthAgentChannel(_ message.ChannelID) {}
 
 func (l *empty) OnDirectStreamLocal(_ message.ChannelID, _ string) {}
 

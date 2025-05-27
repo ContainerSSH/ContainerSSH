@@ -5,11 +5,11 @@ import (
 	"fmt"
 	"io"
 
-    "go.containerssh.io/containerssh/config"
-    "go.containerssh.io/containerssh/internal/agentforward"
-    "go.containerssh.io/containerssh/internal/sshserver"
-    "go.containerssh.io/containerssh/message"
-    "go.containerssh.io/containerssh/metadata"
+	"go.containerssh.io/containerssh/config"
+	"go.containerssh.io/containerssh/internal/agentforward"
+	"go.containerssh.io/containerssh/internal/sshserver"
+	"go.containerssh.io/containerssh/message"
+	"go.containerssh.io/containerssh/metadata"
 	"golang.org/x/crypto/ssh"
 )
 
@@ -75,6 +75,18 @@ func (s *sshConnectionHandler) OnTCPForwardChannel(
 	return channel, nil
 }
 
+func (s *sshConnectionHandler) OnAuthAgentChannel(channelID uint64) (channel sshserver.ForwardChannel, failureReason sshserver.ChannelRejection) {
+	channel, err := s.agentForward.NewForwardUnix(
+		s.setupAgent,
+		s.networkHandler.logger,
+		"/tmp/ssh-agent.sock",
+	)
+	if err != nil {
+		return nil, sshserver.NewChannelRejection(ssh.ConnectionFailed, message.EKubernetesForwardingFailed, "Error setting up SSH agent forwarding", "Error setting up SSH agent forwarding")
+	}
+	return channel, nil
+}
+
 func (s *sshConnectionHandler) OnRequestTCPReverseForward(
 	bindHost string,
 	bindPort uint32,
@@ -87,6 +99,10 @@ func (s *sshConnectionHandler) OnRequestTCPReverseForward(
 		bindPort,
 		reverseHandler,
 	)
+}
+
+func (s *sshConnectionHandler) OnRequestAuthAgent(reverseHandler sshserver.ReverseForward) error {
+	return nil
 }
 
 func (s *sshConnectionHandler) OnRequestCancelTCPReverseForward(
@@ -136,7 +152,7 @@ func (c *sshConnectionHandler) setupAgent() (io.Reader, io.Writer, error) {
 	)
 	defer cancelFunc()
 
-	if c.networkHandler.config.Pod.Mode == config.KubernetesExecutionModeConnection {
+	if c.networkHandler.config.Pod.Mode == config.KubernetesExecutionModeConnection{
 		agent := []string{c.networkHandler.config.Pod.AgentPath, "forward-server"}
 		exec, err := c.networkHandler.pod.createExec(ctx, agent, c.env, false)
 		if err != nil {

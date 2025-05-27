@@ -166,3 +166,15 @@ func (s *AbstractSessionChannelHandler) OnX11Request(
 ) error {
 	return fmt.Errorf("not supported")
 }
+
+// OnAuthAgentRequest is called when the client requests SSH agent forwarding to be enabled.
+// This method may be called after a program is started. The implementation can return an error to reject the request.
+//
+// requestID is an incrementing number uniquely identifying the request within the channel.
+// reverseHandler is a set of callbacks to signal new connections
+func (s *AbstractSessionChannelHandler) OnAuthAgentRequest(
+	requestID uint64,
+	reverseHandler ReverseForward,
+) error {
+	return fmt.Errorf("not supported")
+}

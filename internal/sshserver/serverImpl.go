@@ -775,7 +775,7 @@ func (s *serverImpl) handleGlobalRequests(
 		case "keepalive@openssh.com":
 			s.handleKeepAliveRequest(request, logger)
 		default:
-			logger.Debug("Handling global request %s", request.Type)
+			logger.Debug(messageCodes.NewMessage(messageCodes.MSSHGlobalRequestHandling, "Handling global request %s", request.Type))
 			s.handleGlobalRequest(authenticatedMetadata, requestID, connection, request, logger)
 		}
 	}
@@ -804,6 +804,8 @@ func (s *serverImpl) handleChannels(
 			go s.handleDirectForwardingChannel(authenticatedMetadata.Channel(channelID), newChannel, connection, logger)
 		case ChannelTypeDirectStreamLocal:
 			go s.handleDirectStreamLocalChannel(authenticatedMetadata.Channel(channelID), newChannel, connection, logger)
+		case ChannelTypeAuthAgent:
+			go s.handleAuthAgentChannel(authenticatedMetadata.Channel(channelID), newChannel, connection, logger)
 		default:
 			logger.Debug(
 				messageCodes.NewMessage(
@@ -813,7 +815,7 @@ func (s *serverImpl) handleChannels(
 			)
 			connection.OnUnsupportedChannel(channelID, newChannel.ChannelType(), newChannel.ExtraData())
 			if err := newChannel.Reject(ssh.UnknownChannelType, "unsupported channel type"); err != nil {
-				logger.Debug("failed to send channel rejection for channel type %s", newChannel.ChannelType())
+				logger.Debug(messageCodes.Wrap(err, messageCodes.ESSHChannelRejectionFailed, "failed to send channel rejection for channel type %s", newChannel.ChannelType()))
 			}
 			continue
 		}
@@ -1039,12 +1041,19 @@ func (s *serverImpl) unmarshalTCPIPForward(request *ssh.Request) (payload ssh2.F
 }
 
 func (s *serverImpl) unmarshalStreamLocalForward(request *ssh.Request) (payload ssh2.StreamLocalForwardRequestPayload, err error) {
-	s.logger.Debug("Unmarshalling streamlocal: %+v", request.Payload)
+	s.logger.Debug(messageCodes.NewMessage(messageCodes.MSSHStreamLocalUnmarshalling, "Unmarshalling streamlocal: %+v", request.Payload))
 	return payload, ssh.Unmarshal(request.Payload, &payload)
 }
 
 func (s *serverImpl) unmarshalX11(request *ssh.Request) (payload ssh2.X11RequestPayload, err error) {
 	return payload, ssh.Unmarshal(request.Payload, &payload)
+}
+
+func (s *serverImpl) unmarshalAuthAgent(request *ssh.Request) (payload ssh2.AuthAgentRequestPayload, err error) {
+	if len(request.Payload) != 0 {
+		err = ssh.Unmarshal(request.Payload, &payload)
+	}
+	return payload, err
 }
 
 func (s *serverImpl) unmarshalChannelRequestPayload(request *ssh.Request) (payload interface{}, err error) {
@@ -1065,6 +1074,8 @@ func (s *serverImpl) unmarshalChannelRequestPayload(request *ssh.Request) (paylo
 		return s.unmarshalSignal(request)
 	case ssh2.RequestTypeX11:
 		return s.unmarshalX11(request)
+	case ssh2.RequestTypeAuthAgent:
+		return s.unmarshalAuthAgent(request)
 	default:
 		return nil, nil
 	}
@@ -1195,6 +1206,8 @@ func (s *serverImpl) handleDecodedChannelRequest(
 		return s.onSignal(requestID, sessionChannel, payload)
 	case ssh2.RequestTypeX11:
 		return s.onX11(channelMetadata.Connection.ConnectionID, requestID, sessionChannel, payload)
+	case ssh2.RequestTypeAuthAgent:
+		return s.onAuthAgent(channelMetadata.Connection.ConnectionID, requestID, sessionChannel, payload)
 	}
 	return nil
 }
@@ -1305,7 +1318,7 @@ func (s *serverImpl) onCancelForwardStreamLocal(authenticatedMetadata metadata.C
 
 func (s *serverImpl) onX11(connectionID string, requestID uint64, sessionChannel SessionChannelHandler, payload interface{}) error {
 	x11 := payload.(ssh2.X11RequestPayload)
-	s.logger.Debug("onX11: Handling X11 %+v", x11)
+	s.logger.Debug(messageCodes.NewMessage(messageCodes.MSSHX11Handling, "onX11: Handling X11 %+v", x11))
 
 	s.lock.Lock()
 	defer s.lock.Unlock()
@@ -1321,6 +1334,29 @@ func (s *serverImpl) onX11(connectionID string, requestID uint64, sessionChannel
 	err := sessionChannel.OnX11Request(requestID, x11.SingleConnection, x11.Protocol, x11.Cookie, x11.Screen, &reverseForwardHandler)
 	if err != nil {
 		s.logger.Warning("Failed to start X11 forwarding %+v", err)
+	}
+	return err
+}
+
+func (s *serverImpl) onAuthAgent(connectionID string, requestID uint64, sessionChannel SessionChannelHandler, payload interface{}) error {
+	s.logger.Debug(messageCodes.NewMessage(messageCodes.MSSHAgentForwardingRequest, "Handling SSH agent forwarding request"))
+
+	s.lock.Lock()
+	defer s.lock.Unlock()
+	conn, ok := s.connMap[connectionID]
+	if !ok {
+		return fmt.Errorf("couldn't find connection in map for SSH agent forwarding")
+	}
+
+	reverseForwardHandler := ReverseForwardHandler{
+		sshConn: conn.sshConn,
+		server:  s,
+		logger:  s.logger,
+	}
+
+	err := sessionChannel.OnAuthAgentRequest(requestID, &reverseForwardHandler)
+	if err != nil {
+		s.logger.Warning("Failed to start SSH agent forwarding %+v", err)
 	}
 	return err
 }
@@ -1353,4 +1389,64 @@ func (s *serverImpl) shutdownHandler(lifecycle service.Lifecycle, exited chan st
 
 type shutdownHandler interface {
 	OnShutdown(shutdownContext context.Context)
+}
+
+func (s *serverImpl) handleAuthAgentChannel(
+	channelMetadata metadata.ChannelMetadata,
+	newChannel ssh.NewChannel,
+	connection SSHConnectionHandler,
+	logger log.Logger,
+) {
+	var payload ssh2.AuthAgentChannelOpenPayload
+	err := ssh.Unmarshal(newChannel.ExtraData(), &payload)
+	if err != nil {
+		logger.Warning(
+			messageCodes.Wrap(
+				err,
+				messageCodes.MSSHNewChannelRejected,
+				"Failed to decode new auth-agent channel payload",
+			),
+		)
+		return
+	}
+
+	handlerChannel, rejection := connection.OnAuthAgentChannel(channelMetadata.ChannelID)
+	if rejection != nil {
+		logger.Debug(
+			messageCodes.Wrap(
+				rejection,
+				messageCodes.MSSHNewChannelRejected,
+				"New auth-agent channel rejected",
+			).Label("type", newChannel.ChannelType()),
+		)
+
+		if err := newChannel.Reject(rejection.Reason(), rejection.UserMessage()); err != nil {
+			logger.Debug(messageCodes.Wrap(err, messageCodes.ESSHReplyFailed, "Failed to send reply to channel request"))
+		}
+		return
+	}
+	shutdownHandlerID := fmt.Sprintf("auth-agent-%s-%d", channelMetadata.Connection.ConnectionID, channelMetadata.ChannelID)
+	s.shutdownHandlers.Register(shutdownHandlerID, &shutdownCloser{
+		closer: handlerChannel,
+	})
+	channel, requests, err := newChannel.Accept()
+	if err != nil {
+		logger.Debug(messageCodes.Wrap(err, messageCodes.ESSHReplyFailed, "failed to accept auth-agent channel"))
+		s.shutdownHandlers.Unregister(shutdownHandlerID)
+		return
+	}
+	logger.Debug(messageCodes.NewMessage(messageCodes.MSSHNewChannel, "New SSH channel").Label("type", newChannel.ChannelType()))
+	go serveConnection(logger, handlerChannel, channel)
+	go serveConnection(logger, channel, handlerChannel)
+	for {
+		request, ok := <-requests
+		if !ok {
+			s.shutdownHandlers.Unregister(shutdownHandlerID)
+			_ = handlerChannel.Close()
+			break
+		}
+		if request.WantReply {
+			_ = request.Reply(false, []byte{})
+		}
+	}
 }
