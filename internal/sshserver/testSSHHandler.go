@@ -78,12 +78,6 @@ func (s *testSSHHandler) OnAuthAgentChannel(channelID uint64) (channel ForwardCh
 	return nil, NewChannelRejection(ssh.Prohibited, message2.ESSHNotImplemented, "SSH agent channel unimplemented in test backend", "SSH agent channel unimplemented in test backend")
 }
 
-func (t *testSSHHandler) OnRequestAuthAgent(
-	agentChannel ReverseForward,
-) error {
-	return fmt.Errorf("Unimplemented")
-}
-
 func (t *testSSHHandler) OnShutdown(_ context.Context) {
 	t.shutdown = true
 }

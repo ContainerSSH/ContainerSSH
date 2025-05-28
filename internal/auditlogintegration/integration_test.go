@@ -376,10 +376,6 @@ func (s *backendHandler) OnRequestCancelStreamLocal(
 	return fmt.Errorf("Unimplemented")
 }
 
-func (s *backendHandler) OnRequestAuthAgent(reverseHandler sshserver.ReverseForward) error {
-	return fmt.Errorf("Unimplemented")
-}
-
 func (b *backendHandler) OnAuthPassword(meta metadata.ConnectionAuthPendingMetadata, _ []byte) (
 	response sshserver.AuthResponse,
 	metadata metadata.ConnectionAuthenticatedMetadata,

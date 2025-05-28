@@ -136,10 +136,6 @@ func (s *sshConnectionHandler) OnRequestCancelStreamLocal(
 	return s.backend.OnRequestCancelStreamLocal(path)
 }
 
-func (s *sshConnectionHandler) OnRequestAuthAgent(reverseHandler sshserver.ReverseForward) error {
-	return s.backend.OnRequestAuthAgent(reverseHandler)
-}
-
 func (s *sshConnectionHandler) OnAuthAgentChannel(channelID uint64) (channel sshserver.ForwardChannel, failureReason sshserver.ChannelRejection) {
 	s.audit.OnReverseAuthAgentChannel(message.MakeChannelID(channelID))
 

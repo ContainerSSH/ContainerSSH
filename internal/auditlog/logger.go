@@ -129,8 +129,6 @@ type Channel interface {
 	OnRequestPty(requestID uint64, term string, columns uint32, rows uint32, width uint32, height uint32, modeList []byte)
 	// OnRequestX11 create an audit log message for a channel request to start X11 forwarding
 	OnRequestX11(requestID uint64, singleConnection bool, protocol string, cookie string, screen uint32)
-	// OnRequestAuthAgent creates an audit log message for a channel request to enable SSH agent forwarding.
-	OnRequestAuthAgent(requestID uint64)
 	// OnRequestShell creates an audit log message for a channel request to execute a shell.
 	OnRequestShell(requestID uint64)
 	// OnRequestSignal creates an audit log message for a channel request to send a signal to the currently running

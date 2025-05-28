@@ -101,10 +101,6 @@ func (s *sshConnectionHandler) OnRequestTCPReverseForward(
 	)
 }
 
-func (s *sshConnectionHandler) OnRequestAuthAgent(reverseHandler sshserver.ReverseForward) error {
-	return nil
-}
-
 func (s *sshConnectionHandler) OnRequestCancelTCPReverseForward(
 	bindHost string,
 	bindPort uint32,
