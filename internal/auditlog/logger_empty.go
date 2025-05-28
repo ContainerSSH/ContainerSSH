@@ -37,8 +37,6 @@ func (e *empty) OnRequestPty(_ uint64, _ string, _ uint32, _ uint32, _ uint32, _
 
 func (e *empty) OnRequestX11(_ uint64, _ bool, _ string, _ string, _ uint32) {}
 
-func (e *empty) OnRequestAuthAgent(_ uint64) {}
-
 func (e *empty) OnRequestShell(_ uint64) {}
 
 func (e *empty) OnRequestSignal(_ uint64, _ string) {}

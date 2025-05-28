@@ -101,10 +101,6 @@ func (s *sshConnectionHandler) OnRequestTCPReverseForward(
 	)
 }
 
-func (s *sshConnectionHandler) OnRequestAuthAgent(reverseHandler sshserver.ReverseForward) error {
-	return nil
-}
-
 func (s *sshConnectionHandler) OnRequestCancelTCPReverseForward(
 	bindHost string,
 	bindPort uint32,
@@ -152,7 +148,7 @@ func (c *sshConnectionHandler) setupAgent() (io.Reader, io.Writer, error) {
 	)
 	defer cancelFunc()
 
-	if c.networkHandler.config.Pod.Mode == config.KubernetesExecutionModeConnection{
+	if c.networkHandler.config.Pod.Mode == config.KubernetesExecutionModeConnection {
 		agent := []string{c.networkHandler.config.Pod.AgentPath, "forward-server"}
 		exec, err := c.networkHandler.pod.createExec(ctx, agent, c.env, false)
 		if err != nil {

@@ -1005,6 +1005,66 @@ func (s *serverImpl) handleDirectStreamLocalChannel(
 	}
 }
 
+func (s *serverImpl) handleAuthAgentChannel(
+	channelMetadata metadata.ChannelMetadata,
+	newChannel ssh.NewChannel,
+	connection SSHConnectionHandler,
+	logger log.Logger,
+) {
+	var payload ssh2.AuthAgentChannelOpenPayload
+	err := ssh.Unmarshal(newChannel.ExtraData(), &payload)
+	if err != nil {
+		logger.Warning(
+			messageCodes.Wrap(
+				err,
+				messageCodes.MSSHNewChannelRejected,
+				"Failed to decode new auth-agent channel payload",
+			),
+		)
+		return
+	}
+
+	handlerChannel, rejection := connection.OnAuthAgentChannel(channelMetadata.ChannelID)
+	if rejection != nil {
+		logger.Debug(
+			messageCodes.Wrap(
+				rejection,
+				messageCodes.MSSHNewChannelRejected,
+				"New auth-agent channel rejected",
+			).Label("type", newChannel.ChannelType()),
+		)
+
+		if err := newChannel.Reject(rejection.Reason(), rejection.UserMessage()); err != nil {
+			logger.Debug(messageCodes.Wrap(err, messageCodes.ESSHReplyFailed, "Failed to send reply to channel request"))
+		}
+		return
+	}
+	shutdownHandlerID := fmt.Sprintf("auth-agent-%s-%d", channelMetadata.Connection.ConnectionID, channelMetadata.ChannelID)
+	s.shutdownHandlers.Register(shutdownHandlerID, &shutdownCloser{
+		closer: handlerChannel,
+	})
+	channel, requests, err := newChannel.Accept()
+	if err != nil {
+		logger.Debug(messageCodes.Wrap(err, messageCodes.ESSHReplyFailed, "failed to accept auth-agent channel"))
+		s.shutdownHandlers.Unregister(shutdownHandlerID)
+		return
+	}
+	logger.Debug(messageCodes.NewMessage(messageCodes.MSSHNewChannel, "New SSH channel").Label("type", newChannel.ChannelType()))
+	go serveConnection(logger, handlerChannel, channel)
+	go serveConnection(logger, channel, handlerChannel)
+	for {
+		request, ok := <-requests
+		if !ok {
+			s.shutdownHandlers.Unregister(shutdownHandlerID)
+			_ = handlerChannel.Close()
+			break
+		}
+		if request.WantReply {
+			_ = request.Reply(false, []byte{})
+		}
+	}
+}
+
 func (s *serverImpl) unmarshalEnv(request *ssh.Request) (payload ssh2.EnvRequestPayload, err error) {
 	return payload, ssh.Unmarshal(request.Payload, &payload)
 }
@@ -1389,64 +1449,4 @@ func (s *serverImpl) shutdownHandler(lifecycle service.Lifecycle, exited chan st
 
 type shutdownHandler interface {
 	OnShutdown(shutdownContext context.Context)
-}
-
-func (s *serverImpl) handleAuthAgentChannel(
-	channelMetadata metadata.ChannelMetadata,
-	newChannel ssh.NewChannel,
-	connection SSHConnectionHandler,
-	logger log.Logger,
-) {
-	var payload ssh2.AuthAgentChannelOpenPayload
-	err := ssh.Unmarshal(newChannel.ExtraData(), &payload)
-	if err != nil {
-		logger.Warning(
-			messageCodes.Wrap(
-				err,
-				messageCodes.MSSHNewChannelRejected,
-				"Failed to decode new auth-agent channel payload",
-			),
-		)
-		return
-	}
-
-	handlerChannel, rejection := connection.OnAuthAgentChannel(channelMetadata.ChannelID)
-	if rejection != nil {
-		logger.Debug(
-			messageCodes.Wrap(
-				rejection,
-				messageCodes.MSSHNewChannelRejected,
-				"New auth-agent channel rejected",
-			).Label("type", newChannel.ChannelType()),
-		)
-
-		if err := newChannel.Reject(rejection.Reason(), rejection.UserMessage()); err != nil {
-			logger.Debug(messageCodes.Wrap(err, messageCodes.ESSHReplyFailed, "Failed to send reply to channel request"))
-		}
-		return
-	}
-	shutdownHandlerID := fmt.Sprintf("auth-agent-%s-%d", channelMetadata.Connection.ConnectionID, channelMetadata.ChannelID)
-	s.shutdownHandlers.Register(shutdownHandlerID, &shutdownCloser{
-		closer: handlerChannel,
-	})
-	channel, requests, err := newChannel.Accept()
-	if err != nil {
-		logger.Debug(messageCodes.Wrap(err, messageCodes.ESSHReplyFailed, "failed to accept auth-agent channel"))
-		s.shutdownHandlers.Unregister(shutdownHandlerID)
-		return
-	}
-	logger.Debug(messageCodes.NewMessage(messageCodes.MSSHNewChannel, "New SSH channel").Label("type", newChannel.ChannelType()))
-	go serveConnection(logger, handlerChannel, channel)
-	go serveConnection(logger, channel, handlerChannel)
-	for {
-		request, ok := <-requests
-		if !ok {
-			s.shutdownHandlers.Unregister(shutdownHandlerID)
-			_ = handlerChannel.Close()
-			break
-		}
-		if request.WantReply {
-			_ = request.Reply(false, []byte{})
-		}
-	}
 }

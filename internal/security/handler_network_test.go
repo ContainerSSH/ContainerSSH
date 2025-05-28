@@ -176,10 +176,6 @@ func (s *dummySSHBackend) OnRequestCancelStreamLocal(
 	return fmt.Errorf("Unimplemented")
 }
 
-func (s *dummySSHBackend) OnRequestAuthAgent(reverseHandler sshserver.ReverseForward) error {
-	return fmt.Errorf("Unimplemented")
-}
-
 func (s *dummySSHBackend) OnAuthAgentChannel(channelID uint64) (channel sshserver.ForwardChannel, failureReason sshserver.ChannelRejection) {
 	return nil, sshserver.NewChannelRejection(ssh.Prohibited, message.ESSHNotImplemented, "SSH agent channel unimplemented in test backend", "SSH agent channel unimplemented in test backend")
 }

@@ -314,11 +314,6 @@ type SSHConnectionHandler interface {
 	// channelID is an ID uniquely identifying the channel within the connection.
 	OnAuthAgentChannel(channelID uint64) (channel ForwardChannel, failureReason ChannelRejection)
 
-	// OnRequestAuthAgent is called when the client requests SSH agent forwarding to be enabled.
-	//
-	// reverseHandler is a set of callbacks to signal new connections
-	OnRequestAuthAgent(reverseHandler ReverseForward) error
-
 	// OnShutdown is called when a shutdown of the SSH server is desired. The shutdownContext is passed as a deadline
 	//            for the shutdown, after which the server should abort all running connections and return as fast as
 	//            possible.

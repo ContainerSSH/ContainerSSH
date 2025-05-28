@@ -232,19 +232,6 @@ func (s *sshConnectionHandler) handleAuthAgentChannel(newChannel ssh.NewChannel)
 	go s.handleForward(&once, clientChannel, serverChannel)
 }
 
-func (s *sshConnectionHandler) OnRequestAuthAgent(
-	sshserver sshserver.ReverseForward,
-) error {
-	s.logger.Debug(message.NewMessage(message.MSSHAgentForwardingSetup, "Setting up SSH agent forwarding"))
-	if s.reverseHandler == nil {
-		return message.NewMessage(
-			message.ESSHProxyBackendRequestFailed,
-			"SSH agent forwarding is not supported by the backend",
-		)
-	}
-	return nil
-}
-
 func (s *sshConnectionHandler) OnUnsupportedGlobalRequest(_ uint64, _ string, _ []byte) {
 }
 

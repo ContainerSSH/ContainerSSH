@@ -150,7 +150,6 @@ func (s *sessionChannelHandler) OnX11Request(
 }
 
 func (s *sessionChannelHandler) OnAuthAgentRequest(requestID uint64, reverseHandler sshserver.ReverseForward) error {
-	s.audit.OnRequestAuthAgent(requestID)
 	if err := s.backend.OnAuthAgentRequest(requestID, reverseHandler); err != nil {
 		s.audit.OnRequestFailed(requestID, err)
 		return err

@@ -588,18 +588,6 @@ func (l *loggerChannel) OnRequestX11(
 	})
 }
 
-func (l *loggerChannel) OnRequestAuthAgent(requestID uint64) {
-	l.c.log(message.Message{
-		ConnectionID: l.c.connectionID,
-		Timestamp:    time.Now().UnixNano(),
-		MessageType:  message.TypeChannelRequestAuthAgent,
-		Payload: message.PayloadChannelRequestAuthAgent{
-			RequestID: requestID,
-		},
-		ChannelID: l.channelID,
-	})
-}
-
 func (l *loggerChannel) OnRequestShell(requestID uint64) {
 	l.c.log(message.Message{
 		ConnectionID: l.c.connectionID,

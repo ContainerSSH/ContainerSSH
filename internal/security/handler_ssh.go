@@ -241,32 +241,6 @@ func (s *sshConnectionHandler) OnAuthAgentChannel(channelID uint64) (channel ssh
 	}
 }
 
-func (s *sshConnectionHandler) OnRequestAuthAgent(reverseHandler sshserver.ReverseForward) error {
-	mode := s.getPolicy(s.config.Forwarding.ForwardingMode)
-	switch mode {
-	case config2.ExecutionPolicyDisable:
-		err := message.UserMessage(
-			message.ESecurityForwardingRejected,
-			"SSH agent forwarding is rejected",
-			"SSH agent forwarding is rejected because it is disabled in the config",
-		)
-		s.logger.Debug(err)
-		return err
-	case config2.ExecutionPolicyFilter:
-		err := message.UserMessage(
-			message.ESecurityForwardingRejected,
-			"SSH agent forwarding is rejected",
-			"SSH agent forwarding is rejected because it is set to filtered and filtering SSH agent forwarding requests is currently not supported",
-		)
-		s.logger.Debug(err)
-		return err
-	case config2.ExecutionPolicyEnable:
-		fallthrough
-	default:
-		return s.backend.OnRequestAuthAgent(reverseHandler)
-	}
-}
-
 // ErrTooManySessions indicates that too many sessions were opened in the same connection.
 type ErrTooManySessions struct {
 	labels message.Labels
