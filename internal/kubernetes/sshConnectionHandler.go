@@ -5,11 +5,11 @@ import (
 	"fmt"
 	"io"
 
-    "go.containerssh.io/containerssh/config"
-    "go.containerssh.io/containerssh/internal/agentforward"
-    "go.containerssh.io/containerssh/internal/sshserver"
-    "go.containerssh.io/containerssh/message"
-    "go.containerssh.io/containerssh/metadata"
+	"go.containerssh.io/containerssh/config"
+	"go.containerssh.io/containerssh/internal/agentforward"
+	"go.containerssh.io/containerssh/internal/sshserver"
+	"go.containerssh.io/containerssh/message"
+	"go.containerssh.io/containerssh/metadata"
 	"golang.org/x/crypto/ssh"
 )
 
@@ -136,7 +136,7 @@ func (c *sshConnectionHandler) setupAgent() (io.Reader, io.Writer, error) {
 	)
 	defer cancelFunc()
 
-	if c.networkHandler.config.Pod.Mode == config.KubernetesExecutionModeConnection {
+	if c.networkHandler.config.Pod.Mode == config.KubernetesExecutionModeConnection || c.networkHandler.config.Pod.Mode == config.KubernetesExecutionModePersistent {
 		agent := []string{c.networkHandler.config.Pod.AgentPath, "forward-server"}
 		exec, err := c.networkHandler.pod.createExec(ctx, agent, c.env, false)
 		if err != nil {
