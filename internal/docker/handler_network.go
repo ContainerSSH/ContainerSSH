@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"net"
-	"strings"
 	"sync"
 
     auth2 "go.containerssh.io/containerssh/auth"
@@ -125,12 +124,6 @@ func (n *networkHandler) pullNeeded(ctx context.Context) (bool, error) {
 		return false, nil
 	case config.ImagePullPolicyAlways:
 		n.logger.Debug(message.NewMessage(message.MDockerImagePullNeeded, "Image pull policy is \"Always\", pulling image."))
-		return true, nil
-	}
-
-	image := n.dockerClient.getImageName()
-	if !strings.Contains(image, ":") || strings.HasSuffix(image, ":latest") {
-		n.logger.Debug(message.NewMessage(message.MDockerImagePullNeeded, "Image pull policy is \"IfNotPresent\" and the image name is \"latest\", pulling image."))
 		return true, nil
 	}
 
