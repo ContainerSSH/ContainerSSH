@@ -25,7 +25,6 @@ linters-settings:
       - gopkg.in/yaml.v2
   govet:
     enable-all: true
-    check-shadowing: false
     disable:
       # Remove this in a future PR to optimize struct usage.
       - fieldalignment
