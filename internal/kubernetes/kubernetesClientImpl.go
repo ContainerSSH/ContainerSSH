@@ -69,7 +69,6 @@ func (k *kubernetesClientImpl) getPodByName(
 	podName string,
 	namespace string,
 ) (*core.Pod, error) {
-
 	return k.client.CoreV1().Pods(namespace).Get(ctx, podName, meta.GetOptions{})
 }
 

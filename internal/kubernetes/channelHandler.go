@@ -175,10 +175,10 @@ func (c *channelHandler) handleExecModePersistent(ctx context.Context, program [
 
 	c.pod = pod
 	exec, err := c.networkHandler.pod.createExec(ctx, program, c.env, c.pty)
-	if err == nil {
-		c.exec = exec
+	if err != nil {	
 		return nil, err
 	}
+	c.exec = exec
 	return nil, nil
 }
 

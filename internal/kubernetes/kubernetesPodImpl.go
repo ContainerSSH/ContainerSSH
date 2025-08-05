@@ -44,7 +44,6 @@ type kubernetesPodImpl struct {
 }
 
 func (k *kubernetesPodImpl) getExitCode(ctx context.Context) (int32, error) {
-
 	if k.config.Pod.Mode == config2.KubernetesExecutionModePersistent {
 		k.logger.Debug(message.NewMessage(message.MKubernetesPodAttach, "Skipping exit code check in connection mode"))
 		return 0, nil
