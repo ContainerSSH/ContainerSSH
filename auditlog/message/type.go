@@ -39,8 +39,9 @@ const (
 	TypeNewForwardChannel            Type = 303 // TypeNewForwardChannel describes a message when the client requests to open a connection to a specific host/port for connection forwarding
 	TypeNewReverseForwardChannel     Type = 304 // TypeNewReverseForwardChannel describes a message when the server opens a new channel due to an incoming connection on a forwarded port
 	TypeNewReverseX11ForwardChannel  Type = 305 // TypeNewReverseX11ForwardChannel describes a message when the server opens a new channel due to an incoming connection on the forwarded X11 port
-	TypeNewForwardStreamLocalChannel Type = 306 // TypeDirectStreamLocalChannel describes a message when the client requests to open a new channel due to an incoming connection towards a forwarded port
-	TypeNewReverseStreamLocalChannel Type = 307 // TypeNewReverseStreamLocalChannel describes a message when the server opens a new channel due to an incoming connection on a forwarded unix socket
+	TypeNewReverseAuthAgentChannel   Type = 306 // TypeNewReverseAuthAgentChannel describes a message when the server opens a new channel due to an SSH agent forwarding request
+	TypeNewForwardStreamLocalChannel Type = 307 // TypeDirectStreamLocalChannel describes a message when the client requests to open a new channel due to an incoming connection towards a forwarded port
+	TypeNewReverseStreamLocalChannel Type = 308 // TypeNewReverseStreamLocalChannel describes a message when the server opens a new channel due to an incoming connection on a forwarded unix socket
 
 	TypeChannelRequestUnknownType  Type = 400 // TypeChannelRequestUnknownType describes an in-channel request from the user that is not supported.
 	TypeChannelRequestDecodeFailed Type = 401 // TypeChannelRequestDecodeFailed describes an in-channel request from the user that is supported but the payload could not be decoded.
@@ -55,6 +56,8 @@ const (
 	TypeChannelRequestWindow    Type = 408 // TypeChannelRequestWindow describes an in-channel request to resize the current interactive terminal.
 
 	TypeChannelRequestX11 Type = 409 // TypeChannelRequestX11 describes an in-channel request to start forwarding remote X11 connections to the client
+
+	TypeChannelRequestAuthAgent Type = 410 // TypeChannelRequestAuthAgent describes an in-channel request to enable SSH agent forwarding
 
 	TypeWriteClose Type = 496 // TypeWriteClose indicates that the channel was closed for writing from the server side.
 	TypeClose      Type = 497 // TypeClose indicates that the channel was closed.
@@ -96,6 +99,7 @@ var typeToID = map[Type]string{
 	TypeNewForwardChannel:            "new_channel_direct_tcpip",
 	TypeNewReverseForwardChannel:     "new_channel_forwarded_tcpip",
 	TypeNewReverseX11ForwardChannel:  "new_channel_x11",
+	TypeNewReverseAuthAgentChannel:   "new_channel_auth_agent",
 	TypeNewForwardStreamLocalChannel: "new_channel_direct_streamlocal",
 	TypeNewReverseStreamLocalChannel: "new_channel_forwarded_streamlocal",
 
@@ -109,6 +113,7 @@ var typeToID = map[Type]string{
 	TypeChannelRequestSubsystem:    "subsystem",
 	TypeChannelRequestWindow:       "window",
 	TypeChannelRequestX11:          "x11-req",
+	TypeChannelRequestAuthAgent:    "auth-agent-req",
 	TypeWriteClose:                 "close_write",
 	TypeClose:                      "close",
 	TypeExit:                       "exit",
@@ -149,6 +154,7 @@ var typeToName = map[Type]string{
 	TypeNewForwardChannel:            "New client-to-server port forwarding channel",
 	TypeNewReverseForwardChannel:     "New server-to-client port forwarding channel",
 	TypeNewReverseX11ForwardChannel:  "New server-to-client X11 forwarding channel",
+	TypeNewReverseAuthAgentChannel:   "New server-to-client SSH agent forwarding channel",
 	TypeNewForwardStreamLocalChannel: "New client-to-server unix socket forwarding channel",
 	TypeNewReverseStreamLocalChannel: "New server-to-client unix socket forwarding channel",
 
@@ -162,6 +168,7 @@ var typeToName = map[Type]string{
 	TypeChannelRequestSubsystem:    "Request subsystem",
 	TypeChannelRequestWindow:       "Change window size",
 	TypeChannelRequestX11:          "Request X11 forwarding",
+	TypeChannelRequestAuthAgent:    "Request SSH agent forwarding",
 	TypeWriteClose:                 "Close channel for writing",
 	TypeClose:                      "Close channel",
 	TypeExit:                       "Program exited",
@@ -203,6 +210,7 @@ var messageTypeToPayload = map[Type]Payload{
 	TypeNewForwardChannel:            PayloadNewForwardChannel{},
 	TypeNewReverseForwardChannel:     PayloadNewReverseForwardChannel{},
 	TypeNewReverseX11ForwardChannel:  PayloadNewReverseX11ForwardChannel{},
+	TypeNewReverseAuthAgentChannel:   nil, // SSH agent channel has no specific payload
 	TypeNewForwardStreamLocalChannel: PayloadRequestStreamLocal{},
 	TypeNewReverseStreamLocalChannel: PayloadRequestStreamLocal{},
 
@@ -216,6 +224,7 @@ var messageTypeToPayload = map[Type]Payload{
 	TypeChannelRequestSubsystem:    PayloadChannelRequestSubsystem{},
 	TypeChannelRequestWindow:       PayloadChannelRequestWindow{},
 	TypeChannelRequestX11:          PayloadChannelRequestX11{},
+	TypeChannelRequestAuthAgent:    PayloadChannelRequestAuthAgent{},
 	TypeIO:                         PayloadIO{},
 	TypeRequestFailed:              PayloadRequestFailed{},
 	TypeExit:                       PayloadExit{},

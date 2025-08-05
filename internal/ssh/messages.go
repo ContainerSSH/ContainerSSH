@@ -75,6 +75,12 @@ type X11ChanOpenRequestPayload struct {
 	OriginatorPort    uint32
 }
 
+type AuthAgentRequestPayload struct {
+}
+
+type AuthAgentChannelOpenPayload struct {
+}
+
 type DirectStreamLocalChannelOpenPayload struct {
 	SocketPath string
 	Reserved1  string

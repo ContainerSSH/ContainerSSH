@@ -232,6 +232,10 @@ func (t *testBackend) OnNetworkConnection(meta metadata.ConnectionMetadata) (
 	return t, meta, nil
 }
 
+func (t *testBackend) OnAuthAgentChannel(channelID uint64) (channel sshserver.ForwardChannel, failureReason sshserver.ChannelRejection) {
+	return nil, sshserver.NewChannelRejection(ssh.Prohibited, message.ESSHNotImplemented, "SSH agent channel unimplemented in test backend", "SSH agent channel unimplemented in test backend")
+}
+
 // endregion
 
 // region AuthHandler

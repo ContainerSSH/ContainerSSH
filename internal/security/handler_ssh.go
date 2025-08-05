@@ -4,11 +4,11 @@ import (
 	"context"
 	"sync"
 
-    config2 "go.containerssh.io/containerssh/config"
-    "go.containerssh.io/containerssh/internal/sshserver"
-    "go.containerssh.io/containerssh/log"
-    "go.containerssh.io/containerssh/message"
-    "go.containerssh.io/containerssh/metadata"
+	config2 "go.containerssh.io/containerssh/config"
+	"go.containerssh.io/containerssh/internal/sshserver"
+	"go.containerssh.io/containerssh/log"
+	"go.containerssh.io/containerssh/message"
+	"go.containerssh.io/containerssh/metadata"
 	"golang.org/x/crypto/ssh"
 )
 
@@ -211,6 +211,34 @@ func (s *sshConnectionHandler) OnRequestCancelStreamLocal(
 	path string,
 ) error {
 	return s.backend.OnRequestCancelStreamLocal(path)
+}
+
+func (s *sshConnectionHandler) OnAuthAgentChannel(channelID uint64) (channel sshserver.ForwardChannel, failureReason sshserver.ChannelRejection) {
+	mode := s.getPolicy(s.config.Forwarding.ForwardingMode)
+	switch mode {
+	case config2.ExecutionPolicyDisable:
+		err := sshserver.NewChannelRejection(
+			ssh.Prohibited,
+			message.ESecurityForwardingRejected,
+			"SSH agent forwarding is rejected",
+			"SSH agent forwarding is rejected because it is disabled",
+		)
+		s.logger.Debug(err)
+		return nil, err
+	case config2.ExecutionPolicyFilter:
+		err := sshserver.NewChannelRejection(
+			ssh.Prohibited,
+			message.ESecurityForwardingRejected,
+			"SSH agent forwarding is rejected",
+			"SSH agent forwarding is rejected because it is set to filtered and filtering is currently not supported",
+		)
+		s.logger.Debug(err)
+		return nil, err
+	case config2.ExecutionPolicyEnable:
+		fallthrough
+	default:
+		return s.backend.OnAuthAgentChannel(channelID)
+	}
 }
 
 // ErrTooManySessions indicates that too many sessions were opened in the same connection.

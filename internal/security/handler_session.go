@@ -3,10 +3,10 @@ package security
 import (
 	"context"
 
-    config2 "go.containerssh.io/containerssh/config"
-    "go.containerssh.io/containerssh/internal/sshserver"
-    "go.containerssh.io/containerssh/log"
-    "go.containerssh.io/containerssh/message"
+	config2 "go.containerssh.io/containerssh/config"
+	"go.containerssh.io/containerssh/internal/sshserver"
+	"go.containerssh.io/containerssh/log"
+	"go.containerssh.io/containerssh/message"
 )
 
 type sessionHandler struct {
@@ -333,5 +333,31 @@ func (s *sessionHandler) OnX11Request(
 		fallthrough
 	default:
 		return s.backend.OnX11Request(requestID, singleConnection, protocol, cookie, screen, reverseHandler)
+	}
+}
+
+func (s *sessionHandler) OnAuthAgentRequest(requestID uint64, reverseHandler sshserver.ReverseForward) error {
+	mode := s.getPolicy(s.config.Forwarding.SSHAgentForwardingMode)
+	switch mode {
+	case config2.ExecutionPolicyDisable:
+		err := message.UserMessage(
+			message.ESecurityAgentForwardingRejected,
+			"SSH agent forwarding is rejected",
+			"SSH agent forwarding is rejected because it is disabled in the config",
+		)
+		s.logger.Debug(err)
+		return err
+	case config2.ExecutionPolicyFilter:
+		err := message.UserMessage(
+			message.ESecurityAgentForwardingRejected,
+			"SSH agent forwarding is rejected",
+			"SSH agent forwarding is rejected because it is set to filter and filtering agent requests is not supported",
+		)
+		s.logger.Debug(err)
+		return err
+	case config2.ExecutionPolicyEnable:
+		fallthrough
+	default:
+		return s.backend.OnAuthAgentRequest(requestID, reverseHandler)
 	}
 }

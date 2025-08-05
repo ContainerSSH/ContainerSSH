@@ -94,3 +94,24 @@ const ESSHSOReuseFailed = "SSH_SOCKET_REUSE_FAILED"
 
 // ESSHNotImplemented indicates that a feature is not implemented in the backend.
 const ESSHNotImplemented = "SSH_NOT_IMPLEMENTED"
+
+// MSSHAgentForwardingRequest indicates that ContainerSSH is handling an SSH agent forwarding request.
+const MSSHAgentForwardingRequest = "SSH_AGENT_FORWARDING_REQUEST"
+
+// MSSHAgentForwardingSetup indicates that ContainerSSH is setting up SSH agent forwarding.
+const MSSHAgentForwardingSetup = "SSH_AGENT_FORWARDING_SETUP"
+
+// MSSHForwardChannelClosing indicates that a forwarding channel is being closed.
+const MSSHForwardChannelClosing = "SSH_FORWARD_CHANNEL_CLOSING"
+
+// MSSHGlobalRequestHandling indicates that a global request is being handled.
+const MSSHGlobalRequestHandling = "SSH_GLOBAL_REQUEST_HANDLING"
+
+// ESSHChannelRejectionFailed indicates that sending a channel rejection failed.
+const ESSHChannelRejectionFailed = "SSH_CHANNEL_REJECTION_FAILED"
+
+// MSSHStreamLocalUnmarshalling indicates that stream local payload is being unmarshalled for debugging.
+const MSSHStreamLocalUnmarshalling = "SSH_STREAMLOCAL_UNMARSHALLING"
+
+// MSSHX11Handling indicates that an X11 request is being handled.
+const MSSHX11Handling = "SSH_X11_HANDLING"

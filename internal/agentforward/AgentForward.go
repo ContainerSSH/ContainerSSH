@@ -28,6 +28,17 @@ type AgentForward interface {
 		reverseHandler sshserver.ReverseForward,
 	) error
 
+	// NewAgentForwarding initializes SSH agent forwarding
+	//
+	// setupAgentCallback is a function that should start the agent on the desired target if it's called. It should return an interface to the stdin and stdout of a new instance of the agent.
+	// logger is the logging interface to be used
+	// reverseHandler is an interface that notifies the caller of new connections (can be nil for basic forwarding)
+	NewAgentForwarding(
+		setupAgentCallback func() (io.Reader, io.Writer, error),
+		logger log.Logger,
+		reverseHandler sshserver.ReverseForward,
+	) error
+
 	// NewTCPReverseForwarding initializes the TCP reverse forwarding mode of the agent
 	//
 	// setupAgentCallback is a function that should start the agent on the desired target if it's called. It should return an interface to the stdin and stdout of a new instance of the agent.

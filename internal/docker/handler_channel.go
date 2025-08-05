@@ -7,10 +7,10 @@ import (
 	"io"
 	"strings"
 
-    "go.containerssh.io/containerssh/config"
-    "go.containerssh.io/containerssh/internal/sshserver"
-    "go.containerssh.io/containerssh/internal/unixutils"
-    "go.containerssh.io/containerssh/message"
+	"go.containerssh.io/containerssh/config"
+	"go.containerssh.io/containerssh/internal/sshserver"
+	"go.containerssh.io/containerssh/internal/unixutils"
+	"go.containerssh.io/containerssh/message"
 )
 
 type channelHandler struct {
@@ -283,6 +283,26 @@ func (c *channelHandler) OnX11Request(
 		return err
 	}
 	c.x11 = true
+
+	return nil
+}
+
+func (c *channelHandler) OnAuthAgentRequest(
+	requestID uint64,
+	reverseHandler sshserver.ReverseForward,
+) error {
+	c.networkHandler.logger.Debug(message.NewMessage(message.MSSHAgentForwardingSetup, "Setting up SSH agent forwarding"))
+
+	c.env["SSH_AUTH_SOCK"] = "/tmp/ssh-agent.sock"
+
+	err := c.connectionHandler.agentForward.NewAgentForwarding(
+		c.connectionHandler.setupAgent,
+		c.networkHandler.logger,
+		reverseHandler,
+	)
+	if err != nil {
+		return fmt.Errorf("failed to setup SSH agent forwarding: %w", err)
+	}
 
 	return nil
 }

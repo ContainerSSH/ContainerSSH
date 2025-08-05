@@ -98,6 +98,9 @@ type Connection interface {
 	// OnReverseX11ForwardChannel creates an audit log message for requesting to open a channel to forward an X11 connection to the client.
 	OnReverseX11ForwardChannel(channelID message.ChannelID, originatorHost string, originatorPort uint32)
 
+	// OnReverseAuthAgentChannel creates an audit log message for requesting to open a channel to forward an SSH agent connection to the client.
+	OnReverseAuthAgentChannel(channelID message.ChannelID)
+	
 	// OnDirectStreamLocal creates an audit log message for requesting to open a unix socket forwarding channel.
 	OnDirectStreamLocal(channelID message.ChannelID, path string)
 

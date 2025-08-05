@@ -4,14 +4,15 @@ type RequestType string
 
 const (
 	// Channel
-	RequestTypeEnv          RequestType = "env"
-	RequestTypePty          RequestType = "pty-req"
-	RequestTypeShell        RequestType = "shell"
-	RequestTypeExec         RequestType = "exec"
-	RequestTypeSubsystem    RequestType = "subsystem"
-	RequestTypeWindow       RequestType = "window-change"
-	RequestTypeSignal       RequestType = "signal"
-	RequestTypeX11          RequestType = "x11-req"
+	RequestTypeEnv       RequestType = "env"
+	RequestTypePty       RequestType = "pty-req"
+	RequestTypeShell     RequestType = "shell"
+	RequestTypeExec      RequestType = "exec"
+	RequestTypeSubsystem RequestType = "subsystem"
+	RequestTypeWindow    RequestType = "window-change"
+	RequestTypeSignal    RequestType = "signal"
+	RequestTypeX11       RequestType = "x11-req"
+	RequestTypeAuthAgent RequestType = "auth-agent-req@openssh.com"
 
 	// Global
 	RequestTypeReverseForward           RequestType = "tcpip-forward"

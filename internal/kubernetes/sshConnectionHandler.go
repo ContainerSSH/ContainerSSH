@@ -5,11 +5,11 @@ import (
 	"fmt"
 	"io"
 
-    "go.containerssh.io/containerssh/config"
-    "go.containerssh.io/containerssh/internal/agentforward"
-    "go.containerssh.io/containerssh/internal/sshserver"
-    "go.containerssh.io/containerssh/message"
-    "go.containerssh.io/containerssh/metadata"
+	"go.containerssh.io/containerssh/config"
+	"go.containerssh.io/containerssh/internal/agentforward"
+	"go.containerssh.io/containerssh/internal/sshserver"
+	"go.containerssh.io/containerssh/message"
+	"go.containerssh.io/containerssh/metadata"
 	"golang.org/x/crypto/ssh"
 )
 
@@ -71,6 +71,18 @@ func (s *sshConnectionHandler) OnTCPForwardChannel(
 	)
 	if err != nil {
 		return nil, sshserver.NewChannelRejection(ssh.ConnectionFailed, message.EKubernetesForwardingFailed, "Error setting up the forwarding", "Error setting up the forwarding")
+	}
+	return channel, nil
+}
+
+func (s *sshConnectionHandler) OnAuthAgentChannel(channelID uint64) (channel sshserver.ForwardChannel, failureReason sshserver.ChannelRejection) {
+	channel, err := s.agentForward.NewForwardUnix(
+		s.setupAgent,
+		s.networkHandler.logger,
+		"/tmp/ssh-agent.sock",
+	)
+	if err != nil {
+		return nil, sshserver.NewChannelRejection(ssh.ConnectionFailed, message.EKubernetesForwardingFailed, "Error setting up SSH agent forwarding", "Error setting up SSH agent forwarding")
 	}
 	return channel, nil
 }

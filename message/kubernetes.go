@@ -120,3 +120,6 @@ const EKubernetesAgentFailed = "KUBERNETES_AGENT_FAILED"
 // MKubernetesAgentLog indicates a log message from the ContainerSSH agent running within a user container.
 // Note that the agent is normally run with the users credentials and as such all log output is to be considered UNTRUSTED and should only be used for debugging purposes
 const MKubernetesAgentLog = "KUBERNETES_AGENT_LOG"
+
+// MSSHX11Setup indicates that X11 environment variables are being set up
+const MSSHX11Setup = "SSH_X11_SETUP"
