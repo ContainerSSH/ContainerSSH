@@ -265,6 +265,18 @@ func (l *loggerConnection) OnAuthKeyboardInteractiveBackendError(username string
 	})
 }
 
+func (l *loggerConnection) OnAuthNone(username string) {
+	l.log(message.Message{
+		ConnectionID: l.connectionID,
+		Timestamp:    time.Now().UnixNano(),
+		MessageType:  message.TypeAuthNone,
+		Payload: message.PayloadAuthNone{
+			Username: username,
+		},
+		ChannelID: nil,
+	})
+}
+
 func (l *loggerConnection) OnHandshakeFailed(reason string) {
 	l.log(message.Message{
 		ConnectionID: l.connectionID,
