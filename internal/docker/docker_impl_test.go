@@ -7,6 +7,7 @@ import (
     "time"
 
     "github.com/docker/docker/api/types"
+	"github.com/docker/docker/api/types/registry"
     "go.containerssh.io/containerssh/config"
     "go.containerssh.io/containerssh/internal/geoip/dummy"
     "go.containerssh.io/containerssh/internal/metrics"
@@ -45,7 +46,7 @@ func TestPullImageAuthenticated(t *testing.T) {
         cfg := config.DockerConfig{}
         structutils.Defaults(&cfg)
         cfg.Execution.ContainerConfig.Image = fmt.Sprintf("localhost:%d/containerssh/agent", registry.Port())
-        cfg.Execution.Auth = &types.AuthConfig{
+        cfg.Execution.Auth = &registry.AuthConfig{
             Username:      *registry.Username(),
             Password:      *registry.Password(),
             Email:         "noreply@containerssh.io",
