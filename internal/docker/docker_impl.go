@@ -17,6 +17,7 @@ import (
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/client"
+	"github.com/docker/docker/errdefs"
 	"github.com/docker/docker/pkg/stdcopy"
 	"go.containerssh.io/containerssh/config"
 	"go.containerssh.io/containerssh/internal/metrics"
@@ -147,7 +148,8 @@ loop:
 		if pullReader != nil {
 			_ = pullReader.Close()
 		}
-		if client.IsErrUnauthorized(lastError) ||
+		// if client.IsErrUnauthorized(lastError) ||
+		if errdefs.IsUnauthorized(lastError) ||
 			client.IsErrNotFound(lastError) ||
 			strings.Contains(lastError.Error(), "no basic auth credential") {
 			err = message.WrapUser(
@@ -205,7 +207,8 @@ func (d *dockerV20Client) createContainer(
 	var lastError error
 loop:
 	for {
-		var body container.ContainerCreateCreatedBody
+		// var body container.ContainerCreateCreatedBody
+		var body container.CreateResponse
 		d.backendRequestsMetric.Increment()
 		body, lastError = d.dockerClient.ContainerCreate(
 			ctx,
@@ -1178,6 +1181,17 @@ func (d *dockerV20Exec) execInspect(ctx context.Context, onExit func(exitStatus 
 func (d *dockerV20Exec) stopContainer(ctx context.Context) error {
 	d.logger.Debug(message.NewMessage(message.MDockerContainerStop, "Stopping container..."))
 	var lastError error
+
+	// Should not be here, belongs in config/docker.go with default-values and such
+	var timeout *int
+	timeout = new(int)
+	*timeout = 10
+
+	var stopOptions = container.StopOptions{
+		Signal: "sig",
+		Timeout: timeout,
+	}
+
 loop:
 	for {
 		var inspectResult types.ContainerJSON
@@ -1190,7 +1204,7 @@ loop:
 			lastError = d.dockerClient.ContainerStop(
 				ctx,
 				d.container.containerID,
-				&d.container.config.Timeouts.ContainerStop)
+				stopOptions)
 			if lastError == nil {
 				return nil
 			}
@@ -1216,7 +1230,8 @@ loop:
 
 func isPermanentError(err error) bool {
 	return client.IsErrNotFound(err) ||
-		client.IsErrNotImplemented(err) ||
-		client.IsErrPluginPermissionDenied(err) ||
-		client.IsErrUnauthorized(err)
+		errdefs.IsNotImplemented(err) ||
+		// client.IsErrPluginPermissionDenied(err) ||
+		// client.IsErrUnauthorized(err)
+		errdefs.IsUnauthorized(err)
 }

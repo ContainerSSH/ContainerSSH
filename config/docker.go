@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/docker/docker/api/types"
+	"github.com/docker/docker/api/types/registry"
 	"github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/api/types/network"
 	specs "github.com/opencontainers/image-spec/specs-go/v1"
@@ -98,7 +98,7 @@ type DockerExecutionConfig struct {
 	DockerLaunchConfig `json:",inline" yaml:",inline"`
 
 	// Auth contains the image registry authentication config
-	Auth *types.AuthConfig `json:"auth" yaml:"auth"`
+	Auth *registry.AuthConfig `json:"auth" yaml:"auth"`
 
 	// Mode influences how commands are executed.
 	//
