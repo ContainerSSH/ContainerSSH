@@ -148,7 +148,6 @@ loop:
 		if pullReader != nil {
 			_ = pullReader.Close()
 		}
-		// if client.IsErrUnauthorized(lastError) ||
 		if errdefs.IsUnauthorized(lastError) ||
 			client.IsErrNotFound(lastError) ||
 			strings.Contains(lastError.Error(), "no basic auth credential") {
@@ -207,7 +206,6 @@ func (d *dockerV20Client) createContainer(
 	var lastError error
 loop:
 	for {
-		// var body container.ContainerCreateCreatedBody
 		var body container.CreateResponse
 		d.backendRequestsMetric.Increment()
 		body, lastError = d.dockerClient.ContainerCreate(
@@ -1182,13 +1180,12 @@ func (d *dockerV20Exec) stopContainer(ctx context.Context) error {
 	d.logger.Debug(message.NewMessage(message.MDockerContainerStop, "Stopping container..."))
 	var lastError error
 
-	// Should not be here, belongs in config/docker.go with default-values and such
+	// TODO: Should not be here, belongs in config/docker.go with default-values and such
 	var timeout *int
 	timeout = new(int)
 	*timeout = 10
-
 	var stopOptions = container.StopOptions{
-		Signal: "sig",
+		Signal: "SIGTERM",
 		Timeout: timeout,
 	}
 
@@ -1231,6 +1228,7 @@ loop:
 func isPermanentError(err error) bool {
 	return client.IsErrNotFound(err) ||
 		errdefs.IsNotImplemented(err) ||
+		// TODO: Not sure how to replace these two checks
 		// client.IsErrPluginPermissionDenied(err) ||
 		// client.IsErrUnauthorized(err)
 		errdefs.IsUnauthorized(err)

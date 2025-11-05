@@ -42,7 +42,6 @@ jobs:
       - name: Set up Go
         uses: actions/setup-go@v6
         with:
-          # go-version: '1.25'
           go-version-file: 'go.mod'
       - name: Install KinD
         run: |
@@ -80,12 +79,12 @@ jobs:
           echo "build=$(go env GOCACHE)" >> $GITHUB_OUTPUT
           echo "mod=$(go env GOMODCACHE)" >> $GITHUB_OUTPUT
       - name: Set up go module cache
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: ${{ steps.gopaths.outputs.mod }}
           key: ${{ runner.os }}-go-mod-${{ hashFiles('**/go.sum') }}
       - name: Set up go build cache
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: ${{ steps.gopaths.outputs.build }}
           key: ${{ runner.os }}-build-${{ hashFiles('**/go.sum') }}
@@ -106,6 +105,6 @@ jobs:
           path: /tmp/gotest.log
           if-no-files-found: error
       - name: Upload coverage reports to Codecov
-        uses: codecov/codecov-action@v3
+        uses: codecov/codecov-action@v5
         env:
           CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
