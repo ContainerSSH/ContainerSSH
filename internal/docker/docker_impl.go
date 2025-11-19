@@ -1180,15 +1180,6 @@ func (d *dockerV20Exec) stopContainer(ctx context.Context) error {
 	d.logger.Debug(message.NewMessage(message.MDockerContainerStop, "Stopping container..."))
 	var lastError error
 
-	// TODO: Should not be here, belongs in config/docker.go with default-values and such
-	var timeout *int
-	timeout = new(int)
-	*timeout = 10
-	var stopOptions = container.StopOptions{
-		Signal: "SIGTERM",
-		Timeout: timeout,
-	}
-
 loop:
 	for {
 		var inspectResult types.ContainerJSON
@@ -1198,10 +1189,14 @@ loop:
 			if inspectResult.State.Status == "stopped" {
 				return nil
 			}
+			var stopTimeout = int(10)
 			lastError = d.dockerClient.ContainerStop(
 				ctx,
 				d.container.containerID,
-				stopOptions)
+				container.StopOptions{
+					Signal: "SIGTERM",
+					Timeout: &stopTimeout,
+				})
 			if lastError == nil {
 				return nil
 			}
