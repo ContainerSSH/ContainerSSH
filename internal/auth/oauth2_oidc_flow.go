@@ -186,10 +186,9 @@ func (o *oidcFlow) getIdentity(
 // It compares the granted scopes from the token response with the requested extra scopes.
 // Returns an error if enforceScopes is enabled and any required scopes are missing.
 func (o *oidcFlow) checkGrantedScopes(scope string) error {
-	// OIDC uses space-separated scopes
-	grantedScopes := strings.Split(scope, " ")
-
 	if o.provider.enforceScopes {
+		// OIDC uses space-separated scopes
+		grantedScopes := strings.Split(scope, " ")
 		for _, requiredScope := range o.provider.scopes {
 			scopeGranted := false
 			for _, grantedScope := range grantedScopes {
@@ -202,8 +201,9 @@ func (o *oidcFlow) checkGrantedScopes(scope string) error {
 				err := message.UserMessage(
 					message.EAuthOIDCRequiredScopeNotGranted,
 					fmt.Sprintf("You have not granted us the required %s permission.", requiredScope),
-					"The user has not granted the %s permission.",
-					requiredScope,
+					"The user has not granted the required scopes. Requested: %v, Granted: %v",
+					o.provider.scopes,
+					grantedScopes,
 				)
 				o.logger.Debug(err)
 				return err
