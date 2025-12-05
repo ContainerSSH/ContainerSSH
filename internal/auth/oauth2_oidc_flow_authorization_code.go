@@ -23,7 +23,7 @@ func (o *oidcAuthorizationCodeFlow) GetAuthorizationURL(ctx context.Context) (st
 	query := link.Query()
 	query.Set("response_type", "code")
 	query.Set("client_id", o.provider.clientID)
-	query.Set("scope", "openid")
+	query.Set("scope", o.provider.getScope())
 	query.Set("state", o.connectionID)
 	query.Set("redirect_uri", o.provider.config.RedirectURI)
 	link.RawQuery = query.Encode()
@@ -89,7 +89,7 @@ loop:
 					resp.ErrorDescription,
 				)
 			} else {
-				return resp.AccessToken, nil
+				return resp.AccessToken, o.checkGrantedScopes(resp.Scope)
 			}
 		}
 		err = message.WrapUser(

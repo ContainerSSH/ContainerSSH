@@ -44,8 +44,8 @@ func (o *oidcDeviceFlow) GetAuthorizationURL(ctx context.Context) (
 	req := &oidcDeviceRequest{
 		ClientID:  o.provider.clientID,
 		GrantType: "urn:ietf:params:oauth:grant-type:device_code",
-		// openid scope is required to access the userinfo endpoint
-		Scope: "openid",
+		// openid scope is required to access the userinfo endpoint, plus any extra scopes
+		Scope: o.provider.getScope(),
 	}
 	var lastError error
 	var statusCode int
@@ -166,8 +166,7 @@ loop:
 				// User hit don't authorize
 				return "", message.UserMessage(message.EAuthFailed, "GitHub authentication failed", "User canceled GitHub authentication")
 			case "":
-				//return resp.AccessToken, o.checkGrantedScopes(resp.Scope)
-				return resp.AccessToken, nil
+				return resp.AccessToken, o.checkGrantedScopes(resp.Scope)
 			}
 		}
 		o.logger.Debug(lastError)

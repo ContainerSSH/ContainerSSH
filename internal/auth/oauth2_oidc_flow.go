@@ -2,6 +2,7 @@ package auth
 
 import (
 	"context"
+	"fmt"
 	"strings"
 	"time"
 
@@ -179,4 +180,35 @@ func (o *oidcFlow) getIdentity(
 			return "", meta.AuthFailed(), err
 		}
 	}
+}
+
+// checkGrantedScopes validates that the user granted all required scopes.
+// It compares the granted scopes from the token response with the requested extra scopes.
+// Returns an error if enforceScopes is enabled and any required scopes are missing.
+func (o *oidcFlow) checkGrantedScopes(scope string) error {
+	if o.provider.enforceScopes {
+		// OIDC uses space-separated scopes
+		grantedScopes := strings.Split(scope, " ")
+		for _, requiredScope := range o.provider.scopes {
+			scopeGranted := false
+			for _, grantedScope := range grantedScopes {
+				if grantedScope == requiredScope {
+					scopeGranted = true
+					break
+				}
+			}
+			if !scopeGranted {
+				err := message.UserMessage(
+					message.EAuthOIDCRequiredScopeNotGranted,
+					fmt.Sprintf("You have not granted us the required %s permission.", requiredScope),
+					"The user has not granted the required scopes. Requested: %v, Granted: %v",
+					o.provider.scopes,
+					grantedScopes,
+				)
+				o.logger.Debug(err)
+				return err
+			}
+		}
+	}
+	return nil
 }

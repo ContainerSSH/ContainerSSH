@@ -628,6 +628,12 @@ type AuthOIDCConfig struct {
 
 	// RedirectURI is the URI the client is returned to. This URL should be configured to the redirect server endpoint.
 	RedirectURI string `json:"redirectURI" yaml:"redirectURI"`
+
+	// ExtraScopes asks the user to grant extra scopes to ContainerSSH in addition to the default "openid" scope.
+	// This is useful when the configuration server or other integrations need these scopes to operate.
+	ExtraScopes []string `json:"extraScopes" yaml:"extraScopes"`
+	// EnforceScopes rejects the user authentication if the user fails to grant the scopes requested in extraScopes.
+	EnforceScopes bool `json:"enforceScopes" yaml:"enforceScopes"`
 }
 
 func (o *AuthOIDCConfig) Validate() error {

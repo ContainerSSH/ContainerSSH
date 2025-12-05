@@ -142,6 +142,10 @@ const EAuthOIDCAccessTokenFetchFailed = "OIDC_ACCESS_TOKEN_FETCH_FAILED"
 // likely due to a misconfiguration.
 const EAuthOIDCHTTPClientCreateFailed = "OIDC_HTTP_CLIENT_CREATE_FAILED"
 
+// EAuthOIDCRequiredScopeNotGranted indicates that the user did not grant all the required scopes during OIDC
+// authentication. This happens when enforceScopes is enabled and the user denies one or more requested scopes.
+const EAuthOIDCRequiredScopeNotGranted = "OIDC_REQUIRED_SCOPE_NOT_GRANTED"
+
 // EAuthGenericTimeout indicates that the generic oAuth authentication process resulted in a timeout.
 const EAuthGenericTimeout = "GENERIC_TIMEOUT"
 

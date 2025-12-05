@@ -3,6 +3,7 @@ package auth
 import (
 	"context"
 	"encoding/base64"
+	"strings"
 	"time"
 
 	"go.containerssh.io/containerssh/config"
@@ -14,18 +15,22 @@ import (
 
 func newOIDCProvider(config config.AuthOAuth2ClientConfig, logger log.Logger) (OAuth2Provider, error) {
 	return &oidcProvider{
-		clientID:     config.ClientID,
-		clientSecret: config.ClientSecret,
-		config:       config.OIDC,
-		logger:       logger,
+		clientID:      config.ClientID,
+		clientSecret:  config.ClientSecret,
+		config:        config.OIDC,
+		scopes:        config.OIDC.ExtraScopes,
+		enforceScopes: config.OIDC.EnforceScopes,
+		logger:        logger,
 	}, nil
 }
 
 type oidcProvider struct {
-	clientID     string
-	clientSecret string
-	config       config.AuthOIDCConfig
-	logger       log.Logger
+	clientID      string
+	clientSecret  string
+	config        config.AuthOIDCConfig
+	scopes        []string
+	enforceScopes bool
+	logger        log.Logger
 }
 
 func (o *oidcProvider) SupportsDeviceFlow() bool {
@@ -104,4 +109,17 @@ func (o *oidcProvider) createFlow(ctx context.Context, meta metadata.ConnectionA
 		discoveryResponse: discoveryResponse,
 	}
 	return flow, nil
+}
+
+// getScope builds the complete scope string for OIDC requests.
+// It always includes "openid" as the base scope, plus any extra scopes from configuration.
+func (o *oidcProvider) getScope() string {
+	// Start with the required openid scope
+	scopes := []string{"openid"}
+
+	// Add any extra scopes from configuration
+	scopes = append(scopes, o.scopes...)
+
+	// OIDC uses space-separated scopes
+	return strings.Join(scopes, " ")
 }
