@@ -1,15 +1,16 @@
 package agentprotocol
 
 const (
-	CONNECTION_TYPE_X11 = iota
-	CONNECTION_TYPE_PORT_FORWARD = iota
-	CONNECTION_TYPE_PORT_DIAL = iota
+	CONNECTION_TYPE_X11            = iota
+	CONNECTION_TYPE_PORT_FORWARD   = iota
+	CONNECTION_TYPE_PORT_DIAL      = iota
 	CONNECTION_TYPE_SOCKET_FORWARD = iota
-	CONNECTION_TYPE_SOCKET_DIAL = iota
+	CONNECTION_TYPE_SOCKET_DIAL    = iota
+	CONNECTION_TYPE_SSH_AGENT      = iota
 )
 
 const (
-	PROTOCOL_TCP string = "tcp"
+	PROTOCOL_TCP  string = "tcp"
 	PROTOCOL_UNIX string = "unix"
 )
 
@@ -24,10 +25,10 @@ const (
 )
 
 type SetupPacket struct {
-	ConnectionType   uint32
-	BindHost         string
-	BindPort         uint32
-	Protocol         string
+	ConnectionType uint32
+	BindHost       string
+	BindPort       uint32
+	Protocol       string
 
 	Screen           string
 	SingleConnection bool
@@ -36,8 +37,8 @@ type SetupPacket struct {
 }
 
 type NewConnectionPayload struct {
-	Protocol          string
-	
+	Protocol string
+
 	ConnectedAddress  string
 	ConnectedPort     uint32
 	OriginatorAddress string
@@ -45,7 +46,7 @@ type NewConnectionPayload struct {
 }
 
 type Packet struct {
-	Type int
+	Type         int
 	ConnectionId uint64
-	Payload []byte
+	Payload      []byte
 }

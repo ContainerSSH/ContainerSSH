@@ -13,16 +13,16 @@ import (
 	"testing"
 	"time"
 
-    "go.containerssh.io/containerssh/auth"
-    "go.containerssh.io/containerssh/config"
-    "go.containerssh.io/containerssh/internal/sshserver"
-    "go.containerssh.io/containerssh/internal/structutils"
-    "go.containerssh.io/containerssh/internal/test"
-    "go.containerssh.io/containerssh/log"
-    "go.containerssh.io/containerssh/metadata"
-    "go.containerssh.io/containerssh/message"
-    "go.containerssh.io/containerssh/service"
 	"github.com/stretchr/testify/assert"
+	"go.containerssh.io/containerssh/auth"
+	"go.containerssh.io/containerssh/config"
+	"go.containerssh.io/containerssh/internal/sshserver"
+	"go.containerssh.io/containerssh/internal/structutils"
+	"go.containerssh.io/containerssh/internal/test"
+	"go.containerssh.io/containerssh/log"
+	"go.containerssh.io/containerssh/message"
+	"go.containerssh.io/containerssh/metadata"
+	"go.containerssh.io/containerssh/service"
 	"golang.org/x/crypto/ssh"
 )
 
@@ -771,6 +771,10 @@ func (s *fullSSHConnectionHandler) OnRequestCancelStreamLocal(
 	path string,
 ) error {
 	return fmt.Errorf("Unimplemented")
+}
+
+func (s *fullSSHConnectionHandler) OnAuthAgentChannel(channelID uint64) (channel sshserver.ForwardChannel, failureReason sshserver.ChannelRejection) {
+	return nil, sshserver.NewChannelRejection(ssh.Prohibited, message.ESSHNotImplemented, "SSH agent channel unimplemented in test backend", "SSH agent channel unimplemented in test backend")
 }
 
 //endregion

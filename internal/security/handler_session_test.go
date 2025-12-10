@@ -6,10 +6,10 @@ import (
 	"sync"
 	"testing"
 
-    "go.containerssh.io/containerssh/config"
-    "go.containerssh.io/containerssh/internal/sshserver"
-    "go.containerssh.io/containerssh/log"
 	"github.com/stretchr/testify/assert"
+	"go.containerssh.io/containerssh/config"
+	"go.containerssh.io/containerssh/internal/sshserver"
+	"go.containerssh.io/containerssh/log"
 )
 
 func TestEnvRequest(t *testing.T) {
@@ -276,6 +276,10 @@ func (s *dummyBackend) OnX11Request(
 	screen uint32,
 	reverseHandler sshserver.ReverseForward,
 ) error {
+	return fmt.Errorf("Unimplemented")
+}
+
+func (s *dummyBackend) OnAuthAgentRequest(requestID uint64, reverseHandler sshserver.ReverseForward) error {
 	return fmt.Errorf("Unimplemented")
 }
 
