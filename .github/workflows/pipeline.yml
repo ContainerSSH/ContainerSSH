@@ -23,6 +23,7 @@ jobs:
         with:
           version: v2.1
           install-mode: goinstall
+          only-new-issues: true
 
   test:
     name: go test
