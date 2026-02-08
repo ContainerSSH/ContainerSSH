@@ -1223,7 +1223,6 @@ loop:
 func isPermanentError(err error) bool {
 	return client.IsErrNotFound(err) ||
 		errdefs.IsNotImplemented(err) ||
-		// TODO: Not sure how to replace this check
-		// client.IsErrPluginPermissionDenied(err) ||
+		errdefs.IsForbidden(err) ||
 		errdefs.IsUnauthorized(err)
 }
