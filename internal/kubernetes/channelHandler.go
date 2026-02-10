@@ -7,10 +7,10 @@ import (
 	"io"
 	"strings"
 
-    "go.containerssh.io/containerssh/config"
-    "go.containerssh.io/containerssh/internal/sshserver"
-    "go.containerssh.io/containerssh/internal/unixutils"
-    "go.containerssh.io/containerssh/message"
+	"go.containerssh.io/containerssh/config"
+	"go.containerssh.io/containerssh/internal/sshserver"
+	"go.containerssh.io/containerssh/internal/unixutils"
+	"go.containerssh.io/containerssh/message"
 )
 
 type channelHandler struct {
@@ -92,6 +92,8 @@ func (c *channelHandler) run(
 
 	var err error
 	switch c.networkHandler.config.Pod.Mode {
+	case config.KubernetesExecutionModePersistent:
+		c.pod, err = c.handleExecModePersistent(ctx, program)
 	case config.KubernetesExecutionModeConnection:
 		err = c.handleExecModeConnection(ctx, program)
 	case config.KubernetesExecutionModeSession:
@@ -131,6 +133,53 @@ func (c *channelHandler) run(
 	}
 
 	return nil
+}
+
+func (c *channelHandler) handleExecModePersistent(ctx context.Context, program []string) (kubernetesPod, error) {
+	pod, err := c.networkHandler.cli.findPod(
+		ctx,
+		c.networkHandler.config.Pod.Metadata.Name,
+		c.networkHandler.config.Pod.Metadata.Namespace,
+	)
+	if err != nil {
+		if strings.Contains(err.Error(), message.EKubernetesPodNotFound) {
+			if c.networkHandler.config.Pod.CreateMissingPods {
+				c.networkHandler.logger.Debug(
+					message.NewMessage(
+						message.EKubernetesPodNotFound,
+						fmt.Sprintf("Pod %s not found in namespace %s, spawning pod",
+							c.networkHandler.config.Pod.Metadata.Name,
+							c.networkHandler.config.Pod.Metadata.Namespace),
+					),
+				)
+				pod, err := c.networkHandler.cli.createPod(
+					ctx,
+					c.networkHandler.labels,
+					c.networkHandler.annotations,
+					c.env,
+					&c.pty,
+					program,
+				)
+				if err != nil {
+					return nil, err
+				}
+				c.exec, err = pod.attach(ctx)
+				if err != nil {
+					return nil, err
+				}
+				return pod, nil
+			}
+		}
+		return nil, err
+	}
+
+	c.pod = pod
+	exec, err := c.networkHandler.pod.createExec(ctx, program, c.env, c.pty)
+	if err != nil {	
+		return nil, err
+	}
+	c.exec = exec
+	return nil, nil
 }
 
 func (c *channelHandler) handleExecModeConnection(

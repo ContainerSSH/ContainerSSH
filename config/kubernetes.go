@@ -36,6 +36,7 @@ func (c KubernetesConfig) Validate() error {
 }
 
 // KubernetesConnectionConfig configures the connection to the Kubernetes cluster.
+//
 //goland:noinspection GoVetStructTag
 type KubernetesConnectionConfig struct {
 	// Host is a host string, a host:port pair, or a URL to the Kubernetes apiserver. Defaults to kubernetes.default.svc.
@@ -93,6 +94,7 @@ func (c KubernetesConnectionConfig) Validate() error {
 }
 
 // KubernetesPodConfig describes the pod to launch.
+//
 //goland:noinspection GoVetStructTag
 type KubernetesPodConfig struct {
 	// Metadata configures the pod metadata.
@@ -124,6 +126,9 @@ type KubernetesPodConfig struct {
 	//   When configuring this mode you should explicitly configure the "cmd" option to an empty list if you want the
 	//   default command in the container to launch.
 	Mode KubernetesExecutionMode `json:"mode,omitempty" yaml:"mode" default:"connection"`
+
+	// CreateMissingPods creates a new pod if no pod exists for the connection. This is only to be used with the persistent connection
+	CreateMissingPods bool `json:"createMissingPods,omitempty" yaml:"createMissingPods" default:"false"`
 
 	// ExposeAuthMetadataAsEnv causes the specified metadata entries received from the authentication process to be
 	// exposed as environment variables. They are provided as a map, where the key is the authentication metadata entry
@@ -167,12 +172,26 @@ func (c KubernetesPodConfig) Validate() error {
 	if err := c.Mode.Validate(); err != nil {
 		return wrap(err, "mode")
 	}
+
+	if c.CreateMissingPods && c.Mode != KubernetesExecutionModePersistent {
+		return newError("createMissingPods", "createMissingPods can only be used with persistent execution mode")
+	}
 	if c.Mode == KubernetesExecutionModeConnection {
 		if len(c.IdleCommand) == 0 {
 			return newError("idleCommand", "idle command is required when the execution mode is connection")
 		}
 		if len(c.ShellCommand) == 0 {
 			return newError("shellCommand", "shell command is required when the execution mode is connection")
+		}
+	} else if c.Mode == KubernetesExecutionModePersistent && c.CreateMissingPods {
+		if len(c.IdleCommand) == 0 {
+			return newError("idleCommand", "idle command is required when using persistent mode with createMissingPods")
+		}
+		if len(c.ShellCommand) == 0 {
+			return newError("shellCommand", "shell command is required when using persistent mode with createMissingPods")
+		}
+		if len(c.Spec.Containers) == 0 {
+			return wrap(newError("containers", "at least one container must be specified when using persistent mode with createMissingPods"), "spec")
 		}
 	} else if c.Mode == KubernetesExecutionModeSession {
 		if c.Spec.RestartPolicy != "" && c.Spec.RestartPolicy != v1.RestartPolicyNever {
@@ -248,15 +267,18 @@ func (c KubernetesTimeoutConfig) Validate() error {
 type KubernetesExecutionMode string
 
 const (
+	// KubernetesExecutionModePersistent execs into an already running container
+	KubernetesExecutionModePersistent KubernetesExecutionMode = "persistent"
 	// KubernetesExecutionModeConnection launches one container per SSH connection.
 	KubernetesExecutionModeConnection KubernetesExecutionMode = "connection"
 	// KubernetesExecutionModeSession launches one container per SSH session (multiple containers per connection).
 	KubernetesExecutionModeSession KubernetesExecutionMode = "session"
 )
 
-// Validate validates the execution config.
 func (e KubernetesExecutionMode) Validate() error {
 	switch e {
+	case KubernetesExecutionModePersistent:
+		fallthrough
 	case KubernetesExecutionModeConnection:
 		fallthrough
 	case KubernetesExecutionModeSession:

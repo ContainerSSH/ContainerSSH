@@ -17,4 +17,10 @@ type kubernetesClient interface {
 		tty *bool,
 		cmd []string,
 	) (kubernetesPod, error)
+
+	findPod(
+		ctx context.Context,
+		name string,
+		namespace string,
+	) (kubernetesPod, error)
 }

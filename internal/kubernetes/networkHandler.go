@@ -147,6 +147,43 @@ func (n *networkHandler) OnHandshakeSuccess(meta metadata.ConnectionAuthenticate
 		}
 	}
 
+	if n.config.Pod.Mode == publicConfig.KubernetesExecutionModePersistent {
+		if n.pod, err = n.cli.findPod(ctx, n.config.Pod.Metadata.Name, n.config.Pod.Metadata.Namespace); err != nil {
+			if !n.config.Pod.CreateMissingPods {
+				return nil, meta, err
+			}
+
+			if n.pod, err = n.cli.createPod(ctx, n.labels, n.annotations, env, nil, nil); err != nil {
+				return nil, meta, err
+			}
+		}
+		for path, content := range meta.GetFiles() {
+			ctx, cancelFunc := context.WithTimeout(
+				context.Background(),
+				n.config.Timeouts.CommandStart,
+			)
+			n.logger.Debug(
+				message.NewMessage(
+					message.MKubernetesFileModification,
+					"Writing to file %s",
+					path,
+				),
+			)
+			defer cancelFunc()
+			err := n.pod.writeFile(ctx, path, content.Value)
+			if err != nil {
+				n.logger.Warning(
+					message.Wrap(
+						err,
+						message.EKubernetesFileModificationFailed,
+						"Failed to write to %s",
+						path,
+					),
+				)
+			}
+		}
+	}
+
 	files := map[string][]byte{}
 	for name, f := range meta.GetFiles() {
 		files[name] = f.Value

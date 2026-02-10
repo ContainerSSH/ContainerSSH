@@ -7,10 +7,10 @@ import (
 	"sync"
 	"time"
 
-    config2 "go.containerssh.io/containerssh/config"
-    "go.containerssh.io/containerssh/internal/metrics"
-    "go.containerssh.io/containerssh/log"
-    "go.containerssh.io/containerssh/message"
+	config2 "go.containerssh.io/containerssh/config"
+	"go.containerssh.io/containerssh/internal/metrics"
+	"go.containerssh.io/containerssh/log"
+	"go.containerssh.io/containerssh/message"
 	core "k8s.io/api/core/v1"
 	kubeErrors "k8s.io/apimachinery/pkg/api/errors"
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -44,6 +44,11 @@ type kubernetesPodImpl struct {
 }
 
 func (k *kubernetesPodImpl) getExitCode(ctx context.Context) (int32, error) {
+	if k.config.Pod.Mode == config2.KubernetesExecutionModePersistent {
+		k.logger.Debug(message.NewMessage(message.MKubernetesPodAttach, "Skipping exit code check in connection mode"))
+		return 0, nil
+	}
+
 	var pod *core.Pod
 	var lastError error
 loop:
@@ -211,7 +216,6 @@ func (k *kubernetesPodImpl) createExecLocked(
 	if err != nil {
 		return nil, err
 	}
-
 	return &kubernetesExecutionImpl{
 		pod:  k,
 		exec: podExec,
@@ -265,6 +269,11 @@ func (k *kubernetesPodImpl) writeFile(ctx context.Context, path string, content 
 }
 
 func (k *kubernetesPodImpl) remove(ctx context.Context) error {
+	if k.config.Pod.Mode == config2.KubernetesExecutionModePersistent {
+		k.logger.Debug(message.NewMessage(message.MKubernetesPodRemove, "Skipping pod removal in persistent mode"))
+		return nil
+	}
+
 	k.removeLock.Lock()
 	defer k.removeLock.Unlock()
 	if k.shuttingDown {

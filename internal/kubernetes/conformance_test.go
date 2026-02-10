@@ -4,14 +4,14 @@ import (
 	"net"
 	"testing"
 
-    "go.containerssh.io/containerssh/config"
-    "go.containerssh.io/containerssh/internal/geoip/dummy"
-    "go.containerssh.io/containerssh/internal/kubernetes"
-    "go.containerssh.io/containerssh/internal/metrics"
-    "go.containerssh.io/containerssh/internal/sshserver"
-    "go.containerssh.io/containerssh/internal/structutils"
-    "go.containerssh.io/containerssh/internal/test"
-    "go.containerssh.io/containerssh/log"
+	"go.containerssh.io/containerssh/config"
+	"go.containerssh.io/containerssh/internal/geoip/dummy"
+	"go.containerssh.io/containerssh/internal/kubernetes"
+	"go.containerssh.io/containerssh/internal/metrics"
+	"go.containerssh.io/containerssh/internal/sshserver"
+	"go.containerssh.io/containerssh/internal/structutils"
+	"go.containerssh.io/containerssh/internal/test"
+	"go.containerssh.io/containerssh/log"
 )
 
 func TestConformance(t *testing.T) {
@@ -24,6 +24,13 @@ func TestConformance(t *testing.T) {
 		"connection": func(t *testing.T, logger log.Logger) (sshserver.NetworkConnectionHandler, error) {
 			cfg := getKubernetesConfig(t)
 			cfg.Pod.Mode = config.KubernetesExecutionModeConnection
+			return getKubernetes(t, cfg, logger)
+		},
+		"persistent": func(t *testing.T, logger log.Logger) (sshserver.NetworkConnectionHandler, error) {
+			cfg := getKubernetesConfig(t)
+			cfg.Pod.Mode = config.KubernetesExecutionModePersistent
+			cfg.Pod.CreateMissingPods = true
+			cfg.Pod.Metadata.Name = "containerssh-test-pod"
 			return getKubernetes(t, cfg, logger)
 		},
 	}
