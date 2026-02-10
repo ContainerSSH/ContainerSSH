@@ -4,7 +4,7 @@ import (
 	"errors"
 	"strings"
 
-	"github.com/docker/distribution/reference"
+	"github.com/distribution/reference"
 )
 
 func getCanonicalImageName(image string) (string, error) {
