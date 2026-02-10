@@ -16,12 +16,12 @@ require (
 	github.com/google/uuid v1.6.0
 	github.com/gorilla/schema v1.4.1
 	github.com/imdario/mergo v0.3.16
+	github.com/jinzhu/copier v0.4.0
 	github.com/mattn/go-shellwords v1.0.12
 	github.com/mitchellh/golicense v0.2.0
 	github.com/mitchellh/mapstructure v1.5.0
 	github.com/opencontainers/image-spec v1.1.0
 	github.com/oschwald/geoip2-golang v1.11.0
-	github.com/qdm12/reprint v0.0.0-20200326205758-722754a53494
 	github.com/rsc/goversion v1.2.0
 	github.com/stretchr/testify v1.11.1
 	golang.org/x/crypto v0.43.0
@@ -41,7 +41,7 @@ require (
 	github.com/ProtonMail/go-crypto v0.0.0-20220930113650-c6815a8c17ad // indirect
 	github.com/acomagu/bufpipe v1.0.3 // indirect
 	github.com/alessio/shellescape v1.4.2 // indirect
-	github.com/cloudflare/circl v1.3.7 // indirect
+	github.com/cloudflare/circl v1.6.1 // indirect
 	github.com/containerd/log v0.1.0 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/dgryski/go-minhash v0.0.0-20190315135803-ad340ca03076 // indirect
@@ -76,7 +76,6 @@ require (
 	github.com/jcmturner/goidentity/v6 v6.0.1 // indirect
 	github.com/jcmturner/rpc/v2 v2.0.3 // indirect
 	github.com/jdkato/prose v1.2.1 // indirect
-	github.com/jinzhu/copier v0.4.0 // indirect
 	github.com/jmespath/go-jmespath v0.4.0 // indirect
 	github.com/josharian/intern v1.0.0 // indirect
 	github.com/json-iterator/go v1.1.12 // indirect
