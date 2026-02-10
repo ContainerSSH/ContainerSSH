@@ -55,7 +55,7 @@ func (pipeline *logger) write(level config.LogLevel, message ...interface{}) {
 		if len(message) == 1 {
 			switch message[0].(type) {
 			case string:
-				msg = messageCodes.NewMessage(messageCodes.EUnknownError, message[0].(string))
+				msg = messageCodes.NewMessage(messageCodes.EUnknownError, "%s", message[0].(string))
 			default:
 				if m, ok := message[0].(messageCodes.Message); ok {
 					msg = m

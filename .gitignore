@@ -25,3 +25,4 @@ docs/api/authconfig/containerssh-authconfig.json
 venv
 var
 .vscode
+.local

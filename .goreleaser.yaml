@@ -5,7 +5,7 @@ before:
 builds:
   - id: containerssh
     main: cmd/containerssh/main.go
-    binary: "containerssh"
+    binary: containerssh
     goos:
       - freebsd
       - windows
@@ -18,7 +18,7 @@ builds:
       - CGO_ENABLED=0
   - id: containerssh-auditlog-decoder
     main: cmd/containerssh-auditlog-decoder/main.go
-    binary: "containerssh-auditlog-decoder"
+    binary: containerssh-auditlog-decoder
     goos:
       - freebsd
       - windows
@@ -31,7 +31,7 @@ builds:
       - CGO_ENABLED=0
   - id: containerssh-testauthconfigserver
     main: cmd/containerssh-testauthconfigserver/main.go
-    binary: "containerssh-testauthconfigserver"
+    binary: containerssh-testauthconfigserver
     goos:
       - freebsd
       - windows
@@ -89,11 +89,11 @@ source:
   name_template: '{{ .ProjectName }}-{{ .Version }}-source'
 sboms:
   - id: sbom-config
-    documents : 
-      - "containerssh.cdx.sbom"  
-    cmd : cyclonedx-gomod
-    args: [ "mod", "-licenses", "-json", "-output", "$document", "../"]
-    artifacts: source 
+    documents:
+      - containerssh.cdx.sbom
+    cmd: cyclonedx-gomod
+    args: ["mod", "-licenses", "-json", "-output", "$document", "../"]
+    artifacts: source
 dist: build
 release:
   github:

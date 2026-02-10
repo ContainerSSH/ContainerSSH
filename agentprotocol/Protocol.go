@@ -37,7 +37,7 @@ type SetupPacket struct {
 
 type NewConnectionPayload struct {
 	Protocol          string
-	
+
 	ConnectedAddress  string
 	ConnectedPort     uint32
 	OriginatorAddress string

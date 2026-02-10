@@ -6,7 +6,7 @@ import (
     "testing"
     "time"
 
-    "github.com/docker/docker/api/types"
+	"github.com/docker/docker/api/types/registry"
     "go.containerssh.io/containerssh/config"
     "go.containerssh.io/containerssh/internal/geoip/dummy"
     "go.containerssh.io/containerssh/internal/metrics"
@@ -16,7 +16,7 @@ import (
 )
 
 func TestPullImageAuthenticated(t *testing.T) {
-    registry := test.Registry(t, true)
+    testRegistry := test.Registry(t, true)
     metricsCollector := metrics.New(dummy.New())
     clientFactory := &dockerV20ClientFactory{
         backendFailuresMetric: metricsCollector.MustCreateCounter("backend-failures", "requests", ""),
@@ -27,7 +27,7 @@ func TestPullImageAuthenticated(t *testing.T) {
     t.Run("unauthenticated", func(t *testing.T) {
         cfg := config.DockerConfig{}
         structutils.Defaults(&cfg)
-        cfg.Execution.ContainerConfig.Image = fmt.Sprintf("localhost:%d/containerssh/guest-image", registry.Port())
+        cfg.Execution.ContainerConfig.Image = fmt.Sprintf("localhost:%d/containerssh/guest-image", testRegistry.Port())
 
         logger := log.NewTestLogger(t)
         client, err := clientFactory.get(ctx, cfg, logger)
@@ -44,12 +44,12 @@ func TestPullImageAuthenticated(t *testing.T) {
     t.Run("authenticated", func(t *testing.T) {
         cfg := config.DockerConfig{}
         structutils.Defaults(&cfg)
-        cfg.Execution.ContainerConfig.Image = fmt.Sprintf("localhost:%d/containerssh/agent", registry.Port())
-        cfg.Execution.Auth = &types.AuthConfig{
-            Username:      *registry.Username(),
-            Password:      *registry.Password(),
+        cfg.Execution.ContainerConfig.Image = fmt.Sprintf("localhost:%d/containerssh/agent", testRegistry.Port())
+        cfg.Execution.Auth = &registry.AuthConfig{
+            Username:      *testRegistry.Username(),
+            Password:      *testRegistry.Password(),
             Email:         "noreply@containerssh.io",
-            ServerAddress: fmt.Sprintf("localhost:%d", registry.Port()),
+            ServerAddress: fmt.Sprintf("localhost:%d", testRegistry.Port()),
         }
 
         logger := log.NewTestLogger(t)
