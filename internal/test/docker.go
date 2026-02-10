@@ -12,8 +12,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/docker/docker/api/types"
-	containerType "github.com/docker/docker/api/types/container"
+	"github.com/docker/docker/api/types/build"
+	containertypes "github.com/docker/docker/api/types/container"
+	"github.com/docker/docker/api/types/image"
 	"github.com/docker/docker/client"
 	"github.com/docker/go-connections/nat"
 )
@@ -177,7 +178,7 @@ func (d *dockerContainer) id() string {
 func (d *dockerContainer) pull() {
 	d.t.Helper()
 	d.t.Logf("Pulling image %s...", d.image)
-	reader, err := d.client.ImagePull(context.Background(), d.image, types.ImagePullOptions{})
+	reader, err := d.client.ImagePull(context.Background(), d.image, image.PullOptions{})
 	if err != nil {
 		d.t.Fatalf("failed to pull container image %s (%v)", d.image, err)
 	}
@@ -189,7 +190,7 @@ func (d *dockerContainer) pull() {
 func (d *dockerContainer) create() {
 	d.t.Helper()
 	d.t.Logf("Creating container from %s...", d.image)
-	hostConfig := &containerType.HostConfig{
+	hostConfig := &containertypes.HostConfig{
 		AutoRemove:   true,
 		PortBindings: map[nat.Port][]nat.PortBinding{},
 	}
@@ -212,7 +213,7 @@ func (d *dockerContainer) create() {
 	}
 	resp, err := d.client.ContainerCreate(
 		context.Background(),
-		&containerType.Config{
+		&containertypes.Config{
 			Image: d.image,
 			Cmd:   d.cmd,
 			Env:   d.env,
@@ -232,7 +233,7 @@ func (d *dockerContainer) create() {
 func (d *dockerContainer) start() {
 	d.t.Helper()
 	d.t.Logf("Starting container %s...", d.containerID)
-	if err := d.client.ContainerStart(context.Background(), d.containerID, types.ContainerStartOptions{}); err != nil {
+	if err := d.client.ContainerStart(context.Background(), d.containerID, containertypes.StartOptions{}); err != nil {
 		d.t.Fatalf("failed to start container %s (%v)", d.containerID, err)
 	}
 }
@@ -240,7 +241,7 @@ func (d *dockerContainer) start() {
 func (d *dockerContainer) remove() {
 	d.t.Helper()
 	d.t.Logf("Removing container ID %s...", d.containerID)
-	if err := d.client.ContainerRemove(context.Background(), d.containerID, types.ContainerRemoveOptions{
+	if err := d.client.ContainerRemove(context.Background(), d.containerID, containertypes.RemoveOptions{
 		RemoveVolumes: false,
 		RemoveLinks:   false,
 		Force:         true,
@@ -294,7 +295,7 @@ func (d *dockerContainer) build() {
 	imageBuildResponse, err := d.client.ImageBuild(
 		context.Background(),
 		buildContext,
-		types.ImageBuildOptions{
+		build.ImageBuildOptions{
 			Tags:       []string{d.image},
 			Dockerfile: "Dockerfile",
 		},
@@ -323,8 +324,8 @@ func (d *dockerContainer) inspect() {
 		if err != nil {
 			d.t.Fatalf("Failed to inspect container (%v)", err)
 		}
-		if inspectResult.State.Health == nil || inspectResult.State.Health.Status == types.Healthy ||
-			inspectResult.State.Health.Status == types.NoHealthcheck {
+		if inspectResult.State.Health == nil || inspectResult.State.Health.Status == containertypes.Healthy ||
+			inspectResult.State.Health.Status == containertypes.NoHealthcheck {
 			if inspectResult.State.Running {
 				if d.updatePortMappings(inspectResult) {
 					return
@@ -345,7 +346,7 @@ func (d *dockerContainer) inspect() {
 	}
 }
 
-func (d *dockerContainer) updatePortMappings(inspectResult types.ContainerJSON) bool {
+func (d *dockerContainer) updatePortMappings(inspectResult containertypes.InspectResponse) bool {
 	for port := range d.ports {
 		if hostPorts, ok := inspectResult.NetworkSettings.Ports[nat.Port(port)]; ok {
 			if len(hostPorts) > 0 {

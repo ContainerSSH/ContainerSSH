@@ -16,6 +16,7 @@ import (
 
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/container"
+	"github.com/docker/docker/api/types/image"
 	"github.com/docker/docker/client"
 	"github.com/docker/docker/errdefs"
 	"github.com/docker/docker/pkg/stdcopy"
@@ -113,12 +114,12 @@ loop:
 }
 
 func (d *dockerV20Client) pullImage(ctx context.Context) error {
-	image, err := getCanonicalImageName(d.config.Execution.DockerLaunchConfig.ContainerConfig.Image)
+	imageName, err := getCanonicalImageName(d.config.Execution.DockerLaunchConfig.ContainerConfig.Image)
 	if err != nil {
 		return err
 	}
 
-	options := types.ImagePullOptions{}
+	options := image.PullOptions{}
 	if d.config.Execution.Auth != nil {
 		jsonEncodedCredentials, err := json.Marshal(d.config.Execution.Auth)
 		if err != nil {
@@ -128,13 +129,13 @@ func (d *dockerV20Client) pullImage(ctx context.Context) error {
 		options.RegistryAuth = base64.StdEncoding.EncodeToString(jsonEncodedCredentials)
 	}
 
-	d.logger.Debug(message.NewMessage(message.MDockerImagePull, "Pulling image %s...", image))
+	d.logger.Debug(message.NewMessage(message.MDockerImagePull, "Pulling image %s...", imageName))
 	var lastError error
 loop:
 	for {
 		var pullReader io.ReadCloser
 		d.backendRequestsMetric.Increment()
-		pullReader, lastError = d.dockerClient.ImagePull(ctx, image, options)
+		pullReader, lastError = d.dockerClient.ImagePull(ctx, imageName, options)
 		if lastError == nil {
 			_, lastError = io.ReadAll(pullReader)
 			if lastError == nil {
@@ -156,7 +157,7 @@ loop:
 				message.EDockerFailedImagePull,
 				UserMessageInitializeSSHSession,
 				"failed to pull image %s, giving up",
-				image,
+				imageName,
 			)
 			d.logger.Debug(err)
 			return err
@@ -166,7 +167,7 @@ loop:
 				lastError,
 				message.EDockerFailedImagePull,
 				"failed to pull image %s, retrying in 10 seconds",
-				image,
+				imageName,
 			))
 		select {
 		case <-ctx.Done():
@@ -182,7 +183,7 @@ loop:
 		message.EDockerFailedImagePull,
 		UserMessageInitializeSSHSession,
 		"failed to pull image %s, giving up",
-		image,
+		imageName,
 	)
 	d.logger.Debug(err)
 	return err
@@ -309,7 +310,7 @@ loop:
 		attachResult, lastError = d.dockerClient.ContainerAttach(
 			ctx,
 			d.containerID,
-			types.ContainerAttachOptions{
+			container.AttachOptions{
 				Stream: true,
 				Stdin:  true,
 				Stdout: true,
@@ -359,7 +360,7 @@ loop:
 		lastError = d.dockerClient.ContainerStart(
 			ctx,
 			d.containerID,
-			types.ContainerStartOptions{},
+			container.StartOptions{},
 		)
 		if lastError == nil {
 			return nil
@@ -476,7 +477,7 @@ loop:
 		if lastError == nil {
 			d.backendRequestsMetric.Increment()
 			lastError = d.dockerClient.ContainerRemove(
-				ctx, d.containerID, types.ContainerRemoveOptions{
+				ctx, d.containerID, container.RemoveOptions{
 					Force: true,
 				},
 			)
@@ -566,7 +567,7 @@ func (d *dockerV20Container) lockedCreateExec(
 	}, nil
 }
 
-func (d *dockerV20Container) realCreateExec(ctx context.Context, execConfig types.ExecConfig) (string, error) {
+func (d *dockerV20Container) realCreateExec(ctx context.Context, execConfig container.ExecOptions) (string, error) {
 	d.logger.Debug(message.NewMessage(message.MDockerExecCreate, "Creating exec..."))
 	var lastError error
 loop:
@@ -599,7 +600,7 @@ loop:
 	return "", err
 }
 
-func (d *dockerV20Container) createExecConfig(env map[string]string, tty bool, program []string) types.ExecConfig {
+func (d *dockerV20Container) createExecConfig(env map[string]string, tty bool, program []string) container.ExecOptions {
 	dockerEnv := createEnv(env)
 	if !d.config.Execution.DisableAgent {
 		agentPrefix := []string{
@@ -610,7 +611,7 @@ func (d *dockerV20Container) createExecConfig(env map[string]string, tty bool, p
 		}
 		program = append(agentPrefix, program...)
 	}
-	execConfig := types.ExecConfig{
+	execConfig := container.ExecOptions{
 		Tty:          tty,
 		AttachStdin:  true,
 		AttachStderr: true,
@@ -631,7 +632,7 @@ func createEnv(env map[string]string) []string {
 	return dockerEnv
 }
 
-func (d *dockerV20Container) attachExec(ctx context.Context, execID string, config types.ExecConfig) (types.HijackedResponse, error) {
+func (d *dockerV20Container) attachExec(ctx context.Context, execID string, config container.ExecOptions) (types.HijackedResponse, error) {
 	d.logger.Debug(message.NewMessage(message.MDockerExecAttach, "Attaching exec..."))
 	var attachResult types.HijackedResponse
 	var lastError error
@@ -641,7 +642,7 @@ loop:
 		attachResult, lastError = d.dockerClient.ContainerExecAttach(
 			ctx,
 			execID,
-			types.ExecStartCheck{
+			container.ExecStartOptions{
 				Detach: false,
 				Tty:    config.Tty,
 			},
@@ -868,7 +869,7 @@ func (d *dockerV20Exec) resize(ctx context.Context, height uint, width uint) err
 	var lastError error
 loop:
 	for {
-		resizeOptions := types.ResizeOptions{
+		resizeOptions := container.ResizeOptions{
 			Height: height,
 			Width:  width,
 		}
@@ -1154,7 +1155,7 @@ func (d *dockerV20Exec) containerInspect(
 }
 
 func (d *dockerV20Exec) execInspect(ctx context.Context, onExit func(exitStatus int)) (lastError error) {
-	var inspectResult types.ContainerExecInspect
+	var inspectResult container.ExecInspect
 	inspectResult, lastError = d.dockerClient.ContainerExecInspect(ctx, d.execID)
 	if lastError == nil {
 		if inspectResult.Running {
