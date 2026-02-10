@@ -14,8 +14,8 @@ import (
 	"github.com/aws/aws-sdk-go/aws/credentials"
 	"github.com/aws/aws-sdk-go/aws/session"
 	awsS3 "github.com/aws/aws-sdk-go/service/s3"
-	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/container"
+	"github.com/docker/docker/api/types/image"
 	"github.com/docker/docker/client"
 	"github.com/docker/go-connections/nat"
 	"github.com/stretchr/testify/assert"
@@ -134,7 +134,7 @@ func (m *minio) startMinio(t *testing.T, accessKey string, secretKey string) err
 		return err
 	}
 
-	reader, err := cli.ImagePull(ctx, "docker.io/minio/minio", types.ImagePullOptions{})
+	reader, err := cli.ImagePull(ctx, "docker.io/minio/minio", image.PullOptions{})
 	if err != nil {
 		assert.Fail(t, "failed to pull Minio image (%v)", err)
 		return err
@@ -168,7 +168,7 @@ func (m *minio) startMinio(t *testing.T, accessKey string, secretKey string) err
 
 	m.containerID = resp.ID
 
-	if err := cli.ContainerStart(ctx, resp.ID, types.ContainerStartOptions{}); err != nil {
+	if err := cli.ContainerStart(ctx, resp.ID, container.StartOptions{}); err != nil {
 		assert.Fail(t, "failed to start minio container (%v)", err)
 		return err
 	}
@@ -210,7 +210,7 @@ func (m *minio) Stop() {
 			goLog.Printf("failed to create Docker client (%v)\n", err)
 		}
 
-		if err := cli.ContainerRemove(ctx, m.containerID, types.ContainerRemoveOptions{
+		if err := cli.ContainerRemove(ctx, m.containerID, container.RemoveOptions{
 			RemoveVolumes: false,
 			RemoveLinks:   false,
 			Force:         true,
