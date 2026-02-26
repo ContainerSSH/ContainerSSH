@@ -120,3 +120,6 @@ const EKubernetesAgentFailed = "KUBERNETES_AGENT_FAILED"
 // MKubernetesAgentLog indicates a log message from the ContainerSSH agent running within a user container.
 // Note that the agent is normally run with the users credentials and as such all log output is to be considered UNTRUSTED and should only be used for debugging purposes
 const MKubernetesAgentLog = "KUBERNETES_AGENT_LOG"
+
+// EKubernetesPodNotFound indicates that the ContainerSSH Kubernetes backend could not find the pod with the given name
+const EKubernetesPodNotFound = "KUBERNETES_POD_NOT_FOUND"
