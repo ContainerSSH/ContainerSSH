@@ -16,6 +16,7 @@
 In a hurry? This one-minute video explains everything you need to know about ContainerSSH.
 
 [![An image with a YouTube play button on it.](https://containerssh.io/images/containerssh-intro-preview.png)](https://youtu.be/Cs9OrnPi2IM)
+[![Docker Health](https://img.releaserun.com/badge/health/docker-engine.svg)](https://releaserun.com/badges/docker-engine/)
 
 ## Need help?
 
