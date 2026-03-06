@@ -10,13 +10,13 @@
 [![Go Report Card](https://goreportcard.com/badge/github.com/containerssh/containerssh)](https://goreportcard.com/report/github.com/containerssh/containerssh)
 [![License: Apache 2.0](https://img.shields.io/github/license/ContainerSSH/ContainerSSH)](LICENSE.md)
 [![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2FContainerSSH%2FContainerSSH.svg?type=shield&issueType=license)](https://app.fossa.com/projects/git%2Bgithub.com%2FContainerSSH%2FContainerSSH?ref=badge_shield&issueType=license)
+[![Docker Health](https://img.releaserun.com/badge/health/docker-engine.svg)](https://releaserun.com/badges/docker-engine/)
 
 ## ContainerSSH in One Minute
 
 In a hurry? This one-minute video explains everything you need to know about ContainerSSH.
 
 [![An image with a YouTube play button on it.](https://containerssh.io/images/containerssh-intro-preview.png)](https://youtu.be/Cs9OrnPi2IM)
-[![Docker Health](https://img.releaserun.com/badge/health/docker-engine.svg)](https://releaserun.com/badges/docker-engine/)
 
 ## Need help?
 
