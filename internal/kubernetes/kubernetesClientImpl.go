@@ -113,7 +113,9 @@ func (k *kubernetesClientImpl) findPod(
 	}
 	notFoundErr := fmt.Errorf("failed to find pod %s in namespace %s after multiple retries",
 		podName, namespace)
-	k.logger.Debug(message.NewMessage(message.EKubernetesPodNotFound, notFoundErr.Error()))
+	k.logger.Debug(message.NewMessage(message.EKubernetesPodNotFound,
+		"failed to find pod %s in namespace %s after multiple retries",
+		podName, namespace))
 	return nil, notFoundErr
 }
 

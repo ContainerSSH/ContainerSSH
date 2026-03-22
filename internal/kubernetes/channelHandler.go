@@ -147,9 +147,9 @@ func (c *channelHandler) handleExecModePersistent(ctx context.Context, program [
 				c.networkHandler.logger.Debug(
 					message.NewMessage(
 						message.EKubernetesPodNotFound,
-						fmt.Sprintf("Pod %s not found in namespace %s, spawning pod",
-							c.networkHandler.config.Pod.Metadata.Name,
-							c.networkHandler.config.Pod.Metadata.Namespace),
+						"Pod %s not found in namespace %s, spawning pod",
+						c.networkHandler.config.Pod.Metadata.Name,
+						c.networkHandler.config.Pod.Metadata.Namespace,
 					),
 				)
 				pod, err := c.networkHandler.cli.createPod(
