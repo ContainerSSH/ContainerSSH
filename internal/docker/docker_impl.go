@@ -18,7 +18,7 @@ import (
 	"github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/api/types/image"
 	"github.com/docker/docker/client"
-	"github.com/docker/docker/errdefs"
+	"github.com/containerd/errdefs"
 	"github.com/docker/docker/pkg/stdcopy"
 	"go.containerssh.io/containerssh/config"
 	"go.containerssh.io/containerssh/internal/metrics"
@@ -1224,6 +1224,6 @@ loop:
 func isPermanentError(err error) bool {
 	return client.IsErrNotFound(err) ||
 		errdefs.IsNotImplemented(err) ||
-		errdefs.IsForbidden(err) ||
+		errdefs.IsPermissionDenied(err) ||
 		errdefs.IsUnauthorized(err)
 }
