@@ -29,9 +29,9 @@ require (
 	golang.org/x/sys v0.42.0
 	gopkg.in/jcmturner/goidentity.v3 v3.0.0
 	gopkg.in/yaml.v3 v3.0.1
-	k8s.io/api v0.35.0
+	k8s.io/api v0.35.3
 	k8s.io/apimachinery v0.35.3
-	k8s.io/client-go v0.35.0
+	k8s.io/client-go v0.35.3
 	sigs.k8s.io/kind v0.31.0
 	sigs.k8s.io/yaml v1.6.0
 )
