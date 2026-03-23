@@ -11,6 +11,8 @@ jobs:
   snapshot:
     name: Snapshot build
     runs-on: ubuntu-latest
+    outputs:
+      hashes: ${{ steps.hash.outputs.hashes }}
     if: ${{ ! startsWith(github.ref, 'refs/tags/') }}
     steps:
       - name: Checkout the repository
@@ -32,6 +34,11 @@ jobs:
           name: build-results
           path: build
           if-no-files-found: error
+      - name: Generate subject (checksum)
+        id: hash
+        run: |
+          set -euo pipefail
+          echo "hashes=$(find build -type f | xargs sha256sum | base64 -w0)" >> "$GITHUB_OUTPUT"
 
   release:
     name: Release build
@@ -76,13 +83,14 @@ jobs:
           echo "hashes=$(cat $checksum_file | base64 -w0)" >> "$GITHUB_OUTPUT"
 
   provenance:
-    needs: [release]
+    needs: [snapshot, release]
+    if: ${{ always() && (needs.snapshot.result == 'success' || needs.release.result == 'success') }}
     permissions:
       actions: read # To read the workflow path.
       id-token: write # To sign the provenance.
       contents: write # To add assets to a release.
     uses: slsa-framework/slsa-github-generator/.github/workflows/generator_generic_slsa3.yml@v2.1.0
     with:
-      base64-subjects: "${{ needs.release.outputs.hashes }}"
-      upload-assets: true
-      draft-release: true
+      base64-subjects: "${{ needs.release.outputs.hashes || needs.snapshot.outputs.hashes }}"
+      upload-assets: ${{ startsWith(github.ref, 'refs/tags/') }}
+      draft-release: ${{ startsWith(github.ref, 'refs/tags/') }}
