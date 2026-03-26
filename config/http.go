@@ -36,7 +36,7 @@ func (t TLSVersion) Validate() error {
 func (t TLSVersion) GetTLSVersion() uint16 {
 	switch t {
 	case TLSVersion13:
-		return tls.VersionTLS12
+		return tls.VersionTLS13
 	case TLSVersion12:
 		return tls.VersionTLS12
 	default:
