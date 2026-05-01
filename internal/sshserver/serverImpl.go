@@ -1316,6 +1316,7 @@ func (s *serverImpl) onX11(connectionID string, requestID uint64, sessionChannel
 
 	reverseForwardHandler := ReverseForwardHandler{
 		sshConn: conn.sshConn,
+		server:  s,
 		logger:  s.logger,
 	}
 	err := sessionChannel.OnX11Request(requestID, x11.SingleConnection, x11.Protocol, x11.Cookie, x11.Screen, &reverseForwardHandler)
