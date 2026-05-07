@@ -329,6 +329,7 @@ func (q *uploadQueue) recover(name string) error {
 
 	// Create a new upload
 	entry := &queueEntry{
+		lock:          &sync.Mutex{},
 		logger:        q.logger,
 		name:          name,
 		file:          file,
