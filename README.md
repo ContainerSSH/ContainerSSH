@@ -60,6 +60,43 @@ Study SSH attack patterns up close. Drop attackers safely into network-isolated 
 
 [🚀 Get started »](https://containerssh.io/quickstart/)
 
+## SFTP file uploads
+
+SFTP is configured as an SSH subsystem that runs a binary inside the guest
+container or pod. The configured executable must be present in the guest image.
+For the default OpenSSH SFTP server path, add the subsystem to the backend
+configuration:
+
+```yaml
+backend: kubernetes
+kubernetes:
+  pod:
+    subsystems:
+      sftp: /usr/lib/openssh/sftp-server
+```
+
+For the Docker backend, use the same subsystem mapping under the execution
+configuration:
+
+```yaml
+backend: docker
+docker:
+  execution:
+    subsystems:
+      sftp: /usr/lib/openssh/sftp-server
+```
+
+If subsystem requests are restricted by security settings, allow the `sftp`
+subsystem explicitly:
+
+```yaml
+security:
+  subsystem:
+    mode: filter
+    allow:
+      - sftp
+```
+
 ## Verify provenance
 
 Each of the releases come with a SLSA provenance data file `multiple.intoto.jsonl`. This file can be used to verify the source and provenance of the produced artifacts with [`slsa-verifier`](https://github.com/slsa-framework/slsa-verifier).
