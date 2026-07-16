@@ -17,12 +17,8 @@ import (
 	"go.containerssh.io/containerssh/message"
 )
 
-const (
-	// Bound idle connection lifetime and pool size so short-lived clients cannot retain transports indefinitely.
-	defaultHTTPClientIdleConnTimeout     = 90 * time.Second
-	defaultHTTPClientMaxIdleConns        = 100
-	defaultHTTPClientMaxIdleConnsPerHost = 10
-)
+// Match the idle connection timeout used by net/http.DefaultTransport.
+const defaultHTTPClientIdleConnTimeout = 90 * time.Second
 
 type client struct {
 	config           config.HTTPClientConfiguration
@@ -266,10 +262,8 @@ func (c *client) createRequestForURL(method string, u string, requestBody interf
 
 func (c *client) createHTTPClient() *http.Client {
 	transport := &http.Transport{
-		TLSClientConfig:     c.tlsConfig,
-		IdleConnTimeout:     defaultHTTPClientIdleConnTimeout,
-		MaxIdleConns:        defaultHTTPClientMaxIdleConns,
-		MaxIdleConnsPerHost: defaultHTTPClientMaxIdleConnsPerHost,
+		TLSClientConfig: c.tlsConfig,
+		IdleConnTimeout: defaultHTTPClientIdleConnTimeout,
 	}
 
 	httpClient := &http.Client{

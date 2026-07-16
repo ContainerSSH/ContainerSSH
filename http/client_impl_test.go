@@ -45,12 +45,6 @@ func TestClientConfiguresReusableHTTPClient(t *testing.T) {
 	if transport.IdleConnTimeout != defaultHTTPClientIdleConnTimeout {
 		t.Fatalf("unexpected idle connection timeout: %s", transport.IdleConnTimeout)
 	}
-	if transport.MaxIdleConns != defaultHTTPClientMaxIdleConns {
-		t.Fatalf("unexpected maximum idle connections: %d", transport.MaxIdleConns)
-	}
-	if transport.MaxIdleConnsPerHost != defaultHTTPClientMaxIdleConnsPerHost {
-		t.Fatalf("unexpected maximum idle connections per host: %d", transport.MaxIdleConnsPerHost)
-	}
 
 	for request := 0; request < 2; request++ {
 		response := struct{}{}
