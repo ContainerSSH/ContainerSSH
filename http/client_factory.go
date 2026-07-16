@@ -4,8 +4,8 @@ import (
 	"crypto/tls"
 	"strings"
 
-    "go.containerssh.io/containerssh/config"
-    "go.containerssh.io/containerssh/log"
+	"go.containerssh.io/containerssh/config"
+	"go.containerssh.io/containerssh/log"
 )
 
 // NewClient creates a new HTTP client with the given configuration.
@@ -33,13 +33,15 @@ func NewClientWithHeaders(
 
 	tlsConfig := createTLSConfig(config, certs)
 
-	return &client{
+	result := &client{
 		config:           config,
 		logger:           logger.WithLabel("endpoint", config.URL),
 		tlsConfig:        tlsConfig,
 		extraHeaders:     extraHeaders,
 		allowLaxDecoding: allowLaxDecoding,
-	}, nil
+	}
+	result.httpClient = result.createHTTPClient()
+	return result, nil
 }
 
 // createTLSConfig creates a TLS config. Should only be called after config.Validate().

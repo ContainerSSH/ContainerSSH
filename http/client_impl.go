@@ -9,11 +9,19 @@ import (
 	"io"
 	"net/http"
 	"net/url"
+	"time"
 
 	"github.com/gorilla/schema"
 	"go.containerssh.io/containerssh/config"
 	"go.containerssh.io/containerssh/log"
 	"go.containerssh.io/containerssh/message"
+)
+
+const (
+	// Bound idle connection lifetime and pool size so short-lived clients cannot retain transports indefinitely.
+	defaultHTTPClientIdleConnTimeout     = 90 * time.Second
+	defaultHTTPClientMaxIdleConns        = 100
+	defaultHTTPClientMaxIdleConnsPerHost = 10
 )
 
 type client struct {
@@ -22,6 +30,7 @@ type client struct {
 	tlsConfig        *tls.Config
 	extraHeaders     map[string][]string
 	allowLaxDecoding bool
+	httpClient       *http.Client
 }
 
 func (c *client) Put(
@@ -124,7 +133,6 @@ func (c *client) requestURLWithLogger(
 ) (int, error) {
 	logger = logger.WithLabel("method", method).WithLabel("url", u)
 
-	httpClient := c.createHTTPClient(logger)
 	req, err := c.createRequestForURL(method, u, requestBody, logger)
 	if err != nil {
 		return 0, err
@@ -132,7 +140,7 @@ func (c *client) requestURLWithLogger(
 
 	logger.Debug(message.NewMessage(message.MHTTPClientRequest, "HTTP %s request to %s", method, u))
 
-	resp, err := httpClient.Do(req)
+	resp, err := c.httpClient.Do(req)
 	if err != nil {
 		var typedError message.Message
 		if errors.As(err, &typedError) {
@@ -256,9 +264,12 @@ func (c *client) createRequestForURL(method string, u string, requestBody interf
 	return req, nil
 }
 
-func (c *client) createHTTPClient(logger log.Logger) *http.Client {
+func (c *client) createHTTPClient() *http.Client {
 	transport := &http.Transport{
-		TLSClientConfig: c.tlsConfig,
+		TLSClientConfig:     c.tlsConfig,
+		IdleConnTimeout:     defaultHTTPClientIdleConnTimeout,
+		MaxIdleConns:        defaultHTTPClientMaxIdleConns,
+		MaxIdleConnsPerHost: defaultHTTPClientMaxIdleConnsPerHost,
 	}
 
 	httpClient := &http.Client{
@@ -270,6 +281,13 @@ func (c *client) createHTTPClient(logger log.Logger) *http.Client {
 					"Redirects disabled, server tried to redirect to %s", req.URL,
 				).Label("redirect", req.URL)
 			}
+			request := req
+			if len(via) > 0 {
+				request = via[0]
+			}
+			logger := c.logger.
+				WithLabel("method", request.Method).
+				WithLabel("url", request.URL.String())
 			logger.Debug(
 				message.NewMessage(
 					message.MHTTPClientRedirect, "HTTP redirect to %s", req.URL,
