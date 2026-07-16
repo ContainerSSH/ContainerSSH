@@ -51,3 +51,37 @@ func TestClientReusesHTTPConnection(t *testing.T) {
 		t.Fatalf("expected requests to reuse one connection, got %d connections", connections.Load())
 	}
 }
+
+func TestClientFollowsRedirect(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(writer http.ResponseWriter, request *http.Request) {
+		switch request.URL.Path {
+		case "/redirect":
+			http.Redirect(writer, request, "/response", http.StatusFound)
+		case "/response":
+			writer.Header().Set("Content-Type", "application/json")
+			_, _ = writer.Write([]byte("{}"))
+		default:
+			http.NotFound(writer, request)
+		}
+	}))
+	defer server.Close()
+
+	client, err := containersshhttp.NewClient(
+		config.HTTPClientConfiguration{
+			URL:            server.URL,
+			AllowRedirects: true,
+			Timeout:        time.Second,
+		},
+		log.NewTestLogger(t),
+	)
+	if err != nil {
+		t.Fatalf("failed to create HTTP client: %v", err)
+	}
+
+	response := struct{}{}
+	if status, err := client.Get("/redirect", &response); err != nil {
+		t.Fatalf("redirect request failed: %v", err)
+	} else if status != http.StatusOK {
+		t.Fatalf("redirect request returned status %d", status)
+	}
+}
