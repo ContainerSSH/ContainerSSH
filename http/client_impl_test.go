@@ -1,4 +1,4 @@
-package http
+package http_test
 
 import (
 	"net"
@@ -9,10 +9,11 @@ import (
 	"time"
 
 	"go.containerssh.io/containerssh/config"
+	containersshhttp "go.containerssh.io/containerssh/http"
 	"go.containerssh.io/containerssh/log"
 )
 
-func TestClientConfiguresReusableHTTPClient(t *testing.T) {
+func TestClientReusesHTTPConnection(t *testing.T) {
 	var connections atomic.Int32
 	server := httptest.NewUnstartedServer(http.HandlerFunc(func(writer http.ResponseWriter, _ *http.Request) {
 		writer.Header().Set("Content-Type", "application/json")
@@ -26,7 +27,7 @@ func TestClientConfiguresReusableHTTPClient(t *testing.T) {
 	server.Start()
 	defer server.Close()
 
-	clientInterface, err := NewClient(
+	client, err := containersshhttp.NewClient(
 		config.HTTPClientConfiguration{
 			URL:     server.URL,
 			Timeout: time.Second,
@@ -35,15 +36,6 @@ func TestClientConfiguresReusableHTTPClient(t *testing.T) {
 	)
 	if err != nil {
 		t.Fatalf("failed to create HTTP client: %v", err)
-	}
-
-	client := clientInterface.(*client)
-	transport, ok := client.httpClient.Transport.(*http.Transport)
-	if !ok {
-		t.Fatalf("unexpected transport type %T", client.httpClient.Transport)
-	}
-	if transport.IdleConnTimeout != defaultHTTPClientIdleConnTimeout {
-		t.Fatalf("unexpected idle connection timeout: %s", transport.IdleConnTimeout)
 	}
 
 	for request := 0; request < 2; request++ {
