@@ -275,13 +275,14 @@ func (c *client) createHTTPClient() *http.Client {
 					"Redirects disabled, server tried to redirect to %s", req.URL,
 				).Label("redirect", req.URL)
 			}
-			request := req
-			if len(via) > 0 {
-				request = via[0]
-			}
 			logger := c.logger.
-				WithLabel("method", request.Method).
-				WithLabel("url", request.URL.String())
+				WithLabel("method", req.Method).
+				WithLabel("url", req.URL.String())
+			if len(via) > 0 {
+				logger = c.logger.
+					WithLabel("method", via[0].Method).
+					WithLabel("url", via[0].URL.String())
+			}
 			logger.Debug(
 				message.NewMessage(
 					message.MHTTPClientRedirect, "HTTP redirect to %s", req.URL,
