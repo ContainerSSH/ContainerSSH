@@ -627,6 +627,7 @@ func (s *serverImpl) handleConnection(conn net.Conn) {
 
 	go func() {
 		_ = sshConn.Wait()
+		s.removeClientConnection(connectionID, sshConn)
 		logger.Debug(messageCodes.NewMessage(messageCodes.MSSHDisconnected, "Client disconnected"))
 		s.shutdownHandlers.Unregister(shutdownHandlerID)
 		s.shutdownHandlers.Unregister(sshShutdownHandlerID)
@@ -639,6 +640,13 @@ func (s *serverImpl) handleConnection(conn net.Conn) {
 
 	go s.handleChannels(authenticatedMetadata, channels, handlerSSHConnection, logger)
 	go s.handleGlobalRequests(authenticatedMetadata, globalRequests, handlerSSHConnection, logger)
+}
+
+func (s *serverImpl) removeClientConnection(connectionID string, sshConn *ssh.ServerConn) {
+	s.lock.Lock()
+	delete(s.clientSockets, sshConn)
+	delete(s.connMap, connectionID)
+	s.lock.Unlock()
 }
 
 func (s *serverImpl) handleKeepAliveRequest(req *ssh.Request, logger log.Logger) {
