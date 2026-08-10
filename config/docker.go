@@ -430,5 +430,13 @@ func (l *DockerLaunchConfig) Validate() error {
 	if l.ContainerConfig.Image == "" {
 		return wrap(newError("image", "no image name provided"), "container")
 	}
+	if l.NetworkConfig != nil && len(l.NetworkConfig.EndpointsConfig) == 0 {
+		return newError(
+			"network",
+			"network configuration was provided but contains no endpoints, "+
+				"specify at least one entry under \"endpointsConfig\" (e.g. network.endpointsConfig.<networkName>.networkId), "+
+				"or remove the \"network\" key entirely to use the default network",
+		)
+	}
 	return nil
 }
