@@ -13,6 +13,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/pires/go-proxyproto"
 	"golang.org/x/crypto/ssh"
 )
 
@@ -43,6 +44,9 @@ type SSHConfig struct {
 	// allowed to be sent without a response being received. If this number
 	// is exceeded the connection is considered dead
 	ClientAliveCountMax int `json:"clientAliveCountMax" yaml:"clientAliveCountMax" default:"3" comment:"Maximum number of failed keepalives"`
+	// ProxyProtocolAllowedCIDRs are the sources from which the PROXY protocol is
+	// accepted (CIDR or IP). If the list is empty the PROXY protocol is disabled.
+	ProxyProtocolAllowedCIDRs []string `json:"proxyProtocolAllowedCidrs" yaml:"proxyProtocolAllowedCidrs" comment:"CIDR ranges or IP addresses to accept the PROXY protocol from"`
 }
 
 // GenerateHostKey generates a random host key and adds it to SSHConfig
@@ -119,6 +123,13 @@ func (cfg SSHConfig) Validate() error {
 	}
 	if cfg.ClientAliveCountMax <= 0 {
 		return newError("clientAliveCountMax", "clientAliveCountMax should be at least 1")
+	}
+	if len(cfg.ProxyProtocolAllowedCIDRs) > 0 {
+		if _, err := proxyproto.PolicyFromRanges(
+			cfg.ProxyProtocolAllowedCIDRs, proxyproto.USE, proxyproto.IGNORE,
+		); err != nil {
+			return wrapWithMessage(err, "proxyProtocolAllowedCidrs", "invalid PROXY protocol source range")
+		}
 	}
 	return nil
 }
