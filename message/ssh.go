@@ -94,3 +94,6 @@ const ESSHSOReuseFailed = "SSH_SOCKET_REUSE_FAILED"
 
 // ESSHNotImplemented indicates that a feature is not implemented in the backend.
 const ESSHNotImplemented = "SSH_NOT_IMPLEMENTED"
+
+// ESSHUnsupportedRemoteAddress indicates that ContainerSSH could not determine the TCP address of the connecting client.
+const ESSHUnsupportedRemoteAddress = "SSH_UNSUPPORTED_REMOTE_ADDRESS"

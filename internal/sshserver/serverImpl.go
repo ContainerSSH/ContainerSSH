@@ -11,6 +11,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/pires/go-proxyproto"
 	protocol "go.containerssh.io/containerssh/agentprotocol"
 	"go.containerssh.io/containerssh/auth"
 	"go.containerssh.io/containerssh/config"
@@ -48,6 +49,13 @@ func (s *serverImpl) String() string {
 }
 
 func (s *serverImpl) RunWithLifecycle(lifecycle service.Lifecycle) error {
+	var proxyProtocolPolicy proxyproto.ConnPolicyFunc
+	if len(s.cfg.ProxyProtocolAllowedCIDRs) > 0 {
+		proxyProtocolPolicy = proxyproto.MustPolicyFromRanges(
+			s.cfg.ProxyProtocolAllowedCIDRs, proxyproto.USE, proxyproto.IGNORE,
+		)
+	}
+
 	s.lock.Lock()
 	alreadyRunning := false
 	if s.listenSocket != nil {
@@ -70,6 +78,9 @@ func (s *serverImpl) RunWithLifecycle(lifecycle service.Lifecycle) error {
 	if err != nil {
 		s.lock.Unlock()
 		return messageCodes.Wrap(err, messageCodes.ESSHStartFailed, "failed to start SSH server on %s", s.cfg.Listen)
+	}
+	if proxyProtocolPolicy != nil {
+		netListener = &proxyproto.Listener{Listener: netListener, ConnPolicy: proxyProtocolPolicy}
 	}
 	s.listenSocket = netListener
 	s.lock.Unlock()
@@ -506,7 +517,19 @@ func (s *serverImpl) createPasswordCallback(
 }
 
 func (s *serverImpl) handleConnection(conn net.Conn) {
-	addr := conn.RemoteAddr().(*net.TCPAddr)
+	addr, ok := conn.RemoteAddr().(*net.TCPAddr)
+	if !ok {
+		s.logger.Warning(
+			messageCodes.NewMessage(
+				messageCodes.ESSHUnsupportedRemoteAddress,
+				"rejecting connection with non-TCP remote address %s",
+				conn.RemoteAddr().String(),
+			),
+		)
+		_ = conn.Close()
+		s.wg.Done()
+		return
+	}
 	connectionID := GenerateConnectionID()
 	logger := s.logger.
 		WithLabel("remoteAddr", addr.IP.String()).
