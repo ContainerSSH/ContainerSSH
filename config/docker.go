@@ -132,7 +132,7 @@ type DockerExecutionConfig struct {
 }
 
 type tmpDockerExecutionConfig struct {
-	Auth            interface{}         `json:"auth" yaml:"auth"`
+	Auth            *registry.AuthConfig         `json:"auth" yaml:"auth"`
 	ContainerConfig interface{}         `json:"container" yaml:"container"`
 	HostConfig      interface{}         `json:"host" yaml:"host"`
 	NetworkConfig   interface{}         `json:"network" yaml:"network"`
@@ -172,6 +172,7 @@ func (d *DockerExecutionConfig) UnmarshalJSON(b []byte) error {
 	d.Subsystems = tmp.Subsystems
 	d.ImagePullPolicy = tmp.ImagePullPolicy
 	d.ExposeAuthMetadataAsEnv = tmp.ExposeAuthMetadataAsEnv
+	d.Auth = tmp.Auth
 	return nil
 }
 
@@ -207,6 +208,7 @@ func (d *DockerExecutionConfig) UnmarshalYAML(unmarshal func(interface{}) error)
 	d.Subsystems = tmp.Subsystems
 	d.ImagePullPolicy = tmp.ImagePullPolicy
 	d.ExposeAuthMetadataAsEnv = tmp.ExposeAuthMetadataAsEnv
+	d.Auth = tmp.Auth
 	return nil
 }
 
