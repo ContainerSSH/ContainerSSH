@@ -11,6 +11,7 @@ import (
 	"os"
 	"regexp"
 	"strings"
+	"text/template"
 	"time"
 
 	"golang.org/x/crypto/ssh"
@@ -33,6 +34,12 @@ type SSHConfig struct {
 	MACs SSHMACList `json:"macs" yaml:"macs" default:"[\"hmac-sha2-256-etm@openssh.com\",\"hmac-sha2-256\"]" comment:"SSHMAC algorithms to use"`
 	// Banner is the banner sent to the client on connecting.
 	Banner string `json:"banner" yaml:"banner" comment:"Host banner to show after the username" default:""`
+	// KeyboardInteractiveName is the name field sent to the client with keyboard-interactive authentication
+	// requests (RFC 4256, SSH_MSG_USERAUTH_INFO_REQUEST). Clients such as OpenSSH display it as a separate line
+	// above the instruction text of each challenge. It is evaluated as a Go text/template with the {{.Username}}
+	// variable available (see SSHKeyboardInteractiveNameData). It defaults to "{{.Username}}", matching the
+	// behavior of previous ContainerSSH versions. Set it to an empty string to send no name at all.
+	KeyboardInteractiveName *string `json:"keyboardInteractiveName" yaml:"keyboardInteractiveName" comment:"Name field sent with keyboard-interactive authentication requests" default:"{{.Username}}"`
 	// HostKeys are the host keys either in PEM format, or filenames to load.
 	HostKeys []string `json:"hostkeys" yaml:"hostkeys" comment:"Host keys in PEM format or files to load PEM host keys from."`
 	// ClientAliveInterval is the duration between keep alive messages that
@@ -120,7 +127,33 @@ func (cfg SSHConfig) Validate() error {
 	if cfg.ClientAliveCountMax <= 0 {
 		return newError("clientAliveCountMax", "clientAliveCountMax should be at least 1")
 	}
+	if cfg.KeyboardInteractiveName != nil {
+		if err := validateKeyboardInteractiveName(*cfg.KeyboardInteractiveName); err != nil {
+			return wrap(err, "keyboardInteractiveName")
+		}
+	}
 	return nil
+}
+
+// SSHKeyboardInteractiveNameData is the data available in the KeyboardInteractiveName template.
+type SSHKeyboardInteractiveNameData struct {
+	// Username is the username the client is authenticating as.
+	Username string
+}
+
+// DefaultKeyboardInteractiveName is the default value for KeyboardInteractiveName, matching the behavior of
+// previous ContainerSSH versions.
+const DefaultKeyboardInteractiveName = "{{.Username}}"
+
+func validateKeyboardInteractiveName(name string) error {
+	if name == "" {
+		return nil
+	}
+	tpl, err := template.New("keyboardInteractiveName").Parse(name)
+	if err != nil {
+		return err
+	}
+	return tpl.Execute(io.Discard, SSHKeyboardInteractiveNameData{})
 }
 
 type stringer interface {
