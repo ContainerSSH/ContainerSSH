@@ -36,7 +36,7 @@ func S3(t *testing.T) S3Helper {
 	m := &minio{
 		cnt: containerFromPull(
 			t,
-			"docker.io/minio/minio",
+			"docker.io/pgsty/minio",
 			[]string{"server", "/data", "--console-address", ":9001"},
 			env,
 			map[string]string{
