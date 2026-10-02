@@ -2,6 +2,7 @@ package auth
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"strings"
 	"time"
@@ -151,10 +152,15 @@ func (o *oidcFlow) getIdentity(
 				m["OIDC_TOKEN"] = metadata.Value{Value: token, Sensitive: true}
 				for field, value := range resp {
 					valueString, ok := value.(string)
-					if ok {
-						m["OIDC_USERINFO_"+strings.ToUpper(field)] = metadata.Value{
-							Value: valueString,
+					if !ok {
+						encodedValue, marshalErr := json.Marshal(value)
+						if marshalErr != nil {
+							continue
 						}
+						valueString = string(encodedValue)
+					}
+					m["OIDC_USERINFO_"+strings.ToUpper(field)] = metadata.Value{
+						Value: valueString,
 					}
 				}
 				return token, meta.Authenticated(usernameString), nil
