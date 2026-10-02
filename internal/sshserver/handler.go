@@ -307,13 +307,6 @@ type SSHConnectionHandler interface {
 		path string,
 	) error
 
-	// OnAuthAgentChannel is called when a channel of the auth-agent@openssh.com type is requested. The implementer must either return
-	//                    the channel result if the channel was successful, or failureReason to state why the channel
-	//                    should be rejected.
-	//
-	// channelID is an ID uniquely identifying the channel within the connection.
-	OnAuthAgentChannel(channelID uint64) (channel ForwardChannel, failureReason ChannelRejection)
-
 	// OnShutdown is called when a shutdown of the SSH server is desired. The shutdownContext is passed as a deadline
 	//            for the shutdown, after which the server should abort all running connections and return as fast as
 	//            possible.

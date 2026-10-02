@@ -124,18 +124,6 @@ func (s *sshConnectionHandler) OnRequestCancelStreamLocal(
 	return s.agentForward.CancelStreamLocalForwarding(path)
 }
 
-func (s *sshConnectionHandler) OnAuthAgentChannel(channelID uint64) (channel sshserver.ForwardChannel, failureReason sshserver.ChannelRejection) {
-	channel, err := s.agentForward.NewForwardUnix(
-		s.setupAgent,
-		s.networkHandler.logger,
-		"/tmp/ssh-agent.sock",
-	)
-	if err != nil {
-		return nil, sshserver.NewChannelRejection(ssh.ConnectionFailed, message.EDockerForwardingFailed, "Error setting up SSH agent forwarding", "Error setting up SSH agent forwarding")
-	}
-	return channel, nil
-}
-
 func (c *sshConnectionHandler) setupAgent() (io.Reader, io.Writer, error) {
 	ctx, cancelFunc := context.WithTimeout(
 		context.Background(),

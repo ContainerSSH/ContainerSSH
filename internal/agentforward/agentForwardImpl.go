@@ -1,9 +1,11 @@
 package agentforward
 
 import (
+	"crypto/rand"
 	"errors"
 	"fmt"
 	"io"
+	"os"
 	"sync"
 
 	protocol "go.containerssh.io/containerssh/agentprotocol"
@@ -18,6 +20,7 @@ type agentForward struct {
 	x11Forward      *protocol.ForwardCtx
 	directForward   *protocol.ForwardCtx
 	agentForward    *protocol.ForwardCtx
+	agentSocketPath string
 	logger          log.Logger
 }
 
@@ -206,22 +209,27 @@ func (f *agentForward) NewAgentForwarding(
 	setupAgentCallback func() (io.Reader, io.Writer, error),
 	logger log.Logger,
 	reverseHandler sshserver.ReverseForward,
-) error {
+) (string, error) {
 	f.lock.Lock()
 	defer f.lock.Unlock()
+	if f.agentSocketPath != "" {
+		return f.agentSocketPath, nil
+	}
 	if f.agentForward != nil {
-		return fmt.Errorf("SSH agent forwarding already setup")
+		return "", fmt.Errorf("SSH agent forwarding already setup")
 	}
 	fromAgent, toAgent, err := setupAgentCallback()
 	if err != nil {
-		return err
+		return "", err
 	}
 	f.agentForward = protocol.NewForwardCtx(fromAgent, toAgent, logger)
 
-	connChan, err := f.agentForward.StartSSHAgentForwardClient("/tmp/ssh-agent.sock")
+	path := fmt.Sprintf("/tmp/ssh-%s/agent.%d", rand.Text()[:8], os.Getpid())
+	connChan, err := f.agentForward.StartSSHAgentForwardClient(path)
 	if err != nil {
-		return err
+		return "", err
 	}
+	f.agentSocketPath = path
 
 	go func() {
 		for {
@@ -256,7 +264,7 @@ func (f *agentForward) NewAgentForwarding(
 			go serveConnection(logger, agentConn, clientChannel)
 		}
 	}()
-	return nil
+	return path, nil
 }
 
 func (f *agentForward) NewTCPReverseForwarding(

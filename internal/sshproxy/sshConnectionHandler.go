@@ -501,38 +501,5 @@ func (s *sshConnectionHandler) OnRequestCancelStreamLocal(
 	return nil
 }
 
-func (s *sshConnectionHandler) OnAuthAgentChannel(channelID uint64) (channel sshserver.ForwardChannel, failureReason sshserver.ChannelRejection) {
-	s.forwardMu.Lock()
-	defer s.forwardMu.Unlock()
-
-	// SSH agent channel has no payload according to RFC 4254
-	backingChannel, req, err := s.sshConn.OpenChannel(sshserver.ChannelTypeAuthAgent, []byte{})
-	if err != nil {
-		realErr := &ssh.OpenChannelError{}
-		if errors.As(err, &realErr) {
-			failureReason = sshserver.NewChannelRejection(
-				realErr.Reason,
-				message.ESSHProxyBackendForwardFailed,
-				realErr.Message,
-				"Backend rejected SSH agent channel with message: %s",
-				realErr.Message,
-			)
-		} else {
-			failureReason = sshserver.NewChannelRejection(
-				ssh.ConnectionFailed,
-				message.ESSHProxyBackendForwardFailed,
-				"Cannot open SSH agent channel.",
-				"Backend rejected SSH agent channel with message: %s",
-				err.Error(),
-			)
-		}
-		s.logger.Debug(failureReason)
-		return nil, failureReason
-	}
-	go s.rejectAllRequests(req)
-
-	return backingChannel, nil
-}
-
 func (s *sshConnectionHandler) OnShutdown(_ context.Context) {
 }

@@ -37,7 +37,7 @@ type AgentForward interface {
 		setupAgentCallback func() (io.Reader, io.Writer, error),
 		logger log.Logger,
 		reverseHandler sshserver.ReverseForward,
-	) error
+	) (string, error)
 
 	// NewTCPReverseForwarding initializes the TCP reverse forwarding mode of the agent
 	//

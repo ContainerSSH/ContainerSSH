@@ -337,10 +337,6 @@ func (s *backendHandler) OnTCPForwardChannel(
 	return nil, sshserver.NewChannelRejection(ssh.Prohibited, message2.ESSHNotImplemented, "Forwarding channel unimplemented", "Forwarding channel unimplemented")
 }
 
-func (s *backendHandler) OnAuthAgentChannel(channelID uint64) (channel sshserver.ForwardChannel, failureReason sshserver.ChannelRejection) {
-	return nil, sshserver.NewChannelRejection(ssh.Prohibited, message2.ESSHNotImplemented, "SSH agent channel unimplemented in test backend", "SSH agent channel unimplemented in test backend")
-}
-
 func (s *backendHandler) OnRequestTCPReverseForward(
 	bindHost string,
 	bindPort uint32,

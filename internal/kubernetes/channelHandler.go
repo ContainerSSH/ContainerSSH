@@ -363,9 +363,8 @@ func (c *channelHandler) OnAuthAgentRequest(
 	reverseHandler sshserver.ReverseForward,
 ) error {
 	c.networkHandler.logger.Debug(message.NewMessage(message.MSSHAgentForwardingSetup, "Setting up SSH agent forwarding"))
-	c.env["SSH_AUTH_SOCK"] = "/tmp/ssh-agent.sock"
 
-	err := c.connectionHandler.agentForward.NewAgentForwarding(
+	path, err := c.connectionHandler.agentForward.NewAgentForwarding(
 		c.connectionHandler.setupAgent,
 		c.networkHandler.logger,
 		reverseHandler,
@@ -373,6 +372,7 @@ func (c *channelHandler) OnAuthAgentRequest(
 	if err != nil {
 		return fmt.Errorf("failed to setup SSH agent forwarding: %w", err)
 	}
+	c.env["SSH_AUTH_SOCK"] = path
 
 	return nil
 }

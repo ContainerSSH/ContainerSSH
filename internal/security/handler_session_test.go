@@ -9,6 +9,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"go.containerssh.io/containerssh/config"
 	"go.containerssh.io/containerssh/internal/sshserver"
+	"go.containerssh.io/containerssh/internal/structutils"
 	"go.containerssh.io/containerssh/log"
 )
 
@@ -180,6 +181,23 @@ func TestSubsystem(t *testing.T) {
 	assert.Equal(t, map[string]string{"SSH_ORIGINAL_COMMAND": "sftp"}, backend.env)
 }
 
+func TestAuthAgentRequest(t *testing.T) {
+	session := &sessionHandler{
+		config:  config.SecurityConfig{},
+		backend: &dummyBackend{},
+		sshConnection: &sshConnectionHandler{
+			lock: &sync.Mutex{},
+		},
+		logger: log.NewTestLogger(t),
+	}
+	structutils.Defaults(&session.config)
+
+	assert.Error(t, session.OnAuthAgentRequest(1, nil))
+
+	session.config.Forwarding.SSHAgentForwardingMode = config.ExecutionPolicyEnable
+	assert.NoError(t, session.OnAuthAgentRequest(2, nil))
+}
+
 // region Dummy backend
 type dummyBackend struct {
 	exit             chan struct{}
@@ -280,7 +298,7 @@ func (s *dummyBackend) OnX11Request(
 }
 
 func (s *dummyBackend) OnAuthAgentRequest(requestID uint64, reverseHandler sshserver.ReverseForward) error {
-	return fmt.Errorf("Unimplemented")
+	return nil
 }
 
 // endregion

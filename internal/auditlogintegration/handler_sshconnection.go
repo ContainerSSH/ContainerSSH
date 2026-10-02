@@ -136,18 +136,6 @@ func (s *sshConnectionHandler) OnRequestCancelStreamLocal(
 	return s.backend.OnRequestCancelStreamLocal(path)
 }
 
-func (s *sshConnectionHandler) OnAuthAgentChannel(channelID uint64) (channel sshserver.ForwardChannel, failureReason sshserver.ChannelRejection) {
-	s.audit.OnReverseAuthAgentChannel(message.MakeChannelID(channelID))
-
-	backend, err := s.backend.OnAuthAgentChannel(channelID)
-	if err != nil {
-		return nil, err
-	}
-	auditChannel := s.audit.OnNewChannelSuccess(message.MakeChannelID(channelID), sshserver.ChannelTypeAuthAgent)
-	forwardProxy := auditChannel.GetForwardingProxy(backend)
-	return forwardProxy, nil
-}
-
 type reverseHandlerProxy struct {
 	backend           sshserver.ReverseForward
 	connectionHandler *sshConnectionHandler
