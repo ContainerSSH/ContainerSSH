@@ -182,6 +182,7 @@ const (
 	ChannelTypeX11                  string = "x11"
 	ChannelTypeDirectStreamLocal    string = "direct-streamlocal@openssh.com"
 	ChannelTypeForwardedStreamLocal string = "forwarded-streamlocal@openssh.com"
+	ChannelTypeAuthAgent            string = "auth-agent@openssh.com"
 )
 
 // ReverseForward contains a set of callbacks for backends to request the opening of a new channel
@@ -202,6 +203,8 @@ type ReverseForward interface {
 	// originatorAddress is the address that initiated the X11 request
 	// originatorPort is the port that originated the X11 request
 	NewChannelX11(originatorAddress string, originatorPort uint32) (ForwardChannel, uint64, error)
+	// NewChannelAuthAgent requests the opening of an SSH agent forwarding channel
+	NewChannelAuthAgent() (ForwardChannel, uint64, error)
 }
 
 // ForwardChannel represents a network forwarding channel
@@ -390,6 +393,16 @@ type SessionChannelHandler interface {
 		protocol string,
 		cookie string,
 		screen uint32,
+		reverseHandler ReverseForward,
+	) error
+
+	// OnAuthAgentRequest is called when the client requests SSH agent forwarding to be enabled.
+	// This method may be called after a program is started. The implementation can return an error to reject the request.
+	//
+	// requestID is an incrementing number uniquely identifying the request within the channel.
+	// reverseHandler is a set of callbacks to signal new connections
+	OnAuthAgentRequest(
+		requestID uint64,
 		reverseHandler ReverseForward,
 	) error
 

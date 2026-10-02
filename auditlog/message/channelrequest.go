@@ -100,7 +100,7 @@ func (p PayloadChannelRequestPty) Equals(other Payload) bool {
 }
 
 type PayloadChannelRequestX11 struct {
-	RequestID        uint64 `json:"requestId" yaml:"requestId"`
+	RequestID uint64 `json:"requestId" yaml:"requestId"`
 
 	SingleConnection bool   `json:"singleConnection" yaml:"singleConnection"`
 	AuthProtocol     string `json:"authProtocol" yaml:"authProtocol"`
@@ -180,6 +180,17 @@ func (p PayloadChannelRequestWindow) Equals(other Payload) bool {
 	}
 	return p.RequestID == p2.RequestID && p.Columns == p2.Columns && p.Rows == p2.Rows && p.Width == p2.Width &&
 		p.Height == p2.Height
+}
+
+// PayloadChannelRequestAuthAgent is a payload signaling a request for SSH agent forwarding.
+type PayloadChannelRequestAuthAgent struct {
+	RequestID uint64 `json:"requestId" yaml:"requestId"`
+}
+
+// Equals compares two PayloadChannelRequestAuthAgent payloads.
+func (p PayloadChannelRequestAuthAgent) Equals(other Payload) bool {
+	p2, ok := other.(PayloadChannelRequestAuthAgent)
+	return ok && p.RequestID == p2.RequestID
 }
 
 // PayloadExit is the payload for a message that is sent when a program exits.

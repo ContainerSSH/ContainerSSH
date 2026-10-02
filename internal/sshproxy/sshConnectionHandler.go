@@ -6,11 +6,11 @@ import (
 	"io"
 	"sync"
 
-    ssh2 "go.containerssh.io/containerssh/internal/ssh"
-    "go.containerssh.io/containerssh/internal/sshserver"
-    "go.containerssh.io/containerssh/log"
-    "go.containerssh.io/containerssh/message"
-    "go.containerssh.io/containerssh/metadata"
+	ssh2 "go.containerssh.io/containerssh/internal/ssh"
+	"go.containerssh.io/containerssh/internal/sshserver"
+	"go.containerssh.io/containerssh/log"
+	"go.containerssh.io/containerssh/message"
+	"go.containerssh.io/containerssh/metadata"
 	"golang.org/x/crypto/ssh"
 )
 
@@ -51,6 +51,8 @@ func (s *sshConnectionHandler) handleChannels(newChannels <-chan ssh.NewChannel)
 			s.handleStreamLocalChannel(newChannel)
 		case "forwarded-tcpip":
 			s.handleReverseForwardChannel(newChannel)
+		case "auth-agent@openssh.com":
+			s.handleAuthAgentChannel(newChannel)
 		default:
 			_ = newChannel.Reject(ssh.Prohibited, "Unsupported channel type")
 		}
@@ -72,7 +74,7 @@ func (s *sshConnectionHandler) rejectAllRequests(req <-chan *ssh.Request) {
 func (s *sshConnectionHandler) handleForward(closer *sync.Once, reader io.ReadCloser, writer io.WriteCloser) {
 	_, _ = io.Copy(writer, reader)
 	closer.Do(func() {
-		s.logger.Debug("Closing forward channel")
+		s.logger.Debug(message.NewMessage(message.MSSHForwardChannelClosing, "Closing forward channel"))
 		_ = writer.Close()
 		_ = reader.Close()
 	})
@@ -182,6 +184,44 @@ func (s *sshConnectionHandler) handleX11Channel(newChannel ssh.NewChannel) {
 			err,
 			message.ESSHProxyBackendForwardFailed,
 			"Failed to accept X11 channel from server",
+		)
+		s.logger.Info(m)
+	}
+	go s.rejectAllRequests(req)
+	once := sync.Once{}
+
+	go s.handleForward(&once, serverChannel, clientChannel)
+	go s.handleForward(&once, clientChannel, serverChannel)
+}
+
+func (s *sshConnectionHandler) handleAuthAgentChannel(newChannel ssh.NewChannel) {
+	var payload ssh2.AuthAgentChannelOpenPayload
+	err := ssh.Unmarshal(newChannel.ExtraData(), &payload)
+	if err != nil {
+		m := message.Wrap(
+			err,
+			message.ESSHProxyPayloadUnmarshalFailed,
+			"Failed to open new auth-agent channel",
+		)
+		s.logger.Warning(m)
+	}
+	s.forwardMu.Lock()
+	defer s.forwardMu.Unlock()
+	clientChannel, _, err := s.reverseHandler.NewChannelAuthAgent()
+	if err != nil {
+		m := message.Wrap(
+			err,
+			message.ESSHProxyBackendForwardFailed,
+			"Failed to open auth-agent channel to the client",
+		)
+		s.logger.Info(m)
+	}
+	serverChannel, req, err := newChannel.Accept()
+	if err != nil {
+		m := message.Wrap(
+			err,
+			message.ESSHProxyBackendForwardFailed,
+			"Failed to accept auth-agent channel from server",
 		)
 		s.logger.Info(m)
 	}

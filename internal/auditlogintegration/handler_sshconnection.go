@@ -4,10 +4,10 @@ import (
 	"context"
 	"io"
 
-    "go.containerssh.io/containerssh/auditlog/message"
-    "go.containerssh.io/containerssh/internal/auditlog"
-    "go.containerssh.io/containerssh/internal/sshserver"
-    "go.containerssh.io/containerssh/metadata"
+	"go.containerssh.io/containerssh/auditlog/message"
+	"go.containerssh.io/containerssh/internal/auditlog"
+	"go.containerssh.io/containerssh/internal/sshserver"
+	"go.containerssh.io/containerssh/metadata"
 )
 
 type sshConnectionHandler struct {
@@ -172,6 +172,18 @@ func (r *reverseHandlerProxy) NewChannelX11(originatorAddress string, originator
 	}
 
 	r.connectionHandler.audit.OnReverseX11ForwardChannel(message.MakeChannelID(id), originatorAddress, originatorPort)
+	auditChannel := r.connectionHandler.audit.OnNewChannelSuccess(message.MakeChannelID(id), r.channelType)
+	forwardProxy := auditChannel.GetForwardingProxy(channel)
+	return forwardProxy, id, nil
+}
+
+func (r *reverseHandlerProxy) NewChannelAuthAgent() (sshserver.ForwardChannel, uint64, error) {
+	channel, id, err := r.backend.NewChannelAuthAgent()
+	if err != nil {
+		return nil, 0, err
+	}
+
+	r.connectionHandler.audit.OnReverseAuthAgentChannel(message.MakeChannelID(id))
 	auditChannel := r.connectionHandler.audit.OnNewChannelSuccess(message.MakeChannelID(id), r.channelType)
 	forwardProxy := auditChannel.GetForwardingProxy(channel)
 	return forwardProxy, id, nil
