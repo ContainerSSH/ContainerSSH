@@ -134,7 +134,7 @@ func (m *minio) startMinio(t *testing.T, accessKey string, secretKey string) err
 		return err
 	}
 
-	reader, err := cli.ImagePull(ctx, "docker.io/minio/minio", image.PullOptions{})
+	reader, err := cli.ImagePull(ctx, "docker.io/pgsty/minio", image.PullOptions{})
 	if err != nil {
 		assert.Fail(t, "failed to pull Minio image (%v)", err)
 		return err
@@ -152,7 +152,7 @@ func (m *minio) startMinio(t *testing.T, accessKey string, secretKey string) err
 	resp, err := cli.ContainerCreate(
 		ctx,
 		&container.Config{
-			Image: "minio/minio",
+			Image: "pgsty/minio",
 			Cmd:   []string{"server", "/testdata"},
 			Env:   env,
 		},
