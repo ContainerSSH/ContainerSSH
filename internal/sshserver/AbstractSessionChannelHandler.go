@@ -155,7 +155,7 @@ func (a *AbstractSessionChannelHandler) OnWindow(
 // cookie is the authentication cookie for the X11 connections
 // screen is the X11 screen number
 // reverseHandler is a callback interface to signal when new connections are made
-func (s *AbstractSessionChannelHandler) OnX11Request(
+func (a *AbstractSessionChannelHandler) OnX11Request(
 
 	requestID uint64,
 	singleConnection bool,
@@ -172,7 +172,7 @@ func (s *AbstractSessionChannelHandler) OnX11Request(
 //
 // requestID is an incrementing number uniquely identifying the request within the channel.
 // reverseHandler is a set of callbacks to signal new connections
-func (s *AbstractSessionChannelHandler) OnAuthAgentRequest(
+func (a *AbstractSessionChannelHandler) OnAuthAgentRequest(
 	requestID uint64,
 	reverseHandler ReverseForward,
 ) error {

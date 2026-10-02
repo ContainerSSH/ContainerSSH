@@ -1,16 +1,16 @@
 package agentprotocol
 
 const (
-	CONNECTION_TYPE_X11            = iota
-	CONNECTION_TYPE_PORT_FORWARD   = iota
-	CONNECTION_TYPE_PORT_DIAL      = iota
+	CONNECTION_TYPE_X11 = iota
+	CONNECTION_TYPE_PORT_FORWARD = iota
+	CONNECTION_TYPE_PORT_DIAL = iota
 	CONNECTION_TYPE_SOCKET_FORWARD = iota
-	CONNECTION_TYPE_SOCKET_DIAL    = iota
-	CONNECTION_TYPE_SSH_AGENT      = iota
+	CONNECTION_TYPE_SOCKET_DIAL = iota
+	CONNECTION_TYPE_SSH_AGENT = iota //nolint:staticcheck
 )
 
 const (
-	PROTOCOL_TCP  string = "tcp"
+	PROTOCOL_TCP string = "tcp"
 	PROTOCOL_UNIX string = "unix"
 )
 

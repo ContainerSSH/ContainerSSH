@@ -51,7 +51,7 @@ func (s *sshConnectionHandler) handleChannels(newChannels <-chan ssh.NewChannel)
 			s.handleStreamLocalChannel(newChannel)
 		case "forwarded-tcpip":
 			s.handleReverseForwardChannel(newChannel)
-		case "auth-agent-req@openssh.com":
+		case "auth-agent@openssh.com":
 			s.handleAuthAgentChannel(newChannel)
 		default:
 			_ = newChannel.Reject(ssh.Prohibited, "Unsupported channel type")

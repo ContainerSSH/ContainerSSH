@@ -286,7 +286,7 @@ func (d *dummyBackend) OnWindow(_ uint64, _ uint32, _ uint32, _ uint32, _ uint32
 	return nil
 }
 
-func (s *dummyBackend) OnX11Request(
+func (d *dummyBackend) OnX11Request(
 	requestID uint64,
 	singleConnection bool,
 	protocol string,
@@ -297,7 +297,7 @@ func (s *dummyBackend) OnX11Request(
 	return fmt.Errorf("Unimplemented")
 }
 
-func (s *dummyBackend) OnAuthAgentRequest(requestID uint64, reverseHandler sshserver.ReverseForward) error {
+func (d *dummyBackend) OnAuthAgentRequest(requestID uint64, reverseHandler sshserver.ReverseForward) error {
 	return nil
 }
 

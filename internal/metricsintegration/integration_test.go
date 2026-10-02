@@ -372,7 +372,7 @@ func (d *dummySession) OnWindow(
 	return fmt.Errorf("window changes are not supported")
 }
 
-func (s *dummySession) OnX11Request(
+func (d *dummySession) OnX11Request(
 	requestID uint64,
 	singleConnection bool,
 	protocol string,
@@ -383,6 +383,6 @@ func (s *dummySession) OnX11Request(
 	return fmt.Errorf("Unimplemented")
 }
 
-func (s *dummySession) OnAuthAgentRequest(requestID uint64, reverseHandler sshserver.ReverseForward) error {
+func (d *dummySession) OnAuthAgentRequest(requestID uint64, reverseHandler sshserver.ReverseForward) error {
 	return fmt.Errorf("Agent forwarding not supported")
 }
