@@ -9,6 +9,7 @@ import (
 	"net"
 	"strings"
 	"sync"
+	"text/template"
 	"time"
 
 	protocol "go.containerssh.io/containerssh/agentprotocol"
@@ -39,6 +40,7 @@ type serverImpl struct {
 	nextGlobalRequestID uint64
 	nextChannelID       uint64
 	hostKeys            []ssh.Signer
+	kbiNameTemplate     *template.Template
 	shutdownHandlers    *shutdownRegistry
 	shuttingDown        bool
 }
@@ -304,8 +306,13 @@ func (s *serverImpl) createKeyboardInteractiveHandler(
 				echos = append(echos, question.EchoResponse)
 			}
 
-			// user, instruction string, questions []string, echos []bool
-			answerList, err := challenge(conn.User(), instruction, q, echos)
+			name, err := s.renderKeyboardInteractiveName(conn.User())
+			if err != nil {
+				return answers, err
+			}
+
+			// name, instruction string, questions []string, echos []bool
+			answerList, err := challenge(name, instruction, q, echos)
 			for index, rawAnswer := range answerList {
 				question := questions[index]
 				answers.answers[question.getID()] = rawAnswer
@@ -330,6 +337,26 @@ func (s *serverImpl) createKeyboardInteractiveHandler(
 		}
 		return nil, authenticatedMetadata, fmt.Errorf("authentication currently unavailable")
 	}
+}
+
+// renderKeyboardInteractiveName renders the configured KeyboardInteractiveName template for the given username. If
+// no template is configured it returns an empty string, meaning no name is sent to the client.
+func (s *serverImpl) renderKeyboardInteractiveName(username string) (string, error) {
+	if s.kbiNameTemplate == nil {
+		return "", nil
+	}
+	name := &strings.Builder{}
+	if err := s.kbiNameTemplate.Execute(name, config.SSHKeyboardInteractiveNameData{
+		Username: username,
+	}); err != nil {
+		return "", messageCodes.WrapUser(
+			err,
+			messageCodes.EAuthConfigError,
+			"Authentication failed.",
+			"Failed to render the keyboardInteractiveName template.",
+		)
+	}
+	return name.String(), nil
 }
 
 func (s *serverImpl) createConfiguration(
