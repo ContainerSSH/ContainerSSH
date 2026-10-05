@@ -51,6 +51,18 @@ func (n *networkHandler) OnAuthPubKey(meta metadata.ConnectionAuthPendingMetadat
 	return n.backend.OnAuthPubKey(meta, pubKey)
 }
 
+func (n *networkHandler) NoneAuthEnabled() bool {
+	return n.backend.NoneAuthEnabled()
+}
+
+func (n *networkHandler) OnAuthNone(meta metadata.ConnectionAuthPendingMetadata) (
+	response sshserver.AuthResponse,
+	metadata metadata.ConnectionAuthenticatedMetadata,
+	reason error,
+) {
+	return n.backend.OnAuthNone(meta)
+}
+
 func (n *networkHandler) OnAuthGSSAPI(meta metadata.ConnectionMetadata) auth.GSSAPIServer {
 	return n.backend.OnAuthGSSAPI(meta)
 }

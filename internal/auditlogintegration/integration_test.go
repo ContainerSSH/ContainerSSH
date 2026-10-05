@@ -387,6 +387,18 @@ func (b *backendHandler) OnAuthPubKey(meta metadata.ConnectionAuthPendingMetadat
 	return sshserver.AuthResponseFailure, meta.AuthFailed(), nil
 }
 
+func (b *backendHandler) NoneAuthEnabled() bool {
+	return false
+}
+
+func (b *backendHandler) OnAuthNone(meta metadata.ConnectionAuthPendingMetadata) (
+	response sshserver.AuthResponse,
+	metadata metadata.ConnectionAuthenticatedMetadata,
+	reason error,
+) {
+	return sshserver.AuthResponseFailure, meta.AuthFailed(), nil
+}
+
 func (b *backendHandler) OnAuthGSSAPI(_ metadata.ConnectionMetadata) auth.GSSAPIServer {
 	return nil
 }
