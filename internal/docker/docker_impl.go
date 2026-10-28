@@ -14,11 +14,11 @@ import (
 	"sync"
 	"time"
 
+	"github.com/containerd/errdefs"
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/api/types/image"
 	"github.com/docker/docker/client"
-	"github.com/containerd/errdefs"
 	"github.com/docker/docker/pkg/stdcopy"
 	"go.containerssh.io/containerssh/config"
 	"go.containerssh.io/containerssh/internal/metrics"
@@ -460,6 +460,12 @@ func (d *dockerV20Container) remove(ctx context.Context) error {
 	d.shuttingDown = true
 	d.lock.Unlock()
 	d.wg.Wait()
+
+	cleanupCtx, cancel := context.WithTimeout(
+		context.Background(),
+		d.config.Timeouts.ContainerStop,
+	)
+	defer cancel()
 	d.lock.Lock()
 	d.shutdown = true
 	d.lock.Unlock()
@@ -469,7 +475,7 @@ func (d *dockerV20Container) remove(ctx context.Context) error {
 loop:
 	for {
 		d.backendRequestsMetric.Increment()
-		_, lastError = d.dockerClient.ContainerInspect(ctx, d.containerID)
+		_, lastError = d.dockerClient.ContainerInspect(cleanupCtx, d.containerID)
 		if lastError != nil && client.IsErrNotFound(lastError) {
 			return nil
 		}
@@ -477,7 +483,7 @@ loop:
 		if lastError == nil {
 			d.backendRequestsMetric.Increment()
 			lastError = d.dockerClient.ContainerRemove(
-				ctx, d.containerID, container.RemoveOptions{
+				cleanupCtx, d.containerID, container.RemoveOptions{
 					Force: true,
 				},
 			)
@@ -494,7 +500,7 @@ loop:
 				"failed to remove container on disconnect, retrying in 10 seconds",
 			))
 		select {
-		case <-ctx.Done():
+		case <-cleanupCtx.Done():
 			break loop
 		case <-time.After(10 * time.Second):
 		}
@@ -1195,7 +1201,7 @@ loop:
 				ctx,
 				d.container.containerID,
 				container.StopOptions{
-					Signal: "SIGTERM",
+					Signal:  "SIGTERM",
 					Timeout: &stopTimeout,
 				})
 			if lastError == nil {
