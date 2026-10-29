@@ -783,7 +783,7 @@ func (s *serverImpl) handleGlobalRequests(
 		case "keepalive@openssh.com":
 			s.handleKeepAliveRequest(request, logger)
 		default:
-			logger.Debug("Handling global request %s", request.Type)
+			logger.Debug(messageCodes.NewMessage(messageCodes.MSSHGlobalRequestHandling, "Handling global request %s", request.Type))
 			s.handleGlobalRequest(authenticatedMetadata, requestID, connection, request, logger)
 		}
 	}
@@ -821,7 +821,7 @@ func (s *serverImpl) handleChannels(
 			)
 			connection.OnUnsupportedChannel(channelID, newChannel.ChannelType(), newChannel.ExtraData())
 			if err := newChannel.Reject(ssh.UnknownChannelType, "unsupported channel type"); err != nil {
-				logger.Debug("failed to send channel rejection for channel type %s", newChannel.ChannelType())
+				logger.Debug(messageCodes.Wrap(err, messageCodes.ESSHChannelRejectionFailed, "failed to send channel rejection for channel type %s", newChannel.ChannelType()))
 			}
 			continue
 		}
@@ -1047,12 +1047,19 @@ func (s *serverImpl) unmarshalTCPIPForward(request *ssh.Request) (payload ssh2.F
 }
 
 func (s *serverImpl) unmarshalStreamLocalForward(request *ssh.Request) (payload ssh2.StreamLocalForwardRequestPayload, err error) {
-	s.logger.Debug("Unmarshalling streamlocal: %+v", request.Payload)
+	s.logger.Debug(messageCodes.NewMessage(messageCodes.MSSHStreamLocalUnmarshalling, "Unmarshalling streamlocal: %+v", request.Payload))
 	return payload, ssh.Unmarshal(request.Payload, &payload)
 }
 
 func (s *serverImpl) unmarshalX11(request *ssh.Request) (payload ssh2.X11RequestPayload, err error) {
 	return payload, ssh.Unmarshal(request.Payload, &payload)
+}
+
+func (s *serverImpl) unmarshalAuthAgent(request *ssh.Request) (payload ssh2.AuthAgentRequestPayload, err error) {
+	if len(request.Payload) != 0 {
+		err = ssh.Unmarshal(request.Payload, &payload)
+	}
+	return payload, err
 }
 
 func (s *serverImpl) unmarshalChannelRequestPayload(request *ssh.Request) (payload interface{}, err error) {
@@ -1073,6 +1080,8 @@ func (s *serverImpl) unmarshalChannelRequestPayload(request *ssh.Request) (paylo
 		return s.unmarshalSignal(request)
 	case ssh2.RequestTypeX11:
 		return s.unmarshalX11(request)
+	case ssh2.RequestTypeAuthAgent:
+		return s.unmarshalAuthAgent(request)
 	default:
 		return nil, nil
 	}
@@ -1203,6 +1212,8 @@ func (s *serverImpl) handleDecodedChannelRequest(
 		return s.onSignal(requestID, sessionChannel, payload)
 	case ssh2.RequestTypeX11:
 		return s.onX11(channelMetadata.Connection.ConnectionID, requestID, sessionChannel, payload)
+	case ssh2.RequestTypeAuthAgent:
+		return s.onAuthAgent(channelMetadata.Connection.ConnectionID, requestID, sessionChannel, payload)
 	}
 	return nil
 }
@@ -1313,7 +1324,7 @@ func (s *serverImpl) onCancelForwardStreamLocal(authenticatedMetadata metadata.C
 
 func (s *serverImpl) onX11(connectionID string, requestID uint64, sessionChannel SessionChannelHandler, payload interface{}) error {
 	x11 := payload.(ssh2.X11RequestPayload)
-	s.logger.Debug("onX11: Handling X11 %+v", x11)
+	s.logger.Debug(messageCodes.NewMessage(messageCodes.MSSHX11Handling, "onX11: Handling X11 %+v", x11))
 
 	s.lock.Lock()
 	defer s.lock.Unlock()
@@ -1330,6 +1341,29 @@ func (s *serverImpl) onX11(connectionID string, requestID uint64, sessionChannel
 	err := sessionChannel.OnX11Request(requestID, x11.SingleConnection, x11.Protocol, x11.Cookie, x11.Screen, &reverseForwardHandler)
 	if err != nil {
 		s.logger.Warning("Failed to start X11 forwarding %+v", err)
+	}
+	return err
+}
+
+func (s *serverImpl) onAuthAgent(connectionID string, requestID uint64, sessionChannel SessionChannelHandler, payload interface{}) error {
+	s.logger.Debug(messageCodes.NewMessage(messageCodes.MSSHAgentForwardingRequest, "Handling SSH agent forwarding request"))
+
+	s.lock.Lock()
+	defer s.lock.Unlock()
+	conn, ok := s.connMap[connectionID]
+	if !ok {
+		return fmt.Errorf("couldn't find connection in map for SSH agent forwarding")
+	}
+
+	reverseForwardHandler := ReverseForwardHandler{
+		sshConn: conn.sshConn,
+		server:  s,
+		logger:  s.logger,
+	}
+
+	err := sessionChannel.OnAuthAgentRequest(requestID, &reverseForwardHandler)
+	if err != nil {
+		s.logger.Warning("Failed to start SSH agent forwarding %+v", err)
 	}
 	return err
 }

@@ -462,6 +462,32 @@ func TestTypeChannelRequestWindow(t *testing.T) {
 	testPipeline(t, msg)
 }
 
+func TestTypeChannelRequestAuthAgent(t *testing.T) {
+	msg := message.Message{
+		ConnectionID: "0123456789ABCDEF",
+		Timestamp:    1234,
+		MessageType:  message.TypeChannelRequestAuthAgent,
+		Payload: message.PayloadChannelRequestAuthAgent{
+			RequestID: 1,
+		},
+		ChannelID: message.MakeChannelID(0),
+	}
+
+	testPipeline(t, msg)
+}
+
+func TestTypeNewReverseAuthAgentChannel(t *testing.T) {
+	msg := message.Message{
+		ConnectionID: "0123456789ABCDEF",
+		Timestamp:    1234,
+		MessageType:  message.TypeNewReverseAuthAgentChannel,
+		Payload:      nil,
+		ChannelID:    message.MakeChannelID(0),
+	}
+
+	testPipeline(t, msg)
+}
+
 func TestTypeChannelExitSignal(t *testing.T) {
 	msg := message.Message{
 		ConnectionID: "0123456789ABCDEF",

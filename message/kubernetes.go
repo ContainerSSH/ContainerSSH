@@ -123,3 +123,6 @@ const MKubernetesAgentLog = "KUBERNETES_AGENT_LOG"
 
 // EKubernetesPodNotFound indicates that the ContainerSSH Kubernetes backend could not find the pod with the given name
 const EKubernetesPodNotFound = "KUBERNETES_POD_NOT_FOUND"
+
+// MSSHX11Setup indicates that X11 environment variables are being set up
+const MSSHX11Setup = "SSH_X11_SETUP"

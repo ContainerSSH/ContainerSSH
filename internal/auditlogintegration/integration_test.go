@@ -294,7 +294,7 @@ func (b *backendHandler) OnWindow(_ uint64, _ uint32, _ uint32, _ uint32, _ uint
 	return fmt.Errorf("window requests are not supported")
 }
 
-func (s *backendHandler) OnX11Request(
+func (b *backendHandler) OnX11Request(
 	requestID uint64,
 	singleConnection bool,
 	protocol string,
@@ -303,6 +303,10 @@ func (s *backendHandler) OnX11Request(
 	reverseHandler sshserver.ReverseForward,
 ) error {
 	return fmt.Errorf("Unimplemented")
+}
+
+func (b *backendHandler) OnAuthAgentRequest(requestID uint64, reverseHandler sshserver.ReverseForward) error {
+	return fmt.Errorf("Agent forwarding not supported")
 }
 
 func (b *backendHandler) OnUnsupportedGlobalRequest(_ uint64, _ string, _ []byte) {
@@ -323,7 +327,7 @@ func (b *backendHandler) OnSessionChannel(_ metadata.ChannelMetadata, _ []byte, 
 	return b, nil
 }
 
-func (s *backendHandler) OnTCPForwardChannel(
+func (b *backendHandler) OnTCPForwardChannel(
 	channelID uint64,
 	hostToConnect string,
 	portToConnect uint32,
@@ -333,7 +337,7 @@ func (s *backendHandler) OnTCPForwardChannel(
 	return nil, sshserver.NewChannelRejection(ssh.Prohibited, message2.ESSHNotImplemented, "Forwarding channel unimplemented", "Forwarding channel unimplemented")
 }
 
-func (s *backendHandler) OnRequestTCPReverseForward(
+func (b *backendHandler) OnRequestTCPReverseForward(
 	bindHost string,
 	bindPort uint32,
 	reverseHandler sshserver.ReverseForward,
@@ -341,28 +345,28 @@ func (s *backendHandler) OnRequestTCPReverseForward(
 	return fmt.Errorf("Unimplemented")
 }
 
-func (s *backendHandler) OnRequestCancelTCPReverseForward(
+func (b *backendHandler) OnRequestCancelTCPReverseForward(
 	bindHost string,
 	bindPort uint32,
 ) error {
 	return fmt.Errorf("Unimplemented")
 }
 
-func (s *backendHandler) OnDirectStreamLocal(
+func (b *backendHandler) OnDirectStreamLocal(
 	channelID uint64,
 	path string,
 ) (channel sshserver.ForwardChannel, failureReason sshserver.ChannelRejection) {
 	return nil, sshserver.NewChannelRejection(ssh.Prohibited, message2.ESSHNotImplemented, "Streamlocal Forwarding unimplemented", "Streamlocal Forwarding unimplemented")
 }
 
-func (s *backendHandler) OnRequestStreamLocal(
+func (b *backendHandler) OnRequestStreamLocal(
 	path string,
 	reverseHandler sshserver.ReverseForward,
 ) error {
 	return fmt.Errorf("Unimplemented")
 }
 
-func (s *backendHandler) OnRequestCancelStreamLocal(
+func (b *backendHandler) OnRequestCancelStreamLocal(
 	path string,
 ) error {
 	return fmt.Errorf("Unimplemented")
