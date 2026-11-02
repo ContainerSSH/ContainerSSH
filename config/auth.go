@@ -3,9 +3,11 @@ package config
 import (
 	"encoding/json"
 	"fmt"
+	"io"
 	"net/url"
 	"os"
 	"path"
+	"text/template"
 	"time"
 )
 
@@ -456,6 +458,16 @@ type AuthOAuth2ClientConfig struct {
 	// questions.
 	DeviceFlowClients []string `json:"deviceFlowClients" yaml:"deviceFlowClients"`
 
+	// DeviceFlowPrompt is the message shown to the connecting user when the device authorization flow is used. It
+	// is evaluated as a Go text/template with the {{.AuthorizationURL}} and {{.UserCode}} variables available (see
+	// OAuth2DeviceFlowPromptData). If left empty, DefaultDeviceFlowPrompt is used.
+	DeviceFlowPrompt string `json:"deviceFlowPrompt" yaml:"deviceFlowPrompt"`
+
+	// AuthorizationCodeFlowPrompt is the message shown to the connecting user when the authorization code flow is
+	// used. It is evaluated as a Go text/template with the {{.AuthorizationURL}} variable available (see
+	// OAuth2AuthorizationCodeFlowPromptData). If left empty, DefaultAuthorizationCodeFlowPrompt is used.
+	AuthorizationCodeFlowPrompt string `json:"authorizationCodeFlowPrompt" yaml:"authorizationCodeFlowPrompt"`
+
 	// AuthTimeout is the timeout for the overall authentication call. If the server
 	// responds with a non-200 response the call will be retried until this timeout is reached.
 	AuthTimeout time.Duration `json:"authTimeout" yaml:"authTimeout" default:"120s"`
@@ -493,7 +505,48 @@ func (o *AuthOAuth2ClientConfig) Validate() error {
 		}
 	}
 
+	if err := validateOAuth2Prompt(o.DeviceFlowPrompt, OAuth2DeviceFlowPromptData{}); err != nil {
+		return wrap(err, "deviceFlowPrompt")
+	}
+	if err := validateOAuth2Prompt(o.AuthorizationCodeFlowPrompt, OAuth2AuthorizationCodeFlowPromptData{}); err != nil {
+		return wrap(err, "authorizationCodeFlowPrompt")
+	}
+
 	return nil
+}
+
+const (
+	// DefaultDeviceFlowPrompt is the default message template shown to the user during the device authorization
+	// flow when AuthOAuth2ClientConfig.DeviceFlowPrompt is not set.
+	DefaultDeviceFlowPrompt = "Please click the following link: {{.AuthorizationURL}}\n\nEnter the following code: {{.UserCode}}\n"
+	// DefaultAuthorizationCodeFlowPrompt is the default message template shown to the user during the
+	// authorization code flow when AuthOAuth2ClientConfig.AuthorizationCodeFlowPrompt is not set.
+	DefaultAuthorizationCodeFlowPrompt = "Please click the following link to log in: {{.AuthorizationURL}}\n\n"
+)
+
+// OAuth2DeviceFlowPromptData is the data available in the DeviceFlowPrompt template.
+type OAuth2DeviceFlowPromptData struct {
+	// AuthorizationURL is the URL the user needs to open to authorize the connection.
+	AuthorizationURL string
+	// UserCode is the code the user needs to enter on the authorization page.
+	UserCode string
+}
+
+// OAuth2AuthorizationCodeFlowPromptData is the data available in the AuthorizationCodeFlowPrompt template.
+type OAuth2AuthorizationCodeFlowPromptData struct {
+	// AuthorizationURL is the URL the user needs to open to log in.
+	AuthorizationURL string
+}
+
+func validateOAuth2Prompt(prompt string, data interface{}) error {
+	if prompt == "" {
+		return nil
+	}
+	tpl, err := template.New("prompt").Parse(prompt)
+	if err != nil {
+		return err
+	}
+	return tpl.Execute(io.Discard, data)
 }
 
 // OAuth2ProviderName provides the various methods of oAuth2 authentication.
