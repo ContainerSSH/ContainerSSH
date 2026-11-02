@@ -1,7 +1,53 @@
 Dockerfile
-ssh_host_rsa_key
-config.yaml
+.dockerignore
 docker-compose.yaml
+docker-compose.yml
+compose.yaml
+compose.yml
 
+# VCS and CI metadata
+.git
+.github
+
+# Local configuration and secrets
+ssh_host_rsa_key
+ssh_host_*_key
+ssh_host_*_key.pub
+config.yaml
+config.*.yaml
+!config.example.yaml
+*.pem
+*.key
+*.crt
+.env
+.env.*
+
+# Build output and test artifacts
 build/
+dist/
+vendor/
+/containerssh
+/containerssh-auditlog-decoder
+/containerssh-testauthconfigserver
+*.exe
+*.test
 cover.out
+coverage.txt
+coverage.out
+*.coverprofile
+*.prof
+*.log
+
+# Editors and OS files
+.idea
+*.iml
+.vscode
+.fleet
+.zed
+.claude
+*.swp
+*.swo
+*~
+.DS_Store
+._*
+Thumbs.db
