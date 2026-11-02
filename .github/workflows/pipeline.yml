@@ -14,6 +14,9 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v5
+        with:
+          # Full history so golangci-lint can diff against origin/main.
+          fetch-depth: 0
       - name: Set up Go
         uses: actions/setup-go@v6
         with:
@@ -21,7 +24,10 @@ jobs:
       - name: Run golangci-lint
         uses: golangci/golangci-lint-action@v9
         with:
-          only-new-issues: true
+          version: v2.15.0
+          # Report only issues introduced since the branch diverged from main. Unlike only-new-issues, this works
+          # on the first push of a new branch, where GitHub's compare API has no "before" commit to diff against.
+          args: --new-from-merge-base=origin/main
 
   test:
     name: go test
@@ -72,25 +78,12 @@ jobs:
         uses: GoTestTools/gotestfmt-action@v2
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
-      - id: gopaths
-        name: Determine go cache paths
-        run: |
-          echo "build=$(go env GOCACHE)" >> $GITHUB_OUTPUT
-          echo "mod=$(go env GOMODCACHE)" >> $GITHUB_OUTPUT
-      - name: Set up go module cache
-        uses: actions/cache@v4
-        with:
-          path: ${{ steps.gopaths.outputs.mod }}
-          key: ${{ runner.os }}-go-mod-${{ hashFiles('**/go.sum') }}
-      - name: Set up go build cache
-        uses: actions/cache@v4
-        with:
-          path: ${{ steps.gopaths.outputs.build }}
-          key: ${{ runner.os }}-build-${{ hashFiles('**/go.sum') }}
+      # Module and build caches are handled by actions/setup-go (cache: true by default).
       - name: Run go test
         run: |
           set -euo pipefail
-          go test -coverprofile=coverage.txt -covermode=atomic -json -p 1 -v ./... 2>&1 | tee /tmp/gotest.log
+          # -count=1 disables the test result cache; the e2e tests depend on Docker/KinD state that Go can't track.
+          go test -count=1 -coverprofile=coverage.txt -covermode=atomic -json -p 1 -v ./... 2>&1 | tee /tmp/gotest.log
       - name: Format log output
         if: always()
         run: |
