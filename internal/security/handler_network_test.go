@@ -8,12 +8,12 @@ import (
 	"sync"
 	"testing"
 
-    "go.containerssh.io/containerssh/config"
-    "go.containerssh.io/containerssh/internal/sshserver"
-    "go.containerssh.io/containerssh/log"
-    "go.containerssh.io/containerssh/metadata"
-    "go.containerssh.io/containerssh/message"
 	"github.com/stretchr/testify/assert"
+	"go.containerssh.io/containerssh/config"
+	"go.containerssh.io/containerssh/internal/sshserver"
+	"go.containerssh.io/containerssh/log"
+	"go.containerssh.io/containerssh/message"
+	"go.containerssh.io/containerssh/metadata"
 
 	"golang.org/x/crypto/ssh"
 )

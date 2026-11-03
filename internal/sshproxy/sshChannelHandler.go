@@ -393,6 +393,22 @@ func (s *sshChannelHandler) OnX11Request(
 	return nil
 }
 
+func (s *sshChannelHandler) OnAuthAgentRequest(requestID uint64, reverseHandler sshserver.ReverseForward) error {
+	s.lock.Lock()
+	defer s.lock.Unlock()
+	if err := s.sendRequest("auth-agent-req@openssh.com", nil); err != nil {
+		err := message.WrapUser(
+			err,
+			message.ESSHProxyX11RequestFailed,
+			"Error requesting SSH agent forwarding",
+			"ContainerSSH cannot enable SSH agent forwarding because of an error on the backend connection",
+		)
+		s.logger.Debug(err)
+		return err
+	}
+	return nil
+}
+
 func (s *sshChannelHandler) OnClose() {
 	s.lock.Lock()
 	defer s.lock.Unlock()

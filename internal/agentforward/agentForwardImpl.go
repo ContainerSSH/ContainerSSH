@@ -1,14 +1,16 @@
 package agentforward
 
 import (
+	"crypto/rand"
 	"errors"
 	"fmt"
 	"io"
+	"os"
 	"sync"
 
-    protocol "go.containerssh.io/containerssh/agentprotocol"
-    "go.containerssh.io/containerssh/internal/sshserver"
-    "go.containerssh.io/containerssh/log"
+	protocol "go.containerssh.io/containerssh/agentprotocol"
+	"go.containerssh.io/containerssh/internal/sshserver"
+	"go.containerssh.io/containerssh/log"
 )
 
 type agentForward struct {
@@ -17,6 +19,8 @@ type agentForward struct {
 	nX11Channels    uint32
 	x11Forward      *protocol.ForwardCtx
 	directForward   *protocol.ForwardCtx
+	agentForward    *protocol.ForwardCtx
+	agentSocketPath string
 	logger          log.Logger
 }
 
@@ -199,6 +203,68 @@ func (f *agentForward) NewX11Forwarding(
 	}
 	f.nX11Channels++
 	return nil
+}
+
+func (f *agentForward) NewAgentForwarding(
+	setupAgentCallback func() (io.Reader, io.Writer, error),
+	logger log.Logger,
+	reverseHandler sshserver.ReverseForward,
+) (string, error) {
+	f.lock.Lock()
+	defer f.lock.Unlock()
+	if f.agentSocketPath != "" {
+		return f.agentSocketPath, nil
+	}
+	if f.agentForward != nil {
+		return "", fmt.Errorf("SSH agent forwarding already setup")
+	}
+	fromAgent, toAgent, err := setupAgentCallback()
+	if err != nil {
+		return "", err
+	}
+	f.agentForward = protocol.NewForwardCtx(fromAgent, toAgent, logger)
+
+	path := fmt.Sprintf("/tmp/ssh-%s/agent.%d", rand.Text()[:8], os.Getpid())
+	connChan, err := f.agentForward.StartSSHAgentForwardClient(path)
+	if err != nil {
+		return "", err
+	}
+	f.agentSocketPath = path
+
+	go func() {
+		for {
+			agentConn, ok := <-connChan
+			if !ok {
+				return
+			}
+
+			if reverseHandler == nil {
+				err := agentConn.Accept()
+				if err != nil {
+					logger.Warning("Failed to accept SSH agent connection: %v", err)
+				}
+				continue
+			}
+
+			clientChannel, _, err := reverseHandler.NewChannelAuthAgent()
+			if err != nil {
+				logger.Warning("Failed to open SSH agent channel to client: %v", err)
+				_ = agentConn.Reject()
+				continue
+			}
+
+			err = agentConn.Accept()
+			if err != nil {
+				logger.Warning("Failed to accept SSH agent connection: %v", err)
+				_ = clientChannel.Close()
+				continue
+			}
+
+			go serveConnection(logger, clientChannel, agentConn)
+			go serveConnection(logger, agentConn, clientChannel)
+		}
+	}()
+	return path, nil
 }
 
 func (f *agentForward) NewTCPReverseForwarding(
@@ -395,8 +461,12 @@ func (f *agentForward) OnShutdown() {
 		f.directForward.Kill()
 	}
 	if f.x11Forward != nil {
-		_ = f.directForward.NoMoreConnections()
+		_ = f.x11Forward.NoMoreConnections()
 		f.x11Forward.Kill()
+	}
+	if f.agentForward != nil {
+		_ = f.agentForward.NoMoreConnections()
+		f.agentForward.Kill()
 	}
 	for _, forward := range f.reverseForwards {
 		_ = forward.NoMoreConnections()

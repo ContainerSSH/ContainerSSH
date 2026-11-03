@@ -20,3 +20,24 @@ const EAgentDecodingFailed = "AGENTPROTO_DECODE_FAILED"
 
 // MAgentRemoteError indicates that the ContainerSSH Agent integration received an error message from the remote agent
 const MAgentRemoteError = "AGENTPROTO_REMOTE_ERROR"
+
+// MAgentStarting indicates that the ContainerSSH Agent is starting up.
+const MAgentStarting = "AGENT_STARTING"
+
+// MAgentSocketSetup indicates that the ContainerSSH Agent is setting up an SSH agent socket.
+const MAgentSocketSetup = "AGENT_SOCKET_SETUP"
+
+// MAgentSocketListening indicates that the ContainerSSH Agent socket is now listening for connections.
+const MAgentSocketListening = "AGENT_SOCKET_LISTENING"
+
+// MAgentConnectionAccepted indicates that the ContainerSSH Agent accepted a new connection.
+const MAgentConnectionAccepted = "AGENT_CONNECTION_ACCEPTED"
+
+// MAgentChannelClosed indicates that the ContainerSSH Agent connection channel was closed.
+const MAgentChannelClosed = "AGENT_CHANNEL_CLOSED"
+
+// MAgentDialing indicates that the ContainerSSH Agent is dialing an external connection.
+const MAgentDialing = "AGENT_DIALING"
+
+// EAgentSocketAcceptFailed indicates that the ContainerSSH Agent socket accept failed.
+const EAgentSocketAcceptFailed = "AGENT_SOCKET_ACCEPT_FAILED"
