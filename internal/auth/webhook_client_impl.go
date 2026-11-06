@@ -201,7 +201,7 @@ func (client *webhookClient) logTemporaryFailure(
 	reason string,
 	lastLabels []metrics.MetricLabel,
 ) {
-	logger.Debug(
+	logger.Warning(
 		message.Wrap(
 			lastError,
 			message.EAuthBackendError,
@@ -391,7 +391,7 @@ func (client *webhookClient) logTemporaryAuthzFailure(
 	reason string,
 	lastLabels []metrics.MetricLabel,
 ) {
-	logger.Debug(
+	logger.Warning(
 		message.Wrap(
 			lastError,
 			message.EAuthBackendError,
