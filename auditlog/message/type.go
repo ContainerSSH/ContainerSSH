@@ -84,6 +84,9 @@ var typeToID = map[Type]string{
 	TypeAuthKeyboardInteractiveFailed:       "auth_keyboard_interactive_failed",
 	TypeAuthKeyboardInteractiveBackendError: "auth_keyboard_interactive_backend_error",
 
+	TypeHandshakeFailed:     "handshake_failed",
+	TypeHandshakeSuccessful: "handshake_successful",
+
 	TypeGlobalRequestUnknown:         "global_request_unknown",
 	TypeGlobalRequestDecodeFailed:    "global_request_decode_failed",
 	TypeRequestReverseForward:        "forward_tcpip",
@@ -136,6 +139,9 @@ var typeToName = map[Type]string{
 	TypeAuthKeyboardInteractiveAnswer:       "Keyboard-interactive authentication answer",
 	TypeAuthKeyboardInteractiveFailed:       "Keyboard-interactive authentication failed",
 	TypeAuthKeyboardInteractiveBackendError: "Keyboard-interactive authentication backend error",
+
+	TypeHandshakeFailed:     "Handshake failed",
+	TypeHandshakeSuccessful: "Handshake successful",
 
 	TypeGlobalRequestUnknown:         "Unknown global request",
 	TypeGlobalRequestDecodeFailed:    "Failed to decode global request",
