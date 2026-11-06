@@ -5,8 +5,10 @@ import (
 	"go/doc"
 	"go/parser"
 	"go/token"
+	"path/filepath"
 	"reflect"
 	"regexp"
+	"runtime"
 	"strings"
 )
 
@@ -69,37 +71,51 @@ func DocumentMessages() Documentation {
 }
 
 func getTypeDocs() map[string]string {
+	// Parse this package's own source, so the result does not depend on where the generator runs.
+	_, self, _, ok := runtime.Caller(0)
+	if !ok {
+		panic("cannot find the source of the message package")
+	}
+	names, err := filepath.Glob(filepath.Join(filepath.Dir(self), "*.go"))
+	if err != nil {
+		panic(err)
+	}
 	fset := token.NewFileSet()
-	d, err := parser.ParseDir(fset, "./message", nil, parser.ParseComments)
+	var files []*ast.File
+	for _, name := range names {
+		f, err := parser.ParseFile(fset, name, nil, parser.ParseComments)
+		if err != nil {
+			panic(err)
+		}
+		files = append(files, f)
+	}
+	p, err := doc.NewFromFiles(fset, files, "go.containerssh.io/containerssh/auditlog/message")
 	if err != nil {
 		panic(err)
 	}
 	space := regexp.MustCompile(`\s+`)
 	typeDocs := map[string]string{}
-	for _, f := range d {
-		p := doc.New(f, "./message", 0)
-		for _, t := range p.Types {
-			typeDocs[t.Name] = space.ReplaceAllString(strings.Replace(t.Doc, "\n", " ", -1), " ")
-			previousName := ""
-			ast.Inspect(
-				t.Decl, func(node ast.Node) bool {
-					switch nodeType := node.(type) {
-					case *ast.TypeSpec:
-						previousName = nodeType.Name.Name
-					case *ast.StructType:
-						for _, field := range nodeType.Fields.List {
-							comment := space.ReplaceAllString(strings.Replace(field.Comment.Text(), "\n", " ", -1), " ")
-							for _, name := range field.Names {
-								if comment != "" {
-									typeDocs[previousName+"."+name.String()] = comment
-								}
+	for _, t := range p.Types {
+		typeDocs[t.Name] = space.ReplaceAllString(strings.ReplaceAll(t.Doc, "\n", " "), " ")
+		previousName := ""
+		ast.Inspect(
+			t.Decl, func(node ast.Node) bool {
+				switch nodeType := node.(type) {
+				case *ast.TypeSpec:
+					previousName = nodeType.Name.Name
+				case *ast.StructType:
+					for _, field := range nodeType.Fields.List {
+						comment := space.ReplaceAllString(strings.ReplaceAll(field.Comment.Text(), "\n", " "), " ")
+						for _, name := range field.Names {
+							if comment != "" {
+								typeDocs[previousName+"."+name.String()] = comment
 							}
 						}
 					}
-					return true
-				},
-			)
-		}
+				}
+				return true
+			},
+		)
 	}
 	return typeDocs
 }
@@ -168,8 +184,13 @@ func documentType(t reflect.Type, docs map[string]string) DocStruct {
 			continue
 		}
 
+		// The binary format uses the JSON tag names as CBOR map keys.
+		name, _, _ := strings.Cut(f.Tag.Get("json"), ",")
+		if name == "" {
+			name = f.Name
+		}
 		record := DocField{
-			Name:     f.Name,
+			Name:     name,
 			DataType: resolveTypeName(fieldType),
 			Comment:  docs[t.Name()+"."+f.Name],
 		}
