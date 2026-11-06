@@ -114,7 +114,7 @@ func (c *client) logTemporaryFailure(
 	reason string,
 	lastLabels []metrics.MetricLabel,
 ) {
-	logger.Debug(
+	logger.Warning(
 		message.Wrap(
 			lastError,
 			message.EConfigBackendError,

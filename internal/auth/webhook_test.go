@@ -1,6 +1,7 @@
 package auth_test
 
 import (
+	"bytes"
 	"context"
 	"fmt"
 	"testing"
@@ -233,4 +234,38 @@ func initializeAuth(t *testing.T, logger log.Logger, subpath string) (
 	}()
 	<-ready
 	return client, lifecycle, metricsCollector, nil
+}
+
+func TestRetryIsLoggedAsWarning(t *testing.T) {
+	logOutput := &bytes.Buffer{}
+	logger := log.MustNewLogger(config.LogConfig{
+		Level:       config.LogLevelInfo,
+		Format:      config.LogFormatLJSON,
+		Destination: config.LogDestinationStdout,
+		Stdout:      logOutput,
+	})
+	client, err := auth.NewWebhookClient(
+		auth.AuthenticationTypeAll,
+		config.AuthWebhookClientConfig{
+			HTTPClientConfiguration: config.HTTPClientConfiguration{
+				// Nothing listens on this port, so every request fails.
+				URL:     fmt.Sprintf("http://127.0.0.1:%d", test.GetNextPort(t, "auth server")),
+				Timeout: time.Second,
+			},
+			AuthTimeout: time.Second,
+		},
+		logger,
+		metrics.New(dummy.New()),
+	)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	authenticationContext := client.Password(metadata.NewTestAuthenticatingMetadata("foo"), []byte("bar"))
+	assert.Error(t, authenticationContext.Error())
+	assert.Contains(t, logOutput.String(), `"level":"warning","code":"AUTH_BACKEND_ERROR","message":"Password authentication request to backend failed, retrying`)
+
+	authenticationContext = client.Authorize(metadata.NewTestAuthenticatingMetadata("foo").Authenticated("foo"))
+	assert.Error(t, authenticationContext.Error())
+	assert.Contains(t, logOutput.String(), `"level":"warning","code":"AUTH_BACKEND_ERROR","message":"authorization request to backend failed, retrying`)
 }

@@ -1,6 +1,7 @@
 package config_test
 
 import (
+	"bytes"
 	"context"
 	"fmt"
 	"net"
@@ -84,6 +85,32 @@ func TestHTTP(t *testing.T) {
 	lifecycle.Stop(context.Background())
 	err = lifecycle.Wait()
 	assert.NoError(t, err)
+}
+
+func TestHTTPRetryIsLoggedAsWarning(t *testing.T) {
+	logOutput := &bytes.Buffer{}
+	logger := log.MustNewLogger(configuration.LogConfig{
+		Level:       configuration.LogLevelInfo,
+		Format:      configuration.LogFormatLJSON,
+		Destination: configuration.LogDestinationStdout,
+		Stdout:      logOutput,
+	})
+	client, err := config.NewClient(
+		configuration.ClientConfig{
+			HTTPClientConfiguration: configuration.HTTPClientConfiguration{
+				// Nothing listens on this port, so every request fails.
+				URL:     fmt.Sprintf("http://127.0.0.1:%d", test.GetNextPort(t, "config server")),
+				Timeout: time.Second,
+			},
+		}, logger, getMetricsCollector(t),
+	)
+	assert.NoError(t, err)
+
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
+	defer cancel()
+	_, _, err = client.Get(ctx, metadata.NewTestAuthenticatingMetadata("foo").Authenticated("foo"))
+	assert.Error(t, err)
+	assert.Contains(t, logOutput.String(), `"level":"warning","code":"CONFIG_BACKEND_ERROR","message":"Configuration request to backend failed, retrying`)
 }
 
 func getMetricsCollector(t *testing.T) metrics.Collector {
