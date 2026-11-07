@@ -526,7 +526,7 @@ PayloadExit {
 
 ## PayloadIO
 
-PayloadIO The payload for I/O message types containing the testdata stream from/to the application. 
+PayloadIO The payload for I/O message types containing the data stream from/to the application. 
 
 ```
 PayloadIO {

@@ -61,7 +61,7 @@ const (
 	TypeExitSignal Type = 498 // TypeExitSignal describes the signal that caused a program to terminate abnormally.
 	TypeExit       Type = 499 // TypeExit describes a message that is sent when the program exited. The payload contains the exit status.
 
-	TypeIO            Type = 500 // TypeIO describes the testdata transferred to and from the currently running program on the terminal.
+	TypeIO            Type = 500 // TypeIO describes the data transferred to and from the currently running program on the terminal.
 	TypeRequestFailed Type = 501 // TypeRequestFailed describes that a request has failed.
 )
 
