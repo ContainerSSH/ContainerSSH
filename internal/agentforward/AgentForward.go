@@ -2,10 +2,31 @@ package agentforward
 
 import (
 	"io"
+	"time"
 
 	"go.containerssh.io/containerssh/internal/sshserver"
 	"go.containerssh.io/containerssh/log"
 )
+
+// DefaultShutdownTimeout is how long backends wait for the agent forwards to stop on disconnect before removing the
+// container or pod anyway.
+const DefaultShutdownTimeout = 10 * time.Second
+
+// ShutdownWithTimeout calls OnShutdown on forward and waits at most timeout for it to return. It returns false if
+// the forwards did not stop in time, in which case OnShutdown keeps running in the background.
+func ShutdownWithTimeout(forward AgentForward, timeout time.Duration) bool {
+	done := make(chan struct{})
+	go func() {
+		forward.OnShutdown()
+		close(done)
+	}()
+	select {
+	case <-done:
+		return true
+	case <-time.After(timeout):
+		return false
+	}
+}
 
 // AgentForward is a network connection forwarding interface that uses the ContainerSSH Agent protocol
 type AgentForward interface {
@@ -103,6 +124,7 @@ type AgentForward interface {
 		path string,
 	) (sshserver.ForwardChannel, error)
 
-	// OnShutdown kills all connections and instructs all agent instances to terminate
+	// OnShutdown kills all connections and instructs all agent instances to terminate. It is safe to call it
+	// multiple times.
 	OnShutdown()
 }
