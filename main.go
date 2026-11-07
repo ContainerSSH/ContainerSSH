@@ -9,6 +9,7 @@ import (
 	"os"
 	"os/signal"
 	"path/filepath"
+	"runtime/debug"
 	"strings"
 	"syscall"
 	"time"
@@ -37,7 +38,16 @@ func Main() {
 
 	logger = logger.WithLabel("module", "core")
 
-	configFile, actionDumpConfig, actionLicenses, actionHealthCheck := getArguments()
+	configFile, actionDumpConfig, actionLicenses, actionHealthCheck, actionVersion := getArguments()
+
+	if actionVersion {
+		version := "unknown"
+		if info, ok := debug.ReadBuildInfo(); ok {
+			version = info.Main.Version
+		}
+		fmt.Println(version)
+		os.Exit(0)
+	}
 
 	if configFile == "" {
 		configFile = "config.yaml"
@@ -142,11 +152,12 @@ func runContainerSSH(
 	os.Exit(0)
 }
 
-func getArguments() (string, bool, bool, bool) {
+func getArguments() (string, bool, bool, bool, bool) {
 	configFile := ""
 	actionDumpConfig := false
 	actionLicenses := false
 	healthCheck := false
+	version := false
 	flag.StringVar(
 		&configFile,
 		"config",
@@ -171,8 +182,14 @@ func getArguments() (string, bool, bool, bool) {
 		false,
 		"Run health check",
 	)
+	flag.BoolVar(
+		&version,
+		"version",
+		false,
+		"Print version and exit",
+	)
 	flag.Parse()
-	return configFile, actionDumpConfig, actionLicenses, healthCheck
+	return configFile, actionDumpConfig, actionLicenses, healthCheck, version
 }
 
 func startServices(cfg config.AppConfig, loggerFactory log.LoggerFactory) error {
