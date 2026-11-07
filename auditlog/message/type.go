@@ -61,7 +61,7 @@ const (
 	TypeExitSignal Type = 498 // TypeExitSignal describes the signal that caused a program to terminate abnormally.
 	TypeExit       Type = 499 // TypeExit describes a message that is sent when the program exited. The payload contains the exit status.
 
-	TypeIO            Type = 500 // TypeIO describes the testdata transferred to and from the currently running program on the terminal.
+	TypeIO            Type = 500 // TypeIO describes the data transferred to and from the currently running program on the terminal.
 	TypeRequestFailed Type = 501 // TypeRequestFailed describes that a request has failed.
 )
 
@@ -83,6 +83,9 @@ var typeToID = map[Type]string{
 	TypeAuthKeyboardInteractiveAnswer:       "auth_keyboard_interactive_answer",
 	TypeAuthKeyboardInteractiveFailed:       "auth_keyboard_interactive_failed",
 	TypeAuthKeyboardInteractiveBackendError: "auth_keyboard_interactive_backend_error",
+
+	TypeHandshakeFailed:     "handshake_failed",
+	TypeHandshakeSuccessful: "handshake_successful",
 
 	TypeGlobalRequestUnknown:         "global_request_unknown",
 	TypeGlobalRequestDecodeFailed:    "global_request_decode_failed",
@@ -136,6 +139,9 @@ var typeToName = map[Type]string{
 	TypeAuthKeyboardInteractiveAnswer:       "Keyboard-interactive authentication answer",
 	TypeAuthKeyboardInteractiveFailed:       "Keyboard-interactive authentication failed",
 	TypeAuthKeyboardInteractiveBackendError: "Keyboard-interactive authentication backend error",
+
+	TypeHandshakeFailed:     "Handshake failed",
+	TypeHandshakeSuccessful: "Handshake successful",
 
 	TypeGlobalRequestUnknown:         "Unknown global request",
 	TypeGlobalRequestDecodeFailed:    "Failed to decode global request",
