@@ -368,14 +368,13 @@ func (c *channelHandler) OnClose() {
 			c.networkHandler.logger.Info(fmt.Errorf("failed to close X11 forwarding (%w)", err))
 		}
 	}
-	pod := c.networkHandler.pod
-	if pod != nil && c.networkHandler.config.Pod.Mode == config.KubernetesExecutionModeSession {
+	if c.pod != nil && c.networkHandler.config.Pod.Mode == config.KubernetesExecutionModeSession {
 		ctx, cancel := context.WithTimeout(
 			context.Background(),
 			c.networkHandler.config.Timeouts.PodStop,
 		)
 		defer cancel()
-		_ = pod.remove(ctx)
+		_ = c.pod.remove(ctx)
 	}
 }
 

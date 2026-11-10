@@ -28,6 +28,8 @@ type channelHandler struct {
 	x11               bool
 	exec              dockerExecution
 	session           sshserver.SessionChannel
+	// container is the container created for this channel in session mode.
+	container dockerContainer
 }
 
 func (c *channelHandler) OnEnvRequest(_ uint64, name string, value string) error {
@@ -181,6 +183,7 @@ func (c *channelHandler) handleExecModeSession(
 			return err
 		}
 	}
+	c.container = cnt
 	return nil
 }
 
@@ -297,11 +300,10 @@ func (c *channelHandler) OnClose() {
 			c.networkHandler.logger.Info(fmt.Errorf("Failed to close X11 forwarding (%w)", err))
 		}
 	}
-	container := c.networkHandler.container
-	if container != nil && c.networkHandler.config.Execution.Mode == config.DockerExecutionModeSession {
+	if c.container != nil && c.networkHandler.config.Execution.Mode == config.DockerExecutionModeSession {
 		ctx, cancel := context.WithTimeout(context.Background(), c.networkHandler.config.Timeouts.ContainerStop)
 		defer cancel()
-		_ = container.remove(ctx)
+		_ = c.container.remove(ctx)
 	}
 }
 
