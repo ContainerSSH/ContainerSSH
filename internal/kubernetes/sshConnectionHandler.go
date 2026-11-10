@@ -29,7 +29,9 @@ func (b *sshConnectionHandler) OnFailedDecodeGlobalRequest(_ uint64, _ string, _
 func (s *sshConnectionHandler) OnUnsupportedChannel(_ uint64, _ string, _ []byte) {
 }
 
-func (s *sshConnectionHandler) OnShutdown(_ context.Context) {}
+func (s *sshConnectionHandler) OnShutdown(_ context.Context) {
+	s.agentForward.OnShutdown()
+}
 
 func (s *sshConnectionHandler) OnSessionChannel(
 	meta metadata.ChannelMetadata,

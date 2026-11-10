@@ -32,6 +32,7 @@ type networkHandler struct {
 	labels       map[string]string
 	annotations  map[string]string
 	done         chan struct{}
+	agentForward agentforward.AgentForward
 }
 
 func (n *networkHandler) OnAuthPassword(meta metadata.ConnectionAuthPendingMetadata, _ []byte) (
@@ -189,12 +190,13 @@ func (n *networkHandler) OnHandshakeSuccess(meta metadata.ConnectionAuthenticate
 		files[name] = f.Value
 	}
 
+	n.agentForward = agentforward.NewAgentForward(n.logger)
 	return &sshConnectionHandler{
 		networkHandler: n,
 		username:       meta.Username,
 		env:            env,
 		files:          files,
-		agentForward:   agentforward.NewAgentForward(n.logger),
+		agentForward:   n.agentForward,
 	}, meta, nil
 }
 
@@ -205,6 +207,15 @@ func (n *networkHandler) OnDisconnect() {
 		return
 	}
 	n.disconnected = true
+	// Stop the agent forwards first: in persistent mode the pod is not removed, so nothing else would stop them.
+	if n.agentForward != nil && !agentforward.ShutdownWithTimeout(n.agentForward, agentforward.DefaultShutdownTimeout) {
+		n.logger.Warning(
+			message.NewMessage(
+				message.EKubernetesAgentFailed,
+				"Timed out stopping the agent forwards",
+			),
+		)
+	}
 	ctx, cancelFunc := context.WithTimeout(context.Background(), n.config.Timeouts.PodStop)
 	defer cancelFunc()
 	if n.pod != nil {

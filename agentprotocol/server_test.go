@@ -98,3 +98,62 @@ func TestConnectionSetup(t *testing.T) {
 	clientCtx.Kill()
 	close(closeChan)
 }
+
+func TestNoMoreConnectionsTwice(t *testing.T) {
+	serverCtx, _, _ := startReverseForward(t)
+
+	if err := serverCtx.NoMoreConnections(); err != nil {
+		t.Fatal(err)
+	}
+	if err := serverCtx.NoMoreConnections(); err != nil {
+		t.Fatal(err)
+	}
+	serverCtx.Kill()
+}
+
+func TestNoMoreConnectionsAfterRemote(t *testing.T) {
+	serverCtx, clientCtx, connChan := startReverseForward(t)
+
+	if err := clientCtx.NoMoreConnections(); err != nil {
+		t.Fatal(err)
+	}
+	// The server closes its connection channel once it has processed the remote packet.
+	for range connChan {
+	}
+	if err := serverCtx.NoMoreConnections(); err != nil {
+		t.Fatal(err)
+	}
+	serverCtx.Kill()
+}
+
+// startReverseForward sets up a reverse forward between a server context and an in-process client (agent) context
+// and returns the server, the client and the server's connection channel.
+func startReverseForward(t *testing.T) (*proto.ForwardCtx, *proto.ForwardCtx, chan *proto.Connection) {
+	log := log.NewTestLogger(t)
+	fromClientReader, fromClientWriter := io.Pipe()
+	toClientReader, toClientWriter := io.Pipe()
+
+	clientCtx := proto.NewForwardCtx(toClientReader, fromClientWriter, log)
+	serverCtx := proto.NewForwardCtx(fromClientReader, toClientWriter, log)
+
+	clientStarted := make(chan error, 1)
+	go func() {
+		_, _, connectionChan, err := clientCtx.StartClient()
+		clientStarted <- err
+		if err != nil {
+			return
+		}
+		for conn := range connectionChan {
+			_ = conn.Reject()
+		}
+	}()
+
+	connChan, err := serverCtx.StartReverseForwardClient("127.0.0.1", 8080, false)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := <-clientStarted; err != nil {
+		t.Fatal(err)
+	}
+	return serverCtx, clientCtx, connChan
+}

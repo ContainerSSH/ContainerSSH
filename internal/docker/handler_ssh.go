@@ -167,6 +167,11 @@ func (c *sshConnectionHandler) setupAgent() (io.Reader, io.Writer, error) {
 			stdoutWriter,
 			stderrWriter,
 			func() error {
+				// The agent has exited: unblock the forwarding protocol and the stderr logger reading from it, and
+				// fail any further writes to it instead of blocking forever.
+				_ = stdoutWriter.Close()
+				_ = stderrWriter.Close()
+				_ = stdinReader.Close()
 				return nil
 			},
 			func(exitStatus int) {

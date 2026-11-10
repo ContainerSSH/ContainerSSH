@@ -30,6 +30,7 @@ type networkHandler struct {
 	disconnected        bool
 	labels              map[string]string
 	done                chan struct{}
+	agentForward        agentforward.AgentForward
 }
 
 func (n *networkHandler) OnAuthPassword(meta metadata.ConnectionAuthPendingMetadata, _ []byte) (
@@ -108,11 +109,12 @@ func (n *networkHandler) OnHandshakeSuccess(meta metadata.ConnectionAuthenticate
 		}
 	}
 
+	n.agentForward = agentforward.NewAgentForward(n.logger)
 	return &sshConnectionHandler{
 		networkHandler: n,
 		username:       meta.Username,
 		env:            env,
-		agentForward:   agentforward.NewAgentForward(n.logger),
+		agentForward:   n.agentForward,
 	}, meta, nil
 }
 
@@ -168,6 +170,15 @@ func (n *networkHandler) OnDisconnect() {
 		return
 	}
 	n.disconnected = true
+	// The agent forwards run as execs in the container, which remove() waits for, so they must be stopped first.
+	if n.agentForward != nil && !agentforward.ShutdownWithTimeout(n.agentForward, agentforward.DefaultShutdownTimeout) {
+		n.logger.Warning(
+			message.NewMessage(
+				message.EDockerAgentFailed,
+				"Timed out stopping the agent forwards, removing the container anyway",
+			),
+		)
+	}
 	ctx, cancelFunc := context.WithTimeout(context.Background(), n.config.Timeouts.ContainerStop)
 	defer cancelFunc()
 	if n.container != nil {
