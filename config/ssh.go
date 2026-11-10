@@ -43,6 +43,11 @@ type SSHConfig struct {
 	// allowed to be sent without a response being received. If this number
 	// is exceeded the connection is considered dead
 	ClientAliveCountMax int `json:"clientAliveCountMax" yaml:"clientAliveCountMax" default:"3" comment:"Maximum number of failed keepalives"`
+	// LoginTimeout is the maximum time a client may take to authenticate
+	// after connecting. If the client has not authenticated within this time
+	// the connection is closed. If the duration is 0 or unset it disables the
+	// feature.
+	LoginTimeout time.Duration `json:"loginTimeout" yaml:"loginTimeout" comment:"Time limit for the client to authenticate"`
 }
 
 // GenerateHostKey generates a random host key and adds it to SSHConfig
@@ -119,6 +124,9 @@ func (cfg SSHConfig) Validate() error {
 	}
 	if cfg.ClientAliveCountMax <= 0 {
 		return newError("clientAliveCountMax", "clientAliveCountMax should be at least 1")
+	}
+	if cfg.LoginTimeout != 0 && cfg.LoginTimeout < 1*time.Second {
+		return newError("loginTimeout", "loginTimeout should be at least 1 second long")
 	}
 	return nil
 }

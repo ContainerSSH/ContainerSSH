@@ -403,6 +403,98 @@ func TestKeepAlive(t *testing.T) {
 	}
 }
 
+func TestLoginTimeout(t *testing.T) {
+	logger := log.NewTestLogger(t)
+	user := sshserver.NewTestUser("test")
+	user.AddKeyboardInteractiveChallengeResponse("foo", "bar")
+	handler := &handshakeFailureRecorder{
+		Handler: sshserver.NewTestAuthenticationHandler(
+			sshserver.NewTestHandler(),
+			user,
+		),
+		failures: make(chan error, 1),
+	}
+	srv := startLoginTimeoutServer(t, handler, logger)
+	defer srv.Stop(1 * time.Minute)
+
+	hostKey, err := ssh.ParsePrivateKey([]byte(srv.GetHostKey()))
+	if err != nil {
+		t.Fatalf("failed to parse host key (%v)", err)
+	}
+
+	// Simulate a user who never answers the keyboard-interactive prompt.
+	unblock := make(chan struct{})
+	clientDone := make(chan struct{})
+	start := time.Now()
+	go func() {
+		defer close(clientDone)
+		sshConfig := &ssh.ClientConfig{
+			User: user.Username(),
+			Auth: []ssh.AuthMethod{
+				ssh.KeyboardInteractive(func(_, _ string, _ []string, _ []bool) ([]string, error) {
+					<-unblock
+					return nil, errors.New("prompt abandoned")
+				}),
+			},
+			HostKeyCallback: ssh.FixedHostKey(hostKey.PublicKey()),
+		}
+		if connection, err := ssh.Dial("tcp", srv.GetListen(), sshConfig); err == nil {
+			_ = connection.Close()
+		}
+	}()
+	defer func() {
+		close(unblock)
+		<-clientDone
+	}()
+
+	select {
+	case err := <-handler.failures:
+		elapsed := time.Since(start)
+		var msg message.Message
+		if !errors.As(err, &msg) || msg.Code() != message.ESSHLoginTimeout {
+			t.Fatalf("the handshake failed for a reason other than the login timeout (%v)", err)
+		}
+		if elapsed < time.Second/2 {
+			t.Fatalf("the server closed the connection before the login timeout (%s)", elapsed)
+		}
+	case <-time.After(10 * time.Second):
+		t.Fatal("the server did not close the unauthenticated connection")
+	}
+}
+
+func TestLoginTimeoutAfterAuthentication(t *testing.T) {
+	logger := log.NewTestLogger(t)
+	user := sshserver.NewTestUser("test")
+	user.RandomPassword()
+	srv := startLoginTimeoutServer(
+		t,
+		sshserver.NewTestAuthenticationHandler(
+			sshserver.NewTestHandler(),
+			user,
+		),
+		logger,
+	)
+	defer srv.Stop(1 * time.Minute)
+
+	client := sshserver.NewTestClient(srv.GetListen(), srv.GetHostKey(), user, logger)
+	connection, err := client.Connect()
+	if err != nil {
+		t.Fatalf("failed to connect (%v)", err)
+	}
+	defer func() {
+		_ = connection.Close()
+	}()
+
+	// The login timeout must not affect connections that have already authenticated.
+	time.Sleep(2 * time.Second)
+
+	session, err := connection.Session()
+	if err != nil {
+		t.Fatalf("failed to open a session after the login timeout has passed (%v)", err)
+	}
+	_ = session.Close()
+}
+
 //endregion
 
 //region Helper
@@ -505,6 +597,15 @@ func createPipe(session *ssh.Session) (io.WriteCloser, io.Reader, error) {
 	return stdin, stdout, nil
 }
 
+func startLoginTimeoutServer(t *testing.T, handler sshserver.Handler, logger log.Logger) sshserver.TestServer {
+	cfg := config.SSHConfig{}
+	structutils.Defaults(&cfg)
+	cfg.LoginTimeout = 1 * time.Second
+	srv := sshserver.NewTestServer(t, handler, logger, &cfg)
+	srv.Start()
+	return srv
+}
+
 func newServerHelper(
 	t *testing.T,
 	listen string,
@@ -589,6 +690,44 @@ func (h *serverHelper) stop() {
 //endregion
 
 //region Handlers
+
+//region Handshake failure recorder
+
+// handshakeFailureRecorder records the reasons of failed handshakes.
+type handshakeFailureRecorder struct {
+	sshserver.Handler
+	failures chan error
+}
+
+func (h *handshakeFailureRecorder) OnNetworkConnection(meta metadata.ConnectionMetadata) (
+	sshserver.NetworkConnectionHandler,
+	metadata.ConnectionMetadata,
+	error,
+) {
+	networkConnectionHandler, meta, err := h.Handler.OnNetworkConnection(meta)
+	if err != nil {
+		return nil, meta, err
+	}
+	return &handshakeFailureRecorderNetworkConnection{networkConnectionHandler, h.failures}, meta, nil
+}
+
+type handshakeFailureRecorderNetworkConnection struct {
+	sshserver.NetworkConnectionHandler
+	failures chan error
+}
+
+func (h *handshakeFailureRecorderNetworkConnection) OnHandshakeFailed(
+	meta metadata.ConnectionMetadata,
+	reason error,
+) {
+	select {
+	case h.failures <- reason:
+	default:
+	}
+	h.NetworkConnectionHandler.OnHandshakeFailed(meta, reason)
+}
+
+//endregion
 
 //region Rejection
 
