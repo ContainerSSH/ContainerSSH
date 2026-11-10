@@ -147,6 +147,17 @@ func (o *oidcFlow) getIdentity(
 					o.logger.Error(err)
 					return token, meta.AuthFailed(), err
 				}
+				if o.provider.config.EnforceUsername && usernameString != meta.Username {
+					err = message.UserMessage(
+						message.EAuthOIDCUsernameDoesNotMatch,
+						"The username entered in your SSH client does not match your OIDC username.",
+						"The SSH username does not match the %s field returned by the OIDC server, but "+
+							"enforceUsername is enabled.",
+						o.provider.config.UsernameField,
+					)
+					o.logger.Debug(err)
+					return token, meta.AuthFailed(), err
+				}
 				m := meta.GetMetadata()
 				m["OIDC_TOKEN"] = metadata.Value{Value: token, Sensitive: true}
 				for field, value := range resp {

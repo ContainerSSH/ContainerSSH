@@ -146,6 +146,10 @@ const EAuthOIDCHTTPClientCreateFailed = "OIDC_HTTP_CLIENT_CREATE_FAILED"
 // authentication. This happens when enforceScopes is enabled and the user denies one or more requested scopes.
 const EAuthOIDCRequiredScopeNotGranted = "OIDC_REQUIRED_SCOPE_NOT_GRANTED"
 
+// EAuthOIDCUsernameDoesNotMatch indicates that the username entered in the SSH login does not match the username
+// returned by the OIDC server in the configured usernameField, but enforceUsername is enabled.
+const EAuthOIDCUsernameDoesNotMatch = "OIDC_USERNAME_DOES_NOT_MATCH"
+
 // EAuthGenericTimeout indicates that the generic oAuth authentication process resulted in a timeout.
 const EAuthGenericTimeout = "GENERIC_TIMEOUT"
 
