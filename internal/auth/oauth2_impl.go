@@ -2,18 +2,35 @@ package auth
 
 import (
 	"context"
-	"fmt"
 	"strings"
+	"text/template"
 	"time"
 
+	"go.containerssh.io/containerssh/config"
 	"go.containerssh.io/containerssh/log"
 	"go.containerssh.io/containerssh/message"
 	"go.containerssh.io/containerssh/metadata"
 )
 
 type oauth2Client struct {
-	provider OAuth2Provider
-	logger   log.Logger
+	provider                    OAuth2Provider
+	logger                      log.Logger
+	deviceFlowPrompt            *template.Template
+	authorizationCodeFlowPrompt *template.Template
+}
+
+func renderOAuth2Prompt(tpl *template.Template, data interface{}) (string, error) {
+	prompt := &strings.Builder{}
+	if err := tpl.Execute(prompt, data); err != nil {
+		return "", message.WrapUser(
+			err,
+			message.EAuthConfigError,
+			"Authentication failed.",
+			"Failed to render the oAuth2 %s template.",
+			tpl.Name(),
+		)
+	}
+	return prompt.String(), nil
 }
 
 type oauth2Context struct {
@@ -61,12 +78,18 @@ func (o *oauth2Client) KeyboardInteractive(
 		if err == nil {
 			authorizationURL, userCode, expiration, err := deviceFlow.GetAuthorizationURL(ctx)
 			if err == nil {
+				prompt, promptErr := renderOAuth2Prompt(
+					o.deviceFlowPrompt,
+					config.OAuth2DeviceFlowPromptData{
+						AuthorizationURL: authorizationURL,
+						UserCode:         userCode,
+					},
+				)
+				if promptErr != nil {
+					return &oauth2Context{false, meta.AuthFailed(), promptErr, deviceFlow}
+				}
 				_, err = challenge(
-					fmt.Sprintf(
-						"Please click the following link: %s\n\nEnter the following code: %s\n",
-						authorizationURL,
-						userCode,
-					),
+					prompt,
 					KeyboardInteractiveQuestions{},
 				)
 				if err != nil {
@@ -90,11 +113,17 @@ func (o *oauth2Client) KeyboardInteractive(
 		if err == nil {
 			link, err := authCodeFlow.GetAuthorizationURL(ctx)
 			if err == nil {
+				prompt, promptErr := renderOAuth2Prompt(
+					o.authorizationCodeFlowPrompt,
+					config.OAuth2AuthorizationCodeFlowPromptData{
+						AuthorizationURL: link,
+					},
+				)
+				if promptErr != nil {
+					return &oauth2Context{false, meta.AuthFailed(), promptErr, authCodeFlow}
+				}
 				answers, err := challenge(
-					fmt.Sprintf(
-						"Please click the following link to log in: %s\n\n",
-						link,
-					),
+					prompt,
 					KeyboardInteractiveQuestions{
 						KeyboardInteractiveQuestion{
 							ID:           "code",
