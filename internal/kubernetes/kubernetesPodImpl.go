@@ -121,7 +121,7 @@ func (k *kubernetesPodImpl) attach(_ context.Context) (kubernetesExecution, erro
 			Container: k.pod.Spec.Containers[k.config.Pod.ConsoleContainerNumber].Name,
 			Stdin:     true,
 			Stdout:    true,
-			Stderr:    true,
+			Stderr:    !*k.tty,
 			TTY:       *k.tty,
 		}, scheme.ParameterCodec,
 	)
@@ -202,7 +202,7 @@ func (k *kubernetesPodImpl) createExecLocked(
 			Command:   program,
 			Stdin:     true,
 			Stdout:    true,
-			Stderr:    true,
+			Stderr:    !tty,
 			TTY:       tty,
 		},
 		scheme.ParameterCodec,
