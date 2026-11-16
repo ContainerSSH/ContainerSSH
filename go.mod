@@ -6,7 +6,7 @@ require (
 	github.com/aws/aws-sdk-go v1.55.8
 	github.com/containerd/errdefs v1.0.0
 	github.com/containerssh/gokrb5/v8 v8.4.3-0.20211214150832-4bf8b91123af
-	github.com/creasty/defaults v1.8.0
+	github.com/creasty/defaults v1.11.0
 	github.com/distribution/reference v0.6.0
 	github.com/docker/docker v28.5.2+incompatible
 	github.com/docker/go-connections v0.6.0
