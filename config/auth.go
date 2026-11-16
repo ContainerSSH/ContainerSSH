@@ -626,6 +626,11 @@ type AuthOIDCConfig struct {
 	// UsernameField indicates the userinfo field that should be taken as the username.
 	UsernameField string `json:"usernameField" yaml:"usernameField" default:"sub"`
 
+	// EnforceUsername requires that the username returned by the OIDC server in the usernameField and the entered SSH
+	// username match. If this is set to false users can log in with any SSH username, and the configuration server or
+	// the authorization webhook has to compare it with the authenticated username as the SSH username cannot be trusted.
+	EnforceUsername bool `json:"enforceUsername" yaml:"enforceUsername"`
+
 	// RedirectURI is the URI the client is returned to. This URL should be configured to the redirect server endpoint.
 	RedirectURI string `json:"redirectURI" yaml:"redirectURI"`
 
