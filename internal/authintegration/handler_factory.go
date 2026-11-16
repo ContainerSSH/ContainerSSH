@@ -83,6 +83,7 @@ func New(
 		keyboardInteractiveAuthenticator: keyboardInteractiveAuthenticator,
 		gssapiAuthenticator:              gssapiAuthenticator,
 		authorizationProvider:            authorizationProvider,
+		noneAuthEnabled:                  config.NoneAuth,
 		backend:                          backend,
 		behavior:                         behavior,
 	}, services, nil

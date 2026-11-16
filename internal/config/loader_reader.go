@@ -47,10 +47,10 @@ func (y *readerLoader) Load(_ context.Context, config *config.AppConfig) (err er
 	if err != nil {
 		return err
 	}
+	structutils.Defaults(config)
 	if err := fixCompatibility(config, y.logger); err != nil {
 		return err
 	}
-	structutils.Defaults(config)
 	return nil
 }
 
