@@ -1,9 +1,11 @@
 package agentprotocol
 
 import (
+	"errors"
 	"fmt"
 	"io"
 	"sync"
+	"sync/atomic"
 	"time"
 
     log "go.containerssh.io/containerssh/log"
@@ -168,7 +170,8 @@ type ForwardCtx struct {
 	toBackend         io.Writer
 	logger            log.Logger
 	connectionChannel chan *Connection
-	stopped           bool
+	stopped           atomic.Bool
+	stopOnce          sync.Once
 
 	connectionId uint64
 	connMapMu    sync.RWMutex
@@ -235,6 +238,7 @@ func (c *ForwardCtx) handleData(packet *Packet) {
 func (c *ForwardCtx) handleClose(packet *Packet) {
 	c.connMapMu.Lock()
 	conn, ok := c.connMap[packet.ConnectionId]
+	c.connMapMu.Unlock()
 	if !ok {
 		c.logger.Info(
 			message.NewMessage(
@@ -245,7 +249,6 @@ func (c *ForwardCtx) handleClose(packet *Packet) {
 		)
 		return
 	}
-	c.connMapMu.Unlock()
 	err := conn.CloseImm()
 	retPacket := Packet{
 		Type:         PACKET_SUCCESS,
@@ -272,7 +275,10 @@ func (c *ForwardCtx) handleSuccess(packet *Packet) {
 		return
 	}
 
-	switch conn.state {
+	conn.lock.Lock()
+	state := conn.state
+	conn.lock.Unlock()
+	switch state {
 	case CONNECTION_STATE_WAITINIT:
 		conn.setState(CONNECTION_STATE_STARTED)
 	case CONNECTION_STATE_WAITCLOSE:
@@ -352,7 +358,7 @@ func (c *ForwardCtx) handleNewConnection(packet *Packet) {
 	c.waitGroup.Add(1)
 	c.connMapMu.Unlock()
 
-	if c.stopped {
+	if c.stopped.Load() {
 		c.logger.Warning("Client tried opening a connection after stopping")
 		_ = connection.Reject()
 		return
@@ -365,6 +371,14 @@ func (c *ForwardCtx) handleBackend() {
 	for {
 		packet := Packet{}
 		err := c.decoder.Decode(&packet)
+		if errors.Is(err, io.EOF) {
+			c.logger.Debug(message.Wrap(
+				err,
+				message.MSSHConnected,
+				"Backend closed the forwarding connection",
+			))
+			return
+		}
 		if err != nil {
 			c.logger.Error(message.Wrap(
 				err,
@@ -385,10 +399,7 @@ func (c *ForwardCtx) handleBackend() {
 		case PACKET_NEW_CONNECTION:
 			c.handleNewConnection(&packet)
 		case PACKET_NO_MORE_CONNECTIONS:
-			if !c.stopped {
-				c.stopped = true
-				close(c.connectionChannel)
-			}
+			c.stop()
 		default:
 			c.logger.Warning(
 				message.NewMessage(
@@ -491,6 +502,7 @@ func (c *ForwardCtx) newConnection(
 	c.connectionId += 1
 	conn.id = c.connectionId
 	if _, ok := c.connMap[conn.id]; ok {
+		c.connMapMu.Unlock()
 		return nil, fmt.Errorf("Connection id already exists, something went terribly wrong")
 	}
 	c.connMap[conn.id] = &conn
@@ -683,9 +695,17 @@ func (c *ForwardCtx) StartReverseForwardClientUnix(path string, singleConnection
 	return c.startReverseForwardingClient(setupPacket)
 }
 
+// stop closes the connection channel. It may be triggered both locally and by the remote side, so it must only
+// close the channel once.
+func (c *ForwardCtx) stop() {
+	c.stopOnce.Do(func() {
+		c.stopped.Store(true)
+		close(c.connectionChannel)
+	})
+}
+
 func (c *ForwardCtx) NoMoreConnections() error {
-	c.stopped = true
-	close(c.connectionChannel)
+	c.stop()
 	return c.writePacket(
 		&Packet{
 			Type: PACKET_NO_MORE_CONNECTIONS,
@@ -697,11 +717,22 @@ func (c *ForwardCtx) WaitFinish() {
 	c.waitGroup.Wait()
 }
 
+func (c *ForwardCtx) connections() []*Connection {
+	c.connMapMu.RLock()
+	defer c.connMapMu.RUnlock()
+	conns := make([]*Connection, 0, len(c.connMap))
+	for _, conn := range c.connMap {
+		conns = append(conns, conn)
+	}
+	return conns
+}
+
 func (c *ForwardCtx) Kill() {
-	if !c.stopped {
+	if !c.stopped.Load() {
 		_ = c.NoMoreConnections()
 	}
-	for _, conn := range c.connMap {
+	conns := c.connections()
+	for _, conn := range conns {
 		_ = conn.Close()
 	}
 	t := make(chan struct{})
@@ -709,10 +740,11 @@ func (c *ForwardCtx) Kill() {
 		select {
 		case <-t:
 		case <-time.After(5 * time.Second):
-			for _, conn := range c.connMap {
+			for _, conn := range conns {
 				_ = conn.CloseImm()
 			}
 		}
 	}()
 	c.WaitFinish()
+	close(t)
 }

@@ -388,18 +388,25 @@ func (f *agentForward) NewForwardUnix(
 }
 
 func (f *agentForward) OnShutdown() {
+	// Detach the forwards under the lock so a repeated call finds nothing left to stop, then kill them without
+	// holding the lock since Kill() waits for the open connections to close.
 	f.lock.Lock()
-	defer f.lock.Unlock()
+	var forwards []*protocol.ForwardCtx
 	if f.directForward != nil {
-		_ = f.directForward.NoMoreConnections()
-		f.directForward.Kill()
+		forwards = append(forwards, f.directForward)
+		f.directForward = nil
 	}
 	if f.x11Forward != nil {
-		_ = f.directForward.NoMoreConnections()
-		f.x11Forward.Kill()
+		forwards = append(forwards, f.x11Forward)
+		f.x11Forward = nil
 	}
 	for _, forward := range f.reverseForwards {
-		_ = forward.NoMoreConnections()
+		forwards = append(forwards, forward)
+	}
+	f.reverseForwards = make(map[string]*protocol.ForwardCtx)
+	f.lock.Unlock()
+
+	for _, forward := range forwards {
 		forward.Kill()
 	}
 }
