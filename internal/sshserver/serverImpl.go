@@ -540,10 +540,14 @@ func (s *serverImpl) handleConnection(conn net.Conn) {
 		NetworkConnectionHandler: handlerNetworkConnection,
 	}
 
+	stopLoginTimer := s.startLoginTimer(conn, logger)
 	sshConn, channels, globalRequests, err := ssh.NewServerConn(
 		conn,
 		s.createConfiguration(connectionMeta, &wrapper, logger),
 	)
+	if loginTimeoutErr := stopLoginTimer(); loginTimeoutErr != nil {
+		err = loginTimeoutErr
+	}
 	abortCleanup := func() {
 		logger.Info(messageCodes.Wrap(err, messageCodes.ESSHHandshakeFailed, "SSH handshake failed"))
 		handlerNetworkConnection.OnHandshakeFailed(connectionMeta, err)
@@ -640,6 +644,29 @@ func (s *serverImpl) handleConnection(conn net.Conn) {
 
 	go s.handleChannels(authenticatedMetadata, channels, handlerSSHConnection, logger)
 	go s.handleGlobalRequests(authenticatedMetadata, globalRequests, handlerSSHConnection, logger)
+}
+
+// startLoginTimer closes the connection if the client does not finish authenticating within the configured
+// loginTimeout. The returned function stops the timer and returns an error if the timeout has already been reached.
+func (s *serverImpl) startLoginTimer(conn net.Conn, logger log.Logger) func() error {
+	if s.cfg.LoginTimeout <= 0 {
+		return func() error { return nil }
+	}
+	err := messageCodes.NewMessage(
+		messageCodes.ESSHLoginTimeout,
+		"Client did not authenticate within %s, closing connection.",
+		s.cfg.LoginTimeout,
+	)
+	timer := time.AfterFunc(s.cfg.LoginTimeout, func() {
+		logger.Info(err)
+		_ = conn.Close()
+	})
+	return func() error {
+		if timer.Stop() {
+			return nil
+		}
+		return err
+	}
 }
 
 func (s *serverImpl) removeClientConnection(connectionID string, sshConn *ssh.ServerConn) {
