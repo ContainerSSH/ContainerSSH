@@ -284,7 +284,7 @@ func (k *kubernetesPodImpl) remove(ctx context.Context) error {
 	k.shuttingDown = true
 	k.lock.Unlock()
 	// Do not wait to exit in connection mode.
-	// In session mode this function is called everytime an exec exits in order to ensure all signals/messages have been handled.
+	// In session mode this function is called every time an exec exits in order to ensure all signals/messages have been handled.
 	// In connection mode this is only called in ssh disconnect, in which case we want to stop all activity
 	if k.config.Pod.Mode == config2.KubernetesExecutionModeSession {
 		k.wg.Wait()

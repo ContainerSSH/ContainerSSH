@@ -9,7 +9,7 @@ import (
 	"time"
 )
 
-// MetricType is the enum for tye types of metrics supported
+// MetricType is the enum for the types of metrics supported
 type MetricType string
 
 const (

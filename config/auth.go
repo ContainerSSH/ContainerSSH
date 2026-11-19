@@ -586,7 +586,7 @@ type AuthGitHubConfig struct {
 	CipherSuites CipherSuiteList `json:"cipher" yaml:"cipher" default:"[\"TLS_AES_128_GCM_SHA256\",\"TLS_AES_256_GCM_SHA384\",\"TLS_CHACHA20_POLY1305_SHA256\",\"TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256\",\"TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256\"]"`
 
 	// EnforceUsername requires that the GitHub username and the entered SSH username match. If this is set to false
-	// the configuration server has to handle the GITHUB_USER connnection parameter in order to obtain the correct
+	// the configuration server has to handle the GITHUB_USER connection parameter in order to obtain the correct
 	// username as the SSH username cannot be trusted.
 	EnforceUsername bool `json:"enforceUsername" yaml:"enforceUsername" default:"true"`
 	// RequireOrgMembership checks if the user is part of the specified organization on GitHub. This requires the

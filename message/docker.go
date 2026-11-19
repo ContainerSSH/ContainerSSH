@@ -193,7 +193,7 @@ const MDockerFileWrite = "DOCKER_FILE_WRITE"
 // EDockerForwardingFailed indicates that the ContainerSSH docker backend failed to initialize the forwarding backend
 const EDockerForwardingFailed = "DOCKER_FORWARDING_FAILED"
 
-// EDockerAgentFailed indicates that the ContainerSSH docker backend failed to start the ContainerSSH agent or it exitted unexpectedly
+// EDockerAgentFailed indicates that the ContainerSSH docker backend failed to start the ContainerSSH agent or it exited unexpectedly
 const EDockerAgentFailed = "DOCKER_AGENT_FAILED"
 
 // MDockerAgentLog indicates a log message from the ContainerSSH agent running within a user container.
