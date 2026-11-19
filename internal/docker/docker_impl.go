@@ -315,7 +315,8 @@ loop:
 				Stdin:  true,
 				Stdout: true,
 				Stderr: true,
-				Logs:   true,
+				// Logs is deliberately not set. The container is attached to before it is started, so there is no
+				// earlier output to replay, and asking for it fails when the log driver (e.g. "none") can't be read.
 			},
 		)
 		if lastError == nil {
