@@ -83,7 +83,7 @@ func (l *lifecycle) Stop(shutdownContext context.Context) {
 func (l *lifecycle) Run() error {
 	defer func() {
 		if crash := recover(); crash != nil {
-			l.crashed(fmt.Errorf("service paniced (%v)", crash))
+			l.crashed(fmt.Errorf("service panicked (%v)", crash))
 		}
 		l.cancelWaitContext()
 	}()
