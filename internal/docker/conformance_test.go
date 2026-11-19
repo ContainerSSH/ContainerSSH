@@ -4,6 +4,8 @@ import (
 	"net"
 	"testing"
 
+	"github.com/docker/docker/api/types/container"
+
     "go.containerssh.io/containerssh/config"
     "go.containerssh.io/containerssh/internal/docker"
     "go.containerssh.io/containerssh/internal/geoip/dummy"
@@ -21,6 +23,17 @@ func TestConformance(t *testing.T) {
 			structutils.Defaults(&cfg)
 
 			cfg.Execution.Mode = config.DockerExecutionModeSession
+			return getDocker(t, cfg, logger)
+		},
+		"session-log-driver-none": func(t *testing.T, logger log.Logger) (sshserver.NetworkConnectionHandler, error) {
+			cfg := config.DockerConfig{}
+			structutils.Defaults(&cfg)
+
+			cfg.Execution.Mode = config.DockerExecutionModeSession
+			// A log driver that cannot be read must not break attaching to the container.
+			cfg.Execution.HostConfig = &container.HostConfig{
+				LogConfig: container.LogConfig{Type: "none"},
+			}
 			return getDocker(t, cfg, logger)
 		},
 		"connection": func(t *testing.T, logger log.Logger) (sshserver.NetworkConnectionHandler, error) {

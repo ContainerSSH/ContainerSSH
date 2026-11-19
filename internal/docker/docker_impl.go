@@ -315,7 +315,9 @@ loop:
 				Stdin:  true,
 				Stdout: true,
 				Stderr: true,
-				Logs:   true,
+				// No log replay: we attach before the container starts, so there is nothing to
+				// replay, and log drivers that cannot be read (such as "none") make it fail.
+				Logs: false,
 			},
 		)
 		if lastError == nil {
