@@ -11,7 +11,7 @@ Header {
 }
 ```
 
-After the first {{ .HeaderLength }} bytes you will have to GZIP-decode the rest of the file and then the CBOR format. The main element of the CBOR container is an *array of messages* where each message has the following format:
+After the first {{ .HeaderLength }} bytes you will have to GZIP-decode the rest of the file. The result is a sequence of CBOR-encoded messages, one after the other, with no enclosing array (version 1 wrapped all messages in a single CBOR array). Decode messages until the stream ends. The GZIP stream may lack its end marker, so some GZIP readers report an unexpected end of file, and a log that is still being written may end in the middle of a message. Treat both as the end of the log. Each message is a CBOR map with the following keys:
 
 ```
 {{ .Message.Name }} {
