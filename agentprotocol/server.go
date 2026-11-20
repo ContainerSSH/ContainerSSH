@@ -6,9 +6,9 @@ import (
 	"sync"
 	"time"
 
-    log "go.containerssh.io/containerssh/log"
-    message "go.containerssh.io/containerssh/message"
 	"github.com/fxamacker/cbor/v2"
+	log "go.containerssh.io/containerssh/log"
+	message "go.containerssh.io/containerssh/message"
 )
 
 const (
@@ -667,6 +667,16 @@ func (c *ForwardCtx) StartReverseForwardClient(bindHost string, bindPort uint32,
 		BindPort:         bindPort,
 		Protocol:         "tcp",
 		SingleConnection: singleConnection,
+	}
+
+	return c.startReverseForwardingClient(setupPacket)
+}
+
+func (c *ForwardCtx) StartSSHAgentForwardClient(path string) (chan *Connection, error) {
+	setupPacket := SetupPacket{
+		ConnectionType: CONNECTION_TYPE_SSH_AGENT,
+		BindHost:       path,
+		Protocol:       "unix",
 	}
 
 	return c.startReverseForwardingClient(setupPacket)

@@ -1,8 +1,8 @@
 package sshserver
 
 import (
-    ssh2 "go.containerssh.io/containerssh/internal/ssh"
-    "go.containerssh.io/containerssh/log"
+	ssh2 "go.containerssh.io/containerssh/internal/ssh"
+	"go.containerssh.io/containerssh/log"
 	"golang.org/x/crypto/ssh"
 )
 
@@ -48,6 +48,11 @@ func (r *ReverseForwardHandler) NewChannelX11(
 	}
 	mar := ssh.Marshal(payload)
 	return r.openChannel(ChannelTypeX11, mar)
+}
+
+func (r *ReverseForwardHandler) NewChannelAuthAgent() (ForwardChannel, uint64, error) {
+	// SSH agent channel has no payload
+	return r.openChannel(ChannelTypeAuthAgent, []byte{})
 }
 
 func (r *ReverseForwardHandler) openChannel(

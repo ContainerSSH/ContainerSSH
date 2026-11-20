@@ -154,6 +154,9 @@ type ForwardingConfig struct {
 
 	// X11forwardingMode configures how to treat X11 forwarding requests from the container to the client
 	X11ForwardingMode SecurityExecutionPolicy `json:"x11ForwardingMode" yaml:"x11ForwardingMode" default:"disable"`
+
+	// SSHAgentForwardingMode configures how to treat SSH agent forwarding requests from the container to the client
+	SSHAgentForwardingMode SecurityExecutionPolicy `json:"sshAgentForwardingMode" yaml:"sshAgentForwardingMode" default:"disable"`
 }
 
 func (f ForwardingConfig) Validate() error {
@@ -170,6 +173,9 @@ func (f ForwardingConfig) Validate() error {
 		return fmt.Errorf("invalid mode (%w)", err)
 	}
 	if err := f.X11ForwardingMode.Validate(); err != nil {
+		return fmt.Errorf("invalid mode (%w)", err)
+	}
+	if err := f.SSHAgentForwardingMode.Validate(); err != nil {
 		return fmt.Errorf("invalid mode (%w)", err)
 	}
 	return nil

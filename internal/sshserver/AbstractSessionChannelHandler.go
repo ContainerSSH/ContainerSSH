@@ -155,13 +155,25 @@ func (a *AbstractSessionChannelHandler) OnWindow(
 // cookie is the authentication cookie for the X11 connections
 // screen is the X11 screen number
 // reverseHandler is a callback interface to signal when new connections are made
-func (s *AbstractSessionChannelHandler) OnX11Request(
+func (a *AbstractSessionChannelHandler) OnX11Request(
 
 	requestID uint64,
 	singleConnection bool,
 	protocol string,
 	cookie string,
 	screen uint32,
+	reverseHandler ReverseForward,
+) error {
+	return fmt.Errorf("not supported")
+}
+
+// OnAuthAgentRequest is called when the client requests SSH agent forwarding to be enabled.
+// This method may be called after a program is started. The implementation can return an error to reject the request.
+//
+// requestID is an incrementing number uniquely identifying the request within the channel.
+// reverseHandler is a set of callbacks to signal new connections
+func (a *AbstractSessionChannelHandler) OnAuthAgentRequest(
+	requestID uint64,
 	reverseHandler ReverseForward,
 ) error {
 	return fmt.Errorf("not supported")

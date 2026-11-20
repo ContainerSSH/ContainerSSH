@@ -6,10 +6,11 @@ import (
 	"sync"
 	"testing"
 
-    "go.containerssh.io/containerssh/config"
-    "go.containerssh.io/containerssh/internal/sshserver"
-    "go.containerssh.io/containerssh/log"
 	"github.com/stretchr/testify/assert"
+	"go.containerssh.io/containerssh/config"
+	"go.containerssh.io/containerssh/internal/sshserver"
+	"go.containerssh.io/containerssh/internal/structutils"
+	"go.containerssh.io/containerssh/log"
 )
 
 func TestEnvRequest(t *testing.T) {
@@ -180,6 +181,23 @@ func TestSubsystem(t *testing.T) {
 	assert.Equal(t, map[string]string{"SSH_ORIGINAL_COMMAND": "sftp"}, backend.env)
 }
 
+func TestAuthAgentRequest(t *testing.T) {
+	session := &sessionHandler{
+		config:  config.SecurityConfig{},
+		backend: &dummyBackend{},
+		sshConnection: &sshConnectionHandler{
+			lock: &sync.Mutex{},
+		},
+		logger: log.NewTestLogger(t),
+	}
+	structutils.Defaults(&session.config)
+
+	assert.Error(t, session.OnAuthAgentRequest(1, nil))
+
+	session.config.Forwarding.SSHAgentForwardingMode = config.ExecutionPolicyEnable
+	assert.NoError(t, session.OnAuthAgentRequest(2, nil))
+}
+
 // region Dummy backend
 type dummyBackend struct {
 	exit             chan struct{}
@@ -268,7 +286,7 @@ func (d *dummyBackend) OnWindow(_ uint64, _ uint32, _ uint32, _ uint32, _ uint32
 	return nil
 }
 
-func (s *dummyBackend) OnX11Request(
+func (d *dummyBackend) OnX11Request(
 	requestID uint64,
 	singleConnection bool,
 	protocol string,
@@ -277,6 +295,10 @@ func (s *dummyBackend) OnX11Request(
 	reverseHandler sshserver.ReverseForward,
 ) error {
 	return fmt.Errorf("Unimplemented")
+}
+
+func (d *dummyBackend) OnAuthAgentRequest(requestID uint64, reverseHandler sshserver.ReverseForward) error {
+	return nil
 }
 
 // endregion

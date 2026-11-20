@@ -7,12 +7,12 @@ import (
 	"sync"
 	"time"
 
-    "go.containerssh.io/containerssh/auditlog/message"
-    "go.containerssh.io/containerssh/config"
-    "go.containerssh.io/containerssh/internal/auditlog/codec"
-    "go.containerssh.io/containerssh/internal/auditlog/storage"
-    "go.containerssh.io/containerssh/internal/geoip/geoipprovider"
-    "go.containerssh.io/containerssh/log"
+	"go.containerssh.io/containerssh/auditlog/message"
+	"go.containerssh.io/containerssh/config"
+	"go.containerssh.io/containerssh/internal/auditlog/codec"
+	"go.containerssh.io/containerssh/internal/auditlog/storage"
+	"go.containerssh.io/containerssh/internal/geoip/geoipprovider"
+	"go.containerssh.io/containerssh/log"
 )
 
 type loggerImplementation struct {
@@ -304,13 +304,13 @@ func (l *loggerConnection) OnGlobalRequestUnknown(requestType string) {
 func (l *loggerConnection) OnGlobalRequestDecodeFailed(requestID uint64, requestType string, payload []byte, reason error) {
 	l.log(message.Message{
 		ConnectionID: l.connectionID,
-		Timestamp: time.Now().UnixNano(),
-		MessageType: message.TypeGlobalRequestDecodeFailed,
+		Timestamp:    time.Now().UnixNano(),
+		MessageType:  message.TypeGlobalRequestDecodeFailed,
 		Payload: message.PayloadGlobalRequestDecodeFailed{
-			RequestID: requestID,
+			RequestID:   requestID,
 			RequestType: requestType,
-			Payload: payload,
-			Reason: reason.Error(),
+			Payload:     payload,
+			Reason:      reason.Error(),
 		},
 	})
 }
@@ -437,6 +437,15 @@ func (l *loggerConnection) OnReverseX11ForwardChannel(channelID message.ChannelI
 	})
 }
 
+func (l *loggerConnection) OnReverseAuthAgentChannel(channelID message.ChannelID) {
+	l.log(message.Message{
+		ConnectionID: l.connectionID,
+		Timestamp:    time.Now().UnixNano(),
+		MessageType:  message.TypeNewReverseAuthAgentChannel,
+		Payload:      nil, // SSH agent channel has no specific payload
+		ChannelID:    channelID,
+	})
+}
 func (l *loggerConnection) OnDirectStreamLocal(channelID message.ChannelID, path string) {
 	l.log(message.Message{
 		ConnectionID: l.connectionID,
@@ -574,6 +583,18 @@ func (l *loggerChannel) OnRequestX11(
 			AuthProtocol:     protocol,
 			Cookie:           cookie,
 			Screen:           screen,
+		},
+		ChannelID: l.channelID,
+	})
+}
+
+func (l *loggerChannel) OnRequestAuthAgent(requestID uint64) {
+	l.c.log(message.Message{
+		ConnectionID: l.c.connectionID,
+		Timestamp:    time.Now().UnixNano(),
+		MessageType:  message.TypeChannelRequestAuthAgent,
+		Payload: message.PayloadChannelRequestAuthAgent{
+			RequestID: requestID,
 		},
 		ChannelID: l.channelID,
 	})

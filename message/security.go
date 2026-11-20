@@ -33,6 +33,8 @@ const ESecuritySignalRejected = "SECURITY_SIGNAL_REJECTED"
 
 const ESecurityX11ForwardingRejected = "SECURITY_X11_FORWARDING_REJECTED"
 
+const ESecurityAgentForwardingRejected = "SECURITY_AGENT_FORWARDING_REJECTED"
+
 // ESecurityMaxSessions indicates that the client has reached the maximum number of configured sessions, the new session
 // request is therefore rejected.
 const ESecurityMaxSessions = "SECURITY_MAX_SESSIONS"
