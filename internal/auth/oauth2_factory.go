@@ -5,6 +5,7 @@ import (
 	"html/template"
 	"io"
 	goHttp "net/http"
+	textTemplate "text/template"
 
 	"go.containerssh.io/containerssh/config"
 	"go.containerssh.io/containerssh/http"
@@ -125,8 +126,38 @@ func NewOAuth2Client(cfg config.AuthOAuth2ClientConfig, logger log.Logger, colle
 		)
 	}
 
+	deviceFlowPrompt, err := parseOAuth2Prompt(
+		"deviceFlowPrompt",
+		cfg.DeviceFlowPrompt,
+		config.DefaultDeviceFlowPrompt,
+	)
+	if err != nil {
+		return nil, nil, err
+	}
+	authorizationCodeFlowPrompt, err := parseOAuth2Prompt(
+		"authorizationCodeFlowPrompt",
+		cfg.AuthorizationCodeFlowPrompt,
+		config.DefaultAuthorizationCodeFlowPrompt,
+	)
+	if err != nil {
+		return nil, nil, err
+	}
+
 	return &oauth2Client{
-		logger:   logger,
-		provider: provider,
+		logger:                      logger,
+		provider:                    provider,
+		deviceFlowPrompt:            deviceFlowPrompt,
+		authorizationCodeFlowPrompt: authorizationCodeFlowPrompt,
 	}, redirectServer, nil
+}
+
+func parseOAuth2Prompt(name string, promptTemplate string, defaultTemplate string) (*textTemplate.Template, error) {
+	if promptTemplate == "" {
+		promptTemplate = defaultTemplate
+	}
+	tpl, err := textTemplate.New(name).Parse(promptTemplate)
+	if err != nil {
+		return nil, fmt.Errorf("failed to parse the oAuth2 %s template (%w)", name, err)
+	}
+	return tpl, nil
 }
