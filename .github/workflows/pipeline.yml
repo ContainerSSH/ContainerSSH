@@ -1,0 +1,102 @@
+name: Test
+on:
+  push:
+    branches:
+      - '*'
+  pull_request:
+  schedule:
+    - cron: '0 17 * * 2'
+jobs:
+  golangci-lint:
+    name: golangci-lint
+    runs-on: ubuntu-latest
+    if: ${{ github.event_name != 'schedule' }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+        with:
+          # Full history so golangci-lint can diff against origin/main.
+          fetch-depth: 0
+      - name: Set up Go
+        uses: actions/setup-go@v6
+        with:
+          go-version-file: 'go.mod'
+      - name: Run golangci-lint
+        uses: golangci/golangci-lint-action@v9
+        with:
+          version: v2.15.0
+          # Report only issues introduced since the branch diverged from main. Unlike only-new-issues, this works
+          # on the first push of a new branch, where GitHub's compare API has no "before" commit to diff against.
+          args: --new-from-merge-base=origin/main
+
+  test:
+    name: go test
+    if: ${{ github.event_name != 'schedule' }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Reconfigure Docker daemon
+        run: |
+          echo '{
+            "insecure-registries" : ["http://localhost:5000"]
+          }' | sudo tee /etc/docker/daemon.json
+          sudo service docker restart
+      - name: Checkout
+        uses: actions/checkout@v5
+        with:
+          submodules: true
+      - name: Set up Go
+        uses: actions/setup-go@v6
+        with:
+          go-version-file: 'go.mod'
+      - name: Install KinD
+        run: |
+          sudo curl -Lo /usr/local/bin/kind https://kind.sigs.k8s.io/dl/v0.11.1/kind-linux-amd64
+          sudo curl -Lo /usr/local/bin/kubectl "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
+          sudo chmod +x /usr/local/bin/kind /usr/local/bin/kubectl
+      - name: Bring up KinD cluster
+        run: |
+          kind create cluster --wait 300s
+      - name: Wait for KinD
+        run: |
+          set -ex
+          UP=0
+          for i in $(seq 1 30); do
+            kubectl get nodes
+            NODECOUNT=$(kubectl get nodes | grep kind-control-plane | grep -v NotReady | wc -l)
+            if [ $NODECOUNT -eq "1" ]; then
+              UP=1
+              break
+            fi
+            sleep 5
+          done
+          if [ $UP -eq "0" ]; then
+            echo "KinD cluster failed to come up"
+            exit 1
+          fi
+          echo "KinD is ready for use."
+      - name: Set up gotestfmt
+        uses: GoTestTools/gotestfmt-action@v2
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+      # Module and build caches are handled by actions/setup-go (cache: true by default).
+      - name: Run go test
+        run: |
+          set -euo pipefail
+          # -count=1 disables the test result cache; the e2e tests depend on Docker/KinD state that Go can't track.
+          go test -count=1 -coverprofile=coverage.txt -covermode=atomic -json -p 1 -v ./... 2>&1 | tee /tmp/gotest.log
+      - name: Format log output
+        if: always()
+        run: |
+          set -euo pipefail
+          cat /tmp/gotest.log | gotestfmt
+      - name: Upload test log
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: test-log
+          path: /tmp/gotest.log
+          if-no-files-found: error
+      - name: Upload coverage reports to Codecov
+        uses: codecov/codecov-action@v5
+        env:
+          CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}

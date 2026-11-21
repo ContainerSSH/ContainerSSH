@@ -1,0 +1,6 @@
+# CLOMonitor metadata file
+# https://github.com/cncf/clomonitor/blob/main/docs/metadata/.clomonitor.yml
+
+exemptions:
+  - check: trademark_disclaimer
+    reason: "The website root is a (js/html) redirect to the current version which contains the disclaimer. CLOMonitor doesn't follow redirects."

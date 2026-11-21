@@ -1,0 +1,44 @@
+version: "2"
+linters:
+  enable:
+    - asciicheck
+    - bodyclose
+    - copyloopvar
+    - dogsled
+    - dupl
+    - durationcheck
+    - errorlint
+    - gomoddirectives
+    - importas
+    - nilerr
+    - nolintlint
+    - testpackage
+    - unconvert
+    - whitespace
+  disable:
+    - unused
+  settings:
+    gomoddirectives:
+      replace-allow-list:
+        - gopkg.in/yaml.v2
+    govet:
+      disable:
+        - fieldalignment
+        - shadow
+      enable-all: true
+    staticcheck:
+      checks:
+        - all
+  exclusions:
+    generated: lax
+    paths:
+      - third_party$
+      - builtin$
+      - examples$
+formatters:
+  exclusions:
+    generated: lax
+    paths:
+      - third_party$
+      - builtin$
+      - examples$

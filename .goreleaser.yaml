@@ -1,0 +1,106 @@
+version: 2
+before:
+  hooks:
+    - go generate
+builds:
+  - id: containerssh
+    main: cmd/containerssh/main.go
+    binary: containerssh
+    goos:
+      - freebsd
+      - windows
+      - darwin
+      - linux
+    goarch:
+      - amd64
+      - arm64
+    env:
+      - CGO_ENABLED=0
+  - id: containerssh-auditlog-decoder
+    main: cmd/containerssh-auditlog-decoder/main.go
+    binary: containerssh-auditlog-decoder
+    goos:
+      - freebsd
+      - windows
+      - darwin
+      - linux
+    goarch:
+      - amd64
+      - arm64
+    env:
+      - CGO_ENABLED=0
+  - id: containerssh-testauthconfigserver
+    main: cmd/containerssh-testauthconfigserver/main.go
+    binary: containerssh-testauthconfigserver
+    goos:
+      - freebsd
+      - windows
+      - darwin
+      - linux
+    goarch:
+      - amd64
+      - arm64
+    env:
+      - CGO_ENABLED=0
+archives:
+  - builds:
+      - containerssh
+      - containerssh-auditlog-decoder
+      - containerssh-testauthconfigserver
+    format_overrides:
+      - goos: windows
+        format: zip
+    files:
+      - LICENSE
+      - NOTICE.md
+      - config.example.yaml
+nfpms:
+  - vendor: ContainerSSH
+    homepage: https://containerssh.io
+    maintainer: Nikos Tsipinakis <handshake@containerssh.io>
+    description: An SSH server that launches Docker containers and Kubernetes pods
+    license: Apache-2.0
+    builds:
+      - containerssh
+      - containerssh-testauthconfigserver
+      - containerssh-auditlog-decoder
+    formats:
+      - deb
+      - rpm
+      - apk
+    bindir: /usr/sbin
+    suggests:
+      - docker
+    contents:
+      - dst: /etc/containerssh
+        type: dir
+      - src: config.example.yaml
+        dst: /etc/containerssh/config.yaml
+        type: config
+      - src: LICENSE
+        dst: /usr/share/doc/containerssh/LICENSE
+      - src: NOTICE.md
+        dst: /usr/share/doc/containerssh/NOTICE.md
+signs:
+  - id: sign-checksums
+    artifacts: checksum
+source:
+  enabled: true
+  name_template: '{{ .ProjectName }}-{{ .Version }}-source'
+sboms:
+  - id: sbom-config
+    documents:
+      - containerssh.cdx.sbom
+    cmd: cyclonedx-gomod
+    args: ["mod", "-licenses", "-json", "-output", "$document", "../"]
+    artifacts: source
+dist: build
+release:
+  github:
+    owner: containerssh
+    name: containerssh
+  prerelease: auto
+  extra_files:
+    - glob: LICENSE
+    - glob: NOTICE.md
+    - glob: containerssh-authconfig-openapi.json

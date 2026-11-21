@@ -1,0 +1,15 @@
+ssh:
+  hostkeys:
+    - /etc/containerssh/ssh_host_rsa_key
+backend: docker
+auth:
+  password:
+    method: webhook
+    webhook:
+      url: "http://127.0.0.1:8080"
+configserver:
+  url: "http://127.0.0.1:8080/config"
+metrics:
+  enable: true
+  listen: 0.0.0.0:9100
+  path: /metrics

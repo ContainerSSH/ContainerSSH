@@ -1,0 +1,284 @@
+ssh:
+  listen: 0.0.0.0:2222
+  serverVersion: SSH-2.0-ContainerSSH
+  ciphers:
+    - chacha20-poly1305@openssh.com
+    - aes256-gcm@openssh.com
+    - aes128-gcm@openssh.com
+    - aes256-ctr
+    - aes192-ctr
+    - aes128-ctr
+  kex:
+    - curve25519-sha256@libssh.org
+    - ecdh-sha2-nistp521
+    - ecdh-sha2-nistp384
+    - ecdh-sha2-nistp256
+  macs:
+    - hmac-sha2-256-etm@openssh.com
+    - hmac-sha2-256
+  banner: ""
+  hostkeys: []
+configserver:
+  url: ""
+  allowRedirects: false
+  timeout: 2s
+  cacert: ""
+  cert: ""
+  key: ""
+  tlsVersion: "1.3"
+  curves:
+    - x25519
+    - secp256r1
+    - secp384r1
+    - secp521r1
+  cipher:
+    - TLS_AES_128_GCM_SHA256
+    - TLS_AES_256_GCM_SHA384
+    - TLS_CHACHA20_POLY1305_SHA256
+    - TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256
+    - TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256
+auth:
+  url: "http://localhost:8080"
+  allowRedirects: false
+  timeout: 2s
+  cacert: ""
+  cert: ""
+  key: ""
+  tlsVersion: "1.3"
+  curves:
+    - x25519
+    - secp256r1
+    - secp384r1
+    - secp521r1
+  cipher:
+    - TLS_AES_128_GCM_SHA256
+    - TLS_AES_256_GCM_SHA384
+    - TLS_CHACHA20_POLY1305_SHA256
+    - TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256
+    - TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256
+  authTimeout: 1m0s
+  password: true
+  pubkey: true
+log:
+  level: notice
+  format: ljson
+  destination: stdout
+  file: /var/log/containerssh/containerssh.log
+  syslog:
+    destination: /dev/log
+    facility: auth
+    tag: ContainerSSH
+    pid: false
+metrics:
+  listen: 0.0.0.0:9100
+  key: ""
+  cert: ""
+  clientcacert: ""
+  tlsVersion: "1.3"
+  curves:
+    - x25519
+    - secp256r1
+    - secp384r1
+    - secp521r1
+  cipher:
+    - TLS_AES_128_GCM_SHA256
+    - TLS_AES_256_GCM_SHA384
+    - TLS_CHACHA20_POLY1305_SHA256
+    - TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256
+    - TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256
+  enable: false
+  path: /metrics
+geoip:
+  provider: dummy
+  maxmind-geoip2-file: /var/lib/GeoIP/GeoIP2-Country.mmdb
+audit:
+  enable: false
+  format: none
+  storage: none
+  file:
+    directory: /var/log/audit
+  s3:
+    local: /var/lib/audit
+    accessKey: ""
+    secretKey: ""
+    bucket: ""
+    region: ""
+    endpoint: ""
+    cacert: ""
+    acl: ""
+    pathStyleAccess: false
+    uploadPartSize: 5242880
+    parallelUploads: 20
+    metadata:
+      ip: false
+      username: false
+  intercept:
+    stdin: false
+    stdout: false
+    stderr: false
+    passwords: false
+security:
+  defaultMode: ""
+  forceCommand: ""
+  env:
+    mode: ""
+    allow: []
+    deny: []
+  command:
+    mode: ""
+    allow: []
+  shell:
+    mode: ""
+  subsystem:
+    mode: ""
+    allow: []
+    deny: []
+  tty:
+    mode: ""
+  signal:
+    mode: ""
+    allow: []
+    deny: []
+  maxSessions: -1
+backend: docker
+docker:
+  connection:
+    host: unix:///var/run/docker.sock
+    cacert: ""
+    cert: ""
+    key: ""
+  execution:
+    container:
+      hostname: ""
+      domainname: ""
+      user: ""
+      attachstdin: false
+      attachstdout: false
+      attachstderr: false
+      exposedports: {}
+      tty: false
+      openstdin: false
+      stdinonce: false
+      env: []
+      cmd: []
+      healthcheck: null
+      argsescaped: false
+      image: containerssh/containerssh-guest-image
+      volumes: {}
+      workingdir: ""
+      entrypoint: []
+      networkdisabled: false
+      macaddress: ""
+      onbuild: []
+      labels: {}
+      stopsignal: ""
+      stoptimeout: null
+      shell: []
+    host: null
+    network: null
+    platform: null
+    containername: ""
+    mode: connection
+    idleCommand:
+      - /usr/bin/containerssh-agent
+      - wait-signal
+      - --signal
+      - INT
+      - --signal
+      - TERM
+    shellCommand:
+      - /bin/bash
+    agentPath: /usr/bin/containerssh-agent
+    disableAgent: false
+    subsystems:
+      sftp: /usr/lib/openssh/sftp-server
+    imagePullPolicy: IfNotPresent
+  timeouts:
+    containerStart: 1m0s
+    containerStop: 1m0s
+    commandStart: 1m0s
+    signal: 1m0s
+    window: 1m0s
+    http: 15s
+kubernetes:
+  connection:
+    host: kubernetes.default.svc
+    path: /api
+    username: ""
+    password: ""
+    serverName: ""
+    certFile: ""
+    keyFile: ""
+    cacertFile: ""
+    cert: ""
+    key: ""
+    cacert: ""
+    bearerToken: ""
+    bearerTokenFile: ""
+    qps: 5
+    burst: 10
+  pod:
+    agentPath: /usr/bin/containerssh-agent
+    idleCommand:
+      - /usr/bin/containerssh-agent
+      - wait-signal
+      - --signal
+      - INT
+      - --signal
+      - TERM
+    metadata:
+      creationTimestamp: null
+      generateName: containerssh-
+      namespace: default
+    mode: connection
+    shellCommand:
+      - /bin/bash
+    spec:
+      containers:
+        - image: containerssh/containerssh-guest-image
+          name: shell
+          resources: {}
+    subsystems:
+      sftp: /usr/lib/openssh/sftp-server
+  timeouts:
+    podStart: 1m0s
+    podStop: 1m0s
+    commandStart: 1m0s
+    signal: 1m0s
+    window: 1m0s
+    http: 15s
+sshproxy:
+  server: ""
+  port: 22
+  usernamePassThrough: false
+  username: ""
+  password: ""
+  privateKey: ""
+  allowedHostKeyFingerprints: []
+  ciphers:
+    - chacha20-poly1305@openssh.com
+    - aes256-gcm@openssh.com
+    - aes128-gcm@openssh.com
+    - aes256-ctr
+    - aes192-ctr
+    - aes128-ctr
+  kex:
+    - curve25519-sha256@libssh.org
+    - ecdh-sha2-nistp521
+    - ecdh-sha2-nistp384
+    - ecdh-sha2-nistp256
+  macs:
+    - hmac-sha2-256-etm@openssh.com
+    - hmac-sha2-256
+  hostKeyAlgos:
+    - ssh-rsa-cert-v01@openssh.com
+    - ssh-dss-cert-v01@openssh.com
+    - ecdsa-sha2-nistp256-cert-v01@openssh.com
+    - ecdsa-sha2-nistp384-cert-v01@openssh.com
+    - ecdsa-sha2-nistp521-cert-v01@openssh.com
+    - ssh-ed25519-cert-v01@openssh.com
+    - ssh-rsa
+    - ssh-dss
+    - ssh-ed25519
+  timeout: 1m0s
+  clientVersion: SSH-2.0-ContainerSSH

@@ -1,0 +1,24 @@
+[Unit]
+Description=ContainerSSH
+After=network.target
+
+[Service]
+Type=simple
+User=containerssh
+Group=containerssh
+LimitNOFILE=1024
+
+Restart=on-failure
+RestartSec=10
+startLimitIntervalSec=60
+
+WorkingDirectory=/
+ExecStart=/usr/sbin/containerssh --config /etc/containerssh/config.yaml
+
+PermissionsStartOnly=true
+StandardOutput=syslog
+StandardError=syslog
+SyslogIdentifier=containerssh
+
+[Install]
+WantedBy=multi-user.target

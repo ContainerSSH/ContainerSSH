@@ -1,0 +1,18 @@
+connection:
+  certFile: /var/run/secrets/kubernetes.io/serviceaccount/ca.crt
+  bearerTokenFile: /var/run/secrets/kubernetes.io/serviceaccount/token
+  cacert: |
+    <cacert>
+pod:
+  consoleContainerNumber: 0
+  metadata:
+    namespace: tp-112520
+  spec:
+    volumes:
+      - name: home
+        hostPath:
+          path: /home/ubuntu
+          type: Directory
+    containers:
+      - name: shell
+        image: containerssh/containerssh-guest-image
