@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/docker/docker/api/types/container"
@@ -383,10 +384,104 @@ type dockerTmpLaunchConfig struct {
 	ContainerName string `json:"containername" yaml:"containername"`
 }
 
+// parseNetworkingConfig decodes a raw NetworkingConfig. encoding/json matches field names
+// case-insensitively, so both the Docker API style ("EndpointsConfig", "NetworkID") and the
+// all-lowercase YAML style ("endpointsconfig", "networkid") are accepted.
+//
+// The Docker container create request carries NetworkingConfig as a top-level field of the request body,
+// so users frequently place it inside the "container" section of the ContainerSSH configuration. The
+// container.Config structure has no NetworkingConfig field, so without the special handling in
+// UnmarshalJSON / UnmarshalYAML the setting would be silently dropped and the container would be
+// launched on the default bridge network (see issue #639).
+func parseNetworkingConfig(raw json.RawMessage) (*network.NetworkingConfig, error) {
+	if len(raw) == 0 || string(raw) == "null" {
+		return nil, nil
+	}
+	networkingConfig := &network.NetworkingConfig{}
+	if err := json.Unmarshal(raw, networkingConfig); err != nil {
+		return nil, err
+	}
+	return networkingConfig, nil
+}
+
+// networkingConfigFromContainerJSON extracts the NetworkingConfig from the raw JSON of the "container" section.
+func networkingConfigFromContainerJSON(rawContainer json.RawMessage) (*network.NetworkingConfig, error) {
+	if len(rawContainer) == 0 {
+		return nil, nil
+	}
+	var section map[string]json.RawMessage
+	if err := json.Unmarshal(rawContainer, &section); err != nil {
+		return nil, err
+	}
+	for key, value := range section {
+		if strings.EqualFold(key, "networkingconfig") {
+			return parseNetworkingConfig(value)
+		}
+	}
+	return nil, nil
+}
+
+// networkingConfigFromContainerYAML extracts the NetworkingConfig from the "container" section of a decoded
+// YAML document. The value is re-encoded as JSON so that field matching is case-insensitive.
+func networkingConfigFromContainerYAML(containerSection interface{}) (*network.NetworkingConfig, error) {
+	section, ok := containerSection.(map[string]interface{})
+	if !ok {
+		return nil, nil
+	}
+	for key, value := range section {
+		if strings.EqualFold(key, "networkingconfig") {
+			raw, err := json.Marshal(value)
+			if err != nil {
+				return nil, err
+			}
+			return parseNetworkingConfig(raw)
+		}
+	}
+	return nil, nil
+}
+
+// mergeNetworkingConfig merges the secondary NetworkingConfig into the primary one. Endpoints already present
+// in primary take precedence; the remaining endpoints of secondary are added. Returns primary.
+func mergeNetworkingConfig(primary, secondary *network.NetworkingConfig) *network.NetworkingConfig {
+	if secondary == nil {
+		return primary
+	}
+	if primary == nil {
+		return secondary
+	}
+	if len(secondary.EndpointsConfig) > 0 {
+		if primary.EndpointsConfig == nil {
+			primary.EndpointsConfig = map[string]*network.EndpointSettings{}
+		}
+		for name, endpoint := range secondary.EndpointsConfig {
+			if _, exists := primary.EndpointsConfig[name]; !exists {
+				primary.EndpointsConfig[name] = endpoint
+			}
+		}
+	}
+	return primary
+}
+
 // UnmarshalJSON implements the special unmarshalling of the DockerLaunchConfig that ignores unknown fields.
 // This is needed because Docker treats removing fields as backwards-compatible.
 // See https://github.com/moby/moby/pull/39158#issuecomment-489704731
 func (l *DockerLaunchConfig) UnmarshalJSON(b []byte) error {
+	var raw map[string]json.RawMessage
+	if err := json.Unmarshal(b, &raw); err != nil {
+		return err
+	}
+	var containerRaw json.RawMessage
+	for key, value := range raw {
+		if strings.EqualFold(key, "container") {
+			containerRaw = value
+			break
+		}
+	}
+	containerNetworkConfig, err := networkingConfigFromContainerJSON(containerRaw)
+	if err != nil {
+		return err
+	}
+
 	decoder := json.NewDecoder(bytes.NewReader(b))
 	tmp := &dockerTmpLaunchConfig{}
 	if err := decoder.Decode(tmp); err != nil {
@@ -394,7 +489,7 @@ func (l *DockerLaunchConfig) UnmarshalJSON(b []byte) error {
 	}
 	l.ContainerConfig = tmp.ContainerConfig
 	l.HostConfig = tmp.HostConfig
-	l.NetworkConfig = tmp.NetworkConfig
+	l.NetworkConfig = mergeNetworkingConfig(tmp.NetworkConfig, containerNetworkConfig)
 	l.Platform = tmp.Platform
 	l.ContainerName = tmp.ContainerName
 	return nil
@@ -408,6 +503,17 @@ func (l *DockerLaunchConfig) UnmarshalYAML(unmarshal func(interface{}) error) er
 	if err := unmarshal(lc); err != nil {
 		return err
 	}
+	var containerSection interface{}
+	for key, value := range *lc {
+		if strings.EqualFold(key, "container") {
+			containerSection = value
+			break
+		}
+	}
+	containerNetworkConfig, err := networkingConfigFromContainerYAML(containerSection)
+	if err != nil {
+		return err
+	}
 	substructure, err := yaml.Marshal(lc)
 	if err != nil {
 		return err
@@ -418,7 +524,7 @@ func (l *DockerLaunchConfig) UnmarshalYAML(unmarshal func(interface{}) error) er
 	}
 	l.ContainerConfig = tmp.ContainerConfig
 	l.HostConfig = tmp.HostConfig
-	l.NetworkConfig = tmp.NetworkConfig
+	l.NetworkConfig = mergeNetworkingConfig(tmp.NetworkConfig, containerNetworkConfig)
 	l.Platform = tmp.Platform
 	l.ContainerName = tmp.ContainerName
 	return nil
